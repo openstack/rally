@@ -154,6 +154,13 @@ class _Deployment(APIGroup):
         deployer = deploy_engine.Engine.get_engine(
             deployment["config"]["type"], deployment)
 
+        print_warning = True
+        if config and "type" not in config:
+            # it looks like a new format! wow!
+            config = {"type": "ExistingCloud",
+                      "creds": config}
+            print_warning = False
+
         if config:
             if deployment["config"]["type"] != config["type"]:
                 raise exceptions.RallyException(
@@ -163,6 +170,18 @@ class _Deployment(APIGroup):
             except jsonschema.ValidationError:
                 LOG.error("Config schema validation error.")
                 raise
+
+        if (config and print_warning and
+                config.get("type", "") == "ExistingCloud"):
+            # credentials are stored in the list, but it contains one item.
+            new_conf = dict(
+                (name, cred[0])
+                for name, cred in deployer._get_creds(config).items())
+            LOG.warning(
+                "The used config schema is deprecated since Rally 0.10.0. "
+                "The new one is much simpler, try it now:\n%s"
+                % json.dumps(new_conf, indent=4)
+            )
 
         with deployer:
             deployer.make_cleanup()

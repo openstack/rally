@@ -26,14 +26,6 @@ import tempfile
 from oslo_utils import encodeutils
 from six.moves import configparser
 
-
-TEST_ENV = {
-    "OS_USERNAME": "admin",
-    "OS_PASSWORD": "admin",
-    "OS_TENANT_NAME": "admin",
-    "OS_AUTH_URL": "http://fake/",
-}
-
 DEPLOYMENT_FILE = "/tmp/rally_functests_main_deployment.json"
 
 

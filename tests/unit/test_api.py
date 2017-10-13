@@ -815,6 +815,30 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
 
     @mock.patch("rally.common.objects.deploy.db.deployment_update")
     @mock.patch("rally.common.objects.deploy.db.deployment_get")
+    def test_recreate_old_config(self, mock_deployment_get,
+                                 mock_deployment_update):
+        mock_deployment_get.return_value = self.deployment
+        mock_deployment_update.return_value = self.deployment
+        config = copy.deepcopy(self.deployment_config["creds"])
+        config["openstack"]["admin"] = {
+            "username": "admin",
+            "password": "pass1",
+            "tenant_name": "demo"}
+        config["openstack"]["users"] = [
+            {"username": "user1",
+             "password": "pass2",
+             "tenant_name": "demo"}]
+
+        self.deployment_inst.recreate(deployment=self.deployment_uuid,
+                                      config=config)
+        mock_deployment_get.assert_called_once_with(self.deployment_uuid)
+        mock_deployment_update.assert_has_calls([
+            mock.call(self.deployment_uuid,
+                      {"config": {"type": "ExistingCloud", "creds": config}}),
+        ])
+
+    @mock.patch("rally.common.objects.deploy.db.deployment_update")
+    @mock.patch("rally.common.objects.deploy.db.deployment_get")
     def test_recreate_config_invalid(self, mock_deployment_get,
                                      mock_deployment_update):
         mock_deployment_get.return_value = self.deployment
