@@ -639,26 +639,26 @@ class _Task(APIGroup):
 
 class _Verifier(APIGroup):
 
-    def list_plugins(self, namespace=None):
+    def list_plugins(self, platform=None):
         """List all plugins for verifiers management.
 
-        :param namespace: Verifier plugin namespace
+        :param platform: Verifier plugin platform
         """
         return [{"name": p.get_name(),
-                 "namespace": p.get_platform(),
+                 "platform": p.get_platform(),
                  "description": p.get_info()["title"],
                  "location": "%s.%s" % (p.__module__, p.__name__)}
-                for p in vmanager.VerifierManager.get_all(platform=namespace)]
+                for p in vmanager.VerifierManager.get_all(platform=platform)]
 
-    def create(self, name, vtype, namespace=None, source=None, version=None,
+    def create(self, name, vtype, platform=None, source=None, version=None,
                system_wide=False, extra_settings=None):
         """Create a verifier.
 
         :param name: Verifier name
         :param vtype: Verifier plugin name
-        :param namespace: Verifier plugin namespace. Should be specified when
+        :param platform: Verifier plugin platform. Should be specified when
                           there are two verifier plugins with equal names but
-                          in different namespaces
+                          in different platforms
         :param source: Path or URL to the repo to clone verifier from
         :param version: Branch, tag or commit ID to checkout before
                         verifier installation
@@ -667,7 +667,7 @@ class _Verifier(APIGroup):
         :param extra_settings: Extra installation settings for verifier
         """
         # check that the specified verifier type exists
-        vmanager.VerifierManager.get(vtype, platform=namespace)
+        vmanager.VerifierManager.get(vtype, platform=platform)
 
         LOG.info("Creating verifier '%s'." % name)
 
@@ -676,7 +676,7 @@ class _Verifier(APIGroup):
         except exceptions.ResourceNotFound:
             verifier = objects.Verifier.create(
                 name=name, source=source, system_wide=system_wide,
-                version=version, vtype=vtype, namespace=namespace,
+                version=version, vtype=vtype, platform=platform,
                 extra_settings=extra_settings)
         else:
             raise exceptions.RallyException(
@@ -684,10 +684,7 @@ class _Verifier(APIGroup):
                 "another name for verifier and try again." % verifier.name)
 
         properties = {}
-
-        default_namespace = verifier.manager.get_platform()
-        if not namespace and default_namespace:
-            properties["namespace"] = default_namespace
+        properties["platform"] = platform or verifier.manager.get_platform()
 
         default_source = verifier.manager._meta_get("default_repo")
         if not source and default_source:

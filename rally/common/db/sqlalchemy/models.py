@@ -364,7 +364,7 @@ class Verifier(BASE, RallyBase):
     description = sa.Column(sa.Text)
 
     type = sa.Column(sa.String(255), nullable=False)
-    namespace = sa.Column(sa.String(255))
+    platform = sa.Column(sa.String(255))
 
     source = sa.Column(sa.String(255))
     version = sa.Column(sa.String(255))

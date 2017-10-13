@@ -1843,10 +1843,10 @@ class FakeUserContext(FakeContext):
 class FakeDeployment(dict):
 
     def __init__(self, **kwargs):
-        namespace = kwargs.pop("namespace", "openstack")
+        platform = kwargs.pop("platform", "openstack")
         kwargs["credentials"] = {
-            namespace: [{"admin": kwargs.pop("admin", None),
-                         "users": kwargs.pop("users", [])}],
+            platform: [{"admin": kwargs.pop("admin", None),
+                        "users": kwargs.pop("users", [])}],
             "default": [{"admin": None, "users": []}]}
         dict.__init__(self, **kwargs)
         self.update_status = mock.Mock()
@@ -1854,8 +1854,8 @@ class FakeDeployment(dict):
     def get_platforms(self):
         return [platform for platform in self["credentials"]]
 
-    def get_credentials_for(self, namespace):
-        return self["credentials"][namespace][0]
+    def get_credentials_for(self, platform):
+        return self["credentials"][platform][0]
 
     def verify_connections(self):
         pass

@@ -142,17 +142,17 @@ class Deployment(object):
                               credentials["users"]]})
         return all_credentials
 
-    def get_credentials_for(self, namespace):
-        if namespace == "default":
+    def get_credentials_for(self, platform):
+        if platform == "default":
             return {"admin": None, "users": []}
         try:
-            creds = self.deployment["credentials"][namespace][0]
+            creds = self.deployment["credentials"][platform][0]
         except (KeyError, IndexError):
             raise exceptions.RallyException(
-                "No credentials found for %s" % namespace)
+                "No credentials found for %s" % platform)
 
         admin = creds["admin"]
-        credential_cls = credential.get(namespace)
+        credential_cls = credential.get(platform)
         return {"admin": credential_cls(**admin) if admin else None,
                 "users": [credential_cls(**user) for user in creds["users"]]}
 

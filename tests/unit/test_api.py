@@ -1125,7 +1125,7 @@ class APITestCase(test.TestCase):
 
 class FakeVerifierManager(object):
     NAME = "fake_verifier"
-    NAMESPACE = "tests"
+    PLATFORM = "tests"
     TITLE = "Fake verifier which is used only for testing purpose"
 
     @classmethod
@@ -1134,7 +1134,7 @@ class FakeVerifierManager(object):
 
     @classmethod
     def get_platform(cls):
-        return cls.NAMESPACE
+        return cls.PLATFORM
 
     @classmethod
     def get_info(cls):
@@ -1151,18 +1151,18 @@ class VerifierAPITestCase(test.TestCase):
 
     @mock.patch("rally.api.vmanager.VerifierManager.get_all")
     def test_list_plugins(self, mock_verifier_manager_get_all):
+        platform = "some"
         mock_verifier_manager_get_all.return_value = [FakeVerifierManager]
-        namespace = "some"
 
         self.assertEqual(
             [{"name": FakeVerifierManager.NAME,
-              "namespace": FakeVerifierManager.NAMESPACE,
+              "platform": FakeVerifierManager.PLATFORM,
               "description": FakeVerifierManager.TITLE,
               "location": "%s.%s" % (FakeVerifierManager.__module__,
                                      FakeVerifierManager.__name__)}],
-            self.verifier_inst.list_plugins(namespace=namespace))
+            self.verifier_inst.list_plugins(platform=platform))
         mock_verifier_manager_get_all.assert_called_once_with(
-            platform=namespace)
+            platform=platform)
 
     @mock.patch("rally.api.objects.Verifier.get")
     def test_get(self, mock_verifier_get):
@@ -1193,14 +1193,14 @@ class VerifierAPITestCase(test.TestCase):
 
         name = "SomeVerifier"
         vtype = "fake_verifier"
-        namespace = "tests"
+        platform = "tests"
         source = "https://example.com"
         version = "3.1415"
         system_wide = True
         extra_settings = {"verifier_specific_option": "value_for_it"}
 
         verifier_obj = mock_verifier_create.return_value
-        verifier_obj.manager.get_platform.return_value = namespace
+        verifier_obj.manager.get_platform.return_value = platform
         verifier_obj.manager._meta_get.side_effect = [source]
 
         verifier_uuid = self.verifier_inst.create(
@@ -1212,11 +1212,11 @@ class VerifierAPITestCase(test.TestCase):
         mock___verifier__get.assert_called_once_with(name)
         mock_verifier_create.assert_called_once_with(
             name=name, source=None, system_wide=system_wide, version=version,
-            vtype=vtype, namespace=None, extra_settings=extra_settings)
+            vtype=vtype, platform=None, extra_settings=extra_settings)
 
         self.assertEqual(verifier_obj.uuid, verifier_uuid)
         verifier_obj.update_properties.assert_called_once_with(
-            namespace=namespace, source=source)
+            platform=platform, source=source)
         self.assertEqual([mock.call(consts.VerifierStatus.INSTALLING),
                           mock.call(consts.VerifierStatus.INSTALLED)],
                          verifier_obj.update_status.call_args_list)
@@ -1230,7 +1230,7 @@ class VerifierAPITestCase(test.TestCase):
             mock_verifier_create):
         name = "SomeVerifier"
         vtype = "fake_verifier"
-        namespace = "tests"
+        platform = "tests"
         source = "https://example.com"
         version = "3.1415"
         system_wide = True
@@ -1238,13 +1238,13 @@ class VerifierAPITestCase(test.TestCase):
 
         self.assertRaises(exceptions.RallyException,
                           self.verifier_inst.create,
-                          name=name, vtype=vtype, namespace=namespace,
+                          name=name, vtype=vtype, platform=platform,
                           source=source, version=version,
                           system_wide=system_wide,
                           extra_settings=extra_settings)
 
         mock_verifier_manager_get.assert_called_once_with(vtype,
-                                                          platform=namespace)
+                                                          platform=platform)
         mock___verifier__get.assert_called_once_with(name)
         self.assertFalse(mock_verifier_create.called)
 
@@ -1260,7 +1260,7 @@ class VerifierAPITestCase(test.TestCase):
 
         name = "SomeVerifier"
         vtype = "fake_verifier"
-        namespace = "tests"
+        platform = "tests"
         source = "https://example.com"
         version = "3.1415"
         system_wide = True
@@ -1268,17 +1268,17 @@ class VerifierAPITestCase(test.TestCase):
 
         self.assertRaises(RuntimeError,
                           self.verifier_inst.create,
-                          name=name, vtype=vtype, namespace=namespace,
+                          name=name, vtype=vtype, platform=platform,
                           source=source, version=version,
                           system_wide=system_wide,
                           extra_settings=extra_settings)
 
-        mock_verifier_manager_get.assert_called_once_with(vtype,
-                                                          platform=namespace)
+        mock_verifier_manager_get.assert_called_once_with(
+            vtype, platform=platform)
         mock___verifier__get.assert_called_once_with(name)
         mock_verifier_create.assert_called_once_with(
             name=name, source=source, system_wide=system_wide, version=version,
-            vtype=vtype, namespace=namespace, extra_settings=extra_settings)
+            vtype=vtype, platform=platform, extra_settings=extra_settings)
 
         self.assertEqual([mock.call(consts.VerifierStatus.INSTALLING),
                           mock.call(consts.VerifierStatus.FAILED)],

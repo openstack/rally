@@ -231,9 +231,9 @@ class PluginsReferenceDirective(rst.Directive):
         if info["description"]:
             section_obj.extend(utils.parse_text(info["description"]))
 
-        if info["namespace"]:
+        if info["platform"]:
             section_obj.append(utils.paragraph(
-                "**Namespace**: %s" % info["namespace"]))
+                "**Platform**: %s" % info["platform"]))
 
         if base_name:
             ref_prefix = "%s-%s-" % (base_name, plugin_cls.get_name())

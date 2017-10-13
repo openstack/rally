@@ -42,14 +42,14 @@ class VerifyCommandsTestCase(test.TestCase):
         self.verifier_name = "My Verifier"
         self.verifier_uuid = "my-verifier-uuid"
         self.verifier_type = "OldSchoolTestTool"
-        self.verifier_namespace = "OpenStack"
+        self.verifier_platform = "OpenStack"
         self.verification_uuid = "uuuiiiiddd"
 
         self.verifier_data = {
             "uuid": self.verifier_uuid,
             "name": self.verifier_name,
             "type": self.verifier_type,
-            "namespace": self.verifier_namespace,
+            "platform": self.verifier_platform,
             "description": "The best tool in the world",
             "created_at": "2016-01-01T17:00:03",
             "updated_at": "2016-01-01T17:01:05",
@@ -126,9 +126,9 @@ class VerifyCommandsTestCase(test.TestCase):
     @mock.patch("rally.cli.commands.verify.logging.is_debug",
                 return_value=True)
     def test_list_plugins(self, mock_is_debug, mock_print_list):
-        self.verify.list_plugins(self.fake_api, namespace="some")
+        self.verify.list_plugins(self.fake_api, platform="some")
         self.fake_api.verifier.list_plugins.assert_called_once_with(
-            namespace="some")
+            platform="some")
 
     @mock.patch("rally.cli.commands.verify.fileutils.update_globals_file")
     def test_create_verifier(self, mock_update_globals_file):
@@ -136,10 +136,10 @@ class VerifyCommandsTestCase(test.TestCase):
         self.fake_api.verifier.get.return_value = self.verifier_data
 
         self.verify.create_verifier(self.fake_api, "a", vtype="b",
-                                    namespace="c", source="d", version="e",
+                                    platform="c", source="d", version="e",
                                     system_wide=True, extra={})
         self.fake_api.verifier.create.assert_called_once_with(
-            name="a", vtype="b", namespace="c", source="d", version="e",
+            name="a", vtype="b", platform="c", source="d", version="e",
             system_wide=True, extra_settings={})
 
         self.fake_api.verifier.get.assert_called_once_with(
@@ -171,7 +171,7 @@ class VerifyCommandsTestCase(test.TestCase):
     def test_list_verifiers(self, mock_print_list):
         self.fake_api.verifier.list.return_value = [self.verifier_data]
 
-        additional_fields = ["UUID", "Name", "Type", "Namespace", "Created at",
+        additional_fields = ["UUID", "Name", "Type", "Platform", "Created at",
                              "Updated at", "Status", "Version", "System-wide",
                              "Active"]
         additional_keys = ["normalize_field_names", "sortby_index",
@@ -217,7 +217,7 @@ class VerifyCommandsTestCase(test.TestCase):
             "| Name           | My Verifier                |\n"
             "| Description    | The best tool in the world |\n"
             "| Type           | OldSchoolTestTool          |\n"
-            "| Namespace      | OpenStack                  |\n"
+            "| Platform       | OpenStack                  |\n"
             "| Source         | https://example.com        |\n"
             "| Version        | master                     |\n"
             "| System-wide    | False                      |\n"
@@ -555,7 +555,7 @@ class VerifyCommandsTestCase(test.TestCase):
             "                    |\n"
             "| Verifier name       | My Verifier (UUID: my-verifier-uuid)     "
             "                    |\n"
-            "| Verifier type       | OldSchoolTestTool (namespace: OpenStack) "
+            "| Verifier type       | OldSchoolTestTool (platform: OpenStack)  "
             "                    |\n"
             "| Deployment name     | Some Deploy (UUID: some-deploy-uuid)     "
             "                    |\n"
@@ -584,53 +584,55 @@ class VerifyCommandsTestCase(test.TestCase):
             self.verify.show(self.fake_api, self.verifier_uuid, detailed=False)
         self.assertEqual(2, len(print_dict_calls))
 
-        self.assertEqual("+---------------------------------------------------"
-                         "--------------------------------------+\n"
-                         "|                                      Verification "
-                         "                                      |\n"
-                         "+---------------------+-----------------------------"
-                         "--------------------------------------+\n"
-                         "| UUID                | uuuiiiiddd                  "
-                         "                                      |\n"
-                         "| Status              | success                     "
-                         "                                      |\n"
-                         "| Started at          | 2016-01-01 17:00:03         "
-                         "                                      |\n"
-                         "| Finished at         | 2016-01-01 17:01:05         "
-                         "                                      |\n"
-                         "| Duration            | 0:01:02                     "
-                         "                                      |\n"
-                         "| Run arguments       | concurrency: 3              "
-                         "                                      |\n"
-                         "|                     | load_list: (value is too lon"
-                         "g, use 'detailed' flag to display it) |\n"
-                         "|                     | skip_list: (value is too lon"
-                         "g, use 'detailed' flag to display it) |\n"
-                         "| Tags                | bar, foo                    "
-                         "                                      |\n"
-                         "| Verifier name       | My Verifier (UUID: my-verifi"
-                         "er-uuid)                              |\n"
-                         "| Verifier type       | OldSchoolTestTool (namespace"
-                         ": OpenStack)                          |\n"
-                         "| Deployment name     | Some Deploy (UUID: some-depl"
-                         "oy-uuid)                              |\n"
-                         "| Tests count         | 2                           "
-                         "                                      |\n"
-                         "| Tests duration, sec | 4                           "
-                         "                                      |\n"
-                         "| Success             | 1                           "
-                         "                                      |\n"
-                         "| Skipped             | 0                           "
-                         "                                      |\n"
-                         "| Expected failures   | 0                           "
-                         "                                      |\n"
-                         "| Unexpected success  | 0                           "
-                         "                                      |\n"
-                         "| Failures            | 1                           "
-                         "                                      |\n"
-                         "+---------------------+-----------------------------"
-                         "--------------------------------------+\n",
-                         print_dict_calls[1].getvalue())
+        self.assertEqual(
+            print_dict_calls[1].getvalue(),
+            "+---------------------------------------------------"
+            "--------------------------------------+\n"
+            "|                                      Verification "
+            "                                      |\n"
+            "+---------------------+-----------------------------"
+            "--------------------------------------+\n"
+            "| UUID                | uuuiiiiddd                  "
+            "                                      |\n"
+            "| Status              | success                     "
+            "                                      |\n"
+            "| Started at          | 2016-01-01 17:00:03         "
+            "                                      |\n"
+            "| Finished at         | 2016-01-01 17:01:05         "
+            "                                      |\n"
+            "| Duration            | 0:01:02                     "
+            "                                      |\n"
+            "| Run arguments       | concurrency: 3              "
+            "                                      |\n"
+            "|                     | load_list: (value is too lon"
+            "g, use 'detailed' flag to display it) |\n"
+            "|                     | skip_list: (value is too lon"
+            "g, use 'detailed' flag to display it) |\n"
+            "| Tags                | bar, foo                    "
+            "                                      |\n"
+            "| Verifier name       | My Verifier (UUID: my-verifi"
+            "er-uuid)                              |\n"
+            "| Verifier type       | OldSchoolTestTool (platform:"
+            " OpenStack)                           |\n"
+            "| Deployment name     | Some Deploy (UUID: some-depl"
+            "oy-uuid)                              |\n"
+            "| Tests count         | 2                           "
+            "                                      |\n"
+            "| Tests duration, sec | 4                           "
+            "                                      |\n"
+            "| Success             | 1                           "
+            "                                      |\n"
+            "| Skipped             | 0                           "
+            "                                      |\n"
+            "| Expected failures   | 0                           "
+            "                                      |\n"
+            "| Unexpected success  | 0                           "
+            "                                      |\n"
+            "| Failures            | 1                           "
+            "                                      |\n"
+            "+---------------------+-----------------------------"
+            "--------------------------------------+\n",
+        )
 
         self.fake_api.verification.get.assert_called_with(
             verification_uuid=self.verifier_uuid)

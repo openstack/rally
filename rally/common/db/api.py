@@ -362,13 +362,13 @@ def resource_delete(id):
     return get_impl().resource_delete(id)
 
 
-def verifier_create(name, vtype, namespace, source, version, system_wide,
+def verifier_create(name, vtype, platform, source, version, system_wide,
                     extra_settings=None):
     """Create a verifier record.
 
     :param name: verifier name
     :param vtype: verifier plugin name
-    :param namespace: verifier plugin namespace
+    :param platform: verifier plugin platform
     :param source: path or URL to a verifier repo
     :param version: branch, tag or commit ID of a verifier repo
     :param system_wide: whether or not to use the system-wide environment
@@ -376,7 +376,7 @@ def verifier_create(name, vtype, namespace, source, version, system_wide,
     :returns: a dict with verifier data
     """
     return get_impl().verifier_create(name=name, vtype=vtype,
-                                      namespace=namespace, source=source,
+                                      platform=platform, source=source,
                                       version=version, system_wide=system_wide,
                                       extra_settings=extra_settings)
 

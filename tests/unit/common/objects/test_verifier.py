@@ -48,7 +48,7 @@ class VerifierTestCase(test.TestCase):
     def test_create(self, mock_verifier_create):
         objects.Verifier.create("a", "b", "c", "d", "e", False)
         mock_verifier_create.assert_called_once_with(
-            name="a", vtype="b", namespace="c", source="d", version="e",
+            name="a", vtype="b", platform="c", source="d", version="e",
             system_wide=False, extra_settings=None)
 
     @mock.patch("rally.common.objects.verifier.db.verifier_get")
@@ -92,7 +92,7 @@ class VerifierTestCase(test.TestCase):
     @mock.patch("rally.common.objects.verifier.manager")
     def test_manager_property(self, mock_manager):
         self.db_obj["type"] = "some"
-        self.db_obj["namespace"] = "namespace"
+        self.db_obj["platform"] = "platform"
         v = objects.Verifier(self.db_obj)
         self.assertIsNone(v._manager)
         self.assertFalse(mock_manager.VerifierManager.get.called)
@@ -101,4 +101,4 @@ class VerifierTestCase(test.TestCase):
             mock_manager.VerifierManager.get.return_value.return_value,
             v.manager)
         mock_manager.VerifierManager.get.assert_called_once_with(
-            self.db_obj["type"], self.db_obj["namespace"])
+            self.db_obj["type"], self.db_obj["platform"])

@@ -42,12 +42,12 @@ class ArgsValidator(validation.Validator):
     def validate(self, context, config, plugin_cls, plugin_cfg):
         scenario = plugin_cls
         name = scenario.get_name()
-        namespace = scenario.get_platform()
+        platform = scenario.get_platform()
         scenario = scenario().run
         args, _varargs, varkwargs, defaults = inspect.getargspec(scenario)
 
-        hint_msg = (" Use `rally plugin show --name %s --namespace %s` "
-                    "to display scenario description." % (name, namespace))
+        hint_msg = (" Use `rally plugin show --name %s --platform %s` "
+                    "to display scenario description." % (name, platform))
 
         # scenario always accepts an instance of scenario cls as a first arg
         missed_args = args[1:]

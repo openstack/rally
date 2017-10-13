@@ -21,15 +21,15 @@ import six
 from rally.common.plugin import plugin
 
 
-def configure(namespace):
+def configure(platform):
     def wrapper(cls):
-        cls = plugin.configure(name="credential", platform=namespace)(cls)
+        cls = plugin.configure(name="credential", platform=platform)(cls)
         return cls
     return wrapper
 
 
-def get(namespace):
-    return Credential.get(name="credential", platform=namespace)
+def get(platform):
+    return Credential.get(name="credential", platform=platform)
 
 
 @plugin.base()
@@ -61,17 +61,17 @@ class Credential(plugin.Plugin):
         return {}
 
 
-def configure_builder(namespace):
+def configure_builder(platform):
     def wrapper(cls):
         cls = plugin.configure(name="credential_builder",
-                               platform=namespace)(cls)
+                               platform=platform)(cls)
         return cls
     return wrapper
 
 
-def get_builder(namespace):
+def get_builder(platform):
     return CredentialBuilder.get(name="credential_builder",
-                                 platform=namespace)
+                                 platform=platform)
 
 
 @plugin.base()
