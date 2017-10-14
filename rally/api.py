@@ -606,17 +606,21 @@ class _Task(APIGroup):
 
         return task_inst.to_dict()
 
-    def export(self, tasks_uuids, output_type, output_dest=None):
+    def export(self, tasks, output_type, output_dest=None):
         """Generate a report for a task or a few tasks.
 
-        :param tasks_uuids: List of tasks UUIDs
+        :param tasks: List of tasks UUIDs or tasks results
         :param output_type: Plugin name of task exporter
         :param output_dest: Destination for task report
         """
 
         tasks_results = []
-        for task_uuid in tasks_uuids:
-            tasks_results.append(self.get(task_id=task_uuid, detailed=True))
+        tasks = tasks or []
+        for task in tasks:
+            if isinstance(task, dict):
+                tasks_results.append(task)
+            else:
+                tasks_results.append(self.get(task_id=task, detailed=True))
 
         errors = texporter.TaskExporter.validate(
             output_type, context={}, config={},
@@ -630,7 +634,8 @@ class _Task(APIGroup):
         reporter_cls = texporter.TaskExporter.get(output_type)
 
         LOG.info("Building '%s' report for the following task(s): '%s'."
-                 % (output_type, "', '".join(tasks_uuids)))
+                 % (output_type,
+                    "', '".join([task["uuid"] for task in tasks_results])))
         result = texporter.TaskExporter.make(reporter_cls,
                                              tasks_results,
                                              output_dest,

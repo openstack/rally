@@ -31,7 +31,6 @@ import six
 from rally.cli import cliutils
 from rally.cli import envutils
 from rally.common import fileutils
-from rally.common.io import junit
 from rally.common import logging
 from rally.common import utils as rutils
 from rally.common import version
@@ -851,95 +850,17 @@ class TaskCommands(object):
                               release="0.10.0",
                               alternative=("rally task export "
                                            "--type junit-xml"))
-    @cliutils.args("--uuid", dest="task_id", nargs="+", type=str,
-                   help="UUIDs of tasks")
-    @envutils.with_default_task_id
+    @cliutils.args("--uuid", dest="tasks", nargs="+", type=str,
+                   help="UUIDs of tasks or json reports of tasks")
+    @envutils.default_from_global("tasks", envutils.ENV_TASK, "uuid")
     @cliutils.suppress_warnings
-    def report(self, api, task_id=None, out=None,
+    def report(self, api, tasks=None, out=None,
                open_it=False, out_format="html"):
         """Generate a report for the specified task(s)."""
-
-        if [task for task in task_id if os.path.exists(
-                os.path.expanduser(task))]:
-            self._old_report(api, tasks=task_id, out=out,
-                             open_it=open_it, out_format=out_format)
-        else:
-            self.export(api, task_id=task_id,
-                        output_type=out_format,
-                        output_dest=out,
-                        open_it=open_it)
-
-    def _old_report(self, api, tasks=None, out=None, open_it=False,
-                    out_format="html"):
-        """Generate report file for specified task.
-
-        :param tasks: list, UUIDs of tasks or pathes files with tasks results
-        :param out: str, output file name
-        :param open_it: bool, whether to open output file in web browser
-        :param out_format: output format (junit, html or html_static)
-        """
-
-        tasks = isinstance(tasks, list) and tasks or [tasks]
-
-        results = []
-        message = []
-        processed_names = {}
-        for task_file_or_uuid in tasks:
-            if os.path.exists(os.path.expanduser(task_file_or_uuid)):
-                results.extend(
-                    self._load_task_results_file(api, task_file_or_uuid)
-                )
-            elif uuidutils.is_uuid_like(task_file_or_uuid):
-                results.append(api.task.get(task_id=task_file_or_uuid,
-                                            detailed=True))
-            else:
-                print("ERROR: Invalid UUID or file name passed: %s"
-                      % task_file_or_uuid,
-                      file=sys.stderr)
-                return 1
-
-        for task in results:
-            for workload in itertools.chain(
-                    *[s["workloads"] for s in task["subtasks"]]):
-                if workload["name"] in processed_names:
-                    processed_names[workload["name"]] += 1
-                    workload["position"] = processed_names[workload["name"]]
-                else:
-                    processed_names[workload["name"]] = 0
-
-        if out_format.startswith("html"):
-            result = plot.plot(results,
-                               include_libs=(out_format == "html-static"))
-        elif out_format == "junit-xml":
-            test_suite = junit.JUnit("Rally test suite")
-            for task in results:
-                for workload in itertools.chain(
-                        *[s["workloads"] for s in task["subtasks"]]):
-                    w_sla = workload["sla_results"].get("sla", [])
-                    if w_sla:
-                        message = ",".join([sla["detail"] for sla in w_sla
-                                            if not sla["success"]])
-                    if message:
-                        outcome = junit.JUnit.FAILURE
-                    else:
-                        outcome = junit.JUnit.SUCCESS
-                    test_suite.add_test(workload["name"],
-                                        workload["full_duration"], outcome,
-                                        message)
-            result = test_suite.to_xml()
-        else:
-            print("Invalid output format: %s" % out_format, file=sys.stderr)
-            return 1
-
-        if out:
-            output_file = os.path.expanduser(out)
-
-            with open(output_file, "w+") as f:
-                f.write(result)
-            if open_it:
-                webbrowser.open_new_tab("file://" + os.path.realpath(out))
-        else:
-            print(result)
+        self.export(api, tasks=tasks,
+                    output_type=out_format,
+                    output_dest=out,
+                    open_it=open_it)
 
     @cliutils.args("--force", action="store_true", help="force delete")
     @cliutils.args("--uuid", type=str, dest="task_id", nargs="*",
@@ -1016,8 +937,8 @@ class TaskCommands(object):
         api.task.get(task_id=task_id)
         fileutils.update_globals_file("RALLY_TASK", task_id)
 
-    @cliutils.args("--uuid", dest="task_id", nargs="+", type=str,
-                   help="UUIDs of tasks")
+    @cliutils.args("--uuid", dest="tasks", nargs="+", type=str,
+                   help="UUIDs of tasks or json reports of tasks")
     @cliutils.args("--type", dest="output_type", type=str,
                    required=True,
                    help="Report type. Out-of-the-box "
@@ -1032,14 +953,23 @@ class TaskCommands(object):
                         "types) to save the report to or a connection string."
                         " It depends on the report type."
                    )
-    @envutils.with_default_task_id
+    @envutils.default_from_global("tasks", envutils.ENV_TASK, "uuid")
     @plugins.ensure_plugins_are_loaded
-    def export(self, api, task_id=None, output_type=None, output_dest=None,
+    def export(self, api, tasks=None, output_type=None, output_dest=None,
                open_it=False):
         """Export task results to the custom task's exporting system."""
+        tasks = isinstance(tasks, list) and tasks or [tasks]
 
-        task_id = isinstance(task_id, list) and task_id or [task_id]
-        report = api.task.export(tasks_uuids=task_id,
+        exported_tasks = []
+        for task_file_or_uuid in tasks:
+            if os.path.exists(os.path.expanduser(task_file_or_uuid)):
+                exported_tasks.extend(
+                    self._load_task_results_file(api, task_file_or_uuid)
+                )
+            else:
+                exported_tasks.append(task_file_or_uuid)
+
+        report = api.task.export(tasks=exported_tasks,
                                  output_type=output_type,
                                  output_dest=output_dest)
         if "files" in report:

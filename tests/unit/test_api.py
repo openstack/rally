@@ -456,8 +456,10 @@ class TaskAPITestCase(test.TestCase):
     @mock.patch("rally.api.texporter.TaskExporter")
     @mock.patch("rally.api.objects.Task.get")
     def test_export(self, mock_task_get, mock_task_exporter):
-        task_id = ["uuid-1", "uuid-2"]
+        tasks_id = ["uuid-1", "uuid-2"]
         tasks = [mock.Mock(), mock.Mock()]
+        tasks[0].to_dict.return_value = {"uuid": "uuid-1"}
+        tasks[1].to_dict.return_value = {"uuid": "uuid-2"}
         mock_task_get.side_effect = tasks
         output_type = mock.Mock()
         output_dest = mock.Mock()
@@ -467,7 +469,7 @@ class TaskAPITestCase(test.TestCase):
 
         self.assertEqual(mock_task_exporter.make.return_value,
                          self.task_inst.export(
-                             tasks_uuids=task_id,
+                             tasks=tasks_id + [{"uuid": "uuid-3"}],
                              output_type=output_type,
                              output_dest=output_dest))
         mock_task_exporter.get.assert_called_once_with(output_type)
@@ -478,9 +480,10 @@ class TaskAPITestCase(test.TestCase):
             vtype="syntax")
 
         mock_task_exporter.make.assert_called_once_with(
-            reporter, [t.to_dict.return_value for t in tasks],
+            reporter,
+            [t.to_dict.return_value for t in tasks] + [{"uuid": "uuid-3"}],
             output_dest, api=self.task_inst.api)
-        self.assertEqual([mock.call(u, detailed=True) for u in task_id],
+        self.assertEqual([mock.call(u, detailed=True) for u in tasks_id],
                          mock_task_get.call_args_list)
 
     @mock.patch("rally.api.objects.Task")
