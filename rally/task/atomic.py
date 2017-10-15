@@ -70,6 +70,8 @@ class ActionTimer(utils.Timer):
     def __exit__(self, type_, value, tb):
         super(ActionTimer, self).__exit__(type_, value, tb)
         self.atomic_action["finished_at"] = self.finish
+        if type_:
+            self.atomic_action["failed"] = True
 
 
 def action_timer(name):
@@ -147,6 +149,8 @@ def merge_atomic_actions(atomic_actions, root=None, depth=0,
         duration = action["finished_at"] - action["started_at"]
         p_atomics[action["name"]]["duration"] += duration
         p_atomics[action["name"]]["count"] += 1
+        if action.get("failed"):
+            p_atomics[action["name"]]["failed"] = True
         if action["children"] and depth < depth_of_processing:
             merge_atomic_actions(
                 action["children"],

@@ -65,7 +65,7 @@ class AtomicActionTestCase(test.TestCase):
         except TestException:
             pass
 
-        self.assertEqual([{"name": "test", "children": [],
+        self.assertEqual([{"name": "test", "children": [], "failed": True,
                            "started_at": 1, "finished_at": 3}],
                          inst.atomic_actions())
 
@@ -98,7 +98,7 @@ class AtomicActionTestCase(test.TestCase):
 
         inst = TestTimer()
         self.assertRaises(TestException, inst.some_func)
-        self.assertEqual([{"name": "test", "children": [],
+        self.assertEqual([{"name": "test", "children": [], "failed": True,
                            "started_at": 1, "finished_at": 3}],
                          inst.atomic_actions())
 
@@ -142,13 +142,19 @@ class AtomicActionTestCase(test.TestCase):
         expected = [("foo", {"duration": 2, "count": 1,
                              "children": collections.OrderedDict()}),
                     ("bar", {"duration": 5, "count": 2,
-                             "children": collections.OrderedDict()})]
+                             "children": collections.OrderedDict()}),
+                    ("do_something_bad", {
+                        "duration": 1, "count": 1, "failed": True,
+                        "children": collections.OrderedDict()})]
         result = atomic.merge_atomic_actions(
             [{"name": "foo", "started_at": 4, "finished_at": 6,
               "children": []},
              {"name": "bar", "started_at": 6, "finished_at": 8,
               "children": []},
              {"name": "bar", "started_at": 8, "finished_at": 11,
-              "children": []}])
+              "children": []},
+             {"name": "do_something_bad", "started_at": 11, "finished_at": 12,
+              "children": [], "failed": True}
+             ])
         result = list(result.items())
         self.assertEqual(expected, result)

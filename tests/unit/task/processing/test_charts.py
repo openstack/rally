@@ -573,6 +573,8 @@ def generate_iteration(duration, error, *actions):
                        "finished_at": finished_at,
                        "children": []}
                       for name, finished_at in actions]
+    if error:
+        atomic_actions[-1]["failed"] = True
     return {
         "atomic_actions": atomic_actions,
         "duration": duration,
@@ -699,12 +701,14 @@ class MainStatsTableTestCase(test.TestCase):
                         {"name": "foo",
                          "started_at": 0,
                          "finished_at": 7.3,
+                         "failed": True,
                          "children": [
                              {"name": "bar",
                               "started_at": 0,
                               "finished_at": 2.3,
                               "children": []},
                              {"name": "bar",
+                              "failed": True,
                               "started_at": 0,
                               "finished_at": 7.3,
                               "children": []}]}
@@ -722,6 +726,29 @@ class MainStatsTableTestCase(test.TestCase):
                  17.0, 18.5, 19.7, 19.85, 20.0, 18.5, "50.0%", 2]],
             "expected_styles": {1: "oblique", 2: "rich",
                                 3: "oblique", 4: "oblique"}
+        },
+        {
+            "info": {"total_iteration_count": 1},
+            "data": [
+                {
+                    "atomic_actions": [
+                        {"name": "foo",
+                         "started_at": 0,
+                         "finished_at": 7.3,
+                         "children": []}
+                    ],
+                    "duration": 7.3,
+                    "idle_duration": 20,
+                    "error": True}
+            ],
+            "expected_rows": [
+                ["foo", 7.3, 7.3, 7.3, 7.3, 7.3, 7.3, "100.0%", 1],
+                ["<no-name-action>", 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, "0.0%", 1],
+                ["total", 27.3, 27.3, 27.3, 27.3, 27.3, 27.3, "0.0%", 1],
+                [" -> duration", 7.3, 7.3, 7.3, 7.3, 7.3, 7.3, "0.0%", 1],
+                [" -> idle_duration", 20.0, 20.0, 20.0, 20.0, 20.0, 20.0,
+                 "0.0%", 1]],
+            "expected_styles": {2: "rich", 3: "oblique", 4: "oblique"}
         }
     )
     @ddt.unpack

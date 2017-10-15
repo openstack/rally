@@ -426,60 +426,44 @@ class MainStatsTable(Table):
             # count
             stats[-1][0].add()
             # success
-            stats[-2][0].add(0 if data.get("error", False) else 1)
+            stats[-2][0].add(0 if data.get("failed", False) else 1)
             for idx in range(6):
                 stats[idx][0].add(data["duration"])
 
             if data["children"]:
                 self._add_data(data["children"], root=p_data[name]["children"])
 
-    def _mark_the_last_as_an_error(self, atomic_actions):
-        """Mark the last atomic action as failed."""
-        if atomic_actions:
-            # NOTE(andreykurilin): the easiest way to identify the last
-            #   atomic is to find the last added key to the OrderedDict. The
-            #   most perfect way is to use reversed, since class OrderedDict
-            #   uses a doubly linked list for the dictionary items and
-            #   implements __reversed__(), what is why such implementation
-            #   gives you O(1) access to the desired element.
-            the_last = atomic_actions[next(reversed(atomic_actions))]
-            the_last["error"] = True
-            if the_last["children"]:
-                # NOTE(andreykurilin): not all of children of the last
-                #   top-level atomic should be marked as failed, only the last
-                #   one, so we need recursively call
-                #   `_mark_the_last_as_an_error` to find all last actions.
-                self._mark_the_last_as_an_error(the_last["children"])
-
     def add_iteration(self, iteration):
         """Add data of a single iteration."""
         data = atomic.merge_atomic_actions(iteration["atomic_actions"])
-        if iteration["error"]:
-            # NOTE(andreykurilin): if an iteration fails, it means that the
-            #   last atomic action produced an error.
-            # NOTE(andreykurilin): It worse to mention that there is a
-            #   uncovered case when the failed item is not wrapped by atomic
-            #   timer, so possibly the last item in atomic actions list can be
-            #   successful. This thing should be fixed in AtomicTimer.
-            self._mark_the_last_as_an_error(data)
+        # NOTE(andreykurilin): the easiest way to identify the last
+        #   atomic is to find the last added key to the OrderedDict. The
+        #   most perfect way is to use reversed, since class OrderedDict
+        #   uses a doubly linked list for the dictionary items and
+        #   implements __reversed__(), what is why such implementation
+        #   gives you O(1) access to the desired element.
+        if data:
+            the_last = data[next(reversed(data))]
+            if iteration["error"] and not the_last.get("failed", False):
+                # un-wrapped action failed
+                data["<no-name-action>"] = {"duration": 0, "count": 1,
+                                            "failed": True, "children": {}}
         total_duration = iteration["duration"] + iteration["idle_duration"]
         data["total"] = {"duration": total_duration,
                          "count": 1,
-                         "error": iteration["error"],
+                         "failed": bool(iteration["error"]),
                          "children": collections.OrderedDict(
                              [("duration", {
                                  "duration": iteration["duration"],
                                  "count": 1,
-                                 "error": iteration["error"],
+                                 "failed": bool(iteration["error"]),
                                  "children": []}),
                               ("idle_duration", {
                                   "duration": iteration["idle_duration"],
                                   "count": 1,
-                                  "error": iteration["error"],
+                                  "failed": bool(iteration["error"]),
                                   "children": []})
                               ])}
-        if iteration["error"]:
-            data["total"]["error"] = True
 
         self._add_data(data)
 
