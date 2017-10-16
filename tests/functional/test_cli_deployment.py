@@ -67,7 +67,7 @@ class DeploymentTestCase(unittest.TestCase):
 
     def test_check_success(self):
         rally = utils.Rally()
-        self.assertTrue(rally("deployment check"))
+        rally("deployment check")
 
     def test_check_fail(self):
         rally = utils.Rally()

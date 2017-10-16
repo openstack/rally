@@ -19,12 +19,17 @@ import traceback
 import unittest
 
 import rally as rally_m
-from tests.functional import utils
+from tests.check_samples import utils
 
 
 class TestPreCreatedTasks(unittest.TestCase):
 
+    def test_check_success(self):
+        rally = utils.Rally()
+        rally("deployment check")
+
     def test_task_samples_is_valid(self):
+
         rally = utils.Rally()
         full_path = os.path.join(
             os.path.dirname(rally_m.__file__), os.pardir, "tasks", "openstack")

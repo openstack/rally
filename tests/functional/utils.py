@@ -26,8 +26,6 @@ import tempfile
 from oslo_utils import encodeutils
 from six.moves import configparser
 
-DEPLOYMENT_FILE = "/tmp/rally_functests_main_deployment.json"
-
 
 class RallyCliError(Exception):
 
@@ -72,12 +70,9 @@ class Rally(object):
         output = rally("deployment list")
 
     """
+    _DEPLOYMENT_CREATE_ARGS = ""
 
-    def __init__(self, fake=False, force_new_db=False):
-        if not os.path.exists(DEPLOYMENT_FILE):
-            subprocess.call(["rally", "--log-file", "/dev/null",
-                             "deployment", "config"],
-                            stdout=open(DEPLOYMENT_FILE, "w"))
+    def __init__(self, force_new_db=False):
 
         # NOTE(sskripnick): we should change home dir to avoid races
         # and do not touch any user files in ~/.rally
@@ -119,7 +114,7 @@ class Rally(object):
         self.reports_root = os.environ.get("REPORTS_ROOT",
                                            "rally-cli-output-files")
         self._created_files = []
-        self("deployment create --file %s --name MAIN" % DEPLOYMENT_FILE,
+        self("deployment create --name MAIN%s" % self._DEPLOYMENT_CREATE_ARGS,
              write_report=False)
 
     def __del__(self):
