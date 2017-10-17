@@ -1,9 +1,0 @@
----
-  Dummy.dummy:
-    -
-      args:
-        sleep: 2
-      runner:
-        type: "random_times"
-        min_times: 10
-        max_times: 20
