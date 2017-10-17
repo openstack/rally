@@ -1,0 +1,163 @@
+{%- set floating_network = floating_network|default("public") %}
+{%- set image_name = image_name|default("^(cirros.*-disk|TestVM)$") %}
+{%- set flavor_name = flavor_name|default("m1.tiny") %}
+
+{%- set availability_zone = availability_zone|default("default") %}
+
+{%- set enable_auth = enable_auth|default(true) %}
+{%- set enable_nova = enable_nova|default(true) %}
+{%- set enable_glance = enable_glance|default(true) %}
+{%- set enable_cinder = enable_cinder|default(true) %}
+{%- set enable_neutron = enable_neutron|default(true) %}
+
+{%- set load = load|default(1) %}
+
+{%- set enable_admin = enable_admin|default(false) %}
+
+---
+  version: 2
+  title: "Collect Key OpenStack Metrics"
+  description: |
+    Use this task to collect performance metrics for key OpenStack projects
+    You can use arguments to specify image, flavor, load and what services
+    should be tested
+  subtasks:
+    {% if enable_auth %}
+    -
+      title: "Test performance of authentication"
+      scenario:
+        Authenticate.keystone: {}
+      runner:
+        constant:
+          times: {{ load }}
+          concurrency: {{ load }}
+    {% endif %}
+    {% if enable_nova %}
+    -
+      title: "Test performance of key VM operations"
+      scenario:
+        NovaServers.boot_and_bounce_server:
+          flavor:
+            name: "{{flavor_name}}"
+          image:
+            name: "{{image_name}}"
+          availability_zone: "{{availability_zone}}"
+          force_delete: false
+          actions:
+            -
+              hard_reboot: 1
+            -
+              soft_reboot: 1
+            -
+              stop_start: 1
+            -
+              rescue_unrescue: 1
+      runner:
+        constant:
+          times: {{ load }}
+          concurrency: {{ load }}
+    -
+      title: "Key pair performance"
+      workloads:
+        -
+          scenario:
+            NovaKeypair.create_and_delete_keypair: {}
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: {{ load }}
+        -
+          scenario:
+            NovaKeypair.create_and_list_keypairs: {}
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: {{ load }}
+    -
+      title: "List flavors and servers"
+      workloads:
+        -
+          scenario:
+            NovaServers.list_servers:
+              detailed: True
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: {{ load }}
+        -
+          scenario:
+            NovaFlavors.list_flavors:
+              detailed: True
+          runner:
+            constant:
+              times: {{ load }}
+              concurrency: {{ load }}
+    {% endif %}
+
+    {% if enable_glance %}
+    -
+      title: "Glance Image List"
+      scenario:
+        GlanceImages.list_images:
+          detailed: True
+      runner:
+        constant:
+          times: {{ load }}
+          concurrency: {{ load }}
+    {% endif %}
+    {% if enable_neutron %}
+    -
+      title: "Test Floating Ips"
+      scenario:
+        NeutronNetworks.create_and_delete_floating_ips:
+          floating_network: {{ floating_network }}
+          floating_ip_args: {}
+      runner:
+        constant:
+          times: {{ load }}
+          concurrency: {{ load }}
+    -
+      title: "Test Security Groups"
+      scenario:
+        NeutronSecurityGroup.create_and_delete_security_group_rule:
+          security_group_args: {}
+          security_group_rule_args: {}
+      runner:
+        constant:
+          times: {{ load }}
+          concurrency: {{ load }}
+    {% if enable_admin %}
+    -
+      title: "Test performance networks, subnetworks, routers and interfaces"
+      scenario:
+        NeutronNetworks.create_and_delete_routers:
+          network_create_args: {}
+          subnet_create_args: {}
+          subnet_cidr_start: "1.1.0.0/30"
+          subnets_per_network: 1
+          router_create_args: {}
+      runner:
+        constant:
+          times: {{ load }}
+          concurrency: {{ load }}
+      contexts:
+        network: {}
+    {% endif %}
+    {% endif %}
+    {% if enable_cinder %}
+    -
+      title: "Cinder volumes create, delete, attach and detach"
+      scenario:
+        CinderVolumes.create_and_attach_volume:
+          size: 1
+          image:
+            name: {{ image_name }}
+          flavor:
+            name: {{ flavor_name }}
+          create_vm_params:
+            availability_zone: "{{ availability_zone }}"
+      runner:
+        constant:
+          times: {{ load }}
+          concurrency: {{ load }}
+    {% endif %}
