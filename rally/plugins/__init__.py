@@ -27,6 +27,10 @@ def load():
     global PLUGINS_LOADED
 
     if not PLUGINS_LOADED:
+        from rally.common import opts
+
+        opts.register()
+
         discover.import_modules_from_package("rally.deployment.engines")
         discover.import_modules_from_package("rally.deployment.serverprovider")
         discover.import_modules_from_package("rally.plugins.common")
