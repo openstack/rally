@@ -24,7 +24,9 @@ import six
 from rally.common import objects
 from rally.common.plugin import plugin
 from rally.common import version
+from rally import exceptions
 from rally.task.processing import charts
+from rally.task import scenario
 from rally.ui import utils as ui_utils
 
 
@@ -245,7 +247,7 @@ def trends(tasks):
     for task in tasks:
         for workload in itertools.chain(
                 *[s["workloads"] for s in task["subtasks"]]):
-            trends.add_result(workload)
+            trends.add_result(task["uuid"], workload)
     template = ui_utils.get_template("task/trends.html")
     return template.render(version=version.version_string(),
                            data=json.dumps(trends.get_data()))
@@ -280,15 +282,30 @@ class Trends(object):
     def _make_hash(self, obj):
         return hashlib.md5(self._to_str(obj).encode("utf8")).hexdigest()
 
-    def add_result(self, workload):
+    def add_result(self, task_uuid, workload):
         workload_cfg = objects.Workload.to_task(workload)
+        # NOTE(andreykurilin): workload_cfg is a complite task with one only
+        #   one workload. Task format v2 includes such fields like task
+        #   description (it contains UUID of an original task), workload
+        #   description. These fields do not affect the workload itself, but
+        #   makes workload_cfg too unique. We need to crop these fields to find
+        #   workloads with equal configs.
+        del workload_cfg["description"]
+        w_description = workload_cfg["subtasks"][0].pop("description")
         key = self._make_hash(workload_cfg)
         if key not in self._data:
             self._data[key] = {
                 "actions": {},
                 "sla_failures": 0,
                 "name": workload["name"],
-                "config": json.dumps(workload_cfg, indent=2)}
+                "tasks": [],
+                "description": w_description,
+                "config": workload_cfg}
+
+        self._data[key]["tasks"].append(task_uuid)
+        if (self._data[key]["description"] and
+                self._data[key]["description"] != w_description):
+            self._data[key]["description"] = None
 
         self._data[key]["sla_failures"] += not workload["pass_sla"]
 
@@ -297,38 +314,52 @@ class Trends(object):
 
         for action in itertools.chain(duration_stats["atomics"],
                                       [duration_stats["total"]]):
+            action_name = action["display_name"]
             # NOTE(amaretskiy): some atomic actions can be missed due to
             #   failures. We can ignore that because we use NVD3 lineChart()
             #   for displaying trends, which is safe for missed points
-            if action["name"] not in self._data[key]["actions"]:
-                self._data[key]["actions"][action["name"]] = {
+            if action_name not in self._data[key]["actions"]:
+                self._data[key]["actions"][action_name] = {
                     "durations": {"min": [], "median": [], "90%ile": [],
                                   "95%ile": [], "max": [], "avg": []},
                     "success": []}
-
             try:
-                success = float(action["success"].rstrip("%"))
+                success = float(action["data"]["success"].rstrip("%"))
             except ValueError:
                 # Got "n/a" for some reason
                 success = 0
 
-            self._data[key]["actions"][action["name"]]["success"].append(
+            self._data[key]["actions"][action_name]["success"].append(
                 (ts, success))
 
             for tgt in ("min", "median", "90%ile", "95%ile", "max", "avg"):
-                d = self._data[key]["actions"][action["name"]]["durations"]
-                d[tgt].append((ts, action[tgt]))
+                d = self._data[key]["actions"][action_name]["durations"]
+                d[tgt].append((ts, action["data"][tgt]))
 
     def get_data(self):
         trends = []
 
         for wload in self._data.values():
+            workload_cfg = wload["config"]
+            # TODO(andreykurilin): The description can be too long and
+            #   unfriendly while displaying. Move displaying tasks UUIDs
+            #   under html report control.
+            workload_cfg["description"] = ("Task(s) with the workload: %s" %
+                                           ", ".join(wload["tasks"]))
+            if not wload["description"]:
+                try:
+                    wload["description"] = scenario.Scenario.get(
+                        wload["name"]).get_info()["title"]
+                except (exceptions.PluginNotFound,
+                        exceptions.MultiplePluginsFound):
+                    wload["description"] = ""
+            workload_cfg["subtasks"][0]["description"] = wload["description"]
             trend = {"stat": {},
                      "name": wload["name"],
                      "cls": wload["name"].split(".")[0],
                      "met": wload["name"].split(".")[1],
                      "sla_failures": wload["sla_failures"],
-                     "config": wload["config"],
+                     "config": json.dumps(workload_cfg, indent=2),
                      "actions": []}
 
             for action, data in wload["actions"].items():

@@ -370,7 +370,8 @@ class PlotTestCase(test.TestCase):
     @mock.patch("rally.common.version.version_string", return_value="42.0")
     def test_trends(self, mock_version_string, mock_get_template, mock_trends,
                     mock_task):
-        task_dict = {"subtasks": [{"workloads": ["foo", "bar"]}]}
+        task_dict = {"uuid": "task--uu--iiii-dd",
+                     "subtasks": [{"workloads": ["foo", "bar"]}]}
 
         trends = mock.Mock()
         trends.get_data.return_value = ["foo", "bar"]
@@ -383,8 +384,8 @@ class PlotTestCase(test.TestCase):
 
         self.assertEqual("trends html", result)
         self.assertEqual(
-            [mock.call("foo"),
-             mock.call("bar")],
+            [mock.call("task--uu--iiii-dd", "foo"),
+             mock.call("task--uu--iiii-dd", "bar")],
             trends.add_result.mock_calls)
         mock_get_template.assert_called_once_with("task/trends.html")
         template.render.assert_called_once_with(version="42.0",
@@ -439,32 +440,42 @@ class TrendsTestCase(test.TestCase):
             atomic = {"a": "n/a", "b": "n/a"}
             stats = {
                 "atomics": [
-                    {"name": "a", "min": "n/a", "median": "n/a",
-                     "90%ile": "n/a", "95%ile": "n/a", "max": "n/a",
-                     "avg": "n/a", "success": "n/a", "count": 4},
-                    {"name": "b", "min": "n/a", "median": "n/a",
-                     "90%ile": "n/a", "95%ile": "n/a", "max": "n/a",
-                     "avg": "n/a", "success": "n/a", "count": 4}
+                    {"name": "a", "display_name": "a",
+                     "data": {"min": "n/a", "median": "n/a",
+                              "90%ile": "n/a", "95%ile": "n/a", "max": "n/a",
+                              "avg": "n/a", "success": "n/a", "count": 4}},
+                    {"name": "b", "display_name": "b",
+                     "data": {"min": "n/a", "median": "n/a",
+                              "90%ile": "n/a", "95%ile": "n/a", "max": "n/a",
+                              "avg": "n/a", "success": "n/a", "count": 4}}
                 ],
-                "total": {"name": "total", "min": "n/a", "median": "n/a",
-                          "90%ile": "n/a", "95%ile": "n/a", "max": "n/a",
-                          "avg": "n/a", "success": "n/a", "count": 4}
+                "total": {"name": "total", "display_name": "total",
+                          "data": {"min": "n/a", "median": "n/a",
+                                   "90%ile": "n/a", "95%ile": "n/a",
+                                   "max": "n/a", "avg": "n/a",
+                                   "success": "n/a", "count": 4}}
             }
         else:
             stats = {
                 "atomics": [
-                    {"name": "a", "min": 0.7, "median": 0.85, "90%ile": 0.9,
-                     "95%ile": 0.87, "max": 1.25, "avg": 0.67,
-                     "success": "100.0%", "count": 4},
-                    {"name": "b", "min": 0.5, "median": 0.75, "90%ile": 0.85,
-                     "95%ile": 0.9, "max": 1.1, "avg": 0.58,
-                     "success": "100.0%", "count": 4}],
-                "total": {"name": "total", "min": 1.2, "median": 1.55,
-                          "90%ile": 1.7, "95%ile": 1.8, "max": 1.5,
-                          "avg": 0.8, "success": "100.0%", "count": 4}}
+                    {"name": "a", "display_name": "a",
+                     "data": {"min": 0.7, "median": 0.85, "90%ile": 0.9,
+                              "95%ile": 0.87, "max": 1.25, "avg": 0.67,
+                              "success": "100.0%", "count": 4}},
+                    {"name": "b", "display_name": "b",
+                     "data": {"min": 0.5, "median": 0.75, "90%ile": 0.85,
+                              "95%ile": 0.9, "max": 1.1, "avg": 0.58,
+                              "success": "100.0%", "count": 4}}],
+                "total": {"name": "total", "display_name": "total",
+                          "data": {"min": 1.2, "median": 1.55,
+                                   "90%ile": 1.7, "95%ile": 1.8, "max": 1.5,
+                                   "avg": 0.8, "success": "100.0%", "count": 4
+                                   }}}
             atomic = {"a": 123, "b": 456}
         return {
             "name": "Scenario.name_%d" % salt,
+            "args": {}, "context": {}, "runner_type": "foo", "runner": {},
+            "hooks": {},
             "pass_sla": sla_success,
             "sla": [{"success": sla_success}],
             "total_iteration_count": 4,
@@ -481,12 +492,29 @@ class TrendsTestCase(test.TestCase):
                 trends_result[idx]["actions"][a_idx]["durations"].sort()
         return trends_result
 
+    @mock.patch(PLOT + "json.dumps")
     @mock.patch(PLOT + "objects.Workload.to_task")
-    def test_add_result_and_get_data(self, mock_workload_to_task):
-        mock_workload_to_task.side_effect = ("kw_0", "kw_1")
+    def test_add_result_and_get_data(self, mock_workload_to_task, mock_dumps):
+        mock_dumps.side_effect = lambda x, **j: x
+        workload_cfg = [
+            {
+                "description": "foo", "name": "Name1",
+                "subtasks": [{"description": "descr"}]},
+            {
+                "description": "foo", "name": "Name2",
+                "subtasks": [{"description": "descr"}]}]
+        mock_workload_to_task.side_effect = workload_cfg
         trends = plot.Trends()
         for i in 0, 1:
-            trends.add_result(self._make_result(i))
+            trends.add_result(
+                "task_uuid_%s" % i, self._make_result(i))
+
+        actual = self._sort_trends(trends.get_data())
+
+        workload_cfg[0]["description"] = (
+            "Task(s) with the workload: task_uuid_1")
+        workload_cfg[1]["description"] = (
+            "Task(s) with the workload: task_uuid_2")
         expected = [
             {"actions": [{"durations": [("90%ile", [(123456789, 0.9)]),
                                         ("95%ile", [(123456789, 0.87)]),
@@ -505,7 +533,7 @@ class TrendsTestCase(test.TestCase):
                           "name": "b",
                           "success": [("success", [(123456789, 100.0)])]}],
              "cls": "Scenario",
-             "config": "\"kw_0\"",
+             "config": workload_cfg[0],
              "durations": [("90%ile", [(123456789, 1.7)]),
                            ("95%ile", [(123456789, 1.8)]),
                            ("avg", [(123456789, 0.8)]),
@@ -535,7 +563,7 @@ class TrendsTestCase(test.TestCase):
                           "name": "b",
                           "success": [("success", [(123457789, 100.0)])]}],
              "cls": "Scenario",
-             "config": "\"kw_1\"",
+             "config": workload_cfg[1],
              "durations": [("90%ile", [(123457789, 1.7)]),
                            ("95%ile", [(123457789, 1.8)]),
                            ("avg", [(123457789, 0.8)]),
@@ -548,13 +576,24 @@ class TrendsTestCase(test.TestCase):
              "sla_failures": 0,
              "stat": {"avg": 1.425, "max": 1.8, "min": 0.8},
              "success": [("success", [(123457789, 100.0)])]}]
-        self.assertEqual(expected, self._sort_trends(trends.get_data()))
+        self.assertEqual(expected, actual)
 
+    @mock.patch(PLOT + "json.dumps")
     @mock.patch(PLOT + "objects.Workload.to_task")
-    def test_add_result_once_and_get_data(self, mock_workload_to_task):
-        mock_workload_to_task.return_value = "kw_42"
+    def test_add_result_once_and_get_data(self, mock_workload_to_task,
+                                          mock_dumps):
+        mock_dumps.side_effect = lambda x, **j: x
+        workload_cfg = {"description": "foo",
+                        "subtasks": [{"description": "descr"}]}
+        mock_workload_to_task.return_value = workload_cfg
         trends = plot.Trends()
-        trends.add_result(self._make_result(42, sla_success=False))
+        trends.add_result(
+            "task_uuid",
+            self._make_result(42, sla_success=False))
+
+        actual = self._sort_trends(trends.get_data())
+
+        workload_cfg["description"] = "Task(s) with the workload: task_uuid"
         expected = [
             {"actions": [{"durations": [("90%ile", [(123498789, 0.9)]),
                                         ("95%ile", [(123498789, 0.87)]),
@@ -573,7 +612,7 @@ class TrendsTestCase(test.TestCase):
                           "name": "b",
                           "success": [("success", [(123498789, 100.0)])]}],
              "cls": "Scenario",
-             "config": "\"kw_42\"",
+             "config": workload_cfg,
              "durations": [("90%ile", [(123498789, 1.7)]),
                            ("95%ile", [(123498789, 1.8)]),
                            ("avg", [(123498789, 0.8)]),
@@ -586,14 +625,24 @@ class TrendsTestCase(test.TestCase):
              "sla_failures": 1,
              "stat": {"avg": 1.425, "max": 1.8, "min": 0.8},
              "success": [("success", [(123498789, 100.0)])]}]
-        self.assertEqual(expected, self._sort_trends(trends.get_data()))
+        self.assertEqual(expected, actual)
 
+    @mock.patch(PLOT + "json.dumps")
     @mock.patch(PLOT + "objects.Workload.to_task")
-    def test_add_result_with_na_and_get_data(self, mock_workload_to_task):
-        mock_workload_to_task.return_value = "kw_42"
+    def test_add_result_with_na_and_get_data(self, mock_workload_to_task,
+                                             mock_dumps):
+        mock_dumps.side_effect = lambda x, **j: x
+        workload_cfg = {"description": "foo",
+                        "subtasks": [{"description": "descr"}]}
+        mock_workload_to_task.return_value = workload_cfg
         trends = plot.Trends()
         trends.add_result(
+            "task_uuid",
             self._make_result(42, sla_success=False, with_na=True))
+
+        actual = self._sort_trends(trends.get_data())
+
+        workload_cfg["description"] = "Task(s) with the workload: task_uuid"
         expected = [
             {"actions": [{"durations": [("90%ile", [(123498789, "n/a")]),
                                         ("95%ile", [(123498789, "n/a")]),
@@ -612,7 +661,7 @@ class TrendsTestCase(test.TestCase):
                           "name": "b",
                           "success": [("success", [(123498789, 0)])]}],
              "cls": "Scenario",
-             "config": "\"kw_42\"",
+             "config": workload_cfg,
              "durations": [("90%ile", [(123498789, "n/a")]),
                            ("95%ile", [(123498789, "n/a")]),
                            ("avg", [(123498789, "n/a")]),
@@ -626,8 +675,35 @@ class TrendsTestCase(test.TestCase):
              "stat": {"avg": None, "max": None, "min": None},
              "success": [("success", [(123498789, 0)])]}]
 
-        self.assertEqual(expected, self._sort_trends(trends.get_data()))
+        self.assertEqual(expected, actual)
 
     def test_get_data_no_results_added(self):
         trends = plot.Trends()
         self.assertEqual([], trends.get_data())
+
+    def test_obtaining_workload_description(self):
+        trends = plot.Trends()
+        workload_1 = self._make_result(42)
+        workload_1["name"] = "Dummy.dummy"
+        workload_1["description"] = "foo!!!"
+
+        trends.add_result("task_uuid", workload_1)
+        data = trends.get_data()
+
+        self.assertEqual(1, len(data))
+        cfg = json.loads(data[0]["config"])
+        self.assertEqual("foo!!!",
+                         cfg["subtasks"][0]["description"])
+
+        workload_2 = self._make_result(42)
+        workload_2["name"] = "Dummy.dummy"
+        workload_2["description"] = "bar!!!"
+
+        trends.add_result("task_uuid", workload_2)
+        data = trends.get_data()
+
+        self.assertEqual(1, len(data))
+        cfg = json.loads(data[0]["config"])
+        self.assertEqual("Do nothing and sleep for the given number of "
+                         "seconds (0 by default).",
+                         cfg["subtasks"][0]["description"])

@@ -363,8 +363,6 @@ class TaskTestCase(unittest.TestCase):
         self.assertTrue(os.path.exists(html_report))
         self._assert_html_report_libs_are_embedded(html_report)
 
-    @unittest.skip("It started failing due to broken launching script. "
-                   "Requires investigation.")
     def test_trends(self):
         cfg1 = {
             "Dummy.dummy": [
@@ -412,12 +410,13 @@ class TaskTestCase(unittest.TestCase):
         report = rally.gen_report_path(extension="html")
 
         for i in range(5):
-            rally("task start --task %(file)s --tag trends_run_%(idx)d"
-                  % {"file": config1.filename, "idx": i})
-        rally("task start --task %s --tag trends_run_once" % config2.filename)
+            rally("task start --task %(file)s --tag trends_run "
+                  "run_%(idx)d" % {"file": config1.filename, "idx": i})
+        rally("task start --task %s --tag trends_run run_once" %
+              config2.filename)
 
-        tasks_list = rally("task list")
-        uuids = [u[2:38] for u in tasks_list.split("\n") if "trends_run" in u]
+        tasks_list = rally("task list --uuids-only --tag trends_run")
+        uuids = [u for u in tasks_list.split("\n") if u]
 
         rally("task trends %(uuids)s --out %(report)s"
               % {"uuids": " ".join(uuids), "report": report})
