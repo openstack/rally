@@ -349,6 +349,8 @@ class Connection(object):
             if tags:
                 uuids = self._uuids_by_tags_get(
                     consts.TagType.TASK, tags)
+                if not uuids:
+                    return []
                 query = query.filter(models.Task.uuid.in_(uuids))
 
             for task in query.all():
