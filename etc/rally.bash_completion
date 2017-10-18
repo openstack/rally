@@ -39,7 +39,7 @@ _rally()
     OPTS["task_export"]="--uuid --type --to"
     OPTS["task_import"]="--file --deployment --tag"
     OPTS["task_list"]="--deployment --all-deployments --status --tag --uuids-only"
-    OPTS["task_report"]="--out --open --html --html-static --uuid"
+    OPTS["task_report"]="--out --open --html --html-static --json --uuid"
     OPTS["task_results"]="--uuid"
     OPTS["task_sla-check"]="--uuid --json"
     OPTS["task_sla_check"]="--uuid --json"

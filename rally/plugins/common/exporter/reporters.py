@@ -25,7 +25,7 @@ class HTMLExporter(exporter.TaskExporter):
     """Generates task report in HTML format."""
     INCLUDE_LIBS = False
 
-    def generate(self):
+    def _generate_results(self):
         results = []
         processed_names = {}
         for task in self.tasks_results:
@@ -37,8 +37,11 @@ class HTMLExporter(exporter.TaskExporter):
                 else:
                     processed_names[workload["name"]] = 0
             results.append(task)
+        return results
 
-        report = plot.plot(results, include_libs=self.INCLUDE_LIBS)
+    def generate(self):
+        report = plot.plot(self._generate_results(),
+                           include_libs=self.INCLUDE_LIBS)
 
         if self.output_destination:
             return {"files": {self.output_destination: report},

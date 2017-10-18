@@ -549,7 +549,8 @@ class TaskCommands(object):
         print("\trally task export %s --type junit --to output.xml\n" %
               task["uuid"])
         print("* To get raw JSON output of task results, run:")
-        print("\trally task results %s\n" % task["uuid"])
+        print("\trally task report %s --json --out output.json\n" %
+              task["uuid"])
 
     @cliutils.args("--uuid", type=str, dest="task_id", help="UUID of task.")
     @envutils.with_default_task_id
@@ -854,6 +855,8 @@ class TaskCommands(object):
                    action="store_const", const="html")
     @cliutils.args("--html-static", dest="out_format",
                    action="store_const", const="html-static")
+    @cliutils.args("--json", dest="out_format",
+                   action="store_const", const="json")
     @cliutils.deprecated_args("--junit", dest="out_format",
                               action="store_const", const="junit-xml",
                               release="0.10.0",
@@ -1032,16 +1035,16 @@ class TaskCommands(object):
                    help="UUIDs of tasks")
     @cliutils.args("--type", dest="output_type", type=str,
                    required=True,
-                   help="Report type (Defaults to HTML). Out-of-the-box "
-                        "types: HTML, HTML-Static, JUnit-XML. "
+                   help="Report type. Out-of-the-box "
+                        "types: JSON, HTML, HTML-Static, JUnit-XML. "
                         "HINT: You can list all types, executing `rally "
                         "plugin list --plugin-base TaskExporter` "
                         "command.")
     @cliutils.args("--to", dest="output_dest", type=str,
                    metavar="<dest>", required=False,
                    help="Report destination. Can be a path to a file (in case"
-                        " of HTML, HTML-Static, JUnit-XML, etc. types) to"
-                        " save the report to or a connection string."
+                        " of JSON, HTML, HTML-Static, JUnit-XML, etc. types)"
+                        " to save the report to or a connection string."
                         " It depends on the report type."
                    )
     @envutils.with_default_task_id
@@ -1052,7 +1055,8 @@ class TaskCommands(object):
 
         :param task_id: UUID of the task
         :param output_type: str, output type
-        :param output_dest: output format (html, html-static, junit-xml,etc)
+        :param output_dest: output format (json, html, html-static,
+                            junit-xml,etc)
         """
         task_id = isinstance(task_id, list) and task_id or [task_id]
         report = api.task.export(tasks_uuids=task_id,

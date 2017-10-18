@@ -91,7 +91,7 @@ class TaskTestCase(unittest.TestCase):
 
     def _get_task_uuid(self, output):
         return re.search(
-            r"\trally task results (?P<uuid>[0-9a-f\-]{36})",
+            r"\trally task report (?P<uuid>[0-9a-f\-]{36})",
             output).group("uuid")
 
     def test_status(self):
@@ -362,6 +362,41 @@ class TaskTestCase(unittest.TestCase):
         rally("task report --out %s --html-static" % html_report)
         self.assertTrue(os.path.exists(html_report))
         self._assert_html_report_libs_are_embedded(html_report)
+
+    def _assert_json_report(self, file_path):
+        results = json.loads(open(file_path).read())
+        self.assertIn("info", results)
+        self.assertIn("tasks", results)
+        # TODO(chenhb): We will switch to check this
+        # json via json schema in next patch
+        for task in results["tasks"]:
+            self.assertIn("subtasks", task)
+            for subtask in task["subtasks"]:
+                self.assertIn("workloads", subtask)
+
+    def test_report_one_uuid_with_json(self):
+        rally = utils.Rally()
+        cfg = self._get_sample_task_config()
+        config = utils.TaskConfig(cfg)
+        rally("task start --task %s" % config.filename)
+        json_report = rally.gen_report_path(extension="json")
+        rally("task report --out %s --json" % json_report)
+        self.assertTrue(os.path.exists(json_report))
+        self._assert_json_report(json_report)
+
+    def test_report_bunch_uuids_with_json(self):
+        rally = utils.Rally()
+        cfg = self._get_sample_task_config()
+        config = utils.TaskConfig(cfg)
+        task_uuids = []
+        for i in range(3):
+            res = rally("task start --task %s" % config.filename)
+            task_uuids.append(self._get_task_uuid(res))
+        json_report = rally.gen_report_path(extension="json")
+        rally("task report --json --uuid %s --out %s"
+              % (" ".join(task_uuids), json_report))
+        self.assertTrue(os.path.exists(json_report))
+        self._assert_json_report(json_report)
 
     def test_trends(self):
         cfg1 = {
