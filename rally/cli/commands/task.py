@@ -241,16 +241,6 @@ class TaskCommands(object):
         If both task_args and task_args_file are specified, they will
         be merged. task_args has a higher priority so it will override
         values from task_args_file.
-
-        :param task_file: Path to the input task file.
-        :param task_args: Input task args (JSON dict). These args are
-                          used to render the Jinja2 template in the
-                          input task.
-        :param task_args_file: Path to the file with input task args
-                               (dict in JSON/YAML). These args are
-                               used to render the Jinja2 template in
-                               the input task.
-        :param deployment: UUID or name of the deployment
         """
 
         task = self._load_and_validate_task(api, task_file, raw_args=task_args,
@@ -291,22 +281,8 @@ class TaskCommands(object):
         If both task_args and task_args_file are specified, they are going to
         be merged. task_args has a higher priority so it overrides
         values from task_args_file.
-
-        :param task_file: Path to the input task file.
-        :param task_args: Input task args (JSON dict). These args are
-                          used to render the Jinja2 template in the
-                          input task.
-        :param task_args_file: Path to the file with input task args
-                               (dict in JSON/YAML). These args are
-                               used to render the Jinja2 template in
-                               the input task.
-        :param deployment: UUID or name of the deployment
-        :param tags: optional tag for this task
-        :param do_use: if True, the new task will be stored as the default one
-                       for future operations
-        :param abort_on_sla_failure: if True, the execution of a task stops
-                                     if any SLA fails
         """
+
         input_task = self._load_and_validate_task(api, task_file,
                                                   raw_args=task_args,
                                                   args_file=task_args_file)
@@ -342,12 +318,8 @@ class TaskCommands(object):
         "--soft", action="store_true",
         help="Abort task after current scenario finishes execution.")
     def abort(self, api, task_id=None, soft=False):
-        """Abort a running task.
+        """Abort a running task."""
 
-        :param task_id: Task uuid
-        :param soft: if set to True, task should be aborted after execution of
-                     current workload
-        """
         if soft:
             print("INFO: please be informed that soft abort won't stop "
                   "a running workload, but will prevent new ones from "
@@ -361,11 +333,7 @@ class TaskCommands(object):
     @cliutils.args("--uuid", type=str, dest="task_id", help="UUID of task")
     @envutils.with_default_task_id
     def status(self, api, task_id=None):
-        """Display the current status of a task.
-
-        :param task_id: Task uuid
-        Returns current status of task
-        """
+        """Display the current status of a task."""
 
         task = api.task.get(task_id=task_id)
         print("Task %(task_id)s: %(status)s"
@@ -379,11 +347,8 @@ class TaskCommands(object):
                    help="Print detailed results for each iteration.")
     @envutils.with_default_task_id
     def detailed(self, api, task_id=None, iterations_data=False):
-        """Print detailed information about given task.
+        """Print detailed information about given task."""
 
-        :param task_id: str, task uuid
-        :param iterations_data: bool, include results for each iteration
-        """
         task = api.task.get(task_id=task_id, detailed=True)
 
         if not task:
@@ -559,9 +524,8 @@ class TaskCommands(object):
         """Display raw task results.
 
         This will produce a lot of output data about every iteration.
-
-        :param task_id: Task uuid
         """
+
         task = api.task.get(task_id=task_id, detailed=True)
         finished_statuses = (consts.TaskStatus.FINISHED,
                              consts.TaskStatus.ABORTED)
@@ -638,12 +602,6 @@ class TaskCommands(object):
         Displayed tasks can be filtered by status or deployment.  By
         default 'rally task list' will display tasks from the active
         deployment without filtering by status.
-
-        :param deployment: UUID or name of deployment
-        :param status: task status to filter by.
-            Available task statuses are in rally.consts.TaskStatus
-        :param all_deployments: display tasks from all deployments
-        :param uuids_only: list task UUIDs only
         """
 
         filters = {}
@@ -696,7 +654,8 @@ class TaskCommands(object):
                       "\trally task start")
 
     def _load_task_results_file(self, api, task_id):
-        """Load the json file which is created by `rally task results` """
+        """Load the json file which is created by `rally task results`"""
+
         with open(os.path.expanduser(task_id)) as inp_js:
             tasks_results = yaml.safe_load(inp_js)
 
@@ -809,6 +768,7 @@ class TaskCommands(object):
     @cliutils.suppress_warnings
     def trends(self, api, *args, **kwargs):
         """Generate workloads trends HTML report."""
+
         tasks = kwargs.get("tasks", []) or list(args)
 
         if not tasks:
@@ -868,7 +828,7 @@ class TaskCommands(object):
     @cliutils.suppress_warnings
     def report(self, api, task_id=None, out=None,
                open_it=False, out_format="html"):
-        """generate report file or string for specified task."""
+        """Generate a report for the specified task(s)."""
 
         if [task for task in task_id if os.path.exists(
                 os.path.expanduser(task))]:
@@ -955,11 +915,8 @@ class TaskCommands(object):
                    help="UUID of task or a list of task UUIDs.")
     @envutils.with_default_task_id
     def delete(self, api, task_id=None, force=False):
-        """Delete task and its results.
+        """Delete task and its results."""
 
-        :param task_id: Task uuid or a list of task uuids
-        :param force: Force delete or not
-        """
         def _delete_single_task(tid, force):
             try:
                 api.task.delete(task_uuid=tid, force=force)
@@ -983,6 +940,7 @@ class TaskCommands(object):
     @cliutils.alias("sla_check")
     def sla_check_deprecated(self, api, task_id=None, tojson=False):
         """DEPRECATED since Rally 0.8.0, use `rally task sla-check` instead."""
+
         return self.sla_check(api, task_id=task_id, tojson=tojson)
 
     @cliutils.args("--uuid", type=str, dest="task_id", help="UUID of task.")
@@ -991,11 +949,8 @@ class TaskCommands(object):
                    help="Output in JSON format.")
     @envutils.with_default_task_id
     def sla_check(self, api, task_id=None, tojson=False):
-        """Display SLA check results table.
+        """Display SLA check results table."""
 
-        :param task_id: Task uuid.
-        :returns: Number of failed criteria.
-        """
         task = api.task.get(task_id=task_id, detailed=True)
         failed_criteria = 0
         data = []
@@ -1023,10 +978,8 @@ class TaskCommands(object):
     @cliutils.deprecated_args("--task", dest="task_id", type=str,
                               release="0.2.0", alternative="--uuid")
     def use(self, api, task_id):
-        """Set active task.
+        """Set active task."""
 
-        :param task_id: Task uuid.
-        """
         print("Using task: %s" % task_id)
         api.task.get(task_id=task_id)
         fileutils.update_globals_file("RALLY_TASK", task_id)
@@ -1051,13 +1004,8 @@ class TaskCommands(object):
     @plugins.ensure_plugins_are_loaded
     def export(self, api, task_id=None, output_type=None, output_dest=None,
                open_it=False):
-        """Export task results to the custom task's exporting system.
+        """Export task results to the custom task's exporting system."""
 
-        :param task_id: UUID of the task
-        :param output_type: str, output type
-        :param output_dest: output format (json, html, html-static,
-                            junit-xml,etc)
-        """
         task_id = isinstance(task_id, list) and task_id or [task_id]
         report = api.task.export(tasks_uuids=task_id,
                                  output_type=output_type,
@@ -1108,12 +1056,7 @@ class TaskCommands(object):
     @cliutils.alias("import")
     @cliutils.suppress_warnings
     def import_results(self, api, deployment=None, task_file=None, tags=None):
-        """Import json results of a test into rally database
-
-        :param task_file: list, pathes files with tasks results
-        :param deployment: UUID or name of the deployment
-        :param tags: optional tag for this task
-        """
+        """Import json results of a test into rally database"""
 
         if os.path.exists(os.path.expanduser(task_file)):
             tasks_results = self._load_task_results_file(api, task_file)

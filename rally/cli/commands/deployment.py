@@ -79,10 +79,6 @@ class DeploymentCommands(object):
         cloud. Except physical servers, Rally can create cluster nodes
         for you. Interaction with virtualization software, OpenStack
         cloud or physical servers is provided by server providers.
-
-        :param fromenv: boolean, read environment instead of config file
-        :param filename: path to the configuration file
-        :param name: name of the deployment
         """
 
         if fromenv:
@@ -122,8 +118,6 @@ class DeploymentCommands(object):
 
         Unlike 'deployment destroy', the deployment database record
         will not be deleted, so the deployment UUID stays the same.
-
-        :param deployment: UUID or name of the deployment
         """
         config = None
         if filename:
@@ -144,8 +138,6 @@ class DeploymentCommands(object):
         instances or Fuel clusters created during Rally deployment
         creation. Also it will remove the deployment record from the
         Rally database.
-
-        :param deployment: UUID or name of the deployment
         """
         api.deployment.destroy(deployment=deployment)
 
@@ -178,8 +170,6 @@ class DeploymentCommands(object):
 
         Output is the configuration of the deployment in a
         pretty-printed JSON format.
-
-        :param deployment: UUID or name of the deployment
         """
         deploy = api.deployment.get(deployment=deployment)
         result = deploy["config"]
@@ -191,10 +181,7 @@ class DeploymentCommands(object):
     @envutils.with_default_deployment()
     @plugins.ensure_plugins_are_loaded
     def show(self, api, deployment=None):
-        """Show the credentials of the deployment.
-
-        :param deployment: UUID or name of the deployment
-        """
+        """Show the credentials of the deployment."""
         # TODO(astudenov): make this method platform independent
 
         headers = ["auth_url", "username", "password", "tenant_name",
@@ -219,10 +206,7 @@ class DeploymentCommands(object):
     @envutils.with_default_deployment()
     @plugins.ensure_plugins_are_loaded
     def check(self, api, deployment=None):
-        """Check all credentials and list all available services.
-
-        :param deployment: UUID or name of the deployment
-        """
+        """Check all credentials and list all available services."""
 
         def is_field_there(lst, field):
             return bool([item for item in lst if field in item])
@@ -317,10 +301,7 @@ class DeploymentCommands(object):
                    help="UUID or name of a deployment.")
     @plugins.ensure_plugins_are_loaded
     def use(self, api, deployment):
-        """Set active deployment.
-
-        :param deployment: UUID or name of the deployment
-        """
+        """Set active deployment."""
         # TODO(astudenov): make this method platform independent
         try:
             if not isinstance(deployment, dict):

@@ -94,6 +94,7 @@ class VerifyCommands(object):
     @plugins.ensure_plugins_are_loaded
     def list_plugins(self, api, platform=None):
         """List all plugins for verifiers management."""
+
         if platform:
             platform = platform.lower()
         verifier_plugins = api.verifier.list_plugins(platform=platform)
@@ -139,6 +140,7 @@ class VerifyCommands(object):
                         version=None, system_wide=False, extra=None,
                         do_use=True):
         """Create a verifier."""
+
         verifier_uuid = api.verifier.create(
             name=name, vtype=vtype, platform=platform, source=source,
             version=version, system_wide=system_wide, extra_settings=extra)
@@ -163,6 +165,7 @@ class VerifyCommands(object):
     @plugins.ensure_plugins_are_loaded
     def list_verifiers(self, api, status=None):
         """List all verifiers."""
+
         verifiers = api.verifier.list(status=status)
         if verifiers:
             fields = ["UUID", "Name", "Type", "Platform", "Created at",
@@ -189,6 +192,7 @@ class VerifyCommands(object):
     @plugins.ensure_plugins_are_loaded
     def show_verifier(self, api, verifier_id=None):
         """Show detailed information about a verifier."""
+
         verifier = api.verifier.get(verifier_id=verifier_id)
         fields = ["UUID", "Status", "Created at", "Updated at", "Active",
                   "Name", "Description", "Type", "Platform", "Source",
@@ -232,6 +236,7 @@ class VerifyCommands(object):
     @plugins.ensure_plugins_are_loaded
     def delete_verifier(self, api, verifier_id, deployment=None, force=False):
         """Delete a verifier."""
+
         api.verifier.delete(verifier_id=verifier_id,
                             deployment_id=deployment,
                             force=force)
@@ -259,6 +264,7 @@ class VerifyCommands(object):
                         system_wide=None, no_system_wide=None,
                         update_venv=None):
         """Update a verifier."""
+
         if not (version or system_wide or no_system_wide or update_venv):
             print("At least one of the following arguments should be "
                   "provided: '--update-venv', '--version', '--system-wide', "
@@ -364,6 +370,7 @@ class VerifyCommands(object):
     @plugins.ensure_plugins_are_loaded
     def list_verifier_tests(self, api, verifier_id=None, pattern=""):
         """List all verifier tests."""
+
         tests = api.verifier.list_tests(verifier_id=verifier_id,
                                         pattern=pattern)
         if tests:
@@ -389,6 +396,7 @@ class VerifyCommands(object):
     def add_verifier_ext(self, api, verifier_id=None, source=None,
                          version=None, extra=None):
         """Add a verifier extension."""
+
         api.verifier.add_extension(verifier_id=verifier_id, source=source,
                                    version=version, extra_settings=extra)
 
@@ -399,6 +407,7 @@ class VerifyCommands(object):
     @plugins.ensure_plugins_are_loaded
     def list_verifier_exts(self, api, verifier_id=None):
         """List all verifier extensions."""
+
         verifier_exts = api.verifier.list_extensions(verifier_id=verifier_id)
         if verifier_exts:
             fields = ["Name", "Entry point"]
@@ -419,6 +428,7 @@ class VerifyCommands(object):
     @plugins.ensure_plugins_are_loaded
     def delete_verifier_ext(self, api, verifier_id=None, name=None):
         """Delete a verifier extension."""
+
         api.verifier.delete_extension(verifier_id=verifier_id, name=name)
 
     @cliutils.help_group("verification")
@@ -466,6 +476,7 @@ class VerifyCommands(object):
               pattern=None, concur=0, load_list=None, skip_list=None,
               xfail_list=None, detailed=False, do_use=True):
         """Start a verification (run verifier tests)."""
+
         if pattern and load_list:
             print("Arguments '--pattern' and '--load-list' cannot be used "
                   "together, use only one of them.")
@@ -524,6 +535,7 @@ class VerifyCommands(object):
                    help="Verification UUID. " + LIST_VERIFICATIONS_HINT)
     def use(self, api, verification_uuid):
         """Choose a verification to use for the future operations."""
+
         verification = api.verification.get(
             verification_uuid=verification_uuid)
         fileutils.update_globals_file(
@@ -559,6 +571,7 @@ class VerifyCommands(object):
     def rerun(self, api, verification_uuid=None, deployment=None, tags=None,
               concur=None, failed=False, detailed=False, do_use=True):
         """Rerun tests from a verification for a specific deployment."""
+
         results = api.verification.rerun(verification_uuid=verification_uuid,
                                          deployment_id=deployment,
                                          failed=failed,
@@ -588,6 +601,7 @@ class VerifyCommands(object):
     def show(self, api, verification_uuid=None, sort_by="name",
              detailed=False):
         """Show detailed information about a verification."""
+
         verification = api.verification.get(
             verification_uuid=verification_uuid)
         verifier = api.verifier.get(verifier_id=verification["verifier_uuid"])
@@ -672,6 +686,7 @@ class VerifyCommands(object):
     def list(self, api, verifier_id=None, deployment=None, tags=None,
              status=None):
         """List all verifications."""
+
         verifications = api.verification.list(verifier_id=verifier_id,
                                               deployment_id=deployment,
                                               tags=tags, status=status)
@@ -705,6 +720,7 @@ class VerifyCommands(object):
                    help="UUIDs of verifications. " + LIST_VERIFICATIONS_HINT)
     def delete(self, api, verification_uuid):
         """Delete a verification or a few verifications."""
+
         if not isinstance(verification_uuid, list):
             verification_uuid = [verification_uuid]
         for v_uuid in verification_uuid:
@@ -731,6 +747,7 @@ class VerifyCommands(object):
     def report(self, api, verification_uuid=None, output_type=None,
                output_dest=None, open_it=None):
         """Generate a report for a verification or a few verifications."""
+
         if not isinstance(verification_uuid, list):
             verification_uuid = [verification_uuid]
 
@@ -785,6 +802,7 @@ class VerifyCommands(object):
     def import_results(self, api, verifier_id=None, deployment=None,
                        file_to_parse=None, run_args=None, do_use=True):
         """Import results of a test run into the Rally database."""
+
         if not os.path.exists(file_to_parse):
             print("File '%s' not found." % file_to_parse)
             return 1
