@@ -42,7 +42,6 @@ class JSONExporterTestCase(test.TestCase):
                 ("created_at", "2017-06-04T05:14:44"),
                 ("updated_at", "2017-06-04T05:15:14"),
                 ("pass_sla", True),
-                ("task_duration", 2.0),
                 ("subtasks", [
                     collections.OrderedDict([
                         ("uuid", "subtask_uuid"),
@@ -52,15 +51,14 @@ class JSONExporterTestCase(test.TestCase):
                         ("created_at", "2017-06-04T05:14:44"),
                         ("updated_at", "2017-06-04T05:15:14"),
                         ("sla", {}),
-                        ("duration", 29.969523191452026),
                         ("workloads", [
                             collections.OrderedDict([
                                 ("uuid", "uuid"),
-                                ("name", "CinderVolumes.list_volumes"),
                                 ("description", "List all volumes."),
                                 ("runner", {"runner_type": {}}),
                                 ("hooks", []),
-                                ("args", {}),
+                                ("scenario", {
+                                    "CinderVolumes.list_volumes": {}}),
                                 ("min_duration", 0.0),
                                 ("max_duration", 1.0),
                                 ("start_time", 0),

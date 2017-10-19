@@ -38,14 +38,14 @@ class JSONExporter(exporter.TaskExporter):
                     workloads.append(
                         collections.OrderedDict(
                             [("uuid", workload["uuid"]),
-                             ("name", workload["name"]),
                              ("description", workload["description"]),
-                             ("runner",
-                              {workload["runner_type"]: workload["runner"]}),
+                             ("runner", {
+                                 workload["runner_type"]: workload["runner"]}),
                              ("hooks", [{"action": dict([h["action"]]),
                                          "trigger": dict([h["trigger"]])}
                                         for h in workload["hooks"]]),
-                             ("args", workload["args"]),
+                             ("scenario", {
+                                 workload["name"]: workload["args"]}),
                              ("min_duration", workload["min_duration"]),
                              ("max_duration", workload["max_duration"]),
                              ("start_time", workload["start_time"]),
@@ -75,7 +75,6 @@ class JSONExporter(exporter.TaskExporter):
                          ("created_at", subtask["created_at"]),
                          ("updated_at", subtask["updated_at"]),
                          ("sla", subtask["sla"]),
-                         ("duration", subtask["duration"]),
                          ("workloads", workloads)]
                     )
                 )
@@ -89,7 +88,6 @@ class JSONExporter(exporter.TaskExporter):
                      ("created_at", task["created_at"]),
                      ("updated_at", task["updated_at"]),
                      ("pass_sla", task["pass_sla"]),
-                     ("task_duration", task["task_duration"]),
                      ("subtasks", subtasks)]
                 )
             )

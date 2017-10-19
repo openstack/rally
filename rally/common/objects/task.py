@@ -72,6 +72,9 @@ TASK_SCHEMA = {
     "required": ["subtasks"],
     "additionalProperties": False,
     "definitions": {
+        "number-or-null": {"oneOf": [
+            {"type": "number", "description": "There was a load."},
+            {"type": "null", "description": "The load was not started"}]},
         "workload": {
             "type": "object",
             "properties": {
@@ -87,13 +90,9 @@ TASK_SCHEMA = {
                     "type": "array",
                     "items": {"$ref": "#/definitions/hook_result"}
                 },
-                "min_duration": {"type": "number"},
-                "max_duration": {"type": "number"},
-                "start_time": {"oneOf": [
-                    {"type": "number",
-                     "description": "The timestamp of load start"},
-                    {"type": "null",
-                     "description": "The load was not started"}]},
+                "min_duration": {"$ref": "#/definitions/number-or-null"},
+                "max_duration": {"$ref": "#/definitions/number-or-null"},
+                "start_time": {"$ref": "#/definitions/number-or-null"},
                 "load_duration": {"type": "number"},
                 "full_duration": {"type": "number"},
                 "statistics": {
