@@ -189,16 +189,16 @@ def process_jsonschema(schema):
 CATEGORIES = {
     "Common": ["OS Client"],
     "Deployment": ["Engine", "Provider Factory"],
-    "Task Component": ["Chart", "Context", "Exporter", "Hook",
-                       "Resource Type", "SLA", "Scenario", "Scenario Runner",
-                       "Trigger"],
+    "Task Component": ["Chart", "Context", "Hook Action", "Hook Trigger",
+                       "Resource Type", "Task Exporter", "SLA", "Scenario",
+                       "Scenario Runner", "Trigger", "Validator"],
     "Verification Component": ["Verifier Context", "Verification Reporter",
                                "Verifier Manager"]
 }
 
 # NOTE(andreykurilin): several bases do not have docstings at all, so it is
 # redundant to display them
-IGNORED_BASES = ["Resource Type", "Task Exporter", "OS Client"]
+IGNORED_BASES = ["Resource Type", "OS Client", "Exporters"]
 
 
 class PluginsReferenceDirective(rst.Directive):
