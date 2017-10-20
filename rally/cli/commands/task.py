@@ -559,6 +559,10 @@ class TaskCommands(object):
 
             hooks = [port_hook_cfg(h) for h in w["hooks"]]
 
+            created_at = dt.datetime.strptime(w["created_at"],
+                                              "%Y-%m-%dT%H:%M:%S")
+            created_at = created_at.strftime("%Y-%d-%mT%H:%M:%S")
+
             results.append({
                 "key": {
                     "name": w["name"],
@@ -577,7 +581,7 @@ class TaskCommands(object):
                 "hooks": hooks,
                 "load_duration": w["load_duration"],
                 "full_duration": w["full_duration"],
-                "created_at": w["created_at"]})
+                "created_at": created_at})
 
         print(json.dumps(results, sort_keys=False, indent=4))
 
@@ -710,9 +714,11 @@ class TaskCommands(object):
                 for itr in result["result"]:
                     durations_stat.add_iteration(itr)
 
-                updated_at = dt.datetime.strptime(result["created_at"],
-                                                  "%Y-%m-%dT%H:%M:%S")
-                updated_at += dt.timedelta(seconds=result["full_duration"])
+                created_at = dt.datetime.strptime(result["created_at"],
+                                                  "%Y-%d-%mT%H:%M:%S")
+                updated_at = created_at + dt.timedelta(
+                    seconds=result["full_duration"])
+                created_at = created_at.strftime(consts.TimeFormat.ISO8601)
                 updated_at = updated_at.strftime(consts.TimeFormat.ISO8601)
                 pass_sla = all(s.get("success") for s in result["sla"])
                 runner_type = result["key"]["kw"]["runner"].pop("type")
@@ -734,7 +740,7 @@ class TaskCommands(object):
                             "min_duration": min_duration,
                             "max_duration": max_duration,
                             "start_time": start_time,
-                            "created_at": result["created_at"],
+                            "created_at": created_at,
                             "updated_at": updated_at,
                             "args": result["key"]["kw"]["args"],
                             "runner_type": runner_type,

@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import datetime as dt
 import json
 import os.path
 import sys
@@ -549,7 +550,7 @@ class TaskCommandsTestCase(test.TestCase):
             "status": status or consts.TaskStatus.FINISHED,
             "subtasks": [{"workloads": [{
                 "full_duration": 1, "load_duration": 2,
-                "created_at": "2016",
+                "created_at": "2017-09-27T07:22:55",
                 "name": "Foo.bar", "description": "descr",
                 "position": 2,
                 "args": {"key1": "value1"},
@@ -596,7 +597,9 @@ class TaskCommandsTestCase(test.TestCase):
                 "result": x["data"],
                 "load_duration": x["load_duration"],
                 "full_duration": x["full_duration"],
-                "created_at": x["created_at"],
+                "created_at": dt.datetime.strptime(
+                    x["created_at"], "%Y-%m-%dT%H:%M:%S").strftime(
+                    "%Y-%d-%mT%H:%M:%S"),
                 "hooks": [{
                     "config": {"description": "",
                                "name": "foo",
@@ -1251,7 +1254,7 @@ class TaskCommandsTestCase(test.TestCase):
              "result": workload["data"],
              "full_duration": workload["full_duration"],
              "load_duration": workload["load_duration"],
-             "created_at": workload["created_at"]}
+             "created_at": "2017-01-07T07:03:01"}
         ]
         mock_safe_load.return_value = results
         ret = self.task._load_task_results_file(self.fake_api, task_file)
