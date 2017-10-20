@@ -16,10 +16,10 @@ import os
 
 import mock
 
-from rally.plugins.common.exporter import reporters
+from rally.plugins.common.exporters import html
 from tests.unit import test
 
-PATH = "rally.plugins.common.exporter.reporters"
+PATH = "rally.plugins.common.exporters.html"
 
 
 def get_tasks_results():
@@ -82,7 +82,7 @@ class HTMLExporterTestCase(test.TestCase):
     def test_generate(self, mock_plot):
         tasks_results = get_tasks_results()
         tasks_results.extend(get_tasks_results())
-        reporter = reporters.HTMLExporter(tasks_results, None)
+        reporter = html.HTMLExporter(tasks_results, None)
         reporter._generate_results = mock.MagicMock()
 
         self.assertEqual({"print": "html"}, reporter.generate())
@@ -92,8 +92,7 @@ class HTMLExporterTestCase(test.TestCase):
             reporter._generate_results.return_value,
             include_libs=False)
 
-        reporter = reporters.HTMLExporter(tasks_results,
-                                          output_destination="path")
+        reporter = html.HTMLExporter(tasks_results, output_destination="path")
         self.assertEqual({"files": {"path": "html"},
                           "open": "file://" + os.path.abspath("path")},
                          reporter.generate())
@@ -118,7 +117,7 @@ class HTMLExporterTestCase(test.TestCase):
             ]
         }]
 
-        reporter = reporters.HTMLExporter(tasks_results, None)
+        reporter = html.HTMLExporter(tasks_results, None)
 
         self.assertEqual(
             [{
@@ -141,45 +140,3 @@ class HTMLExporterTestCase(test.TestCase):
             }],
             reporter._generate_results()
         )
-
-
-class JUnitXMLExporterTestCase(test.TestCase):
-
-    def test_generate(self):
-        content = ("<testsuite errors=\"0\""
-                   " failures=\"0\""
-                   " name=\"Rally test suite\""
-                   " tests=\"1\""
-                   " time=\"29.97\">"
-                   "<testcase classname=\"CinderVolumes\""
-                   " name=\"list_volumes\""
-                   " time=\"29.97\" />"
-                   "</testsuite>")
-
-        reporter = reporters.JUnitXMLExporter(get_tasks_results(),
-                                              output_destination=None)
-        self.assertEqual({"print": content}, reporter.generate())
-
-        reporter = reporters.JUnitXMLExporter(get_tasks_results(),
-                                              output_destination="path")
-        self.assertEqual({"files": {"path": content},
-                          "open": "file://" + os.path.abspath("path")},
-                         reporter.generate())
-
-    def test_generate_fail(self):
-        tasks_results = get_tasks_results()
-        tasks_results[0]["subtasks"][0]["workloads"][0]["sla_results"] = {
-            "sla": [{"success": False, "detail": "error"}]}
-        content = ("<testsuite errors=\"0\""
-                   " failures=\"1\""
-                   " name=\"Rally test suite\""
-                   " tests=\"1\""
-                   " time=\"29.97\">"
-                   "<testcase classname=\"CinderVolumes\""
-                   " name=\"list_volumes\""
-                   " time=\"29.97\">"
-                   "<failure message=\"error\" /></testcase>"
-                   "</testsuite>")
-        reporter = reporters.JUnitXMLExporter(tasks_results,
-                                              output_destination=None)
-        self.assertEqual({"print": content}, reporter.generate())
