@@ -31,6 +31,29 @@ CONF = cfg.CONF
 @service.service("glance", service_type="image", version="2")
 class GlanceV2Service(service.Service, glance_common.GlanceMixin):
 
+    @atomic.action_timer("glance_v2.upload_data")
+    def upload_data(self, image_id, image_location):
+        """Upload the data for an image.
+
+        :param image_id: Image ID to upload data to.
+        :param image_location: Location of the data to upload to.
+        """
+        image_location = os.path.expanduser(image_location)
+        image_data = None
+        response = None
+        try:
+            if os.path.isfile(image_location):
+                image_data = open(image_location)
+            else:
+                response = requests.get(image_location, stream=True)
+                image_data = response.raw
+            self._clients.glance("2").images.upload(image_id, image_data)
+        finally:
+            if image_data is not None:
+                image_data.close()
+            if response is not None:
+                response.close()
+
     @atomic.action_timer("glance_v2.create_image")
     def create_image(self, image_name=None, container_format=None,
                      image_location=None, disk_format=None,
@@ -59,7 +82,6 @@ class GlanceV2Service(service.Service, glance_common.GlanceMixin):
             min_ram=min_ram,
             **properties)
 
-        image_location = os.path.expanduser(image_location)
         rutils.interruptable_sleep(CONF.openstack.
                                    glance_image_create_prepoll_delay)
 
@@ -71,20 +93,7 @@ class GlanceV2Service(service.Service, glance_common.GlanceMixin):
             check_interval=CONF.openstack.glance_image_create_poll_interval)
         timeout = time.time() - start
 
-        image_data = None
-        response = None
-        try:
-            if os.path.isfile(image_location):
-                image_data = open(image_location)
-            else:
-                response = requests.get(image_location, stream=True)
-                image_data = response.raw
-            self._clients.glance("2").images.upload(image_obj.id, image_data)
-        finally:
-            if image_data is not None:
-                image_data.close()
-            if response is not None:
-                response.close()
+        self.upload_data(image_obj.id, image_location=image_location)
 
         image_obj = utils.wait_for_status(
             image_obj, ["active"],
