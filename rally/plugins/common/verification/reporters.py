@@ -18,9 +18,10 @@ import json
 import re
 import xml.etree.ElementTree as ET
 
+from rally.common import utils
 from rally.common import version
 from rally import consts
-from rally.ui import utils
+from rally.ui import utils as ui_utils
 from rally.verification import reporter
 
 
@@ -297,7 +298,7 @@ class HTMLReporter(JSONReporter):
                 #   about the comparison strategy
                 show_comparison_note = True
 
-        template = utils.get_template("verification/report.html")
+        template = ui_utils.get_template("verification/report.html")
         context = {"uuids": uuids,
                    "verifications": report["verifications"],
                    "tests": report["tests"],
@@ -408,27 +409,6 @@ class JUnitXMLReporter(reporter.VerificationReporter):
     def validate(cls, output_destination):
         pass
 
-    def _prettify_xml(self, elem, level=0):
-        """Adds indents.
-
-        Code of this method was copied from
-            http://effbot.org/zone/element-lib.htm#prettyprint
-
-        """
-        i = "\n" + level * "  "
-        if len(elem):
-            if not elem.text or not elem.text.strip():
-                elem.text = i + "  "
-            if not elem.tail or not elem.tail.strip():
-                elem.tail = i
-            for elem in elem:
-                self._prettify_xml(elem, level + 1)
-            if not elem.tail or not elem.tail.strip():
-                elem.tail = i
-        else:
-            if level and (not elem.tail or not elem.tail.strip()):
-                elem.tail = i
-
     def generate(self):
         root = ET.Element("testsuites")
 
@@ -495,7 +475,7 @@ class JUnitXMLReporter(reporter.VerificationReporter):
                     # wtf is it?! we should add validation of results...
                     pass
 
-            self._prettify_xml(root)
+            utils.prettify_xml(root)
 
         raw_report = ET.tostring(root, encoding="utf-8").decode("utf-8")
         if self.output_destination:

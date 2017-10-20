@@ -287,13 +287,13 @@ class JSONReporterTestCase(test.TestCase):
 
 @ddt.ddt
 class HTMLReporterTestCase(test.TestCase):
-    @mock.patch("%s.utils" % PATH)
+    @mock.patch("%s.ui_utils" % PATH)
     @mock.patch("%s.json.dumps" % PATH)
     @ddt.data((reporters.HTMLReporter, False),
               (reporters.HTMLStaticReporter, True))
     @ddt.unpack
-    def test_generate(self, cls, include_libs, mock_dumps, mock_utils):
-        mock_render = mock_utils.get_template.return_value.render
+    def test_generate(self, cls, include_libs, mock_dumps, mock_ui_utils):
+        mock_render = mock_ui_utils.get_template.return_value.render
 
         reporter = cls(get_verifications(), None)
 
@@ -301,7 +301,7 @@ class HTMLReporterTestCase(test.TestCase):
                          reporter.generate())
         mock_render.assert_called_once_with(data=mock_dumps.return_value,
                                             include_libs=include_libs)
-        mock_utils.get_template.assert_called_once_with(
+        mock_ui_utils.get_template.assert_called_once_with(
             "verification/report.html")
 
         self.assertEqual(1, mock_dumps.call_count)
