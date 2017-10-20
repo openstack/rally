@@ -12,7 +12,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import datetime as dt
 import os
+
+import mock
 
 from rally.plugins.common.exporters import junit
 from tests.unit import test
@@ -20,62 +23,71 @@ from tests.unit import test
 
 def get_tasks_results():
     task_id = "2fa4f5ff-7d23-4bb0-9b1f-8ee235f7f1c8"
-    workload = {"created_at": "2017-06-04T05:14:44",
-                "updated_at": "2017-06-04T05:15:14",
-                "task_uuid": task_id,
-                "position": 0,
-                "name": "CinderVolumes.list_volumes",
-                "description": "List all volumes.",
-                "data": {"raw": []},
-                "full_duration": 29.969523191452026,
-                "sla": {},
-                "sla_results": {"sla": []},
-                "load_duration": 2.03029203414917,
-                "hooks": [],
-                "id": 3}
-    task = {"subtasks": [
-        {"task_uuid": task_id,
-         "workloads": [workload]}]}
-    return [task]
+    return [{
+        "uuid": "task-uu-ii-dd",
+        "created_at": "2017-06-04T05:14:00",
+        "updated_at": "2017-06-04T05:15:15",
+        "subtasks": [
+            {"task_uuid": task_id,
+             "workloads": [
+                 {
+                     "uuid": "workload-1-uuid",
+                     "created_at": "2017-06-04T05:14:44",
+                     "updated_at": "2017-06-04T05:15:14",
+                     "task_uuid": task_id,
+                     "position": 0,
+                     "name": "CinderVolumes.list_volumes",
+                     "full_duration": 29.969523191452026,
+                     "sla_results": {"sla": []},
+                     "pass_sla": True
+                 },
+                 {
+                     "uuid": "workload-2-uuid",
+                     "created_at": "2017-06-04T05:15:15",
+                     "updated_at": "2017-06-04T05:16:14",
+                     "task_uuid": task_id,
+                     "position": 1,
+                     "name": "NovaServers.list_keypairs",
+                     "full_duration": 5,
+                     "sla_results": {"sla": [
+                         {"criterion": "Failing",
+                          "success": False,
+                          "detail": "ooops"},
+                         {"criterion": "Ok",
+                          "success": True,
+                          "detail": None},
+                     ]},
+                     "pass_sla": False
+                 },
+             ]}]}]
 
 
 class JUnitXMLExporterTestCase(test.TestCase):
+    def setUp(self):
+        super(JUnitXMLExporterTestCase, self).setUp()
+        self.datetime = dt.datetime
 
-    def test_generate(self):
-        content = ("<testsuite errors=\"0\""
-                   " failures=\"0\""
-                   " name=\"Rally test suite\""
-                   " tests=\"1\""
-                   " time=\"29.97\">"
-                   "<testcase classname=\"CinderVolumes\""
-                   " name=\"list_volumes\""
-                   " time=\"29.97\" />"
-                   "</testsuite>")
+        patcher = mock.patch("rally.plugins.common.exporters.junit.dt")
+        self.dt = patcher.start()
+        self.dt.datetime.strptime.side_effect = self.datetime.strptime
+        self.addCleanup(patcher.stop)
+
+    @mock.patch("rally.plugins.common.exporters.junit.version.version_string")
+    def test_generate(self, mock_version_string):
+        now = self.dt.datetime.utcnow.return_value
+        now.strftime.return_value = "$TIME"
+        mock_version_string.return_value = "$VERSION"
+
+        with open(os.path.join(os.path.dirname(__file__),
+                               "junit_report.xml")) as f:
+            expected_report = f.read()
 
         reporter = junit.JUnitXMLExporter(get_tasks_results(),
                                           output_destination=None)
-        self.assertEqual({"print": content}, reporter.generate())
+        self.assertEqual({"print": expected_report}, reporter.generate())
 
         reporter = junit.JUnitXMLExporter(get_tasks_results(),
                                           output_destination="path")
-        self.assertEqual({"files": {"path": content},
+        self.assertEqual({"files": {"path": expected_report},
                           "open": "file://" + os.path.abspath("path")},
                          reporter.generate())
-
-    def test_generate_fail(self):
-        tasks_results = get_tasks_results()
-        tasks_results[0]["subtasks"][0]["workloads"][0]["sla_results"] = {
-            "sla": [{"success": False, "detail": "error"}]}
-        content = ("<testsuite errors=\"0\""
-                   " failures=\"1\""
-                   " name=\"Rally test suite\""
-                   " tests=\"1\""
-                   " time=\"29.97\">"
-                   "<testcase classname=\"CinderVolumes\""
-                   " name=\"list_volumes\""
-                   " time=\"29.97\">"
-                   "<failure message=\"error\" /></testcase>"
-                   "</testsuite>")
-        reporter = junit.JUnitXMLExporter(tasks_results,
-                                          output_destination=None)
-        self.assertEqual({"print": content}, reporter.generate())
