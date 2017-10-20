@@ -139,6 +139,8 @@ function run () {
     gzip -9 rally-plot/new_results.json
     rally task export --type junit-xml --to rally-plot/junit.xml
     gzip -9 rally-plot/junit.xml
+    rally task export --type elastic --to rally-plot/elasticsearch.txt
+    gzip -9 rally-plot/elasticsearch.txt
 
     # NOTE(stpierre): if the sla check fails, we still want osresources.py
     # to run, so we turn off -e and save the return value

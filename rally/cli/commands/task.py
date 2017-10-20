@@ -1008,15 +1008,15 @@ class TaskCommands(object):
     @cliutils.args("--type", dest="output_type", type=str,
                    required=True,
                    help="Report type. Out-of-the-box "
-                        "types: JSON, HTML, HTML-Static, JUnit-XML. "
-                        "HINT: You can list all types, executing `rally "
-                        "plugin list --plugin-base TaskExporter` "
+                        "types: JSON, HTML, HTML-Static, Elastic, JUnit-XML. "
+                        "HINT: You can list all types, executing "
+                        "`rally plugin list --plugin-base TaskExporter` "
                         "command.")
     @cliutils.args("--to", dest="output_dest", type=str,
                    metavar="<dest>", required=False,
                    help="Report destination. Can be a path to a file (in case"
-                        " of JSON, HTML, HTML-Static, JUnit-XML, etc. types)"
-                        " to save the report to or a connection string."
+                        " of JSON, HTML, HTML-Static, JUnit-XML, Elastic etc. "
+                        "types) to save the report to or a connection string."
                         " It depends on the report type."
                    )
     @envutils.with_default_task_id
