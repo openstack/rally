@@ -1,0 +1,35 @@
+============
+Rally v0.9.2
+============
+
+Overview
+--------
+
++------------------+-----------------------+
+| Release date     |     **10/20/2017**    |
++------------------+-----------------------+
+
+Details
+-------
+
+The latest OpenStack merged a bunch of incompatible changes. This release
+is an attempt to fix compatibitily issuses in Rally 0.9. 
+Now it works well for old and new OpenStack releases.
+
+.. note:: OpenStack Nova abandoned networking and image API. It is impossible
+  to do anything with it, so we suggest you to use Neutron and Glance instead.
+
+Fixed bugs
+~~~~~~~~~~
+
+* [broken dependency] One of hook plugins required ansible which released
+  incompatible version. To fix this, the proper version of os-faults lib should
+  be used
+
+* [keystone] The format of keystone URL's completely change which resulted in a
+  wrong processing it from our side.
+
+Thanks
+~~~~~~
+
+ 2 Everybody!
