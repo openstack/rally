@@ -13,7 +13,7 @@ Details
 -------
 
 The latest OpenStack merged a bunch of incompatible changes. This release
-is an attempt to fix compatibitily issuses in Rally 0.9. 
+is an attempt to fix compatibitily issuses in Rally 0.9.
 Now it works well for old and new OpenStack releases.
 
 .. note:: OpenStack Nova abandoned networking and image API. It is impossible

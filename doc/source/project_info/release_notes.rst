@@ -21,4 +21,3 @@ Release Notes
 
    release_notes/archive.rst
    release_notes/latest.rst
-
