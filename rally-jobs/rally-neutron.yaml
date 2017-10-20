@@ -641,6 +641,8 @@
             name: "m1.tiny"
         image:
             name: {{image_name}}
+            list_kwargs:
+              visibility: "public"
       runner:
         type: "constant"
         times: 1

@@ -16,6 +16,7 @@ import copy
 
 from rally.common.plugin import plugin
 from rally import exceptions
+from rally.plugins.openstack.services.image import image
 from rally.task import types
 
 
@@ -80,11 +81,12 @@ class GlanceImage(types.ResourceType):
         :returns: id matching resource
         """
         resource_id = resource_config.get("id")
+        list_kwargs = resource_config.get("list_kwargs", {})
         if not resource_id:
-            glanceclient = clients.glance()
+            images = list(image.Image(clients).list_images(**list_kwargs))
             resource_id = types._id_from_name(
                 resource_config=resource_config,
-                resources=list(glanceclient.images.list()),
+                resources=images,
                 typename="image")
         return resource_id
 
