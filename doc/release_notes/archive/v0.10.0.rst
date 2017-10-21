@@ -1,0 +1,520 @@
+=============
+Rally v0.10.0
+=============
+
+Overview
+--------
+
++------------------+-----------------------+
+| Release date     |     **10/20/2017**    |
++------------------+-----------------------+
+
+* Ability to use OpenStack deployments without admin credentials
+* Better validation process of tasks
+* New task format (with an ability to set description for workloads)
+* New JSON report
+* ElasticSearch exporter
+* `OSProfiler support
+  <https://rally.readthedocs.io/en/0.10.0/quick_start/tutorial/step_11_profiling_openstack_internals.html>`_
+* Restructure of configuration options.
+
+Details
+-------
+
+Command Line Interface
+~~~~~~~~~~~~~~~~~~~~~~
+
+* Introduce `rally task import
+  <https://rally.readthedocs.io/en/0.10.0/cli_reference.html#rally-task-import>`_
+  command for importing task results into database.
+
+* Extend tags support for tasks. Now you can specify several tags for a single
+  task using `--tag argument
+  <https://rally.readthedocs.io/en/0.10.0/cli_reference.html#task-start-tag>`_.
+  Also filtering tasks by tags is now available.
+
+* Move DB category from ``rally-manage db`` to `rally db
+  <https://rally.readthedocs.io/en/0.10.0/cli_reference.html#category-db>`_ and
+  introduce `rally db show
+  <https://rally.readthedocs.io/en/0.10.0/cli_reference.html#rally-db-show>`_
+  command for printing the used connection string.
+
+Deployments
+~~~~~~~~~~~
+
+This release we started a huge work related to simplification of deployment
+component of Rally. There is a good progress which includes several nice
+features:
+
+* The format.
+  "ExistingCloud" deployment type covers 99.99% cases and is used as a base for
+  all new things. Also, it will be extended to support different platforms
+  soon. The new format looks like (for OpenStack case):
+
+  .. code-block:: json
+
+    {
+        "openstack": {
+            "admin": {
+                "username": "admin",
+                "password": "changeme",
+                "tenant_name": "foo",
+            },
+            "auth_url": "https://example.com",
+        }
+    }
+
+
+* admin user is optional in case of setting existing users.
+  From the beginning, setting admin credentials was a required section of Rally
+  deployment configuration. Even with introducing existing users feature, this
+  behaviour left.
+  Finally, we finished a big code refactoring and admin credential become
+  optional section. If a set of plugins for particular workload doesn't require
+  admin user, you can launch this task at deployment without setting it.
+
+  The information about the requirements of plugins you can find at
+  `Plugins Reference page
+  <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html>`_ (see
+  ``Requires platform(s):`` section at the bottom of each plugin).
+
+* Originally, Rally project was designed to check performance of OpenStack and
+  we succeeded in building awesome tool. We do not plan to stop and just want
+  to inform about our future plans to expand a number of supported platforms.
+  Subscribe to our `GitHub organization
+  <https://github.com/xrally>`_ to not miss new plugins.
+
+Task component
+~~~~~~~~~~~~~~
+
+* The new task format is introduced. It includes a bunch of improvements,
+  unification, etc. All the docs and samples will be updated soon.
+
+  As for now, you can check `a spec
+  <https://github.com/openstack/rally/blob/0.10.0/doc/specs/implemented/new_rally_input_task_format.rst>`_
+  for this big change.
+
+* SLA failure_rate max=0 become a default if nothing else is specified.
+
+* Totally reworked atomic actions. The atomic actions now supports nested
+  actions which allows to measure durations inside the scenario even more
+  precise. You can find them in HTML report or in our new json report
+  (see ``rally task report --json``).
+
+* Generation of names for new resources takes care about particular workload
+  id, so it helps to provide a better cleanup and prepare for new feature -
+  disaster cleanup.
+
+Plugins
+~~~~~~~
+
+We started supporting discovering plugins by entry-points, so you can easily
+deliver your custom plugins as a simple python package.
+
+To make you package after-discoverable, you need to specify the proper
+entry-point at your setup.cfg file:
+
+  .. code-block::
+
+    rally_plugins =
+       path=package_name
+
+**Deployment Engines**:
+
+Remove serverproviders & rarely used deployers
+
+Unfortunately, seems like nobody is using deployers for deploying
+their clouds and mostly people would like just to execute their code.
+
+1) Remove server provides
+2) Remove engines that uses server providers
+
+**OpenStack clients**:
+
+* Deprecate EC2 client. It wasn't used in any of plugins and doesn't support
+  keystone v3
+
+* Move ``rally.osclients`` module to ``rally.plugins.openstack.oscliens``
+
+**Scenarios**:
+
+The old way to describe scenario plugin via method is finally removed.
+Initially Rally scenario plugins were methods of special class, like below:
+
+  .. code-block:: python
+
+    from rally.task import scenario
+
+    class SomeBasicClass(scenario.Scenario):
+
+       @scenario.configure()
+       def some_scenario(self, arg1):
+           """An implementation of SomeBasicClass.foo scenario."""
+
+       @scenario.configure()
+       def another_scenario(self):
+           """Implementation of another scenario, SomeBasicClass.bar."""
+
+However to unify scenarios with other plugins we moved to model where
+plugin is class. It was done long time ago.
+
+  .. code-block:: python
+
+    from rally.task import scenario
+
+    @scenario.configure(name="CustomName")
+    class Some(scenario.Scenario):
+
+       def run(self, arg1):
+           """An implementation of the scenario."""
+
+We had a bunch of code that was used for transition and backward compatibility
+that we finally removed.
+
+
+* *NEW!!*
+
+ - `CinderQos.create_and_get_qos
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#cinderqos-create-and-get-qos-scenario>`_
+
+ - `CinderQos.create_and_list_qos
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#cinderqos-create-and-list-qos-scenario>`_
+
+ - `CinderQos.create_and_set_qos
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#cinderqos-create-and-set-qos-scenario>`_
+
+ - `CinderQos.create_qos_associate_and_disassociate_type
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#cinderqos-create-qos-associate-and-disassociate-type-scenario>`_
+
+ - `CinderVolumeTypes.create_and_get_volume_type
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#cindervolumetypes-create-and-get-volume-type-scenario>`_
+
+ - `CinderVolumeTypes.create_and_list_volume_types
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#cindervolumetypes-create-and-list-volume-types-scenario>`_
+
+ - `CinderVolumeTypes.create_and_update_encryption_type
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#cindervolumetypes-create-and-update-encryption-type-scenario>`_
+
+ - `CinderVolumeTypes.create_and_update_volume_type
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#cindervolumetypes-create-and-update-volume-type-scenario>`_
+
+ - `CinderVolumeTypes.create_get_and_delete_encryption_type
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#cindervolumetypes-create-get-and-delete-encryption-type-scenario>`_
+
+ - `CinderVolumeTypes.create_volume_type_add_and_list_type_access
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#cindervolumetypes-create-volume-type-add-and-list-type-access-scenario>`_
+
+ - `Dummy.openstack
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#dummy-openstack-scenario>`_
+
+ - `GlanceImages.create_and_deactivate_image
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#glanceimages-create-and-deactivate-image-scenario>`_
+
+ - `GlanceImages.create_and_download_image
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#glanceimages-create-and-download-image-scenario>`_
+
+ - `GlanceImages.create_and_get_image
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#glanceimages-create-and-get-image-scenario>`_
+
+ - `GlanceImages.create_and_update_image
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#glanceimages-create-and-update-image-scenario>`_
+
+ - `K8sPods.create_pods
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#k8spods-create-pods-scenario>`_
+
+ - `K8sPods.create_rcs
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#k8spods-create-rcs-scenario>`_
+
+ - `K8sPods.list_pods
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#k8spods-list-pods-scenario>`_
+
+ - `ManilaShares.create_and_extend_share
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#manilashares-create-and-extend-share-scenario>`_
+
+ - `ManilaShares.create_and_shrink_share
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#manilashares-create-and-shrink-share-scenario>`_
+
+ - `ManilaShares.create_share_then_allow_and_deny_access
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#manilashares-create-share-then-allow-and-deny-access-scenario>`_
+
+ - `NeutronBGPVPN.create_and_delete_bgpvpns
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#neutronbgpvpn-create-and-delete-bgpvpns-scenario>`_
+
+ - `NeutronBGPVPN.create_and_list_bgpvpns
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#neutronbgpvpn-create-and-list-bgpvpns-scenario>`_
+
+ - `NeutronBGPVPN.create_and_list_networks_associations
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#neutronbgpvpn-create-and-list-networks-associations-scenario>`_
+
+ - `NeutronBGPVPN.create_and_list_routers_associations
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#neutronbgpvpn-create-and-list-routers-associations-scenario>`_
+
+ - `NeutronBGPVPN.create_and_update_bgpvpns
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#neutronbgpvpn-create-and-update-bgpvpns-scenario>`_
+
+ - `NeutronBGPVPN.create_bgpvpn_assoc_disassoc_networks
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#neutronbgpvpn-create-bgpvpn-assoc-disassoc-networks-scenario>`_
+
+ - `NeutronBGPVPN.create_bgpvpn_assoc_disassoc_routers
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#neutronbgpvpn-create-bgpvpn-assoc-disassoc-routers-scenario>`_
+
+ - `NeutronNetworks.create_and_show_ports
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#neutronnetworks-create-and-show-ports-scenario>`_
+
+ - `NeutronNetworks.create_and_show_routers
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#neutronnetworks-create-and-show-routers-scenario>`_
+
+ - `NeutronNetworks.create_and_show_subnets
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#neutronnetworks-create-and-show-subnets-scenario>`_
+
+ - `NeutronNetworks.set_and_clear_router_gateway
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#neutronnetworks-set-and-clear-router-gateway-scenario>`_
+
+ - `NeutronSecurityGroup.create_and_delete_security_group_rule
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#neutronsecuritygroup-create-and-delete-security-group-rule-scenario>`_
+
+ - `NeutronSecurityGroup.create_and_list_security_group_rules
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#neutronsecuritygroup-create-and-list-security-group-rules-scenario>`_
+
+ - `NeutronSecurityGroup.create_and_show_security_group
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#neutronsecuritygroup-create-and-show-security-group-scenario>`_
+
+ - `NeutronSecurityGroup.create_and_show_security_group_rule
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#neutronsecuritygroup-create-and-show-security-group-rule-scenario>`_
+
+ - `NovaServerGroups.create_and_delete_server_group
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#novaservergroups-create-and-delete-server-group-scenario>`_
+
+ - `NovaServerGroups.create_and_get_server_group
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#novaservergroups-create-and-get-server-group-scenario>`_
+
+ - `NovaServers.boot_and_get_console_url
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#novaservers-boot-and-get-console-url-scenario>`_
+
+ - `NovaServers.boot_server_and_attach_interface
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#novaservers-boot-server-and-attach-interface-scenario>`_
+
+ - `NovaServers.boot_server_and_list_interfaces
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#novaservers-boot-server-and-list-interfaces-scenario>`_
+
+ - `NovaServers.boot_server_attach_volume_and_list_attachments
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#novaservers-boot-server-attach-volume-and-list-attachments-scenario>`_
+
+* *UPDATED!!*
+
+ - The new argument ``properties`` is added to scenario
+   `IronicNodes.create_and_list_node
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#ironicnodes-create-and-list-node-scenario>`_
+
+
+* *DELETED*
+
+Fuel and Nova-Network are not alive any more. So we removed those scenarios.
+If any of those scenarios a critical for you, please contact us.
+
+ - `FuelEnvironments.create_and_delete_environment
+   <https://rally.readthedocs.io/en/0.9.0/plugins/plugin_reference.html#fuelenvironments-create-and-delete-environment-scenario>`_
+
+ - `FuelEnvironments.create_and_list_environments
+   <https://rally.readthedocs.io/en/0.9.0/plugins/plugin_reference.html#fuelenvironments-create-and-list-environments-scenario>`_
+
+ - `FuelNodes.add_and_remove_node
+   <https://rally.readthedocs.io/en/0.9.0/plugins/plugin_reference.html#fuelnodes-add-and-remove-node-scenario>`_
+
+ - `NovaFloatingIpsBulk.create_and_delete_floating_ips_bulk
+   <https://rally.readthedocs.io/en/0.9.0/plugins/plugin_reference.html#novafloatingipsbulk-create-and-delete-floating-ips-bulk-scenario>`_
+
+ - `NovaFloatingIpsBulk.create_and_list_floating_ips_bulk
+   <https://rally.readthedocs.io/en/0.9.0/plugins/plugin_reference.html#novafloatingipsbulk-create-and-list-floating-ips-bulk-scenario>`_
+
+ - `NovaNetworks.create_and_delete_network
+   <https://rally.readthedocs.io/en/0.9.0/plugins/plugin_reference.html#novanetworks-create-and-delete-network-scenario>`_
+
+ - `NovaNetworks.create_and_list_networks
+   <https://rally.readthedocs.io/en/0.9.0/plugins/plugin_reference.html#novanetworks-create-and-list-networks-scenario>`_
+
+ - `NovaSecGroup.boot_and_delete_server_with_secgroups
+   <https://rally.readthedocs.io/en/0.9.0/plugins/plugin_reference.html#novasecgroup-boot-and-delete-server-with-secgroups-scenario>`_
+
+ - `NovaSecGroup.boot_server_and_add_secgroups
+   <https://rally.readthedocs.io/en/0.9.0/plugins/plugin_reference.html#novasecgroup-boot-server-and-add-secgroups-scenario>`_
+
+ - `NovaSecGroup.create_and_delete_secgroups
+   <https://rally.readthedocs.io/en/0.9.0/plugins/plugin_reference.html#novasecgroup-create-and-delete-secgroups-scenario>`_
+
+ - `NovaSecGroup.create_and_list_secgroups
+   <https://rally.readthedocs.io/en/0.9.0/plugins/plugin_reference.html#novasecgroup-create-and-list-secgroups-scenario>`_
+
+ - `NovaSecGroup.create_and_update_secgroups
+   <https://rally.readthedocs.io/en/0.9.0/plugins/plugin_reference.html#novasecgroup-create-and-update-secgroups-scenario>`_
+
+**Validators**:
+
+The validators refactoring was a long-term task which blocked us to abandon
+alignment to only OpenStack platform and requirements of setting admin
+credentials. In this release, we made a great progress and fixed a lot of
+issues and blockers which made possible to refactor validators.
+Now validation step is equal for all types of plugins (Scenario, SLA, Context,
+Hooks, Runners, etc).
+
+The old way to add validator for scenario is deprecated. The new unified way
+looks like:
+
+  .. code-block:: python
+
+    import time
+
+    from rally.common import validation
+    from rally.task import scenario
+
+    @validation.add("number", param_name="timeout", minval=0)
+    @scenario.configure(name="Foo.bar")
+    class FooScenario(scenario.Scenario):
+        def run(self, timeout):
+            time.sleep()
+
+The old validators from ``rally.task.validators`` module is deprecated too, see
+equivalents which can be used with ``add`` decorator:
+
+ - required_openstack --> `required_platform
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#required-platform-validator>`_
+   with setting platform argument to "openstack"
+
+ - external_network_exists ->`external_network_exists
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#external-network-exists-validator>`_
+
+ - file_exists ->`file_exists
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#file-exists-validator>`_
+
+ - flavor_exists ->`flavor_exists
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#flavor-exists-validator>`_
+
+ - image_exists ->`image_exists
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#image-exists-validator>`_
+
+ - image_valid_on_flavor ->`image_valid_on_flavor
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#image-valid-on-flavor-validator>`_
+
+ - number ->`number
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#number-validator>`_
+
+ - required_api_versions ->`required_api_versions
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#required-api-versions-validator>`_
+
+ - required_cinder_services ->`required_cinder_services
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#required-cinder-services-validator>`_
+
+ - required_clients ->`required_clients
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#required-clients-validator>`_
+
+ - required_contexts ->`required_contexts
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#required-contexts-validator>`_
+
+ - required_neutron_extensions ->`required_neutron_extensions
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#required-neutron-extensions-validator>`_
+
+ - required_param_or_context ->`required_param_or_context
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#required-param-or-context-validator>`_
+
+ - required_services ->`required_services
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#required-services-validator>`_
+
+ - restricted_parameters ->`restricted_parameters
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#restricted-parameters-validator>`_
+
+ - validate_heat_template ->`validate_heat_template
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#validate-heat-template-validator>`_
+
+ - volume_type_exists ->`volume_type_exists
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#volume-type-exists-validator>`_
+
+ - workbook_contains_workflow -> `workbook_contains_workflow
+   <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#workbook-contains-workflow-validator>`_
+
+ - network_exists is removed, since we do not find any customers for it.
+   Please contact us if it was useful for you.
+
+ - validate_share_proto is removed in favor of enum validator
+
+Fixed bugs
+~~~~~~~~~~
+
+* [plugins] JSON schema of `servers
+  <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#servers-context>`_
+  context allows to transmit a list of nics in two formats. First one is a
+  format that novaclient expects to see (each network should be represented
+  like ``{"nic-id": "the id of the network"}``). The second one is more
+  user-friendly - just list of strings (each network should be represented
+  just by id of the network). Unfortunately, the second case was not covered
+  by our code base.
+
+  Also, the first described format works in limited cases due to bad
+  serialization.
+
+  `Launchpad bug-report #1695245
+  <https://bugs.launchpad.net/rally/+bug/1695245>`_
+
+* [deployment] ~/rally/.openrc not working for keystone v3
+
+  `Launchpad bug-report #1683820
+  <https://bugs.launchpad.net/rally/+bug/1683820>`_
+
+* [plugins] Failed to list volumes in case of missed name in the object.
+
+* [backported into 0.9.1][deployment] Credentials is not updated as soon as
+  deployment is recreated. Need to call recreate request twice.
+
+  `Launchpad bug-report #1675271
+  <https://bugs.launchpad.net/rally/+bug/1675271>`_
+
+* [backported into 0.9.1][plugins] Scenario `IronicNodes.create_and_list_node
+  <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#ironicnodes-create-and-list-node-scenario>`_
+  had a wrong check that list of all nodes contains newly created one.
+
+* [backported into 0.9.1][task][cleanup] Do not remove quotas in case of
+  existing users
+
+* [backported into 0.9.1][task][cleanup] Various traces of neutron resources
+
+* [backported into 0.9.1][core] Keystone v3, authentication error for Rally
+  users if the value of project_domain_name of admin user isn't equal "default"
+
+  `Launchpad bug-report #1680837
+  <https://bugs.launchpad.net/rally/+bug/1680837>`_
+
+* [backported into 0.9.1][task] Scenario `NovaHosts.list_and_get_hosts
+  <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#novahosts-list-and-get-hosts-scenario>`_
+  obtains hostname for all hosts. But it fails in some environments if host is
+  not compute.
+
+  `Launchpad bug-report #1675254
+  <https://bugs.launchpad.net/rally/+bug/1675254>`_
+
+* [backported into 0.9.1][verification] Rally fails to run on systems on which
+  python-virtualenv is not installed
+
+  `Launchpad bug-report #1678047
+  <https://bugs.launchpad.net/rally/+bug/1678047>`_
+
+* [backported into 0.9.1][verification] CLI `rally verify rerun
+  <https://rally.readthedocs.io/en/0.9.1/verification/cli_reference.html#rally-verify-rerun>`_
+  fails with TypeError due to wrong integration with Rally API.
+
+* [plugins] Rally fails while creating neutron router on the clouds where
+  ext-gw-mode extension is not installed.
+
+* [plugins] Scenario `CinderVolumes.create_nested_snapshots_and_attach_volume
+  <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#cindervolumes-create-nested-snapshots-and-attach-volume-scenario>`_
+  fails on a big load due to the fact that one server is used for several
+  iterations. In such case we are facing 2 issues: the maximum number of
+  volumes per VM is 26 (which is a number of available names for volumes);
+  detaching volume of one iteration can block attaching of other iterations.
+
+  `Launchpad bug-report #1708160
+  <https://bugs.launchpad.net/rally/+bug/1708160>`_
+
+
+Thanks
+~~~~~~
+
+ 2 Everybody!
