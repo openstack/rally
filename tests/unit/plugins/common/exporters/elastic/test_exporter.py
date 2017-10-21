@@ -141,22 +141,22 @@ class ElasticSearchExporterTestCase(test.TestCase):
         self.addCleanup(self.patcher.stop)
 
     def test_init(self):
-        exporter = elastic.ElasticSearchExporter(None, "http://example.com")
+        exporter = elastic.ElasticSearchExporter([], "http://example.com")
         self.assertTrue(exporter._remote)
         self.assertEqual(self.es_cls.return_value,
                          getattr(exporter, "_client"))
 
-        exporter = elastic.ElasticSearchExporter(None, None)
+        exporter = elastic.ElasticSearchExporter([], None)
         self.assertTrue(exporter._remote)
         self.assertEqual(self.es_cls.return_value,
                          getattr(exporter, "_client"))
 
-        exporter = elastic.ElasticSearchExporter(None, "/foo/bar")
+        exporter = elastic.ElasticSearchExporter([], "/foo/bar")
         self.assertFalse(exporter._remote)
         self.assertIsNone(getattr(exporter, "_client", None))
 
     def test__pack(self):
-        exporter = elastic.ElasticSearchExporter(None, None)
+        exporter = elastic.ElasticSearchExporter([], None)
 
         self.assertEqual(
             {"key1=value1", "key2=value2"},
@@ -178,7 +178,7 @@ class ElasticSearchExporterTestCase(test.TestCase):
         }
         doc_id = "2fa4f5ff-7d23-4bb0-9b1f-8ee235f7f1c8"
 
-        exporter = elastic.ElasticSearchExporter(None, destination)
+        exporter = elastic.ElasticSearchExporter([], destination)
 
         exporter._add_index(index=index,
                             body=body,
@@ -221,15 +221,17 @@ class ElasticSearchExporterTestCase(test.TestCase):
             atomic_actions[-1]["failed"] = True
             atomic_actions[-1]["children"][-1]["failed"] = True
 
-        es_exporter._process_atomic_actions(atomic_actions=atomic_actions,
-                                            itr=itr_data,
-                                            workload_id="wid",
-                                            workload=workload)
+        es_exporter._process_atomic_actions(
+            deployment_uuid="dep_uuid", deployment_name="dep_name",
+            atomic_actions=atomic_actions, itr=itr_data,
+            workload_id="wid", workload=workload)
 
         expected_calls = [
             mock.call(
                 "rally_atomic_action_data_v1",
                 {
+                    "deployment_uuid": "dep_uuid",
+                    "deployment_name": "dep_name",
                     "action_name": "do_something",
                     "scenario_cfg": ["key1=value1"],
                     "contexts": ["users@openstack.tenants=2"],
@@ -246,6 +248,8 @@ class ElasticSearchExporterTestCase(test.TestCase):
             mock.call(
                 "rally_atomic_action_data_v1",
                 {
+                    "deployment_uuid": "dep_uuid",
+                    "deployment_name": "dep_name",
                     "action_name": "fail_something",
                     "scenario_cfg": ["key1=value1"],
                     "contexts": ["users@openstack.tenants=2"],
@@ -262,6 +266,8 @@ class ElasticSearchExporterTestCase(test.TestCase):
             mock.call(
                 "rally_atomic_action_data_v1",
                 {
+                    "deployment_uuid": "dep_uuid",
+                    "deployment_name": "dep_name",
                     "action_name": "rm -rf",
                     "scenario_cfg": ["key1=value1"],
                     "contexts": ["users@openstack.tenants=2"],
@@ -280,6 +286,8 @@ class ElasticSearchExporterTestCase(test.TestCase):
             expected_calls.append(mock.call(
                 "rally_atomic_action_data_v1",
                 {
+                    "deployment_uuid": "dep_uuid",
+                    "deployment_name": "dep_name",
                     "action_name": "no-name-action",
                     "scenario_cfg": ["key1=value1"],
                     "contexts": ["users@openstack.tenants=2"],
@@ -307,10 +315,14 @@ class ElasticSearchExporterTestCase(test.TestCase):
         tasks.append(second_task)
 
         exporter = elastic.ElasticSearchExporter(tasks, destination)
+        exporter.api = mock.MagicMock()
+        exporter.api.deployment.get.return_value = {"name": "nice_name"}
 
         e = self.assertRaises(exceptions.RallyException, exporter.generate)
         self.assertIn("Failed to push the task %s" % tasks[0]["uuid"],
                       e.format_message())
+        exporter.api.deployment.get.assert_called_once_with(
+            "deployment-uuu-iii-iii-ddd")
 
     def test__ensure_indices(self):
         es = mock.MagicMock()
@@ -363,6 +375,8 @@ class ElasticSearchExporterTestCase(test.TestCase):
         tasks.append(second_task)
 
         exporter = elastic.ElasticSearchExporter(tasks, destination)
+        exporter.api = mock.MagicMock()
+        exporter.api.deployment.get.return_value = {"name": "nice_name"}
 
         result = exporter.generate()
 
@@ -396,6 +410,7 @@ class ElasticSearchExporterTestCase(test.TestCase):
                 "title": "foo",
                 "description": "bar",
                 "deployment_uuid": "deployment-uuu-iii-iii-ddd",
+                "deployment_name": "nice_name",
                 "status": "ok",
                 "pass_sla": "yup",
                 "task_uuid": "2fa4f5ff-7d23-4bb0-9b1f-8ee235f7f1c8",
@@ -407,6 +422,8 @@ class ElasticSearchExporterTestCase(test.TestCase):
                           "_type": "data"}
             },
             {
+                "deployment_uuid": "deployment-uuu-iii-iii-ddd",
+                "deployment_name": "nice_name",
                 "task_uuid": "2fa4f5ff-7d23-4bb0-9b1f-8ee235f7f1c8",
                 "subtask_uuid": "35166362-0b11-4e74-929d-6988377e2da2",
                 "scenario_name": "CinderVolumes.list_volumes",
@@ -430,6 +447,8 @@ class ElasticSearchExporterTestCase(test.TestCase):
                     "_type": "data"}
             },
             {
+                "deployment_uuid": "deployment-uuu-iii-iii-ddd",
+                "deployment_name": "nice_name",
                 "action_name": "cinder.list_volumes",
                 "started_at": "2017-07-28T23:35:50",
                 "finished_at": "2017-07-28T23:36:01",
@@ -451,6 +470,8 @@ class ElasticSearchExporterTestCase(test.TestCase):
                     "_type": "data"}
             },
             {
+                "deployment_uuid": "deployment-uuu-iii-iii-ddd",
+                "deployment_name": "nice_name",
                 "action_name": "no-name-action",
                 "started_at": "2017-07-28T23:36:00",
                 "finished_at": "2017-07-28T23:36:00",
@@ -472,6 +493,8 @@ class ElasticSearchExporterTestCase(test.TestCase):
                     "_type": "data"}
             },
             {
+                "deployment_uuid": "deployment-uuu-iii-iii-ddd",
+                "deployment_name": "nice_name",
                 "action_name": "cinder.list_volumes",
                 "started_at": "2017-07-28T23:35:50",
                 "finished_at": "2017-07-28T23:36:01",
@@ -491,6 +514,8 @@ class ElasticSearchExporterTestCase(test.TestCase):
                           "_type": "data"}
             },
             {
+                "deployment_uuid": "deployment-uuu-iii-iii-ddd",
+                "deployment_name": "nice_name",
                 "title": "foo",
                 "description": "bar",
                 "deployment_uuid": "deployment-uuu-iii-iii-ddd",
