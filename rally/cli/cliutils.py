@@ -598,6 +598,25 @@ def run(argv, categories):
                                           "RALLY_PLUGIN_PATHS"),
                                       help=help_msg))
 
+    # NOTE(andreykurilin): this dirty hack is done to unblock the gates.
+    #   Currently, we are using oslo.config for CLI purpose (don't do this!)
+    #   and it makes the things too complicated.
+    #   To discover which CLI method can be affected by warnings and which not
+    #   (based on suppress_warnings decorator) we need to obtain a desired
+    #   CLI method. It can be done only after initialization of oslo_config
+    #   which is located in rally.api.API init method.
+    #   Initialization of rally.api.API can produce a warning (for example,
+    #   from pymysql), so suppressing of warnings later will not work in such
+    #   case (it is what actually had happened now in our CI with the latest
+    #   release of PyMySQL).
+    #
+    # https://bitbucket.org/zzzeek/sqlalchemy/issues/4120/mysql-5720-warns-on-tx_isolation
+    try:
+        import pymysql
+        warnings.filterwarnings("ignore", category=pymysql.Warning)
+    except ImportError:
+        pass
+
     try:
         rapi = api.API(config_args=argv[1:], skip_db_check=True)
     except exceptions.RallyException as e:
@@ -657,7 +676,7 @@ def run(argv, categories):
                 ret = fn(*fn_args, **fn_kwargs)
         else:
             ret = fn(*fn_args, **fn_kwargs)
-        return(ret)
+        return ret
 
     except (IOError, TypeError, ValueError,
             exceptions.RallyException, jsonschema.ValidationError) as e:
