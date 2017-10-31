@@ -203,6 +203,14 @@ class _Deployment(APIGroup):
         deployment = self._get(deployment).to_dict()
         if deployment["config"].get("type", "") == "ExistingCloud":
             deployment_creds = {}
+            if "creds" not in deployment["config"]:
+                extra = deployment["config"].pop("extra", None)
+                deployment["config"] = {
+                    "type": deployment["config"].pop("type"),
+                    "creds": {"openstack": deployment["config"]}
+                }
+                if extra is not None:
+                    deployment["config"]["extra"] = extra
             for platform, creds in deployment["config"]["creds"].items():
                 if isinstance(creds, dict):
                     deployment_creds[platform] = creds

@@ -859,6 +859,7 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
 
     @mock.patch("rally.common.objects.deploy.db.deployment_get")
     def test_get(self, mock_deployment_get):
+        origin_config = copy.deepcopy(self.deployment_config)
         deployment_id = "aaaa-bbbb-cccc-dddd"
         mock_deployment_get.return_value = self.deployment
         ret = self.deployment_inst.get(deployment=deployment_id)
@@ -866,7 +867,23 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
             self.assertIn(key, ret)
             if key != "config":
                 self.assertEqual(self.deployment[key], ret[key])
-        self.assertEqual(self.deployment_config["creds"], ret["config"])
+        self.assertEqual(origin_config["creds"], ret["config"])
+
+    @mock.patch("rally.common.objects.deploy.db.deployment_get")
+    def test_get_deprecated_formats(self, mock_deployment_get):
+        origin_config = copy.deepcopy(self.deployment_config)
+        self.deployment_config.update(
+            **self.deployment_config.pop("creds")["openstack"])
+        deployment_id = "aaaa-bbbb-cccc-dddd"
+        mock_deployment_get.return_value = self.deployment
+        ret = self.deployment_inst.get(deployment=deployment_id)
+        for key in self.deployment:
+            self.assertIn(key, ret)
+            if key != "config":
+                self.assertEqual(self.deployment[key], ret[key])
+        origin_config.pop("type")
+
+        self.assertEqual(origin_config["creds"], ret["config"])
 
     @mock.patch("rally.common.objects.Deployment.list")
     def test_list(self, mock_deployment_list):
