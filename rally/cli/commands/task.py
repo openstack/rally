@@ -310,7 +310,7 @@ class TaskCommands(object):
             print("Cannot start a task on unfinished deployment: %s" % e)
             return 1
 
-        self.detailed(api, task_id=task_instance["uuid"])
+        return self._detailed(api, task_id=task_instance["uuid"])
 
     @cliutils.args("--uuid", type=str, dest="task_id", help="UUID of task.")
     @envutils.with_default_task_id
@@ -347,13 +347,12 @@ class TaskCommands(object):
                    help="Print detailed results for each iteration.")
     @envutils.with_default_task_id
     def detailed(self, api, task_id=None, iterations_data=False):
+        self._detailed(api, task_id, iterations_data)
+
+    def _detailed(self, api, task_id=None, iterations_data=False):
         """Print detailed information about given task."""
 
         task = api.task.get(task_id=task_id, detailed=True)
-
-        if not task:
-            print("The task %s can not be found" % task_id)
-            return 1
 
         print()
         print("-" * 80)
@@ -516,6 +515,10 @@ class TaskCommands(object):
         print("* To get raw JSON output of task results, run:")
         print("\trally task report %s --json --out output.json\n" %
               task["uuid"])
+
+        if not task["pass_sla"]:
+            print("At least one workload did not pass SLA criteria.\n")
+            return 1
 
     @cliutils.args("--uuid", type=str, dest="task_id", help="UUID of task.")
     @envutils.with_default_task_id

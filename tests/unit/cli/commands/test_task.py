@@ -192,19 +192,22 @@ class TaskCommandsTestCase(test.TestCase):
 
     @mock.patch("rally.cli.commands.task.version")
     @mock.patch("rally.cli.commands.task.TaskCommands.use")
-    @mock.patch("rally.cli.commands.task.TaskCommands.detailed")
+    @mock.patch("rally.cli.commands.task.TaskCommands._detailed")
     @mock.patch("rally.cli.commands.task.TaskCommands._load_and_validate_task",
                 return_value={"some": "json"})
-    def test_start(self, mock__load_and_validate_task, mock_detailed, mock_use,
-                   mock_version):
+    def test_start(self, mock__load_and_validate_task, mock__detailed,
+                   mock_use, mock_version):
         deployment_id = "e0617de9-77d1-4875-9b49-9d5789e29f20"
         task_path = "path_to_config.json"
         fake_task = fakes.FakeTask(uuid="some_new_uuid", tags=["tag"])
+        mock__detailed.return_value = 1
         self.fake_api.task.create.return_value = fake_task
         self.fake_api.task.validate.return_value = fakes.FakeTask(
             some="json", uuid="some_uuid", temporary=True)
 
-        self.task.start(self.fake_api, task_path, deployment_id, do_use=True)
+        val = self.task.start(self.fake_api, task_path,
+                              deployment_id, do_use=True)
+        self.assertEqual(1, val)
         mock_version.version_string.assert_called_once_with()
         self.fake_api.task.create.assert_called_once_with(
             deployment=deployment_id, tags=None)
@@ -216,14 +219,18 @@ class TaskCommandsTestCase(test.TestCase):
         mock__load_and_validate_task.assert_called_once_with(
             self.fake_api, task_path, args_file=None, raw_args=None)
         mock_use.assert_called_once_with(self.fake_api, "some_new_uuid")
-        mock_detailed.assert_called_once_with(self.fake_api,
-                                              task_id=fake_task["uuid"])
+        mock__detailed.assert_called_once_with(self.fake_api,
+                                               task_id=fake_task["uuid"])
+        mock__detailed.return_value = 0
+        val1 = self.task.start(self.fake_api, task_path,
+                               deployment_id, do_use=True)
+        self.assertEqual(0, val1)
 
-    @mock.patch("rally.cli.commands.task.TaskCommands.detailed")
+    @mock.patch("rally.cli.commands.task.TaskCommands._detailed")
     @mock.patch("rally.cli.commands.task.TaskCommands._load_and_validate_task",
                 return_value="some_config")
     def test_start_on_unfinished_deployment(self, mock__load_and_validate_task,
-                                            mock_detailed):
+                                            mock__detailed):
         deployment_id = "e0617de9-77d1-4875-9b49-9d5789e29f20"
         deployment_name = "xxx_name"
         task_path = "path_to_config.json"
@@ -238,13 +245,13 @@ class TaskCommandsTestCase(test.TestCase):
         self.assertEqual(1, self.task.start(self.fake_api, task_path,
                                             deployment="any",
                                             tags=["some_tag"]))
-        self.assertFalse(mock_detailed.called)
+        self.assertFalse(mock__detailed.called)
 
-    @mock.patch("rally.cli.commands.task.TaskCommands.detailed")
+    @mock.patch("rally.cli.commands.task.TaskCommands._detailed")
     @mock.patch("rally.cli.commands.task.TaskCommands._load_and_validate_task",
                 return_value="some_config")
     def test_start_with_task_args(self, mock__load_and_validate_task,
-                                  mock_detailed):
+                                  mock__detailed):
         fake_task = fakes.FakeTask(uuid="new_uuid", tags=["some_tag"])
         self.fake_api.task.create.return_value = fakes.FakeTask(
             uuid="new_uuid", tags=["some_tag"])
@@ -267,7 +274,7 @@ class TaskCommandsTestCase(test.TestCase):
             config=mock__load_and_validate_task.return_value,
             task=fake_task["uuid"],
             abort_on_sla_failure=False)
-        mock_detailed.assert_called_once_with(
+        mock__detailed.assert_called_once_with(
             self.fake_api,
             task_id=fake_task["uuid"])
         self.fake_api.task.create.assert_called_once_with(
@@ -279,10 +286,10 @@ class TaskCommandsTestCase(test.TestCase):
         self.assertRaises(exceptions.InvalidArgumentsException,
                           self.task.start, "path_to_config.json", None)
 
-    @mock.patch("rally.cli.commands.task.TaskCommands.detailed")
+    @mock.patch("rally.cli.commands.task.TaskCommands._detailed")
     @mock.patch("rally.cli.commands.task.TaskCommands._load_and_validate_task")
     def test_start_invalid_task(self, mock__load_and_validate_task,
-                                mock_detailed):
+                                mock__detailed):
         task_obj = fakes.FakeTask(temporary=False, tag="tag", uuid="uuid")
         self.fake_api.task.create.return_value = task_obj
         exc = exceptions.InvalidTaskException("foo")
@@ -313,7 +320,7 @@ class TaskCommandsTestCase(test.TestCase):
             task=task_obj["uuid"],
             abort_on_sla_failure=False)
 
-        self.assertFalse(mock_detailed.called)
+        self.assertFalse(mock__detailed.called)
 
     def test_abort(self):
         test_uuid = "17860c43-2274-498d-8669-448eff7b073f"
@@ -346,7 +353,8 @@ class TaskCommandsTestCase(test.TestCase):
     def test_detailed(self, iterations_data, has_output):
         test_uuid = "c0d874d4-7195-4fd5-8688-abe82bfad36f"
         detailed_value = {
-            "id": "task", "uuid": test_uuid, "status": "finished",
+            "id": "task", "uuid": test_uuid,
+            "pass_sla": False, "status": "finished",
             "subtasks": [{"workloads": [{
                 "name": "fake_name", "position": "fake_pos",
                 "args": "args", "context": "context", "sla": "sla",
@@ -540,7 +548,7 @@ class TaskCommandsTestCase(test.TestCase):
 
     def test_detailed_wrong_id(self):
         test_uuid = "eb290c30-38d8-4c8f-bbcc-fc8f74b004ae"
-        self.fake_api.task.get.return_value = None
+        self.fake_api.task.get.side_effect = None
         self.task.detailed(self.fake_api, test_uuid)
         self.fake_api.task.get.assert_called_once_with(
             task_id=test_uuid, detailed=True)
@@ -1114,6 +1122,7 @@ class TaskCommandsTestCase(test.TestCase):
             "id": "task",
             "uuid": test_uuid,
             "status": "finished",
+            "pass_sla": True,
             "subtasks": [{"workloads": [{
                 "name": "fake_name",
                 "position": "fake_pos",
