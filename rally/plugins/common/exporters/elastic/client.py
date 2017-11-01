@@ -31,7 +31,7 @@ class ElasticSearchClient(object):
     CHUNK_LENGTH = 10000
 
     def __init__(self, url):
-        self._url = url or "http://localhost:9200"
+        self._url = url.rstrip("/") if url else "http://localhost:9200"
         self._version = None
 
     @staticmethod
