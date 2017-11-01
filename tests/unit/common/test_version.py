@@ -23,7 +23,7 @@ class ModuleTestCase(test.TestCase):
 
     def test_version_info(self):
         version_str = version.version_info.semantic_version().debian_string()
-        self.assertRegexpMatches(version_str, self.VERSION_REGEX)
+        self.assertRegex(version_str, self.VERSION_REGEX)
 
     @mock.patch("rally.common.version.version_info")
     def test_version_string(self, mock_version_info):
