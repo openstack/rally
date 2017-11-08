@@ -15,8 +15,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-env
-
 sudo yum remove -y python-crypto || true
 
 # NOTE(pabelanger): We run apt-get update to ensure we don't have a stale
