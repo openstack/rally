@@ -69,6 +69,11 @@ class Chart(plugin.Plugin):
         return [(name, points.get_zipped_graph())
                 for name, points in self._data.items()]
 
+    @classmethod
+    def render_complete_data(cls, data):
+        """render processed complete data for drawing."""
+        return data
+
     def _fix_atomic_actions(self, atomic_actions):
         """Set `0' for missed atomic actions.
 

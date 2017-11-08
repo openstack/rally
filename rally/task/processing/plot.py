@@ -121,10 +121,9 @@ def _process_workload(workload, workload_cfg, pos):
 
         complete_charts = []
         for complete in itr["output"]["complete"]:
-            complete_chart = dict(complete)
-            chart_cls = plugin.Plugin.get(complete_chart.pop("chart_plugin"))
-            complete_chart["widget"] = chart_cls.widget
-            complete_charts.append(complete_chart)
+            chart_cls = plugin.Plugin.get(complete["chart_plugin"])
+            complete["widget"] = chart_cls.widget
+            complete_charts.append(chart_cls.render_complete_data(complete))
         complete_output.append(complete_charts)
 
         for chart in (main_area, main_hist, main_stat, load_profile,

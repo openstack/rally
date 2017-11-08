@@ -88,6 +88,10 @@ class ChartTestCase(test.TestCase):
         self.assertEqual([("foo_a", "a_points"), ("foo_b", "b_points")],
                          chart.render())
 
+    def test_render_complete_data(self):
+        return_val = self.Chart.render_complete_data("aa")
+        self.assertEqual("aa", return_val)
+
     def test__fix_atomic_actions(self):
         chart = self.Chart(self.wload_info)
         self.assertEqual(
