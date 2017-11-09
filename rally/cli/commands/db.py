@@ -15,8 +15,11 @@
 
 from __future__ import print_function
 
+import re
+
 from oslo_config import cfg
 
+from rally.cli import cliutils
 from rally.cli import envutils
 from rally.common import db
 
@@ -29,16 +32,26 @@ class DBCommands(object):
 
         This will delete all existing data.
         """
+        print("Recreating database: ", end="")
+        self.show(api, True)
         db.schema_cleanup()
+        print("Database deleted successfully")
         db.schema_create()
+        print("Database created successfully")
         envutils.clear_env()
 
     def create(self, api):
         """Create Rally database."""
+        print("Creating database: ", end="")
+        self.show(api, True)
         db.schema_create()
+        print("Database created successfully")
 
     def ensure(self, api):
         """Creates Rally database if it doesn't exists."""
+        print("Ensuring database exists: ", end="")
+        self.show(api, True)
+
         if not db.schema_revision():
             db.schema_create()
             print("Database created successfully")
@@ -47,7 +60,9 @@ class DBCommands(object):
 
     def upgrade(self, api):
         """Upgrade Rally database to the latest state."""
-        print("Upgrading...")
+        print("Upgrading database: ", end="")
+        self.show(api, True)
+
         start_revision = db.schema_revision()
         db.schema_upgrade()
         current_revision = db.schema_revision()
@@ -62,6 +77,11 @@ class DBCommands(object):
         """Print current Rally database revision UUID."""
         print(db.schema_revision())
 
-    def show(self, api):
+    @cliutils.args("--creds", action="store_true", dest="show_creds",
+                   help="Hide credentials from connection string")
+    def show(self, api, show_creds=False):
         """Show the connection string."""
-        print(cfg.CONF.database.connection)
+        if not show_creds:
+            print(re.sub("//[^@]*@", "//**:**@", cfg.CONF.database.connection))
+        else:
+            print(cfg.CONF.database.connection)

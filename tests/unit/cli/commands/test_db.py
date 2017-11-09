@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+
 import mock
 
 from rally.cli.commands import db
@@ -69,3 +70,13 @@ class DBCommandsTestCase(test.TestCase):
         self.db_commands.revision(self.fake_api)
         calls = [mock.call.schema_revision()]
         mock_db.assert_has_calls(calls)
+
+    @mock.patch("rally.cli.commands.db.print")
+    @mock.patch("rally.cli.commands.db.cfg.CONF.database")
+    def test_show(self, mock_conf_database, mock_print):
+        mock_conf_database.connection = "http://aaa:bbb@testing.com:888"
+        self.db_commands.show(self.fake_api)
+        mock_print.assert_called_once_with("http://**:**@testing.com:888")
+        mock_print.reset_mock()
+        self.db_commands.show(self.fake_api, show_creds=True)
+        mock_print.assert_called_once_with("http://aaa:bbb@testing.com:888")

@@ -22,7 +22,7 @@ _rally()
     OPTS["db_ensure"]=""
     OPTS["db_recreate"]=""
     OPTS["db_revision"]=""
-    OPTS["db_show"]=""
+    OPTS["db_show"]="--creds"
     OPTS["db_upgrade"]=""
     OPTS["deployment_check"]="--deployment"
     OPTS["deployment_config"]="--deployment"
