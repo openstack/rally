@@ -37,6 +37,14 @@ class DBCommands(object):
         """Create Rally database."""
         db.schema_create()
 
+    def ensure(self, api):
+        """Creates Rally database if it doesn't exists."""
+        if not db.schema_revision():
+            db.schema_create()
+            print("Database created successfully")
+        else:
+            print("Database already exists, nothing to do")
+
     def upgrade(self, api):
         """Upgrade Rally database to the latest state."""
         print("Upgrading...")
