@@ -19,6 +19,7 @@ _rally()
     declare -A OPTS
 
     OPTS["db_create"]=""
+    OPTS["db_ensure"]=""
     OPTS["db_recreate"]=""
     OPTS["db_revision"]=""
     OPTS["db_show"]=""

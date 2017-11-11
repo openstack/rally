@@ -44,6 +44,21 @@ class DBCommandsTestCase(test.TestCase):
         self.assertEqual(calls, mock_db.mock_calls)
 
     @mock.patch("rally.cli.commands.db.db")
+    def test_ensure_create(self, mock_db):
+        mock_db.schema_revision.return_value = None
+        self.db_commands.ensure(self.fake_api)
+        calls = [mock.call.schema_revision(),
+                 mock.call.schema_create()]
+        self.assertEqual(calls, mock_db.mock_calls)
+
+    @mock.patch("rally.cli.commands.db.db")
+    def test_ensure_exists(self, mock_db):
+        mock_db.schema_revision.return_value = "revision"
+        self.db_commands.ensure(self.fake_api)
+        calls = [mock.call.schema_revision()]
+        self.assertEqual(calls, mock_db.mock_calls)
+
+    @mock.patch("rally.cli.commands.db.db")
     def test_upgrade(self, mock_db):
         self.db_commands.upgrade(self.fake_api)
         calls = [mock.call.schema_upgrade()]
