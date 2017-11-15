@@ -1036,8 +1036,9 @@ class FakeServiceCatalog(object):
 
 class FakeGlanceClient(object):
 
-    def __init__(self):
+    def __init__(self, version="1"):
         self.images = FakeImageManager()
+        self.version = version
 
 
 class FakeMuranoClient(object):
@@ -1621,9 +1622,9 @@ class FakeClients(object):
             self._nova = FakeNovaClient()
         return self._nova
 
-    def glance(self):
+    def glance(self, version="1"):
         if not self._glance:
-            self._glance = FakeGlanceClient()
+            self._glance = FakeGlanceClient(version)
         return self._glance
 
     def cinder(self):
