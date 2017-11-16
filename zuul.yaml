@@ -1,0 +1,22 @@
+- job:
+    name: rally-install-ubuntu-xenial
+    parent: base-integration-ubuntu-xenial
+    run: tests/ci/playbooks/rally-install/run
+    timeout: 1800
+
+- job:
+    name: rally-install-centos-7
+    parent: base-integration-centos-7
+    run: tests/ci/playbooks/rally-install/run
+    timeout: 1800
+
+- project:
+    name: openstack/rally
+    check:
+      jobs:
+        - rally-install-ubuntu-xenial
+        - rally-install-centos-7
+    gate:
+      jobs:
+        - rally-install-ubuntu-xenial
+        - rally-install-centos-7

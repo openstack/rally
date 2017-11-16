@@ -1,0 +1,74 @@
+- hosts: all
+  name: a run script for rally-install-ubuntu-xenial and rally-install-centos-7 jobs
+  tasks:
+
+    - name: Ensure legacy workspace directory
+      file:
+        path: '{{ ansible_user_dir }}/workspace'
+        state: directory
+
+    - shell:
+        cmd: |
+          set -e
+          set -x
+          CLONEMAP=`mktemp`
+          function cleanup {
+              # In cases where zuul-cloner is aborted during a git
+              # clone operation, git will remove the git work tree in
+              # its cleanup. The work tree in these jobs is the
+              # workspace directory, which means that subsequent
+              # jenkins post-build actions can not run because the
+              # workspace has been removed.
+              # To reduce the likelihood of this having an impact,
+              # recreate the workspace directory if needed
+              mkdir -p $WORKSPACE
+              rm -f $CLONEMAP
+          }
+          trap cleanup EXIT
+          cat > $CLONEMAP << EOF
+          clonemap:
+            - name: $ZUUL_PROJECT
+              dest: .
+          EOF
+          /usr/zuul-env/bin/zuul-cloner -m $CLONEMAP --cache-dir /opt/git \
+              git://git.openstack.org $ZUUL_PROJECT
+        executable: /bin/bash
+        chdir: '{{ ansible_user_dir }}/workspace'
+      environment: '{{ zuul | zuul_legacy_vars }}'
+
+    - shell:
+        cmd: /usr/local/jenkins/slave_scripts/install-distro-packages.sh
+        chdir: '{{ ansible_user_dir }}/workspace'
+      environment: '{{ zuul | zuul_legacy_vars }}'
+
+    - shell:
+        cmd: |
+          sudo yum remove -y python-crypto || true
+
+          # NOTE(pabelanger): We run apt-get update to ensure we dont have a stale
+          # package cache in the gate.
+          sudo apt-get update || true
+
+          sudo ./install_rally.sh --system --yes
+
+          rally deployment list
+          [ -d /etc/bash_completion.d ] && cat /etc/bash_completion.d/rally.bash_completion || true
+
+          sudo ./install_rally.sh --system --yes
+          rally deployment list
+
+          sudo ./install_rally.sh --yes -d /tmp/rallytest_root/
+          /tmp/rallytest_root/bin/rally deployment list
+          cat /tmp/rallytest_root/etc/bash_completion.d/rally.bash_completion
+
+          sudo rm -fr ~/.rally
+
+          ./install_rally.sh --yes -d /tmp/rallytest_user
+          /tmp/rallytest_user/bin/rally deployment list
+
+          ./install_rally.sh --overwrite --dbtype sqlite
+
+
+        executable: /bin/sh
+        chdir: '{{ ansible_user_dir }}/workspace'
+      environment: '{{ zuul | zuul_legacy_vars }}'
