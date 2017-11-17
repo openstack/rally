@@ -18,7 +18,7 @@ Synchronizes, formats and prepares requirements to release(obtains and adds
 maximum allowed version).
 """
 
-import argparse
+import collections
 import logging
 import re
 import sys
@@ -37,7 +37,6 @@ GLOBAL_REQUIREMENTS_LOCATIONS = (
     "https://raw.githubusercontent.com/openstack/requirements/master/",
     "http://git.openstack.org/cgit/openstack/requirements/plain/"
 )
-GLOBAL_REQUIREMENTS_FILENAME = "global-requirements.txt"
 RALLY_REQUIREMENTS_FILES = (
     "requirements.txt",
     "test-requirements.txt"
@@ -63,12 +62,10 @@ class Comment(object):
                              initial_indent="# ", subsequent_indent="# ")
 
 
-class Requirement(object):
-    RE_NAME = re.compile(r"[a-zA-Z0-9-._]+")
-    RE_CONST_VERSION = re.compile(r"==[a-zA-Z0-9.]+")
-    RE_MIN_VERSION = re.compile(r">=?[a-zA-Z0-9.]+")
-    RE_MAX_VERSION = re.compile(r"<=?[a-zA-Z0-9.]+")
-    RE_NE_VERSIONS = re.compile(r"!=[a-zA-Z0-9.]+")
+_PYPI_CACHE = {}
+
+
+class PYPIPackage(object):
     # NOTE(andreykurilin): one license can have different labels. Let's use
     #   unified variant.
     LICENSE_MAP = {"MIT license": "MIT",
@@ -76,43 +73,72 @@ class Requirement(object):
                    "BSD License": "BSD",
                    "Apache 2.0": "Apache License, Version 2.0"}
 
-    def __init__(self, package_name, version):
+    def __init__(self, package_name):
         self.package_name = package_name
-        self.version = version
-        self._license = None
-        self._pypy_info = None
-        self.do_not_touch = False
-
-    def sync_max_version_with_pypy(self):
-        if isinstance(self.version, dict) and not self.do_not_touch:
-            self.version["max"] = "<=%s" % self.pypy_info["info"]["version"]
+        self._pypi_info = None
+        self._pypi_license = None
 
     @property
-    def pypy_info(self):
-        if self._pypy_info is None:
-            resp = requests.get("https://pypi.python.org/pypi/%s/json" %
-                                self.package_name)
-            if resp.status_code != 200:
-                raise Exception(resp.text)
-            self._pypy_info = resp.json()
-        return self._pypy_info
+    def pypi_info(self):
+        if self._pypi_info is None:
+            if self.package_name in _PYPI_CACHE:
+                self._pypi_info = _PYPI_CACHE[self.package_name]
+            else:
+                resp = requests.get("https://pypi.python.org/pypi/%s/json" %
+                                    self.package_name)
+                if resp.status_code != 200:
+                    print("An error occurred while checking '%s' package at "
+                          "pypi." % self.package_name)
+                    raise Exception(resp.text)
+                self._pypi_info = resp.json()
+
+                # let's cache it for the case when we need to sync requirements
+                # and update upper constrains
+                _PYPI_CACHE[self.package_name] = self._pypi_info
+        return self._pypi_info
 
     @property
-    def license(self):
-        if self._license is None:
-            if self.pypy_info["info"]["license"]:
-                self._license = self.pypy_info["info"]["license"]
+    def pypi_version(self):
+        return self.pypi_info["info"]["version"]
+
+    @property
+    def pypi_license(self):
+        if self._pypi_license is None:
+            if self.pypi_info["info"]["license"]:
+                self._pypi_license = self.pypi_info["info"]["license"]
             else:
                 # try to parse classifiers
                 prefix = "License :: OSI Approved :: "
                 classifiers = [c[len(prefix):]
-                               for c in self.pypy_info["info"]["classifiers"]
+                               for c in self.pypi_info["info"]["classifiers"]
                                if c.startswith(prefix)]
-                self._license = "/".join(classifiers)
-            self._license = self.LICENSE_MAP.get(self._license, self._license)
-            if self._license == "UNKNOWN":
-                self._license = None
+                self._pypi_license = "/".join(classifiers)
+            self._license = self.LICENSE_MAP.get(self._pypi_license,
+                                                 self._pypi_license)
+            if self._pypi_license == "UNKNOWN":
+                self._pypi_license = None
         return self._license
+
+    def __eq__(self, other):
+        return (isinstance(other, PYPIPackage) and
+                self.package_name == other.package_name)
+
+
+class Requirement(PYPIPackage):
+    RE_NAME = re.compile(r"[a-zA-Z0-9-._]+")
+    RE_CONST_VERSION = re.compile(r"==[a-zA-Z0-9.]+")
+    RE_MIN_VERSION = re.compile(r">=?[a-zA-Z0-9.]+")
+    RE_MAX_VERSION = re.compile(r"<=?[a-zA-Z0-9.]+")
+    RE_NE_VERSIONS = re.compile(r"!=[a-zA-Z0-9.]+")
+
+    def __init__(self, package_name, version):
+        super(Requirement, self).__init__(package_name)
+        self.version = version
+        self.do_not_touch = False
+
+    def sync_max_version_with_pypy(self):
+        if isinstance(self.version, dict) and not self.do_not_touch:
+            self.version["max"] = "<=%s" % self.pypi_version
 
     @classmethod
     def parse_line(cls, line):
@@ -180,7 +206,7 @@ class Requirement(object):
                 version = ">=%s" % self.version[2:]
 
         string = "%s%s" % (self.package_name, version)
-        if self.license:
+        if self.pypi_license:
             # NOTE(andreykurilin): When I start implementation of this script,
             #   python-keystoneclient dependency string took around ~45-55
             #   chars, so let's use this length as indent. Feel free to modify
@@ -190,7 +216,7 @@ class Requirement(object):
                 indent = magic_number - len(string)
             else:
                 indent = 2
-            string += " " * indent + "# " + self.license
+            string += " " * indent + "# " + self.pypi_license
         return string
 
     def __eq__(self, other):
@@ -201,7 +227,35 @@ class Requirement(object):
         return not self.__eq__(other)
 
 
-def parse_data(raw_data, include_comments=True):
+class UpperConstraint(PYPIPackage):
+
+    RE_LINE = re.compile(
+        r"(?P<package_name>[a-zA-Z0-9-._]+)===(?P<version>[a-zA-Z0-9.]+)")
+
+    def __init__(self, package_name, version=None):
+        super(UpperConstraint, self).__init__(package_name)
+        self._version = version
+
+    def __str__(self):
+        return "%s===%s" % (self.package_name, self.version)
+
+    @property
+    def version(self):
+        if self._version is None:
+            self._version = self.pypi_version
+        return self._version
+
+    @classmethod
+    def parse_line(cls, line):
+        match = cls.RE_LINE.match(line)
+        if match:
+            return cls(**match.groupdict())
+
+    def update(self, version):
+        self._version = version
+
+
+def parse_data(raw_data, include_comments=True, dependency_cls=Requirement):
     # first elem is None to simplify checks of last elem in requirements
     requirements = [None]
     for line in raw_data.split("\n"):
@@ -222,13 +276,15 @@ def parse_data(raw_data, include_comments=True):
             if (isinstance(requirements[-1], Comment) and
                     not requirements[-1].is_finished):
                 requirements[-1].finish_him()
+
             # parse_line
-            req = Requirement.parse_line(line)
-            if req:
+            dep = dependency_cls.parse_line(line)
+            if dep:
                 if (isinstance(requirements[-1], Comment) and
                         DO_NOT_TOUCH_TAG in str(requirements[-1])):
-                    req.do_not_touch = True
-                requirements.append(req)
+                    dep.do_not_touch = True
+                requirements.append(dep)
+
     for i in range(len(requirements) - 1, 0, -1):
         # remove empty lines at the end of file
         if isinstance(requirements[i], Comment):
@@ -236,22 +292,27 @@ def parse_data(raw_data, include_comments=True):
                 requirements.pop(i)
         else:
             break
-    return requirements[1:]
+    return collections.OrderedDict(
+        (v if isinstance(v, Comment) else v.package_name, v)
+        for v in requirements if v)
 
 
-def _read_requirements():
-    """Read all rally requirements."""
-    LOG.info("Reading rally requirements...")
-    for file_name in RALLY_REQUIREMENTS_FILES:
-        LOG.debug("Try to read '%s'." % file_name)
-        with open(file_name) as f:
-            data = f.read()
-        LOG.info("Parsing requirements from %s." % file_name)
-        yield file_name, parse_data(data)
+def _fetch_from_gr(filename):
+    """Try to fetch data from OpenStack global-requirements repo"""
+    for i in range(0, len(GLOBAL_REQUIREMENTS_LOCATIONS)):
+        url = GLOBAL_REQUIREMENTS_LOCATIONS[i] + filename
+        LOG.debug("Try to obtain %s from %s" % (filename, url))
+        try:
+            return requests.get(url).text
+        except requests.ConnectionError as e:
+            LOG.exception(e)
+    raise Exception("Unable to obtain %s" % filename)
 
 
 def _write_requirements(filename, requirements):
     """Saves requirements to file."""
+    if isinstance(requirements, dict):
+        requirements = requirements.values()
     LOG.info("Saving requirements to %s." % filename)
     with open(filename, "w") as f:
         for entity in requirements:
@@ -259,82 +320,66 @@ def _write_requirements(filename, requirements):
             f.write("\n")
 
 
-def _sync():
-    LOG.info("Obtaining global-requirements...")
-    for i in range(0, len(GLOBAL_REQUIREMENTS_LOCATIONS)):
-        url = GLOBAL_REQUIREMENTS_LOCATIONS[i] + GLOBAL_REQUIREMENTS_FILENAME
-        LOG.debug("Try to obtain global-requirements from %s" % url)
-        try:
-            raw_gr = requests.get(url).text
-        except requests.ConnectionError as e:
-            LOG.exception(e)
-            if i == len(GLOBAL_REQUIREMENTS_LOCATIONS) - 1:
-                # there are no more urls to try
-                raise Exception("Unable to obtain %s" %
-                                GLOBAL_REQUIREMENTS_FILENAME)
-        else:
-            break
-
-    LOG.info("Parsing global-requirements...")
-    # NOTE(andreykurilin): global-requirements includes comments which can be
-    #   unrelated to Rally project.
-    gr = parse_data(raw_gr, include_comments=False)
-    for filename, requirements in _read_requirements():
-        for i in range(0, len(requirements)):
-            if (isinstance(requirements[i], Requirement) and
-                    not requirements[i].do_not_touch):
-                try:
-                    gr_item = gr[gr.index(requirements[i])]
-                except ValueError:
-                    # it not g-r requirements
-                    if isinstance(requirements[i].version, dict):
-                        requirements[i].version["max"] = None
-                else:
-                    requirements[i].version = gr_item.version
-        yield filename, requirements
-
-
-def sync():
+def sync_requirements():
     """Synchronizes Rally requirements with OpenStack global-requirements."""
-    for filename, requirements in _sync():
-        _write_requirements(filename, requirements)
+    LOG.info("Obtaining global-requirements of OpenStack...")
+    raw_gr = _fetch_from_gr("global-requirements.txt")
+
+    # NOTE(andreykurilin): global-requirements includes comments which can be
+    #   unrelated to Rally project, so let's just ignore them
+    gr = parse_data(raw_gr, include_comments=False)
+    for file_name in RALLY_REQUIREMENTS_FILES:
+        LOG.debug("Processing '%s'." % file_name)
+        with open(file_name) as f:
+            requirements = parse_data(f.read())
+        for name, req in requirements.items():
+            if isinstance(req, Requirement) and not req.do_not_touch:
+                if name in gr:
+                    req.version = gr[req.package_name].version
+                else:
+                    # it not g-r requirements
+                    if isinstance(req.version, dict):
+                        req.version["max"] = None
+        _write_requirements(file_name, requirements)
 
 
-def format_requirements():
-    """Obtain package licenses from pypy and write requirements to file."""
-    for filename, requirements in _read_requirements():
-        _write_requirements(filename, requirements)
+def update_upper_constraints():
+    """Obtains latest version of packages and put them to upper-constraints."""
+    LOG.info("Obtaining upper-constrains from OpenStack...")
+    raw_g_uc = _fetch_from_gr("upper-constraints.txt")
+    # NOTE(andreykurilin): global OpenStack upper-constraints file includes
+    #   comments which can be unrelated to Rally project, so let's just ignore
+    #   them.
+    global_uc = parse_data(raw_g_uc, include_comments=False,
+                           dependency_cls=UpperConstraint)
+    with open("upper-constraints.txt") as f:
+        our_uc = parse_data(f.read(), dependency_cls=UpperConstraint)
+    with open("requirements.txt") as f:
+        our_requirements = parse_data(f.read(), include_comments=False)
 
+    for name, req in our_requirements.items():
+        if isinstance(req, Comment):
+            print("continue")
+            continue
+        print(req)
+        if name not in our_uc:
+            our_uc[name] = UpperConstraint(name)
 
-def add_uppers():
-    """Obtains latest version of packages and put them to requirements."""
-    for filename, requirements in _sync():
-        LOG.info("Obtaining latest versions of packages for %s." % filename)
-        for req in requirements:
-            if isinstance(req, Requirement):
-                if isinstance(req.version, dict) and not req.version["max"]:
-                    req.sync_max_version_with_pypy()
-        _write_requirements(filename, requirements)
+        if name in global_uc:
+            # we cannot use whatever we want versions in CI. OpenStack CI
+            # installs ignores versions listed in requirements of
+            # particular project and use versions from global u-c file.
+            # It means that we need to suggest to use the same versions
+            our_uc[name].update(global_uc[name].version)
+
+    our_uc = sorted(our_uc.values(), key=lambda o: o.package_name.upper())
+    _write_requirements("upper-constraints.txt", our_uc)
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        prog="Python Requirement Manager for Rally",
-        description=__doc__.strip(),
-        add_help=True
-    )
+    sync_requirements()
+    update_upper_constraints()
 
-    action_groups = parser.add_mutually_exclusive_group()
-    action_groups.add_argument("--format",
-                               action="store_const",
-                               const=format_requirements,
-                               dest="action")
-    action_groups.add_argument("--add-upper",
-                               action="store_const",
-                               const=add_uppers,
-                               dest="action")
-    action_groups.set_defaults(action=sync)
-    parser.parse_args(sys.argv[1:]).action()
 
 if __name__ == "__main__":
     sys.exit(main())
