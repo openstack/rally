@@ -40,6 +40,9 @@ class TaskTestCase(unittest.TestCase):
                         "type": "constant",
                         "times": 100,
                         "concurrency": 5
+                    },
+                    "sla": {
+                        "failure_rate": {"max": 100}
                     }
                 }
             ]
@@ -123,6 +126,9 @@ class TaskTestCase(unittest.TestCase):
                         "type": "constant",
                         "times": 1,
                         "concurrency": 1
+                    },
+                    "sla": {
+                        "failure_rate": {"max": 100}
                     }
                 }
             ]
@@ -699,10 +705,12 @@ class TaskTestCase(unittest.TestCase):
         rally = utils.Rally()
         deployment_id = utils.get_global("RALLY_DEPLOYMENT", rally.env)
         config = utils.TaskConfig(cfg)
-        rally(("task start --task %(task_file)s "
-               "--deployment %(deployment_id)s --abort-on-sla-failure") %
-              {"task_file": config.filename,
-               "deployment_id": deployment_id})
+        self.assertRaises(utils.RallyCliError, rally,
+                          ("task start --task %(task_file)s "
+                           "--deployment %(deployment_id)s "
+                           "--abort-on-sla-failure") %
+                          {"task_file": config.filename,
+                           "deployment_id": deployment_id})
         results = json.loads(rally("task results"))
         self.assertEqual(1, len(results),
                          "Second subtask should not be started")
@@ -1060,7 +1068,11 @@ class SLATestCase(unittest.TestCase):
         rally = utils.Rally()
         cfg = self._get_sample_task_config(max_seconds_per_iteration=0.001)
         config = utils.TaskConfig(cfg)
-        rally("task start --task %s" % config.filename)
+        with self.assertRaises(utils.RallyCliError) as err:
+            rally("task start --task %s" % config.filename)
+        output = err.exception.output
+        self.assertIn("At least one workload did not pass SLA criteria.",
+                      output)
         self.assertRaises(utils.RallyCliError, rally, "task sla-check")
 
     def test_sla_success(self):
@@ -1101,7 +1113,9 @@ class SLAExtraFlagsTestCase(unittest.TestCase):
                 }
             ]}
         config = utils.TaskConfig(cfg)
-        rally("task start --task %s --abort-on-sla-failure" % config.filename)
+        self.assertRaises(utils.RallyCliError, rally,
+                          "task start --task %s --abort-on-sla-failure"
+                          % config.filename)
         expected = [
             {"benchmark": "Dummy.dummy_exception",
              "criterion": "aborted_on_sla",
@@ -1129,11 +1143,12 @@ class SLAExtraFlagsTestCase(unittest.TestCase):
                     "runner": runner,
                     "context": {
                         "dummy_context": {"fail_setup": True}
-                    }
+                    },
                 }
             ]}
         config = utils.TaskConfig(cfg)
-        rally("task start --task %s" % config.filename)
+        self.assertRaises(utils.RallyCliError, rally,
+                          "task start --task %s" % config.filename)
         expected = [
             {"status": "PASS",
              "benchmark": "Dummy.dummy",
@@ -1195,7 +1210,11 @@ class SLAPerfDegrTestCase(unittest.TestCase):
         rally = utils.Rally()
         cfg = self._get_sample_task_config(max_degradation=1)
         config = utils.TaskConfig(cfg)
-        rally("task start --task %s" % config.filename)
+        with self.assertRaises(utils.RallyCliError) as err:
+            rally("task start --task %s" % config.filename)
+        output = err.exception.output
+        self.assertIn("At least one workload did not pass SLA criteria.",
+                      output)
         self.assertRaises(utils.RallyCliError, rally, "task sla-check")
 
     def test_sla_success(self):

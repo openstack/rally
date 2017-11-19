@@ -684,7 +684,7 @@ def run(argv, categories):
             LOG.exception("Unexpected exception in CLI")
         else:
             print(e)
-        return 1
+        return getattr(e, "error_code", 1)
     except sqlalchemy.exc.OperationalError as e:
         if logging.is_debug():
             LOG.exception("Something went wrong with database")
