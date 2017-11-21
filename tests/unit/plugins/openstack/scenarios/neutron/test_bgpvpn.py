@@ -33,7 +33,8 @@ class NeutronBgpvpnTestCase(test.TestCase):
                 context.update(
                     {"tenant": {"id": "fake_tenant",
                                 resource + "s": [{"id": "fake_net",
-                                                  "tenant_id": "fake_tenant"}]}
+                                                  "tenant_id": "fake_tenant",
+                                                  "router_id": "fake_router"}]}
                      })
             elif resource == "router":
                 context.update(
@@ -127,12 +128,15 @@ class NeutronBgpvpnTestCase(test.TestCase):
         scenario._update_bgpvpn.assert_called_once_with(
             scenario._create_bgpvpn.return_value, **update_data)
 
-    def test_create_and_associate_disassociate_networks(self):
+    @mock.patch.object(bgpvpn, "random")
+    def test_create_and_associate_disassociate_networks(self, mock_random):
         scenario = bgpvpn.CreateAndAssociateDissassociateNetworks(
             self._get_context("network"))
         create_data = self._get_bgpvpn_create_data()
         networks = self._get_context("network")["tenant"]["networks"]
         create_data["tenant_id"] = networks[0]["tenant_id"]
+        mock_random.randint.return_value = 12345
+        create_data["route_targets"] = "12345:12345"
         scenario._create_bgpvpn = mock.Mock()
         scenario._create_bgpvpn_network_assoc = mock.Mock()
         scenario._delete_bgpvpn_network_assoc = mock.Mock()
@@ -146,13 +150,16 @@ class NeutronBgpvpnTestCase(test.TestCase):
             scenario._create_bgpvpn.return_value,
             scenario._create_bgpvpn_network_assoc.return_value)
 
-    def test_create_and_associate_disassociate_routers(self):
+    @mock.patch.object(bgpvpn, "random")
+    def test_create_and_associate_disassociate_routers(self, mock_random):
         scenario = bgpvpn.CreateAndAssociateDissassociateRouters(
-            self._get_context("router"))
+            self._get_context("network"))
         create_data = self._get_bgpvpn_create_data()
-        routers = self._get_context("router")["tenant"]["routers"]
-        router = routers[0]["router"]
-        create_data["tenant_id"] = router["tenant_id"]
+        router = {"id": self._get_context(
+            "network")["tenant"]["networks"][0]["router_id"]}
+        create_data["tenant_id"] = self._get_context("network")["tenant"]["id"]
+        mock_random.randint.return_value = 12345
+        create_data["route_targets"] = "12345:12345"
         scenario._create_bgpvpn = mock.Mock()
         scenario._create_bgpvpn_router_assoc = mock.Mock()
         scenario._delete_bgpvpn_router_assoc = mock.Mock()
@@ -166,7 +173,8 @@ class NeutronBgpvpnTestCase(test.TestCase):
             scenario._create_bgpvpn.return_value,
             scenario._create_bgpvpn_router_assoc.return_value)
 
-    def test_create_and_list_networks_assocs(self):
+    @mock.patch.object(bgpvpn, "random")
+    def test_create_and_list_networks_assocs(self, mock_random):
         scenario = bgpvpn.CreateAndListNetworksAssocs(
             self._get_context("network"))
         create_data = self._get_bgpvpn_create_data()
@@ -175,6 +183,8 @@ class NeutronBgpvpnTestCase(test.TestCase):
         network_assocs = {
             "network_associations": [{"network_id": networks[0]["id"]}]
         }
+        mock_random.randint.return_value = 12345
+        create_data["route_targets"] = "12345:12345"
         scenario._create_bgpvpn = mock.Mock()
         scenario._create_bgpvpn_network_assoc = mock.Mock()
         scenario._list_bgpvpn_network_assocs = mock.Mock(
@@ -188,16 +198,19 @@ class NeutronBgpvpnTestCase(test.TestCase):
         scenario._list_bgpvpn_network_assocs.assert_called_once_with(
             scenario._create_bgpvpn.return_value)
 
-    def test_create_and_list_routers_assocs(self):
+    @mock.patch.object(bgpvpn, "random")
+    def test_create_and_list_routers_assocs(self, mock_random):
         scenario = bgpvpn.CreateAndListRoutersAssocs(
-            self._get_context("router"))
+            self._get_context("network"))
         create_data = self._get_bgpvpn_create_data()
-        routers = self._get_context("router")["tenant"]["routers"]
-        router = routers[0]["router"]
-        create_data["tenant_id"] = router["tenant_id"]
+        router = {"id": self._get_context(
+            "network")["tenant"]["networks"][0]["router_id"]}
+        create_data["tenant_id"] = self._get_context("network")["tenant"]["id"]
         router_assocs = {
             "router_associations": [{"router_id": router["id"]}]
         }
+        mock_random.randint.return_value = 12345
+        create_data["route_targets"] = "12345:12345"
         scenario._create_bgpvpn = mock.Mock()
         scenario._create_bgpvpn_router_assoc = mock.Mock()
         scenario._list_bgpvpn_router_assocs = mock.Mock(

@@ -1,3 +1,4 @@
+{% set flavor_name = flavor_name or "m1.tiny" %}
 ---
   NeutronLoadbalancerV2.create_and_list_loadbalancers:
     -
@@ -69,6 +70,13 @@
           tenants: 2
           users_per_tenant: 1
         network: {}
+        servers:
+          servers_per_tenant: 1
+          auto_assign_nic: True
+          flavor:
+            name: "{{flavor_name}}"
+          image:
+            name: "^cirros.*-disk$"
       sla:
         failure_rate:
           max: 0
@@ -83,7 +91,14 @@
         users:
           tenants: 2
           users_per_tenant: 1
-        router: {}
+        network: {}
+        servers:
+          servers_per_tenant: 1
+          auto_assign_nic: True
+          flavor:
+            name: "{{flavor_name}}"
+          image:
+            name: "^cirros.*-disk$"
       sla:
         failure_rate:
           max: 0
@@ -99,6 +114,13 @@
           tenants: 2
           users_per_tenant: 1
         network: {}
+        servers:
+          servers_per_tenant: 1
+          auto_assign_nic: True
+          flavor:
+            name: "{{flavor_name}}"
+          image:
+            name: "^cirros.*-disk$"
       sla:
         failure_rate:
           max: 0
@@ -113,7 +135,14 @@
         users:
           tenants: 2
           users_per_tenant: 1
-        router: {}
+        network: {}
+        servers:
+          servers_per_tenant: 1
+          auto_assign_nic: True
+          flavor:
+            name: "{{flavor_name}}"
+          image:
+            name: "^cirros.*-disk$"
       sla:
         failure_rate:
           max: 0
