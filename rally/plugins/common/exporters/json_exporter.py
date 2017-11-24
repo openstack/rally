@@ -35,15 +35,19 @@ class JSONExporter(exporter.TaskExporter):
             for subtask in task["subtasks"]:
                 workloads = []
                 for workload in subtask["workloads"]:
+                    hooks = [{
+                        "config": {"action": dict([h["config"]["action"]]),
+                                   "trigger": dict([h["config"]["trigger"]]),
+                                   "description": h["config"]["description"]},
+                        "results": h["results"],
+                        "summary": h["summary"], } for h in workload["hooks"]]
                     workloads.append(
                         collections.OrderedDict(
                             [("uuid", workload["uuid"]),
                              ("description", workload["description"]),
                              ("runner", {
                                  workload["runner_type"]: workload["runner"]}),
-                             ("hooks", [{"action": dict([h["action"]]),
-                                         "trigger": dict([h["trigger"]])}
-                                        for h in workload["hooks"]]),
+                             ("hooks", hooks),
                              ("scenario", {
                                  workload["name"]: workload["args"]}),
                              ("min_duration", workload["min_duration"]),

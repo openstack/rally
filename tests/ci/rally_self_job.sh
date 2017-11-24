@@ -16,8 +16,10 @@ TASK_FILE=$1
 PLUGIN_PATHS=rally-jobs/plugins
 if [ -n "$ZUUL_PROJECT" ]; then
     HTML_REPORT=testr_results.html
+    JSON_REPORT=testr_results.json
 else
     HTML_REPORT=rally_self_results.html
+    JSON_REPORT=rally_self_results.json
 fi
 RND=$(head /dev/urandom | tr -dc a-z0-9 | head -c 5)
 TMP_RALLY_CONF="/tmp/self-rally-$RND.conf"
@@ -36,9 +38,11 @@ $RALLY -d deployment create --name=self
 # Run task
 $RALLY -d --plugin-paths=$PLUGIN_PATHS task start $TASK_FILE
 $RALLY task report --html-static --out $HTML_REPORT
+$RALLY task report --json --out $JSON_REPORT
 
 if [ -n "$ZUUL_PROJECT" ]; then
     gzip -9 -f $HTML_REPORT
+    gzip -9 -f $JSON_REPORT
 fi
 
 # Check sla (this may fail the job)
