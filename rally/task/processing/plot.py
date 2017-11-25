@@ -310,7 +310,12 @@ class Trends(object):
         self._data[key]["sla_failures"] += not workload["pass_sla"]
 
         duration_stats = workload["statistics"]["durations"]
-        ts = int(workload["start_time"] * 1000)
+        if not workload["start_time"]:
+            # NOTE(andreykurilin): The workload didn't start. Probably,
+            #   one of contexts failed.
+            ts = None
+        else:
+            ts = int(workload["start_time"] * 1000)
 
         for action in itertools.chain(duration_stats["atomics"],
                                       [duration_stats["total"]]):
