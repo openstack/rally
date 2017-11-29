@@ -717,9 +717,7 @@ class BootAndLiveMigrateServer(utils.NovaScenario):
         server = self._boot_server(image, flavor, **kwargs)
         self.sleep_between(min_sleep, max_sleep)
 
-        new_host = self._find_host_to_migrate(server)
-        self._live_migrate(server, new_host,
-                           block_migration, disk_over_commit)
+        self._live_migrate(server, block_migration, disk_over_commit)
 
         self._delete_server(server)
 
@@ -774,9 +772,7 @@ class BootServerFromVolumeAndLiveMigrate(utils.NovaScenario,
                                    **kwargs)
         self.sleep_between(min_sleep, max_sleep)
 
-        new_host = self._find_host_to_migrate(server)
-        self._live_migrate(server, new_host,
-                           block_migration, disk_over_commit)
+        self._live_migrate(server, block_migration, disk_over_commit)
 
         self._delete_server(server, force=force_delete)
 
@@ -832,9 +828,7 @@ class BootServerAttachCreatedVolumeAndLiveMigrate(utils.NovaScenario,
 
         self.sleep_between(min_sleep, max_sleep)
 
-        new_host = self._find_host_to_migrate(server)
-        self._live_migrate(server, new_host,
-                           block_migration, disk_over_commit)
+        self._live_migrate(server, block_migration, disk_over_commit)
 
         self._detach_volume(server, volume)
 

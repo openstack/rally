@@ -705,8 +705,6 @@ class NovaServersTestCase(test.ScenarioTestCase):
         scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario.sleep_between = mock.MagicMock()
-        scenario._find_host_to_migrate = mock.MagicMock(
-            return_value="host_name")
         scenario._live_migrate = mock.MagicMock()
         scenario._delete_server = mock.MagicMock()
 
@@ -717,10 +715,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
 
         scenario.sleep_between.assert_called_once_with(10, 20)
 
-        scenario._find_host_to_migrate.assert_called_once_with(fake_server)
-
         scenario._live_migrate.assert_called_once_with(fake_server,
-                                                       "host_name",
                                                        False, False)
         scenario._delete_server.assert_called_once_with(fake_server)
 
@@ -734,8 +729,6 @@ class NovaServersTestCase(test.ScenarioTestCase):
         scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario.sleep_between = mock.MagicMock()
-        scenario._find_host_to_migrate = mock.MagicMock(
-            return_value="host_name")
         scenario._live_migrate = mock.MagicMock()
         scenario._delete_server = mock.MagicMock()
 
@@ -757,10 +750,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
 
         scenario.sleep_between.assert_called_once_with(10, 20)
 
-        scenario._find_host_to_migrate.assert_called_once_with(fake_server)
-
         scenario._live_migrate.assert_called_once_with(fake_server,
-                                                       "host_name",
                                                        False, False)
         scenario._delete_server.assert_called_once_with(fake_server,
                                                         force=False)
@@ -784,8 +774,6 @@ class NovaServersTestCase(test.ScenarioTestCase):
 
         scenario.sleep_between = mock.MagicMock()
 
-        scenario._find_host_to_migrate = mock.MagicMock(
-            return_value="host_name")
         scenario._live_migrate = mock.MagicMock()
 
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
@@ -806,7 +794,6 @@ class NovaServersTestCase(test.ScenarioTestCase):
                                                         fake_volume)
         scenario.sleep_between.assert_called_once_with(10, 20)
         scenario._live_migrate.assert_called_once_with(fake_server,
-                                                       "host_name",
                                                        False, False)
 
         cinder.delete_volume.assert_called_once_with(fake_volume)

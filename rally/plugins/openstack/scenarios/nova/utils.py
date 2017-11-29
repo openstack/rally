@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import random
 
 from oslo_config import cfg
 
@@ -737,12 +736,11 @@ class NovaScenario(scenario.OpenStackScenario):
         )
 
     @atomic.action_timer("nova.live_migrate")
-    def _live_migrate(self, server, target_host, block_migration=False,
+    def _live_migrate(self, server, block_migration=False,
                       disk_over_commit=False, skip_host_check=False):
         """Run live migration of the given server.
 
         :param server: Server object
-        :param target_host: Specifies the target compute node to migrate
         :param block_migration: Specifies the migration type
         :param disk_over_commit: Specifies whether to overcommit migrated
                                  instance or not
@@ -751,8 +749,7 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         server_admin = self.admin_clients("nova").servers.get(server.id)
         host_pre_migrate = getattr(server_admin, "OS-EXT-SRV-ATTR:host")
-        server_admin.live_migrate(target_host,
-                                  block_migration=block_migration,
+        server_admin.live_migrate(block_migration=block_migration,
                                   disk_over_commit=disk_over_commit)
         utils.wait_for_status(
             server,
@@ -768,30 +765,6 @@ class NovaScenario(scenario.OpenStackScenario):
             raise exceptions.RallyException(
                 "Live Migration failed: Migration complete "
                 "but instance did not change host: %s" % host_pre_migrate)
-
-    @atomic.action_timer("nova.find_host_to_migrate")
-    def _find_host_to_migrate(self, server):
-        """Find a compute node for live migration.
-
-        :param server: Server object
-        """
-        server_admin = self.admin_clients("nova").servers.get(server.id)
-        host = getattr(server_admin, "OS-EXT-SRV-ATTR:host")
-        az_name = getattr(server_admin, "OS-EXT-AZ:availability_zone")
-        az = None
-        for a in self.admin_clients("nova").availability_zones.list():
-            if az_name == a.zoneName:
-                az = a
-                break
-        try:
-            new_host = random.choice(
-                [key for key, value in az.hosts.items()
-                    if key != host and
-                    value.get("nova-compute", {}).get("available", False)])
-            return new_host
-        except IndexError:
-            raise exceptions.RallyException(
-                "Live Migration failed: No valid host found to migrate")
 
     @atomic.action_timer("nova.migrate")
     def _migrate(self, server, skip_host_check=False):
