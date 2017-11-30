@@ -517,12 +517,10 @@ class WaitForStatusTestCase(test.TestCase):
                                     update_resource=upd)
         self.assertEqual(res, ret)
 
+    @mock.patch("rally.task.utils.LOG.debug")
     @mock.patch("rally.task.utils.time.sleep")
     @mock.patch("rally.task.utils.time.time", side_effect=[1, 2, 3, 4])
-    def test_wait_timeout(self, mock_time, mock_sleep):
-        self.skipTest("There are several unrelated issues in the gates. To fix"
-                      " them separately, this test should be skipped "
-                      "temporary.")
+    def test_wait_timeout(self, mock_time, mock_sleep, mock_log_debug):
         res = {"status": "not_ready"}
         upd = mock.MagicMock(side_effect=[{"status": "not_ready"},
                                           {"status": "fail"}])
