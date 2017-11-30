@@ -1,12 +1,14 @@
 - job:
     name: rally-install-ubuntu-xenial
-    parent: base-integration-ubuntu-xenial
+    parent: base
+    nodeset: ubuntu-xenial
     run: tests/ci/playbooks/rally-install/run
     timeout: 1800
 
 - job:
     name: rally-install-centos-7
-    parent: base-integration-centos-7
+    parent: base
+    nodeset: centos-7
     run: tests/ci/playbooks/rally-install/run
     timeout: 1800
 
