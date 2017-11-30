@@ -915,16 +915,19 @@ class BootAndRebuildServer(utils.NovaScenario):
     platform="openstack")
 class BootAndAssociateFloatingIp(utils.NovaScenario):
 
-    def run(self, image, flavor, **kwargs):
+    def run(self, image, flavor, create_floating_ip_args=None, **kwargs):
         """Boot a server and associate a floating IP to it.
 
         :param image: image to be used to boot an instance
         :param flavor: flavor to be used to boot an instance
+        :param create_floating_ip_args: Optional additional arguments for
+                                        floating ip creation
         :param kwargs: Optional additional arguments for server creation
         """
+        create_floating_ip_args = create_floating_ip_args or {}
         server = self._boot_server(image, flavor, **kwargs)
         address = network_wrapper.wrap(self.clients, self).create_floating_ip(
-            tenant_id=server.tenant_id)
+            tenant_id=server.tenant_id, **create_floating_ip_args)
         self._associate_floating_ip(server, address["ip"])
 
 
@@ -1095,7 +1098,7 @@ class BootServerFromVolumeSnapshot(utils.NovaScenario,
     platform="openstack")
 class BootServerAssociateAndDissociateFloatingIP(utils.NovaScenario):
 
-    def run(self, image, flavor, **kwargs):
+    def run(self, image, flavor, create_floating_ip_args=None, **kwargs):
         """Boot a server associate and dissociate a floating IP from it.
 
         The scenario first boot a server and create a floating IP. then
@@ -1104,11 +1107,15 @@ class BootServerAssociateAndDissociateFloatingIP(utils.NovaScenario):
 
         :param image: image to be used to boot an instance
         :param flavor: flavor to be used to boot an instance
+        :param create_floating_ip_args: Optional additional arguments for
+                                        floating ip creation
         :param kwargs: Optional additional arguments for server creation
         """
+
+        create_floating_ip_args = create_floating_ip_args or {}
         server = self._boot_server(image, flavor, **kwargs)
         address = network_wrapper.wrap(self.clients, self).create_floating_ip(
-            tenant_id=server.tenant_id)
+            tenant_id=server.tenant_id, **create_floating_ip_args)
         self._associate_floating_ip(server, address["ip"])
         self._dissociate_floating_ip(server, address["ip"])
 
