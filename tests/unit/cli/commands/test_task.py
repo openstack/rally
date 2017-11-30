@@ -347,10 +347,12 @@ class TaskCommandsTestCase(test.TestCase):
         self.assertRaises(exceptions.InvalidArgumentsException,
                           self.task.status, None)
 
-    @ddt.data({"iterations_data": False, "has_output": True},
-              {"iterations_data": True, "has_output": False})
+    @ddt.data({"iterations_data": False, "has_output": True,
+               "filters": None},
+              {"iterations_data": True, "has_output": False,
+               "filters": ["scenario=fake_name", "sla_failures"]})
     @ddt.unpack
-    def test_detailed(self, iterations_data, has_output):
+    def test_detailed(self, iterations_data, has_output, filters):
         test_uuid = "c0d874d4-7195-4fd5-8688-abe82bfad36f"
         detailed_value = {
             "id": "task", "uuid": test_uuid,
@@ -485,7 +487,8 @@ class TaskCommandsTestCase(test.TestCase):
                 "additive": [], "complete": []}
         self.fake_api.task.get.return_value = detailed_value
         self.task.detailed(self.fake_api, test_uuid,
-                           iterations_data=iterations_data)
+                           iterations_data=iterations_data,
+                           filters=filters)
         self.fake_api.task.get.assert_called_once_with(
             task_id=test_uuid, detailed=True)
 

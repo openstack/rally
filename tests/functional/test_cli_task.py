@@ -117,6 +117,54 @@ class TaskTestCase(unittest.TestCase):
         self.assertIn(". dummy_fail_test (x2)", detailed_iterations_data)
         self.assertNotIn("n/a", detailed_iterations_data)
 
+    def test_detailed_filter_by_scenario(self):
+        rally = utils.Rally()
+        cfg = self._get_sample_task_config()
+        config = utils.TaskConfig(cfg)
+        rally("task start --task %s" % config.filename)
+        detailed = rally("task detailed")
+        self.assertIn("Dummy.dummy_random_fail_in_atomic", detailed)
+        detailed = rally("task detailed --filter-by scenario="
+                         "Dummy.dummy_random_fail_in_atomic")
+        self.assertIn("Dummy.dummy_random_fail_in_atomic", detailed)
+        detailed = rally("task detailed --filter-by scenario=scenario.empty")
+        self.assertNotIn("Dummy.dummy_random_fail_in_atomic", detailed)
+
+    def test_detailed_filter_by_sla_failures(self):
+        rally = utils.Rally()
+        cfg = {
+            "Dummy.dummy_exception": [
+                {
+                    "runner": {
+                        "type": "constant",
+                        "times": 1,
+                        "concurrency": 1
+                    },
+                    "sla": {
+                        "failure_rate": {"max": 0}
+                    }
+                }
+            ],
+            "Dummy.dummy_random_action": [
+                {
+                    "runner": {
+                        "type": "constant",
+                        "times": 1,
+                        "concurrency": 1
+                    }
+                }
+            ]
+        }
+        config = utils.TaskConfig(cfg)
+        try:
+            # it should be failed due to Dummy.dummy_exception
+            rally("task start --task %s" % config.filename)
+        except utils.RallyCliError:
+            pass
+        output = rally("task detailed --filter-by sla-failures")
+        self.assertIn("Dummy.dummy_exception", output)
+        self.assertNotIn("Dummy.dummy_random_action", output)
+
     def test_detailed_with_errors(self):
         rally = utils.Rally()
         cfg = {

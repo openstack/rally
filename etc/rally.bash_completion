@@ -44,7 +44,7 @@ _rally()
     OPTS["plugin_show"]="--name --platform"
     OPTS["task_abort"]="--uuid --soft"
     OPTS["task_delete"]="--force --uuid"
-    OPTS["task_detailed"]="--uuid --iterations-data"
+    OPTS["task_detailed"]="--uuid --iterations-data --filter-by"
     OPTS["task_export"]="--uuid --type --to"
     OPTS["task_import"]="--file --deployment --tag"
     OPTS["task_list"]="--deployment --all-deployments --status --tag --uuids-only"
