@@ -68,22 +68,19 @@ class DeploymentCommandsTestCase(test.TestCase):
         self.deployment.create(self.fake_api, "from_env", True)
         self.fake_api.deployment.create.assert_called_once_with(
             config={
-                "type": "ExistingCloud",
-                "creds": {
-                    "openstack": {
-                        "auth_url": "fake_auth_url",
-                        "region_name": "fake_region_name",
-                        "endpoint_type": "fake_endpoint_type",
-                        "endpoint": "fake_endpoint",
-                        "admin": {
-                            "username": "fake_username",
-                            "password": "fake_password",
-                            "tenant_name": "fake_tenant_name"
-                        },
-                        "https_insecure": True,
-                        "https_cacert": "fake_cacert",
-                        "profiler_hmac_key": "fake_hmac_key"
-                    }
+                "openstack": {
+                    "auth_url": "fake_auth_url",
+                    "region_name": "fake_region_name",
+                    "endpoint_type": "fake_endpoint_type",
+                    "endpoint": "fake_endpoint",
+                    "admin": {
+                        "username": "fake_username",
+                        "password": "fake_password",
+                        "tenant_name": "fake_tenant_name"
+                    },
+                    "https_insecure": True,
+                    "https_cacert": "fake_cacert",
+                    "profiler_hmac_key": "fake_hmac_key"
                 }
             },
             name="from_env"
@@ -107,24 +104,21 @@ class DeploymentCommandsTestCase(test.TestCase):
         self.deployment.create(self.fake_api, "from_env", True)
         self.fake_api.deployment.create.assert_called_once_with(
             config={
-                "type": "ExistingCloud",
-                "creds": {
-                    "openstack": {
-                        "auth_url": "fake_auth_url",
-                        "region_name": "fake_region_name",
-                        "endpoint_type": "fake_endpoint_type",
-                        "endpoint": "fake_endpoint",
-                        "admin": {
-                            "username": "fake_username",
-                            "password": "fake_password",
-                            "user_domain_name": "fake_udn",
-                            "project_domain_name": "fake_pdn",
-                            "project_name": "fake_tenant_name"
-                        },
-                        "https_insecure": True,
-                        "https_cacert": "fake_cacert",
-                        "profiler_hmac_key": "fake_hmac_key"
-                    }
+                "openstack": {
+                    "auth_url": "fake_auth_url",
+                    "region_name": "fake_region_name",
+                    "endpoint_type": "fake_endpoint_type",
+                    "endpoint": "fake_endpoint",
+                    "admin": {
+                        "username": "fake_username",
+                        "password": "fake_password",
+                        "user_domain_name": "fake_udn",
+                        "project_domain_name": "fake_pdn",
+                        "project_name": "fake_tenant_name"
+                    },
+                    "https_insecure": True,
+                    "https_cacert": "fake_cacert",
+                    "profiler_hmac_key": "fake_hmac_key"
                 }
             },
             name="from_env"
