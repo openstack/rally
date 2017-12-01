@@ -281,6 +281,8 @@ class TaskCommands(object):
         If both task_args and task_args_file are specified, they are going to
         be merged. task_args has a higher priority so it overrides
         values from task_args_file.
+        There are 3 kinds of return codes, 0: no error, 1: running error,
+        2: sla check failed.
         """
 
         input_task = self._load_and_validate_task(api, task_file,
@@ -310,7 +312,9 @@ class TaskCommands(object):
             print("Cannot start a task on unfinished deployment: %s" % e)
             return 1
 
-        return self._detailed(api, task_id=task_instance["uuid"])
+        if self._detailed(api, task_id=task_instance["uuid"]):
+            return 2
+        return 0
 
     @cliutils.args("--uuid", type=str, dest="task_id", help="UUID of task.")
     @envutils.with_default_task_id

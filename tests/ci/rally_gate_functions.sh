@@ -119,7 +119,13 @@ function run () {
 
     $PYTHON $RALLY_DIR/tests/ci/osresources.py --dump-list resources_at_start.txt
 
+    set +e
     rally --rally-debug task start --task $TASK $TASK_ARGS
+    retval=$?
+    if [[ $? -eq 1 ]]; then
+        exit $retval
+    fi
+    set -e
 
     mkdir -p rally-plot/extra
     $PYTHON $RALLY_DIR/tests/ci/render.py ci/index.html > rally-plot/extra/index.html

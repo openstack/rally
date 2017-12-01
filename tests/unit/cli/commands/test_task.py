@@ -207,7 +207,7 @@ class TaskCommandsTestCase(test.TestCase):
 
         val = self.task.start(self.fake_api, task_path,
                               deployment_id, do_use=True)
-        self.assertEqual(1, val)
+        self.assertEqual(2, val)
         mock_version.version_string.assert_called_once_with()
         self.fake_api.task.create.assert_called_once_with(
             deployment=deployment_id, tags=None)
