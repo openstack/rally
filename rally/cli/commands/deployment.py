@@ -83,9 +83,7 @@ class DeploymentCommands(object):
 
         if fromenv:
             # TODO(astudenov): move this to Credential plugin
-            config = {
-                "type": "ExistingCloud",
-                "creds": {"openstack": envutils.get_creds_from_env_vars()}}
+            config = {"openstack": envutils.get_creds_from_env_vars()}
         else:
             if not filename:
                 config = {}
