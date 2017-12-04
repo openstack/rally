@@ -12,6 +12,7 @@ netaddr>=0.7.13,!=0.7.16,<=0.7.19                      # BSD
 oslo.config>=4.0.0,!=4.3.0,!=4.4.0,<=4.12.0            # Apache Software License
 oslo.db>=4.24.0,<=4.26.0                               # Apache Software License
 oslo.log==3.30.0                                       # Apache Software License
+oslo.serialization<2.22.0                              # Apache Software License
 oslo.utils>=3.20.0,<=3.29.0                            # Apache Software License
 paramiko>=2.0.0,<=2.2.1                                # LGPL
 pbr>=2.0.0,!=2.1.0,<=3.1.1                             # Apache Software License
