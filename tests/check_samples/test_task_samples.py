@@ -30,7 +30,7 @@ from rally.common import broker
 from rally.common import yamlutils as yaml
 from rally import plugins
 from rally.plugins.openstack.context.keystone import users
-from tests.functional import utils
+from tests.check_samples import utils
 
 
 class TestTaskSamples(unittest.TestCase):
