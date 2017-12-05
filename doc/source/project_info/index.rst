@@ -32,7 +32,7 @@ Project Team Lead (PTL)
 | | andreykurilin (irc)        |  * Release management                          |
 | | andreykurilin (gitter)     |  * Community management                        |
 | | andr.kurilin@gmail.com     |  * Core team management                        |
-| | akurilin@mirantis.com      |  * Road Map                                    |
+| |                            |  * Road Map                                    |
 +------------------------------+------------------------------------------------+
 
 | *If you would like to refactor whole Rally or have UX/community/other
@@ -57,9 +57,17 @@ Project Core maintainers
 | | boris-42 (irc)             |  * Architect                                   |
 | | boris@pavlovic.me          |  * Rally task & plugins                        |
 +------------------------------+------------------------------------------------+
+| | Chen Haibing               |  * Rally task & plugins                        |
+| | chenhb-zte (gitter)        |                                                |
+| | chen.haibing1@zte.com.cn   |                                                |
++------------------------------+------------------------------------------------+
 | | Chris St. Pierre           |  * Rally task & plugins                        |
 | | stpierre (irc)             |  * Bash guru ;)                                |
 | | cstpierr@cisco.com         |                                                |
++------------------------------+------------------------------------------------+
+| | Hai Shi                    |  * Rally task & plugins                        |
+| | shihai1991 (gitter)        |                                                |
+| | shihai1992@gmail.com       |                                                |
 +------------------------------+------------------------------------------------+
 | | Illia Khudoshyn            |  * Rally task & plugins                        |
 | | ikhudoshyn (irc)           |                                                |
@@ -80,10 +88,6 @@ Project Core maintainers
 | | Sergey Skripnick           |  * Rally CI/CD                                 |
 | | redixin (irc)              |  * Rally deploy                                |
 | | sskripnick@mirantis.com    |  * Automation of everything                    |
-+------------------------------+------------------------------------------------+
-| | Yair Fried                 |  * Rally-Tempest integration                   |
-| | yfried (irc)               |  * Rally task & plugins                        |
-| | yfried@redhat.com          |                                                |
 +------------------------------+------------------------------------------------+
 | | Yaroslav Lobankov          |  * Rally Verification                          |
 | | ylobankov (irc)            |                                                |
