@@ -668,7 +668,140 @@ class TaskConfig(object):
         }
     }
 
-    CONFIG_SCHEMAS = {1: CONFIG_SCHEMA_V1, 2: CONFIG_SCHEMA_V2}
+    CONFIG_SCHEMA_V3 = {
+        "type": "object",
+        "$schema": consts.JSON_SCHEMA,
+        "properties": {
+            "version": {"type": "number"},
+            "title": {"type": "string", "maxLength": 128},
+            "description": {"type": "string"},
+            "tags": {
+                "type": "array",
+                "items": {"type": "string"}
+            },
+
+            "subtasks": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                    "oneOf": [
+                        {"$ref": "#/definitions/subtask-workload"},
+                        {"$ref": "#/definitions/subtask-workloads"}
+                    ]
+                }
+            }
+        },
+        "additionalProperties": False,
+        "required": ["title", "subtasks"],
+        "definitions": {
+            "singleEntity": {
+                "type": "object",
+                "minProperties": 1,
+                "maxProperties": 1,
+                "patternProperties": {
+                    ".*": {"type": "object"}
+                }
+            },
+            "subtask-workload": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string", "maxLength": 128},
+                    "group": {"type": "string"},
+                    "description": {"type": "string"},
+                    "tags": {
+                        "type": "array",
+                        "items": {"type": "string", "maxLength": 255}
+                    },
+                    "scenario": {"$ref": "#/definitions/singleEntity"},
+                    "runner": {"$ref": "#/definitions/singleEntity"},
+                    "sla": {"type": "object"},
+                    "hooks": {
+                        "type": "array",
+                        "items": {"$ref": "#/definitions/hook"},
+                    },
+                    "contexts": {"type": "object"}
+                },
+                "additionalProperties": False,
+                "required": ["title", "scenario", "runner"]
+            },
+            "subtask-workloads": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string"},
+                    "group": {"type": "string"},
+                    "description": {"type": "string"},
+                    "tags": {
+                        "type": "array",
+                        "items": {"type": "string", "maxLength": 255}
+                    },
+                    "run_in_parallel": {"type": "boolean"},
+                    "workloads": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "scenario": {
+                                    "$ref": "#/definitions/singleEntity"},
+                                "description": {"type": "string"},
+                                "runner": {
+                                    "$ref": "#/definitions/singleEntity"},
+                                "sla": {"type": "object"},
+                                "hooks": {
+                                    "type": "array",
+                                    "items": {"$ref": "#/definitions/hook"},
+                                },
+                                "contexts": {"type": "object"}
+                            },
+                            "additionalProperties": False,
+                            "required": ["scenario"]
+                        }
+                    }
+                },
+                "additionalProperties": False,
+                "required": ["title", "workloads"]
+            },
+            "hook": {
+                "type": "object",
+                "oneOf": [
+                    {
+                        "properties": {
+                            "name": {"type": "string"},
+                            "description": {"type": "string"},
+                            "args": {},
+                            "trigger": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {"type": "string"},
+                                    "args": {},
+                                },
+                                "required": ["name", "args"],
+                                "additionalProperties": False,
+                            }
+                        },
+                        "required": ["name", "args", "trigger"],
+                        "additionalProperties": False
+                    },
+                    {
+                        "properties": {
+                            "action": {
+                                "type": "object",
+                                "minProperties": 1,
+                                "maxProperties": 1,
+                                "patternProperties": {".*": {}}
+                            },
+                            "trigger": {"$ref": "#/definitions/singleEntity"},
+                            "description": {"type": "string"},
+                        },
+                        "required": ["action", "trigger"],
+                        "additionalProperties": False
+                    },
+                ]
+            }
+        }
+    }
+
+    CONFIG_SCHEMAS = {1: CONFIG_SCHEMA_V1, 2: CONFIG_SCHEMA_V2, 2: CONFIG_SCHEMA_V3}
 
     def __init__(self, config):
         """TaskConfig constructor.

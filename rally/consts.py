@@ -118,7 +118,7 @@ class _Service(utils.ImmutableMixin, utils.EnumMixin):
 class _ServiceType(utils.ImmutableMixin, utils.EnumMixin):
     """OpenStack services types, mapped to service names."""
 
-    VOLUME = "volume"
+    VOLUME = "volumev2"
     SHARE = "share"
     EC2 = "ec2"
     IMAGE = "image"

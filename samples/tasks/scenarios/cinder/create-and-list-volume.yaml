@@ -1,3 +1,5 @@
+{% set api_version = api_version or "2" %}
+{% set service_type = service_type or "volumev2" %}
 ---
   CinderVolumes.create_and_list_volume:
     -
@@ -12,6 +14,10 @@
         users:
           tenants: 1
           users_per_tenant: 1
+        api_versions:
+          cinder:
+            version: {{api_version}}
+            service_type: "{{service_type}}"
       sla:
         failure_rate:
           max: 0
@@ -29,6 +35,10 @@
         users:
           tenants: 1
           users_per_tenant: 1
+        api_versions:
+          cinder:
+            version: {{api_version}}
+            service_type: "{{service_type}}"
       sla:
         failure_rate:
           max: 0
