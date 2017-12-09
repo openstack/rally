@@ -16,7 +16,7 @@ oslo.utils===3.30.0
 osprofiler===1.13.0
 paramiko===2.3.1
 pbr===3.1.1
-PrettyTable===7
+PrettyTable===0.7
 python-ceilometerclient===2.9.0
 python-cinderclient===3.2.0
 python-designateclient===2.7.0
