@@ -341,9 +341,9 @@ class UserGeneratorForNewUsersTestCase(test.ScenarioTestCase):
         self.osclients.Clients.assert_has_calls(expected, any_order=True)
 
         user_net = user1.neutron.return_value
-        user_net.list_security_groups.assert_called_once_with()
+        user_net.list_security_groups.assert_called_once_with(tenant_id="t1")
         user_net = user2.neutron.return_value
-        user_net.list_security_groups.assert_called_once_with()
+        user_net.list_security_groups.assert_called_once_with(tenant_id="t2")
         admin_neutron = admin_clients.neutron.return_value
         self.assertEqual(
             [mock.call("id-1"), mock.call("id-3")],
