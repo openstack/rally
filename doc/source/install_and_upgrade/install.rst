@@ -113,48 +113,41 @@ the Rally git repository and run:
     docker build -t myrally .
 
 If you build your own Docker image, substitute ``myrally`` for
-``rallyforge/rally`` in the commands below.
+``xrally/xrally-openstack`` in the commands below.
 
-The Rally Docker image is configured to store local settings and the
-database in the user's home directory. For persistence of these data,
+The Rally Docker image is configured to store the database in the user's home
+directory - ``/home/rally/data/rally.sqlite``. For persistence of these data,
 you may want to keep this directory outside of the container. This may
-be done via the following steps:
+be done via 2 ways:
 
-.. code-block:: bash
+* use a docker image. In this case you do not need to initialize the database
 
-   sudo mkdir /var/lib/rally_container
-   sudo chown 65500 /var/lib/rally_container
-   docker run -it -v /var/lib/rally_container:/home/rally rallyforge/rally
+  .. code-block:: bash
 
-.. note::
+    docker volume create --name rally_volume
+    docker run -v rally_volume:/home/rally/data xrally/xrally-openstack deployment create --name "foo"
 
-   In order for the volume to be accessible by the Rally user
-   (uid: 65500) inside the container, it must be accessible by UID
-   65500 *outside* the container as well, which is why it is created
-   in ``/var/lib/rally_container``. Creating it in your home directory is only
-   likely to work if your home directory has excessively open
-   permissions (e.g., ``0755``), which is not recommended.
+* mount the directory to container. In this case, there is ability to transmit
+  task files inside the container, but you will need to initialize the database
+  by yourself
 
-You can find all task samples, docs and pre created tasks at /opt/rally/.
-Also you may want to save the last command as an alias:
+  .. code-block:: bash
 
-.. code-block:: bash
+    sudo mkdir /var/lib/rally_container
+    sudo chown 65500 /var/lib/rally_container
+    docker run -v /var/lib/rally_container:/home/rally/data xrally/xrally-openstack db create
+    docker run -v /var/lib/rally_container:/home/rally/data xrally/xrally-openstack deployment create --name "foo"
 
-   echo 'alias dock_rally="docker run -it -v /var/lib/rally_container:/home/rally rallyforge/rally"' >> ~/.bashrc
+  .. note::
 
-After executing ``dock_rally``, or ``docker run ...``, you will have
-bash running inside the container with Rally installed. You may do
-anything with Rally, but you need to create the database first:
+    In order for the volume to be accessible by the Rally user
+    (uid: 65500) inside the container, it must be accessible by UID
+    65500 *outside* the container as well, which is why it is created
+    in ``/var/lib/rally_container``. Creating it in your home directory is only
+    likely to work if your home directory has excessively open
+    permissions (e.g., ``0755``), which is not recommended.
 
-.. code-block:: console
-
-   user@box:~/rally$ dock_rally
-   rally@1cc98e0b5941:~$ rally db recreate
-   rally@1cc98e0b5941:~$ rally deployment list
-   There are no deployments. To create a new deployment, use:
-   rally deployment create
-   rally@1cc98e0b5941:~$
-
+You can find all task samples, docs and pre created tasks at /home/rally/source
 In case you have SELinux enabled and Rally fails to create the
 database, try executing the following commands to put SELinux into
 Permissive Mode on the host machine

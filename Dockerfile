@@ -10,8 +10,8 @@ COPY . /home/rally/source
 WORKDIR /home/rally/source
 
 RUN pip install . --constraint upper-constraints.txt && \
-    mkdir /etc/rally && mkdir /home/rally/data && \
-    echo "[db]" > /etc/rally/rally.conf && \
+    mkdir /etc/rally && \
+    echo "[database]" > /etc/rally/rally.conf && \
     echo "connection=sqlite:////home/rally/data/rally.db" >> /etc/rally/rally.conf
 RUN echo '[ ! -z "$TERM" -a -r /etc/motd ] && cat /etc/motd' \
             >> /etc/bash.bashrc; echo '\
@@ -37,10 +37,10 @@ RUN echo '[ ! -z "$TERM" -a -r /etc/motd ] && cat /etc/motd' \
 
 USER rally
 ENV HOME /home/rally
-RUN rally db recreate
+RUN mkdir /home/rally/data && rally db recreate
 
 # Docker volumes have specific behavior that allows this construction to work.
 # Data generated during the image creation is copied to volume only when it's
 # attached for the first time (volume initialization)
-VOLUME ["/home/rally"]
+VOLUME ["/home/rally/data"]
 ENTRYPOINT ["rally"]
