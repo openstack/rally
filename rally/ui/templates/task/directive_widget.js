@@ -1,3 +1,11 @@
+function changeFrameHeight(){
+  var ifm= document.getElementById("embedchart");
+  ifm.height=document.documentElement.clientHeight;
+  ifm.width=document.documentElement.clientWidth;
+}
+window.onresize=function(){
+  changeFrameHeight();
+}
 var widgetDirective = function($compile) {
   var Chart = {
     _render: function(node, data, chart, do_after){
@@ -141,8 +149,20 @@ var widgetDirective = function($compile) {
         } else if (attrs.widget === "TextArea") {
           var template = "<div style='padding:0 0 5px' ng-repeat='str in data track by $index'>{{str}}</div><div style='height:10px'></div>";
           var el = element.empty().append($compile(template)(scope)).children()[0]
-        } else {
+        }
+        else if (attrs.widget == "EmbedChart") {
 
+          /* NOTE(chenxu): tag <\/script> in javascript string will be parsed incorrectly.
+             so we convert <\/script> to <\\/script> in python and convert it back here. */
+          data = data.replace(/\\\/script>/ig, "\/script>");
+          var template = "<iframe scrolling='no' id='embedchart' frameborder='0' onload='changeFrameHeight()' style='width:100%;'></iframe>"
+          var el = element.empty().append($compile(template)(scope)).children()[0];
+          var iframe = el.contentWindow || ( el.contentDocument.document || el.contentDocument);
+          iframe.document.open();
+          iframe.document.write(data);
+          iframe.document.close();
+        }
+        else {
           var el_chart = element.addClass("chart").css({display:"block"});
           var el = el_chart.html("<svg></svg>").children()[0];
 

@@ -217,7 +217,8 @@ class UserGenerator(context.Context):
                 https_insecure=self.credential.https_insecure,
                 https_cacert=self.credential.https_cacert,
                 region_name=self.credential.region_name,
-                profiler_hmac_key=self.credential.profiler_hmac_key)
+                profiler_hmac_key=self.credential.profiler_hmac_key,
+                profiler_conn_str=self.credential.profiler_conn_str)
             users.append({"id": user.id,
                           "credential": user_credential,
                           "tenant_id": tenant_id})

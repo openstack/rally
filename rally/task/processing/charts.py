@@ -16,7 +16,6 @@ import abc
 import bisect
 import collections
 import math
-
 import six
 
 from rally.common.plugin import plugin

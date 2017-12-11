@@ -12,6 +12,7 @@
         },
         "https_insecure": false,
         "https_cacert": "",
-        "profiler_hmac_key": "SECRET_KEY"
+        "profiler_hmac_key": "SECRET_KEY",
+        "profiler_conn_str": "mongodb://localhost"
     }
 }

@@ -45,7 +45,8 @@ class OpenStackCredentialTestCase(test.TestCase):
                           "https_cacert": None,
                           "project_domain_name": None,
                           "user_domain_name": None,
-                          "profiler_hmac_key": None},
+                          "profiler_hmac_key": None,
+                          "profiler_conn_str": None},
                          self.credential.to_dict())
 
     @mock.patch("rally.plugins.openstack.osclients.Clients")
@@ -130,6 +131,7 @@ class OpenStackCredentialBuilderTestCase(test.TestCase):
                 "https_cacert": "cacert",
                 "https_insecure": False,
                 "profiler_hmac_key": None,
+                "profiler_conn_str": None,
                 "project_domain_name": None,
                 "region_name": "RegionOne",
                 "tenant_name": "demo",
@@ -147,6 +149,7 @@ class OpenStackCredentialBuilderTestCase(test.TestCase):
                     "https_cacert": "cacert",
                     "https_insecure": False,
                     "profiler_hmac_key": None,
+                    "profiler_conn_str": None,
                     "project_domain_name": None,
                     "region_name": "RegionOne",
                     "tenant_name": "demo",
