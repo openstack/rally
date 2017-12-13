@@ -27,6 +27,16 @@ class ActionTimerMixinTestCase(test.TestCase):
         inst = atomic.ActionTimerMixin()
         self.assertEqual(inst._atomic_actions, inst.atomic_actions())
 
+    def test_reset_atomic_actions(self):
+        inst = atomic.ActionTimerMixin()
+
+        with atomic.ActionTimer(inst, "test"):
+            pass
+        self.assertNotEqual([], inst.atomic_actions())
+
+        inst.reset_atomic_actions()
+        self.assertEqual([], inst.atomic_actions())
+
 
 class AtomicActionTestCase(test.TestCase):
 

@@ -31,6 +31,10 @@ class ActionTimerMixin(object):
         """Returns the content of each atomic action."""
         return self._atomic_actions
 
+    def reset_atomic_actions(self):
+        """Clean all atomic action data."""
+        self._atomic_actions = []
+
 
 class ActionTimer(utils.Timer):
     """A class to measure the duration of atomic operations
