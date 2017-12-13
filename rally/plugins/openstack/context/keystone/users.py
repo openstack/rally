@@ -143,7 +143,8 @@ class UserGenerator(context.Context):
             with logging.ExceptionLogger(
                     LOG, "Unable to delete default security group"):
                 uclients = osclients.Clients(user["credential"])
-                security_groups = uclients.neutron().list_security_groups()
+                security_groups = uclients.neutron()\
+                    .list_security_groups(tenant_id=tenant_id)
                 default = [sg for sg in security_groups["security_groups"]
                            if sg["name"] == "default"]
                 if default:
