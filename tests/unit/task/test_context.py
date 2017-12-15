@@ -135,6 +135,75 @@ class ContextManagerTestCase(test.TestCase):
         foo_context.setup.assert_called_once_with()
         bar_context.setup.assert_called_once_with()
 
+        self.assertEqual([
+            {
+                "plugin_cfg": foo_context.config,
+                "plugin_name": foo_context.get_fullname.return_value,
+                "setup": {
+                    "atomic_actions": foo_context.atomic_actions.return_value,
+                    "error": None,
+                    "started_at": mock.ANY,
+                    "finished_at": mock.ANY
+                },
+                "cleanup": {
+                    "atomic_actions": None,
+                    "error": None,
+                    "started_at": None,
+                    "finished_at": None}
+            },
+            {
+                "plugin_cfg": bar_context.config,
+                "plugin_name": bar_context.get_fullname.return_value,
+                "setup": {
+                    "atomic_actions": bar_context.atomic_actions.return_value,
+                    "error": None,
+                    "started_at": mock.ANY,
+                    "finished_at": mock.ANY
+                },
+                "cleanup": {
+                    "atomic_actions": None,
+                    "error": None,
+                    "started_at": None,
+                    "finished_at": None}
+            }], manager.contexts_results())
+
+    @mock.patch("rally.task.context.task_utils.format_exc")
+    @mock.patch("rally.task.context.ContextManager._get_sorted_context_lst")
+    def test_setup_fails(self, mock__get_sorted_context_lst, mock_format_exc):
+        special_exc = KeyError("Oops")
+        foo_context = mock.MagicMock()
+        foo_context.setup.side_effect = special_exc
+        bar_context = mock.MagicMock()
+        mock__get_sorted_context_lst.return_value = [foo_context, bar_context]
+
+        ctx_object = {"config": {"a": [], "b": []}, "task": {"uuid": "uuid"}}
+
+        manager = context.ContextManager(ctx_object)
+
+        e = self.assertRaises(KeyError, manager.setup)
+        self.assertEqual(special_exc, e)
+
+        foo_context.setup.assert_called_once_with()
+        self.assertFalse(bar_context.setup.called)
+
+        self.assertEqual([
+            {
+                "plugin_cfg": foo_context.config,
+                "plugin_name": foo_context.get_fullname.return_value,
+                "setup": {
+                    "atomic_actions": foo_context.atomic_actions.return_value,
+                    "error": mock_format_exc.return_value,
+                    "started_at": mock.ANY,
+                    "finished_at": mock.ANY
+                },
+                "cleanup": {
+                    "atomic_actions": None,
+                    "error": None,
+                    "started_at": None,
+                    "finished_at": None}
+            }], manager.contexts_results())
+        mock_format_exc.assert_called_once_with(special_exc)
+
     def test_get_sorted_context_lst(self):
 
         @context.configure("foo", order=1)
@@ -209,9 +278,12 @@ class ContextManagerTestCase(test.TestCase):
         context.ContextManager(ctx_object).cleanup()
         mock_obj.assert_has_calls([mock.call("b@foo"), mock.call("a@foo")])
 
+    @mock.patch("rally.task.context.task_utils.format_exc")
     @mock.patch("rally.task.context.LOG.exception")
-    def test_cleanup_exception(self, mock_log_exception):
+    def test_cleanup_exception(self, mock_log_exception, mock_format_exc):
         mock_obj = mock.MagicMock()
+
+        exc = Exception("So Sad")
 
         @context.configure("a", platform="foo", order=1)
         class A(context.Context):
@@ -221,13 +293,30 @@ class ContextManagerTestCase(test.TestCase):
 
             def cleanup(self):
                 mock_obj("a@foo")
-                raise Exception("So Sad")
+                raise exc
 
         self.addCleanup(A.unregister)
         ctx_object = {"config": {"a@foo": []}, "task": {"uuid": "uuid"}}
-        context.ContextManager(ctx_object).cleanup()
+
+        ctx_manager = context.ContextManager(ctx_object)
+        ctx_manager._data[A.get_fullname()] = {
+            "cleanup": {"atomic_actions": None,
+                        "started_at": None,
+                        "finished_at": None,
+                        "error": None}}
+
+        ctx_manager.cleanup()
+
         mock_obj.assert_called_once_with("a@foo")
         mock_log_exception.assert_called_once_with(mock.ANY)
+        mock_format_exc.assert_called_once_with(exc)
+        self.assertEqual([{
+            "cleanup": {
+                "atomic_actions": [],
+                "error": mock_format_exc.return_value,
+                "started_at": mock.ANY,
+                "finished_at": mock.ANY}}],
+            ctx_manager.contexts_results())
 
     @mock.patch("rally.task.context.ContextManager.cleanup")
     @mock.patch("rally.task.context.ContextManager.setup")

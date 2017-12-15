@@ -211,7 +211,7 @@ def _make_source(tasks):
                 workload_cfg = collections.OrderedDict()
                 workload_cfg["scenario"] = {workload["name"]: workload["args"]}
                 workload_cfg["description"] = workload["description"]
-                workload_cfg["contexts"] = workload["context"]
+                workload_cfg["contexts"] = workload["contexts"]
                 workload_cfg["runner"] = {
                     workload["runner_type"]: workload["runner"]}
                 workload_cfg["hooks"] = [h["config"]

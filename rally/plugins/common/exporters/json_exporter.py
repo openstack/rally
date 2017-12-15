@@ -28,6 +28,12 @@ TIMEFORMAT = "%Y-%m-%dT%H:%M:%S"
 class JSONExporter(exporter.TaskExporter):
     """Generates task report in JSON format."""
 
+    # Revisions:
+    #    1.0 - the json report v1
+    #    1.1 - add `contexts_results` key with contexts execution results of
+    #          workloads.
+    REVISION = "1.1"
+
     def _generate_tasks(self):
         tasks = []
         for task in self.tasks_results:
@@ -63,7 +69,9 @@ class JSONExporter(exporter.TaskExporter):
                               workload["total_iteration_count"]),
                              ("created_at", workload["created_at"]),
                              ("updated_at", workload["updated_at"]),
-                             ("contexts", workload["context"]),
+                             ("contexts", workload["contexts"]),
+                             ("contexts_results",
+                              workload["contexts_results"]),
                              ("position", workload["position"]),
                              ("pass_sla", workload["pass_sla"]),
                              ("sla_results", workload["sla_results"]),
@@ -101,7 +109,7 @@ class JSONExporter(exporter.TaskExporter):
         results = {"info": {"rally_version": rally_version.version_string(),
                             "generated_at": dt.datetime.strftime(
                                 timeutils.utcnow(), TIMEFORMAT),
-                            "format_version": "1"},
+                            "format_version": self.REVISION},
                    "tasks": self._generate_tasks()}
 
         results = json.dumps(results, sort_keys=False, indent=4)

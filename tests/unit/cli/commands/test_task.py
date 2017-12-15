@@ -357,7 +357,7 @@ class TaskCommandsTestCase(test.TestCase):
             "pass_sla": False, "status": "finished",
             "subtasks": [{"workloads": [{
                 "name": "fake_name", "position": "fake_pos",
-                "args": "args", "context": "context", "sla": "sla",
+                "args": "args", "contexts": "context", "sla": "sla",
                 "runner": "runner", "hooks": [],
                 "statistics": {
                     "durations": {
@@ -567,7 +567,7 @@ class TaskCommandsTestCase(test.TestCase):
                 "hooks": [],
                 "sla": {"failure_rate": {"max": 0}},
                 "sla_results": {"sla": [{"success": True}]},
-                "context": {"users": {}},
+                "contexts": {"users": {}},
                 "data": data or []}]}]}
 
     @mock.patch("rally.cli.commands.task.json.dumps")
@@ -592,7 +592,7 @@ class TaskCommandsTestCase(test.TestCase):
             lambda x: {
                 "key": {"kw": {"sla": x["sla"],
                                "args": x["args"],
-                               "context": x["context"],
+                               "context": x["contexts"],
                                "runner": fix_r(x),
                                "hooks": [{"description": "",
                                           "name": "foo",
@@ -1127,7 +1127,7 @@ class TaskCommandsTestCase(test.TestCase):
                 "name": "fake_name",
                 "position": "fake_pos",
                 "args": {}, "runner_type": "foo",
-                "runner": {}, "context": {}, "sla": {},
+                "runner": {}, "contexts": {}, "sla": {},
                 "hooks": {},
                 "load_duration": 3.2,
                 "full_duration": 3.5,
@@ -1228,7 +1228,8 @@ class TaskCommandsTestCase(test.TestCase):
             "pass_sla": True,
             "sla": {"failure_rate": {"max": 0}},
             "sla_results": {"sla": [{"success": True}]},
-            "context": {"users": {}},
+            "contexts": {"users": {}},
+            "contexts_results": [],
             "data": [{"timestamp": 1, "atomic_actions": {"foo": 1.0,
                                                          "bar": 1.0},
                       "duration": 5, "idle_duration": 0, "error": [{}]},
@@ -1258,7 +1259,7 @@ class TaskCommandsTestCase(test.TestCase):
                                         "args": {"a2", "v2"}
                                     }}],
                          "sla": workload["sla"],
-                         "context": workload["context"]}},
+                         "context": workload["contexts"]}},
              "sla": workload["sla_results"]["sla"],
              "result": workload["data"],
              "full_duration": workload["full_duration"],
@@ -1306,7 +1307,8 @@ class TaskCommandsTestCase(test.TestCase):
                 "workloads": [{
                     "args": {},
                     "name": "Foo.bar",
-                    "context": "contexts",
+                    "contexts": "contexts",
+                    "contexts_results": [],
                     "runner_type": "constant",
                     "runner": {
                         "times": 100,

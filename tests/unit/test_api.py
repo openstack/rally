@@ -517,7 +517,8 @@ class TaskAPITestCase(test.TestCase):
                     "position": 77,
                     "runner": {},
                     "runner_type": "",
-                    "context": {},
+                    "contexts": {},
+                    "contexts_results": [],
                     "hooks": [],
                     "pass_sla": True,
                     "sla": {},
@@ -549,10 +550,12 @@ class TaskAPITestCase(test.TestCase):
             title="subtask-title")
         sub_task = mock_task.return_value.add_subtask.return_value
         sub_task.add_workload.assert_called_once_with(
-            name=workload["name"], description=workload["description"],
+            name=workload["name"],
+            description=workload["description"],
             position=workload["position"], runner=workload["runner"],
             runner_type=workload["runner_type"],
-            context=workload["context"], sla=workload["sla"],
+            contexts=workload["contexts"],
+            sla=workload["sla"],
             hooks=workload["hooks"], args=workload["args"]
         )
         sub_task.update_status.assert_called_once_with(
@@ -564,6 +567,7 @@ class TaskAPITestCase(test.TestCase):
             full_duration=workload["full_duration"],
             load_duration=workload["load_duration"],
             sla_results=workload["sla_results"]["sla"],
+            contexts_results=workload["contexts_results"],
             hooks_results=workload["hooks"], start_time=workload["start_time"])
 
     @mock.patch("rally.api.objects.Task")
@@ -584,7 +588,8 @@ class TaskAPITestCase(test.TestCase):
                     "position": 77,
                     "runner": {},
                     "runner_type": "",
-                    "context": {},
+                    "contexts": {"foo": {"killall": False}},
+                    "contexts_results": [],
                     "hooks": [],
                     "pass_sla": True,
                     "sla": {},
@@ -617,11 +622,15 @@ class TaskAPITestCase(test.TestCase):
             title=task_results["subtasks"][0]["title"])
         sub_task = mock_task.return_value.add_subtask.return_value
         sub_task.add_workload.assert_called_once_with(
-            name=workload["name"], description=workload["description"],
-            position=workload["position"], runner=workload["runner"],
+            name=workload["name"],
+            description=workload["description"],
+            position=workload["position"],
+            runner=workload["runner"],
             runner_type=workload["runner_type"],
-            context=workload["context"], sla=workload["sla"],
-            hooks=workload["hooks"], args=workload["args"]
+            contexts=workload["contexts"],
+            sla=workload["sla"],
+            hooks=workload["hooks"],
+            args=workload["args"]
         )
         sub_task.update_status.assert_called_once_with(
             consts.SubtaskStatus.FINISHED)
@@ -634,6 +643,7 @@ class TaskAPITestCase(test.TestCase):
             full_duration=workload["full_duration"],
             load_duration=workload["load_duration"],
             sla_results=workload["sla_results"]["sla"],
+            contexts_results=workload["contexts_results"],
             hooks_results=workload["hooks"], start_time=workload["start_time"])
 
     @mock.patch("rally.api.objects.Deployment.get")

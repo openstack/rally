@@ -180,16 +180,16 @@ def task_delete(uuid, status=None):
     return get_impl().task_delete(uuid, status=status)
 
 
-def subtask_create(task_uuid, title, description=None, context=None):
+def subtask_create(task_uuid, title, description=None, contexts=None):
     """Create a subtask.
 
     :param task_uuid: string with UUID of Task instance.
-    :param title: subtask title.
-    :param description: subtask description.
-    :param context: subtask context dict.
+    :param title: Subtask title.
+    :param description: string with the description of Subtask
+    :param contexts: a dict with config of Workload contexts
     :returns: a dict with data on the subtask.
     """
-    return get_impl().subtask_create(task_uuid, title, description, context)
+    return get_impl().subtask_create(task_uuid, title, description, contexts)
 
 
 def subtask_update(subtask_uuid, values):
@@ -203,8 +203,7 @@ def subtask_update(subtask_uuid, values):
 
 
 def workload_create(task_uuid, subtask_uuid, name, description, position,
-                    runner, runner_type, hooks, context, sla, args,
-                    context_execution=None, statistics=None):
+                    runner, runner_type, hooks, contexts, sla, args):
     """Create a workload.
 
     :param task_uuid: string with UUID of Task instance.
@@ -215,18 +214,15 @@ def workload_create(task_uuid, subtask_uuid, name, description, position,
     :param runner: a dict with config of Workload runner
     :param runner_type: a type of Workload runner
     :param hooks: a list with Workload hooks config and results
-    :param context: a dict with config of Workload context
+    :param contexts: a dict with config of Workload contexts
     :param sla: a dict with config of Workload sla
     :param args: a dict with arguments of Workload
-    :param context_execution: reserved for further refactoring
-    :param statistics: reserved for further refactoring
     :returns: a dict with data on the workload.
     """
     return get_impl().workload_create(
         task_uuid, subtask_uuid, name=name, description=description,
         position=position, runner=runner, runner_type=runner_type,
-        hooks=hooks, context=context, sla=sla, args=args,
-        context_execution=None, statistics=None)
+        hooks=hooks, contexts=contexts, sla=sla, args=args)
 
 
 def workload_get(workload_uuid):
@@ -253,7 +249,7 @@ def workload_data_create(task_uuid, workload_uuid, chunk_order, data):
 
 def workload_set_results(workload_uuid, subtask_uuid, task_uuid, load_duration,
                          full_duration, start_time, sla_results,
-                         hooks_results=None):
+                         contexts_results, hooks_results=None):
     """Set workload results.
 
     :param workload_uuid: string with UUID of Workload instance.
@@ -264,17 +260,20 @@ def workload_set_results(workload_uuid, subtask_uuid, task_uuid, load_duration,
         generating load, executing contexts and etc)
     :param start_time: a timestamp of load start
     :param sla_results: a list with Workload's SLA results
+    :param contexts_results: a list with Contexts execution results
     :param hooks_results: a list with Workload's Hooks results
     :returns: a dict with data on the workload.
     """
-    return get_impl().workload_set_results(workload_uuid=workload_uuid,
-                                           subtask_uuid=subtask_uuid,
-                                           task_uuid=task_uuid,
-                                           load_duration=load_duration,
-                                           full_duration=full_duration,
-                                           start_time=start_time,
-                                           sla_results=sla_results,
-                                           hooks_results=hooks_results)
+    return get_impl().workload_set_results(
+        workload_uuid=workload_uuid,
+        subtask_uuid=subtask_uuid,
+        task_uuid=task_uuid,
+        load_duration=load_duration,
+        full_duration=full_duration,
+        start_time=start_time,
+        sla_results=sla_results,
+        hooks_results=hooks_results,
+        contexts_results=contexts_results)
 
 
 def deployment_create(values):

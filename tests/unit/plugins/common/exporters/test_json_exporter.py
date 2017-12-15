@@ -71,6 +71,7 @@ class JSONExporterTestCase(test.TestCase):
                                 ("created_at", "2017-06-04T05:14:44"),
                                 ("updated_at", "2017-06-04T05:15:14"),
                                 ("contexts", {}),
+                                ("contexts_results", []),
                                 ("position", 0),
                                 ("pass_sla", True),
                                 ("sla_results", {"sla": []}),
@@ -96,7 +97,7 @@ class JSONExporterTestCase(test.TestCase):
                      "generated_at": dt.datetime.strftime(
                          mock_utcnow.return_value,
                          json_exporter.TIMEFORMAT),
-                     "format_version": "1"},
+                     "format_version": "1.1"},
             "tasks": reporter._generate_tasks.return_value
         }
         reporter._generate_tasks.assert_called_once_with()

@@ -193,7 +193,7 @@ class TasksTestCase(test.DBTestCase):
         w_description = "tatata"
         w_position = 0
         w_args = {"a": "A"}
-        w_context = {"c": "C"}
+        w_contexts = {"c": "C"}
         w_sla = {"s": "S"}
         w_runner = {"r": "R", "type": "T"}
         w_runner_type = "T"
@@ -206,12 +206,13 @@ class TasksTestCase(test.DBTestCase):
         w_full_duration = 42.0
         w_start_time = 33.77
         w_hooks = []
+        w_ctx_results = [{"name": "setup:something"}]
 
         subtask = db.subtask_create(task1["uuid"], title="foo")
         workload = db.workload_create(task1["uuid"], subtask["uuid"],
                                       name=w_name, description=w_description,
                                       position=w_position, args=w_args,
-                                      context=w_context, sla=w_sla,
+                                      contexts=w_contexts, sla=w_sla,
                                       hooks=w_hooks, runner=w_runner,
                                       runner_type=w_runner_type)
         db.workload_data_create(task1["uuid"], workload["uuid"], 0,
@@ -222,7 +223,8 @@ class TasksTestCase(test.DBTestCase):
                                 sla_results=sla_results,
                                 load_duration=w_load_duration,
                                 full_duration=w_full_duration,
-                                start_time=w_start_time)
+                                start_time=w_start_time,
+                                contexts_results=w_ctx_results)
 
         task1_full = db.task_get(task1["uuid"], detailed=True)
         self.assertEqual(validation_result, task1_full["validation_result"])
@@ -239,7 +241,10 @@ class TasksTestCase(test.DBTestCase):
              "name": w_name, "description": w_description,
              "id": 1, "position": w_position,
              "data": [],
-             "args": w_args, "context": w_context, "hooks": w_hooks,
+             "args": w_args,
+             "contexts": w_contexts,
+             "contexts_results": w_ctx_results,
+             "hooks": w_hooks,
              "runner": w_runner, "runner_type": w_runner_type,
              "full_duration": w_full_duration,
              "load_duration": w_load_duration,
@@ -254,7 +259,7 @@ class TasksTestCase(test.DBTestCase):
         subtask = db.subtask_create(task_id, title="foo")
         workload = db.workload_create(task_id, subtask["uuid"], name="atata",
                                       description="foo", position=0, args={},
-                                      context={}, sla={}, runner={},
+                                      contexts={}, sla={}, runner={},
                                       runner_type="r", hooks=[])
 
         db.workload_data_create(task_id, workload["uuid"], 0, {
@@ -328,6 +333,7 @@ class TasksTestCase(test.DBTestCase):
         load_duration = 13
         full_duration = 42
         start_time = 33.33
+        w_ctx_results = [{"name": "setup:something"}]
 
         db.workload_set_results(workload_uuid=workload["uuid"],
                                 subtask_uuid=workload["subtask_uuid"],
@@ -335,7 +341,8 @@ class TasksTestCase(test.DBTestCase):
                                 load_duration=load_duration,
                                 full_duration=full_duration,
                                 start_time=start_time,
-                                sla_results=sla_results)
+                                sla_results=sla_results,
+                                contexts_results=w_ctx_results)
 
         detailed_task = db.task_get(task_id, detailed=True)
         self.assertEqual(1, len(detailed_task["subtasks"]))
@@ -369,6 +376,7 @@ class TasksTestCase(test.DBTestCase):
         self.assertEqual(start_time, workload["start_time"])
         self.assertEqual(2, workload["failed_iteration_count"])
         self.assertEqual(10, workload["total_iteration_count"])
+        self.assertEqual(w_ctx_results, workload["contexts_results"])
 
         db.task_delete(task_id)
 
@@ -407,7 +415,7 @@ class WorkloadTestCase(test.DBTestCase):
         w_description = "tatata"
         w_position = 0
         w_args = {"a": "A"}
-        w_context = {"c": "C"}
+        w_contexts = {"c": "C"}
         w_sla = {"s": "S"}
         w_runner = {"r": "R", "type": "T"}
         w_runner_type = "T"
@@ -416,7 +424,7 @@ class WorkloadTestCase(test.DBTestCase):
         workload = db.workload_create(self.task_uuid, self.subtask_uuid,
                                       name=w_name, description=w_description,
                                       position=w_position, args=w_args,
-                                      context=w_context, sla=w_sla,
+                                      contexts=w_contexts, sla=w_sla,
                                       hooks=w_hooks, runner=w_runner,
                                       runner_type=w_runner_type)
 
@@ -425,13 +433,13 @@ class WorkloadTestCase(test.DBTestCase):
         workload.pop("updated_at")
 
         self.assertEqual(
-            {"context_execution": {},
-             "statistics": {},
+            {"statistics": {},
              "subtask_uuid": self.subtask_uuid,
              "task_uuid": self.task_uuid,
              "name": w_name, "description": w_description,
              "id": 1, "position": w_position,
-             "args": w_args, "context": w_context, "hooks": w_hooks,
+             "args": w_args, "hooks": w_hooks,
+             "contexts": w_contexts, "contexts_results": [],
              "runner": w_runner, "runner_type": w_runner_type,
              "full_duration": 0.0, "load_duration": 0.0,
              "failed_iteration_count": 0, "total_iteration_count": 0,
@@ -442,7 +450,7 @@ class WorkloadTestCase(test.DBTestCase):
         workload = db.workload_create(self.task_uuid, self.subtask_uuid,
                                       name="foo", description="descr",
                                       position=0, args={},
-                                      context={}, sla={},
+                                      contexts={}, sla={},
                                       hooks=[], runner={},
                                       runner_type="foo")
         raw_data = {
@@ -482,6 +490,7 @@ class WorkloadTestCase(test.DBTestCase):
         load_duration = 13
         full_duration = 42
         start_time = 33.33
+        w_ctx_results = [{"name": "setup:something"}]
 
         db.workload_data_create(self.task_uuid, workload["uuid"], 0, raw_data)
         db.workload_set_results(workload_uuid=workload["uuid"],
@@ -490,7 +499,8 @@ class WorkloadTestCase(test.DBTestCase):
                                 load_duration=load_duration,
                                 full_duration=full_duration,
                                 start_time=start_time,
-                                sla_results=sla_results)
+                                sla_results=sla_results,
+                                contexts_results=w_ctx_results)
         workload = db.workload_get(workload["uuid"])
 
         self.assertEqual(13, workload["load_duration"])
@@ -512,7 +522,7 @@ class WorkloadTestCase(test.DBTestCase):
         workload = db.workload_create(self.task_uuid, self.subtask_uuid,
                                       name="foo", description="descr",
                                       position=0, args={},
-                                      context={}, sla={},
+                                      contexts={}, sla={},
                                       hooks=[], runner={},
                                       runner_type="foo")
         sla_results = [{"s": "S", "success": False},
@@ -521,6 +531,7 @@ class WorkloadTestCase(test.DBTestCase):
         load_duration = 13
         full_duration = 42
         start_time = 33.33
+        w_ctx_results = [{"name": "setup:something"}]
 
         db.workload_set_results(workload_uuid=workload["uuid"],
                                 subtask_uuid=self.subtask_uuid,
@@ -528,7 +539,8 @@ class WorkloadTestCase(test.DBTestCase):
                                 load_duration=load_duration,
                                 full_duration=full_duration,
                                 start_time=start_time,
-                                sla_results=sla_results)
+                                sla_results=sla_results,
+                                contexts_results=w_ctx_results)
         workload = db.workload_get(workload["uuid"])
         self.assertIsNone(workload["min_duration"])
         self.assertIsNone(workload["max_duration"])
@@ -553,7 +565,7 @@ class WorkloadDataTestCase(test.DBTestCase):
         self.subtask_uuid = self.subtask["uuid"]
         self.workload = db.workload_create(
             self.task_uuid, self.subtask_uuid, name="atata", description="foo",
-            position=0, args={}, context={}, sla={}, runner={},
+            position=0, args={}, contexts={}, sla={}, runner={},
             runner_type="r", hooks={})
         self.workload_uuid = self.workload["uuid"]
 
