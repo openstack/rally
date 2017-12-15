@@ -41,7 +41,9 @@ class VolumeTypeGenerator(context.Context):
             self.context.get("admin", {}).get("credential"),
             api_info=self.context["config"].get("api_versions"))
         cinder_service = block.BlockStorage(
-            admin_clients, name_generator=self.generate_random_name)
+            admin_clients,
+            name_generator=self.generate_random_name,
+            atomic_inst=self.atomic_actions())
         self.context["volume_types"] = []
         for vtype_name in self.config:
             LOG.debug("Creating Cinder volume type %s" % vtype_name)
