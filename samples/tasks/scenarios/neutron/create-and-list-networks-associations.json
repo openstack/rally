@@ -1,3 +1,4 @@
+{% set flavor_name = flavor_name or "m1.tiny" %}
 {
     "NeutronBGPVPN.create_and_list_networks_associations": [
         {
@@ -12,7 +13,17 @@
                     "tenants": 1,
                     "users_per_tenant": 1
                 },
-                "network":{}
+                "network": {},
+                "servers": {
+                    "servers_per_tenant": 1,
+                    "auto_assign_nic": true,
+                    "flavor" : {
+                        "name": "{{flavor_name}}"
+                    },
+                    "image": {
+                        "name": "^cirros.*-disk$"
+                    }
+                }
             },
             "sla": {
                 "failure_rate": {

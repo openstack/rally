@@ -1,3 +1,4 @@
+{% set flavor_name = flavor_name or "m1.tiny" %}
 ---
   NeutronBGPVPN.create_bgpvpn_assoc_disassoc_routers:
     -
@@ -8,9 +9,16 @@
         concurrency: 2
       context:
         users:
-          tenants: 1
+          tenants: 2
           users_per_tenant: 1
-        router: {}
+        network: {}
+        servers:
+          servers_per_tenant: 1
+          auto_assign_nic: True
+          flavor:
+            name: "{{flavor_name}}"
+          image:
+            name: "^cirros.*-disk$"
       sla:
         failure_rate:
           max: 0
