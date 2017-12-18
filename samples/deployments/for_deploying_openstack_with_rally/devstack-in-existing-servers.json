@@ -1,9 +1,0 @@
-{
-    "type": "DevstackEngine",
-    "devstack_repo": "https://git.openstack.org/openstack-dev/devstack",
-    "devstack_branch": "master",
-    "provider": {
-        "type": "ExistingServers",
-        "credentials": [{"user": "root", "host": "10.2.0.8"}]
-    }
-}
