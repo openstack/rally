@@ -65,7 +65,9 @@ class VolumeGenerator(context.Context):
                 user["credential"],
                 api_info=self.context["config"].get("api_versions"))
             cinder_service = block.BlockStorage(
-                clients, name_generator=self.generate_random_name)
+                clients,
+                name_generator=self.generate_random_name,
+                atomic_inst=self.atomic_actions())
             for i in range(volumes_per_tenant):
                 vol = cinder_service.create_volume(size,
                                                    volume_type=volume_type)
