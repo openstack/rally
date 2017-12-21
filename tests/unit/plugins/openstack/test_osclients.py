@@ -618,7 +618,7 @@ class OSClientsTestCase(test.TestCase):
             self.assertEqual(fake_gnocchi, client)
             kw = {"version": "1",
                   "session": mock_keystoneauth1.session.Session(),
-                  "service_type": "metric"}
+                  "adapter_options": {"service_type": "metric"}}
             mock_gnocchi.client.Client.assert_called_once_with(**kw)
             self.assertEqual(fake_gnocchi, self.clients.cache["gnocchi"])
 

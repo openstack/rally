@@ -512,8 +512,9 @@ class Gnocchi(OSClient):
 
         service_type = self.choose_service_type(service_type)
         sess = self.keystone.get_session()[0]
-        gclient = gnocchi.Client(version=self.choose_version(
-            version), session=sess, service_type=service_type)
+        gclient = gnocchi.Client(
+            version=self.choose_version(version), session=sess,
+            adapter_options={"service_type": service_type})
         return gclient
 
 
