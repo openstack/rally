@@ -149,7 +149,7 @@ Work Items
 
  - Rename atomic actions into actions
  - Improve actions results format
- - Create a DB migartion that transforms results to new format
+ - Create a DB migration that transforms results to new format
 
 Dependencies
 ============
