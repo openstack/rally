@@ -333,7 +333,7 @@ of scenario.
 
             # NOTE(boris-42): One of the nice thing is that we can move
             #                 initialization of services to __init__ method
-            #                 of sceanrio.
+            #                 of scenario.
 
 Assignee(s)
 -----------

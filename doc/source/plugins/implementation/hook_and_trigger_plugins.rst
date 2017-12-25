@@ -82,7 +82,7 @@ plugin name and arguments for trigger plugin. In this example "event" trigger
 is specified and configured to run the hook at 5th, 50th, 200th and 1000th
 iterations.
 
-Here is a full task config that contains previous hook configuraiton:
+Here is a full task config that contains previous hook configuration:
 
 .. code-block:: json
 
