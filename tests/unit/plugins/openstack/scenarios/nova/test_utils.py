@@ -776,7 +776,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self.admin_clients("nova").server_groups.list.assert_called_once_with(
             True)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
-                                       "nova.list_server_groups")
+                                       "nova.list_server_groups", count=2)
 
     def test__delete_keypair(self):
         nova_scenario = utils.NovaScenario()
@@ -1068,7 +1068,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                                               description="desp")
 
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
-                                       "nova.update_server")
+                                       "nova.update_server", count=2)
 
     def test_create_aggregate(self):
         nova_scenario = utils.NovaScenario(context=self.context)

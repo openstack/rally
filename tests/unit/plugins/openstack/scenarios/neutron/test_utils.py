@@ -87,7 +87,7 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         return_networks_list = self.scenario._list_networks()
         self.assertEqual(networks_list, return_networks_list)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
-                                       "neutron.list_networks")
+                                       "neutron.list_networks", count=2)
 
     def test_show_network(self):
         network = {

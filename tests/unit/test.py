@@ -23,7 +23,6 @@ from oslotest import base
 
 from rally.common import db
 from rally import plugins
-from rally.task import utils as tutils
 from tests.unit import fakes
 
 
@@ -46,14 +45,33 @@ class TestCase(base.BaseTestCase):
         self.addCleanup(mock.patch.stopall)
         plugins.load()
 
-    def _test_atomic_action_timer(self, atomic_actions, name):
-        atomic_wrapper = tutils.WrapperForAtomicActions(atomic_actions)
-        action_duration = atomic_wrapper.get(name)
-        if action_duration is None:
-            self.fail("The duration of atomic action '%s' should not be None. "
-                      "None duration means that it had not called before the "
-                      "check is executed." % name)
-        self.assertIsInstance(action_duration, float)
+    def _test_atomic_action_timer(self, atomic_actions, name, count=1,
+                                  parent=[]):
+
+        if parent:
+            is_found = False
+            for action in atomic_actions:
+                if action["name"] == parent[0]:
+                    is_found = True
+                    self._test_atomic_action_timer(action["children"],
+                                                   name, count=count,
+                                                   parent=parent[1:])
+            if not is_found:
+                self.fail("The parent action %s can not be found."
+                          % parent[0])
+        else:
+            actual_count = 0
+            for atomic_action in atomic_actions:
+                if atomic_action["name"] == name:
+                    self.assertIsInstance(atomic_action["started_at"], float)
+                    self.assertIsInstance(atomic_action["finished_at"], float)
+                    actual_count += 1
+            if count != actual_count:
+                self.fail("%(count)d count is expected for atomic action"
+                          " %(name)s, the actual count"
+                          " is %(actual_count)d."
+                          % {"name": name, "count": count,
+                             "actual_count": actual_count})
 
     def assertSequenceEqual(self, iterable_1, iterable_2, msg=None):
         self.assertEqual(tuple(iterable_1), tuple(iterable_2), msg)
