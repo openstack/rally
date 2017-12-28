@@ -28,7 +28,7 @@ def base():
     subtypes. Base Plugins may contain documentation and other base methods
     related to specific type of plugins, resolving next problems:
 
-    - Having different types of plugins (e.g. Sceanrio, Context, SLA, ...)
+    - Having different types of plugins (e.g. Scenario, Context, SLA, ...)
     - Auto generation of plugin reference with splitting plugins by their base
     - Plugin lookup - one can easily get all plugins from some base.
 
