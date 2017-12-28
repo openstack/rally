@@ -30,9 +30,8 @@ from oslo_db import exception as db_exc
 from oslo_db.sqlalchemy import session as db_session
 from oslo_utils import timeutils
 import six
-from sqlalchemy import or_
-from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.orm import load_only as sa_loadonly
+import sqlalchemy as sa
+import sqlalchemy.orm   # noqa
 
 from rally.common.db.sqlalchemy import models
 from rally import consts
@@ -235,7 +234,7 @@ class Connection(object):
     def _task_get(self, uuid, load_only=None, session=None):
         pre_query = self.model_query(models.Task, session=session)
         if load_only:
-            pre_query = pre_query.options(sa_loadonly(load_only))
+            pre_query = pre_query.options(sa.orm.load_only(load_only))
 
         task = pre_query.filter_by(uuid=uuid).first()
         if not task:
@@ -669,8 +668,8 @@ class Connection(object):
     def _verifier_get(self, verifier_id, session=None):
         verifier = self.model_query(
             models.Verifier, session=session).filter(
-                or_(models.Verifier.name == verifier_id,
-                    models.Verifier.uuid == verifier_id)).first()
+                sa.or_(models.Verifier.name == verifier_id,
+                       models.Verifier.uuid == verifier_id)).first()
         if not verifier:
             raise exceptions.ResourceNotFound(id=verifier_id)
         return verifier
@@ -687,8 +686,8 @@ class Connection(object):
         with session.begin():
             query = self.model_query(
                 models.Verifier, session=session).filter(
-                    or_(models.Verifier.name == verifier_id,
-                        models.Verifier.uuid == verifier_id))
+                    sa.or_(models.Verifier.name == verifier_id,
+                           models.Verifier.uuid == verifier_id))
             count = query.delete(synchronize_session=False)
             if not count:
                 raise exceptions.ResourceNotFound(id=verifier_id)
@@ -806,7 +805,7 @@ class Connection(object):
         try:
             return (self.model_query(models.Worker).
                     filter_by(hostname=hostname).one())
-        except NoResultFound:
+        except sa.orm.exc.NoResultFound:
             raise exceptions.WorkerNotFound(worker=hostname)
 
     def unregister_worker(self, hostname):
