@@ -55,11 +55,11 @@ class TasksTestCase(test.DBTestCase):
         return db.task_create(values)
 
     def test_task_get_not_found(self):
-        self.assertRaises(exceptions.TaskNotFound,
+        self.assertRaises(exceptions.DBRecordNotFound,
                           db.task_get, "f885f435-f6ca-4f3e-9b3e-aeb6837080f2")
 
     def test_task_get_status_not_found(self):
-        self.assertRaises(exceptions.TaskNotFound,
+        self.assertRaises(exceptions.DBRecordNotFound,
                           db.task_get_status,
                           "f885f435-f6ca-4f3e-9b3e-aeb6837080f2")
 
@@ -101,7 +101,7 @@ class TasksTestCase(test.DBTestCase):
         self.assertEqual(["test_tag"], db_task["tags"])
 
     def test_task_update_not_found(self):
-        self.assertRaises(exceptions.TaskNotFound,
+        self.assertRaises(exceptions.DBRecordNotFound,
                           db.task_update,
                           "fake_uuid", {})
 
@@ -140,7 +140,7 @@ class TasksTestCase(test.DBTestCase):
 
         self.assertEqual(task_init, get_uuids(status=INIT))
         self.assertEqual(task_finished, get_uuids(status=FINISHED))
-        self.assertRaises(exceptions.DeploymentNotFound,
+        self.assertRaises(exceptions.DBRecordNotFound,
                           get_uuids, deployment="non-existing-deployment")
 
         deleted_task_uuid = task_finished.pop()
@@ -151,11 +151,11 @@ class TasksTestCase(test.DBTestCase):
     def test_task_delete(self):
         task1, task2 = self._create_task()["uuid"], self._create_task()["uuid"]
         db.task_delete(task1)
-        self.assertRaises(exceptions.TaskNotFound, self._get_task, task1)
+        self.assertRaises(exceptions.DBRecordNotFound, self._get_task, task1)
         self.assertEqual(task2, self._get_task(task2)["uuid"])
 
     def test_task_delete_not_found(self):
-        self.assertRaises(exceptions.TaskNotFound,
+        self.assertRaises(exceptions.DBRecordNotFound,
                           db.task_delete,
                           "da6f820c-b133-4b9f-8534-4c3bcc40724b")
 
@@ -166,17 +166,17 @@ class TasksTestCase(test.DBTestCase):
         task1 = self._create_task(values=values)["uuid"]
         task2 = self._create_task(values=values)["uuid"]
         db.task_delete(task1, status=consts.TaskStatus.FINISHED)
-        self.assertRaises(exceptions.TaskNotFound, self._get_task, task1)
+        self.assertRaises(exceptions.DBRecordNotFound, self._get_task, task1)
         self.assertEqual(task2, self._get_task(task2)["uuid"])
 
     def test_task_delete_by_uuid_and_status_invalid(self):
         task = self._create_task(
             values={"status": consts.TaskStatus.INIT})["uuid"]
-        self.assertRaises(exceptions.TaskInvalidStatus, db.task_delete, task,
+        self.assertRaises(exceptions.DBConflict, db.task_delete, task,
                           status=consts.TaskStatus.FINISHED)
 
     def test_task_delete_by_uuid_and_status_not_found(self):
-        self.assertRaises(exceptions.TaskNotFound,
+        self.assertRaises(exceptions.DBRecordNotFound,
                           db.task_delete,
                           "fcd0483f-a405-44c4-b712-99c9e52254eb",
                           status=consts.TaskStatus.FINISHED)
@@ -686,7 +686,7 @@ class DeploymentTestCase(test.DBTestCase):
         self.assertEqual({"opt2": "val2"}, get_deploy_two["config"])
 
     def test_deployment_get_not_found(self):
-        self.assertRaises(exceptions.DeploymentNotFound,
+        self.assertRaises(exceptions.DBRecordNotFound,
                           db.deployment_get,
                           "852e932b-9552-4b2d-89e3-a5915780a5e3")
 
@@ -737,7 +737,7 @@ class DeploymentTestCase(test.DBTestCase):
         self.assertEqual(deploy_one["uuid"], deploys[0]["uuid"])
 
     def test_deployment_delete_not_found(self):
-        self.assertRaises(exceptions.DeploymentNotFound,
+        self.assertRaises(exceptions.DBRecordNotFound,
                           db.deployment_delete,
                           "5f2883be-46c8-4c4b-a4fe-988ad0c6b20a")
 
@@ -745,8 +745,8 @@ class DeploymentTestCase(test.DBTestCase):
         deployment = db.deployment_create({})
         db.resource_create({"deployment_uuid": deployment["uuid"]})
         db.resource_create({"deployment_uuid": deployment["uuid"]})
-        self.assertRaises(exceptions.DeploymentIsBusy, db.deployment_delete,
-                          deployment["uuid"])
+        self.assertRaises(exceptions.DBConflict,
+                          db.deployment_delete, deployment["uuid"])
 
 
 class ResourceTestCase(test.DBTestCase):
@@ -773,7 +773,7 @@ class ResourceTestCase(test.DBTestCase):
         self.assertEqual(0, len(resources))
 
     def test_delete_not_found(self):
-        self.assertRaises(exceptions.ResourceNotFound,
+        self.assertRaises(exceptions.DBRecordNotFound,
                           db.resource_delete, 123456789)
 
     def test_get_all(self):
@@ -836,7 +836,7 @@ class VerifierTestCase(test.DBTestCase):
         self.assertEqual("a", db.verifier_get(v["uuid"])["name"])
 
     def test_verifier_get_raise_exc(self):
-        self.assertRaises(exceptions.ResourceNotFound, db.verifier_get, "1234")
+        self.assertRaises(exceptions.DBRecordNotFound, db.verifier_get, "1234")
 
     def test_verifier_list(self):
         v1 = db.verifier_create("a1", "b1", "c1", "d1", "e1", False)
@@ -853,7 +853,7 @@ class VerifierTestCase(test.DBTestCase):
     def test_verifier_delete(self):
         v = db.verifier_create("a", "b", "c", "d", "e", False)
         db.verifier_delete(v["uuid"])
-        self.assertRaises(exceptions.ResourceNotFound, db.verifier_delete,
+        self.assertRaises(exceptions.DBRecordNotFound, db.verifier_delete,
                           v["uuid"])
 
     def test_verification_update(self):
@@ -886,7 +886,7 @@ class VerificationTestCase(test.DBTestCase):
         self.assertEqual(self.deploy["uuid"], v["deployment_uuid"])
 
     def test_verification_get_raise_exc(self):
-        self.assertRaises(exceptions.ResourceNotFound, db.verification_get,
+        self.assertRaises(exceptions.DBRecordNotFound, db.verification_get,
                           "1234")
 
     def test_verification_list(self):
@@ -915,7 +915,7 @@ class VerificationTestCase(test.DBTestCase):
     def test_verification_delete(self):
         v = self._create_verification()
         db.verification_delete(v["uuid"])
-        self.assertRaises(exceptions.ResourceNotFound, db.verification_delete,
+        self.assertRaises(exceptions.DBRecordNotFound, db.verification_delete,
                           v["uuid"])
 
     def test_verification_update(self):

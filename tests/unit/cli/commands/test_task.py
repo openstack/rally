@@ -929,9 +929,10 @@ class TaskCommandsTestCase(test.TestCase):
 
     def test_use_not_found(self):
         task_id = "ddc3f8ba-082a-496d-b18f-72cdf5c10a14"
-        exc = exceptions.TaskNotFound(uuid=task_id)
+        exc = exceptions.DBRecordNotFound(criteria="uuid: %s" % task_id,
+                                          table="tasks")
         self.fake_api.task.get.side_effect = exc
-        self.assertRaises(exceptions.TaskNotFound, self.task.use,
+        self.assertRaises(exceptions.DBRecordNotFound, self.task.use,
                           self.fake_api, task_id)
 
     @mock.patch("rally.cli.commands.task.os.path")

@@ -749,10 +749,10 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
 
     @mock.patch("rally.api.LOG")
     @mock.patch("rally.common.objects.deploy.db.deployment_create",
-                side_effect=exceptions.DeploymentNameExists(
-                    deployment="fake_deploy"))
+                side_effect=exceptions.DBRecordExists(
+                    field="name", value="fake_deploy", table="deployments"))
     def test_create_duplication_error(self, mock_deployment_create, mock_log):
-        self.assertRaises(exceptions.DeploymentNameExists,
+        self.assertRaises(exceptions.DBRecordExists,
                           self.deployment_inst.create,
                           config=self.deployment_config,
                           name="fake_deployment")
@@ -1212,7 +1212,8 @@ class VerifierAPITestCase(test.TestCase):
     @mock.patch("rally.api.vmanager.VerifierManager.get")
     def test_create(self, mock_verifier_manager_get, mock___verifier__get,
                     mock_verifier_create):
-        mock___verifier__get.side_effect = exceptions.ResourceNotFound(id="1")
+        mock___verifier__get.side_effect = exceptions.DBRecordNotFound(
+            criteria="uuid: 1", table="verifiers")
 
         name = "SomeVerifier"
         vtype = "fake_verifier"
@@ -1277,7 +1278,8 @@ class VerifierAPITestCase(test.TestCase):
     def test_create_fails_on_install_step(
             self, mock_verifier_manager_get, mock___verifier__get,
             mock_verifier_create):
-        mock___verifier__get.side_effect = exceptions.ResourceNotFound(id="1")
+        mock___verifier__get.side_effect = exceptions.DBRecordNotFound(
+            criteria="id: 1", table="verifiers")
         verifier_obj = mock_verifier_create.return_value
         verifier_obj.manager.install.side_effect = RuntimeError
 

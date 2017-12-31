@@ -82,7 +82,7 @@ class _Deployment(APIGroup):
 
         try:
             deployment = objects.Deployment(name=name, config=config)
-        except exceptions.DeploymentNameExists:
+        except exceptions.DBRecordExists:
             if logging.is_debug():
                 LOG.exception("Deployment with such name exists")
             raise
@@ -538,9 +538,10 @@ class _Task(APIGroup):
         :param task_uuid: The UUID of the task
         :param force: If set to True, then delete the task despite to the
                       status
-        :raises TaskInvalidStatus: when the status of the task is not
-                                   in FINISHED, FAILED or ABORTED and
-                                   the force argument is not True
+        :raises DBConflict: when the status of the task is not
+                            in FINISHED, FAILED or ABORTED and
+                            the force argument is not True
+        :raises DBRecordNotFound: when task doesn't exist
         """
         if force:
             objects.Task.delete_by_uuid(task_uuid, status=None)
@@ -681,7 +682,7 @@ class _Verifier(APIGroup):
 
         try:
             verifier = self._get(name)
-        except exceptions.ResourceNotFound:
+        except exceptions.DBRecordNotFound:
             verifier = objects.Verifier.create(
                 name=name, source=source, system_wide=system_wide,
                 version=version, vtype=vtype, platform=platform,

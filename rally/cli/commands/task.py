@@ -875,7 +875,7 @@ class TaskCommands(object):
             try:
                 api.task.delete(task_uuid=tid, force=force)
                 print("Successfully deleted task `%s`" % tid)
-            except exceptions.TaskInvalidStatus as e:
+            except exceptions.DBConflict as e:
                 print(e)
                 print("Use '--force' option to delete the task with vague "
                       "state.")

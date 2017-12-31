@@ -21,6 +21,7 @@ import datetime as dt
 import ddt
 
 from rally.common.db.sqlalchemy import api as db_api
+from rally import exceptions
 from tests.unit import test
 
 
@@ -78,4 +79,4 @@ class SerializeTestCase(test.DBTestCase):
 
             return Fake()
 
-        self.assertRaises(ValueError, fake_method)
+        self.assertRaises(exceptions.DBException, fake_method)

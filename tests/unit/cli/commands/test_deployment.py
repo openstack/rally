@@ -383,7 +383,8 @@ class DeploymentCommandsTestCase(test.TestCase):
 
     def test_deployment_not_found(self):
         deployment_id = "e87e4dca-b515-4477-888d-5f6103f13b42"
-        exc = exceptions.DeploymentNotFound(deployment=deployment_id)
+        exc = exceptions.DBRecordNotFound(criteria="uuid: %s" % deployment_id,
+                                          table="deployments")
         self.fake_api.deployment.get.side_effect = exc
         self.assertEqual(1, self.deployment.use(self.fake_api, deployment_id))
 

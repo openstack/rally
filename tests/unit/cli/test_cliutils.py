@@ -283,13 +283,14 @@ class CliUtilsTestCase(test.TestCase):
 
     @mock.patch("rally.api.API.check_db_revision")
     @mock.patch("rally.common.db.api.task_get",
-                side_effect=exceptions.TaskNotFound(uuid=FAKE_TASK_UUID))
+                side_effect=exceptions.DBRecordNotFound(
+                    criteria="uuid: %s" % FAKE_TASK_UUID, table="tasks"))
     def test_run_task_not_found(self, mock_task_get,
                                 mock_api_check_db_revision):
         ret = cliutils.run(["rally", "task", "status", "%s" % FAKE_TASK_UUID],
                            self.categories)
         self.assertTrue(mock_task_get.called)
-        self.assertEqual(460, ret)
+        self.assertEqual(404, ret)
 
     @mock.patch("rally.api.API.check_db_revision")
     @mock.patch("rally.cli.cliutils.validate_args",

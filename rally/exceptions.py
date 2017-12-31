@@ -65,6 +65,26 @@ def make_exception(exc):
     return RallyException(str(exc))
 
 
+class DBException(RallyException):
+    error_code = 500
+    msg_fmt = "DB Exception: '%(message)s'"
+
+
+class DBConflict(RallyException):
+    error_code = 409
+    msg_fmt = "DB Conflict. %(message)s"
+
+
+class DBRecordNotFound(RallyException):
+    error_code = 404
+    msg_fmt = "Record for %(criteria)s not found in table %(table)s"
+
+
+class DBRecordExists(DBException):
+    error_code = 409
+    msg_fmt = "Record with %(field)s = %(value)s already exists in %(table)s"
+
+
 class InvalidArgumentsException(RallyException):
     error_code = 455
     msg_fmt = "Invalid arguments: '%(message)s'"
@@ -111,38 +131,13 @@ class PluginWithSuchNameExists(RallyException):
         "to add plugin whose module allocates at %(new_path)s.")
 
 
-class TaskNotFound(NotFoundException):
-    error_code = 460
-    msg_fmt = "Task with uuid=%(uuid)s not found."
-
-
-class DeploymentNotFound(NotFoundException):
-    error_code = 461
-    msg_fmt = "Deployment %(deployment)s not found."
-
-
-class DeploymentNameExists(RallyException):
-    error_code = 462
-    msg_fmt = "Deployment name '%(deployment)s' already registered."
-
-
 class DeploymentNotFinishedStatus(RallyException):
     error_code = 463
     msg_fmt = "Deployment '%(name)s' (UUID=%(uuid)s) is '%(status)s'."
 
 
-class DeploymentIsBusy(RallyException):
-    error_code = 464
-    msg_fmt = "There are allocated resources for the deployment %(uuid)s."
-
-
 class RallyAssertionError(RallyException):
     msg_fmt = "Assertion error: %(message)s"
-
-
-class ResourceNotFound(NotFoundException):
-    error_code = 465
-    msg_fmt = "Resource with id=%(id)s not found."
 
 
 class TimeoutException(RallyException):
@@ -169,12 +164,6 @@ class GetResourceErrorStatus(GetResourceFailure):
 
 class ScriptError(RallyException):
     msg_fmt = "Script execution failed: %(message)s"
-
-
-class TaskInvalidStatus(RallyException):
-    error_code = 466
-    msg_fmt = ("Task `%(uuid)s` in `%(actual)s` status but `%(require)s` is "
-               "required.")
 
 
 class InvalidAdminException(InvalidArgumentsException):

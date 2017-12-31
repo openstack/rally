@@ -99,7 +99,7 @@ def task_get(uuid, detailed=False):
 
     :param uuid: UUID of the task.
     :param detailed: whether return results of task or not (Defaults to False).
-    :raises TaskNotFound: if the task does not exist.
+    :raises DBRecordNotFound: if the task does not exist.
     :returns: task dict with data on the task.
     """
     return get_impl().task_get(uuid, detailed=detailed)
@@ -109,7 +109,7 @@ def task_get_status(uuid):
     """Returns task by uuid.
 
     :param uuid: UUID of the task.
-    :raises TaskNotFound: if the task does not exist.
+    :raises DBRecordNotFound: if the task does not exist.
     :returns: task dict with data on the task.
     """
     return get_impl().task_get_status(uuid)
@@ -129,7 +129,7 @@ def task_update(uuid, values):
 
     :param uuid: UUID of the task.
     :param values: dict with record values.
-    :raises TaskNotFound: if the task does not exist.
+    :raises DBRecordNotFound: if task is not found.
     :returns: new updated task dict with data on the task.
     """
     return get_impl().task_update(uuid, values)
@@ -141,7 +141,8 @@ def task_update_status(task_uuid, status, allowed_statuses):
     :param task_uuid: string with UUID of Task instance.
     :param status: new value to be written into db instead of status.
     :param allowed_statuses: list of expected statuses to update in db.
-    :raises RallyException: if task not found with specified status.
+    :raises DBConflict: if task is in improper status.
+    :raises DBRecordNotFound: if task is not found.
     :returns: the count of rows match as returned by the database's
               "row count" feature
     """
@@ -173,9 +174,9 @@ def task_delete(uuid, status=None):
     statuses are equal otherwise an exception is raised.
 
     :param uuid: UUID of the task.
-    :raises TaskNotFound: if the task does not exist.
-    :raises TaskInvalidStatus: if the status of the task does not
-                               equal to the status argument.
+    :raises DBRecordNotFound: if the task does not exist.
+    :raises DBConflict: if the status of the task does not
+                        equal to the status argument.
     """
     return get_impl().task_delete(uuid, status=status)
 
@@ -289,8 +290,8 @@ def deployment_delete(uuid):
     """Delete a deployment by UUID.
 
     :param uuid: UUID of the deployment.
-    :raises DeploymentNotFound: if the deployment does not exist.
-    :raises DeploymentIsBusy: if the resource is not enough.
+    :raises DBRecordNotFound: if the deployment does not exist.
+    :raises DBConflict: if deployment cant be deleted
     """
     return get_impl().deployment_delete(uuid)
 
@@ -299,7 +300,7 @@ def deployment_get(deployment):
     """Get a deployment by UUID.
 
     :param deployment: UUID or name of the deployment.
-    :raises DeploymentNotFound: if the deployment does not exist.
+    :raises DBRecordNotFound: if the deployment does not exist.
     :returns: a dict with data on the deployment.
     """
     return get_impl().deployment_get(deployment)
@@ -310,7 +311,7 @@ def deployment_update(uuid, values):
 
     :param uuid: UUID of the deployment.
     :param values: dict with items to update.
-    :raises DeploymentNotFound: if the deployment does not exist.
+    :raises DBRecordNotFound: if the deployment does not exist.
     :returns: a dict with data on the deployment.
     """
     return get_impl().deployment_update(uuid, values)
@@ -356,7 +357,7 @@ def resource_delete(id):
     """Delete a resource.
 
     :param id: ID of a resource.
-    :raises ResourceNotFound: if the resource does not exist.
+    :raises DBRecordNotFound: if the resource does not exist.
     """
     return get_impl().resource_delete(id)
 
@@ -384,7 +385,7 @@ def verifier_get(verifier_id):
     """Get a verifier record.
 
     :param verifier_id: verifier name or UUID
-    :raises ResourceNotFound: if verifier does not exist
+    :raises DBRecordNotFound: if verifier does not exist
     :returns: a dict with verifier data
     """
     return get_impl().verifier_get(verifier_id)
@@ -403,7 +404,7 @@ def verifier_delete(verifier_id):
     """Delete a verifier record.
 
     :param verifier_id: verifier name or UUID
-    :raises ResourceNotFound: if verifier does not exist
+    :raises DBRecordNotFound: if verifier does not exist
     """
     get_impl().verifier_delete(verifier_id)
 
@@ -413,7 +414,7 @@ def verifier_update(verifier_id, **properties):
 
     :param verifier_id: verifier name or UUID
     :param properties: a dict with new properties to update verifier record
-    :raises ResourceNotFound: if verifier does not exist
+    :raises DBRecordNotFound: if verifier does not exist
     :returns: the updated dict with verifier data
     """
     return get_impl().verifier_update(verifier_id, properties)
@@ -437,7 +438,7 @@ def verification_get(verification_uuid):
     """Get a verification record.
 
     :param verification_uuid: verification UUID
-    :raises ResourceNotFound: if verification does not exist
+    :raises DBRecordNotFound: if verification does not exist
     :returns: a dict with verification data
     """
     return get_impl().verification_get(verification_uuid)
@@ -461,7 +462,7 @@ def verification_delete(verification_uuid):
     """Delete a verification record.
 
     :param verification_uuid: verification UUID
-    :raises ResourceNotFound: if verification does not exist
+    :raises DBRecordNotFound: if verification does not exist
     """
     return get_impl().verification_delete(verification_uuid)
 
@@ -471,7 +472,7 @@ def verification_update(uuid, **properties):
 
     :param uuid: verification UUID
     :param properties: a dict with new properties to update verification record
-    :raises ResourceNotFound: if verification does not exist
+    :raises DBRecordNotFound: if verification does not exist
     :returns: the updated dict with verification data
     """
     return get_impl().verification_update(uuid, properties)

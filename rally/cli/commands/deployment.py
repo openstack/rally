@@ -96,7 +96,7 @@ class DeploymentCommands(object):
         except jsonschema.ValidationError:
             print("Config schema validation error: %s." % sys.exc_info()[1])
             return 1
-        except exceptions.DeploymentNameExists:
+        except exceptions.DBRecordExists:
             print("Error: %s" % sys.exc_info()[1])
             return 1
 
@@ -304,7 +304,7 @@ class DeploymentCommands(object):
         try:
             if not isinstance(deployment, dict):
                 deployment = api.deployment.get(deployment=deployment)
-        except exceptions.DeploymentNotFound:
+        except exceptions.DBRecordNotFound:
             print("Deployment %s is not found." % deployment)
             return 1
         print("Using deployment: %s" % deployment["uuid"])

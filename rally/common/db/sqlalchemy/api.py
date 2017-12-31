@@ -74,7 +74,7 @@ def serialize_data(data):
                 result[key] = serialize_data(getattr(data, key))
         return result
 
-    raise ValueError("Can not serialize %s" % data)
+    raise exceptions.DBException("Can not serialize %s" % data)
 
 
 def serialize(fn):
@@ -213,7 +213,8 @@ class Connection(object):
             return isinstance(obj, type) and issubclass(obj, models.RallyBase)
 
         if not issubclassof_rally_base(model):
-            raise Exception("The model should be a subclass of RallyBase")
+            raise exceptions.DBException(
+                "The model %s should be a subclass of RallyBase" % model)
 
         return query
 
@@ -237,7 +238,8 @@ class Connection(object):
 
         task = pre_query.filter_by(uuid=uuid).first()
         if not task:
-            raise exceptions.TaskNotFound(uuid=uuid)
+            raise exceptions.DBRecordNotFound(
+                criteria="uuid: %s" % uuid, table="tasks")
         task.tags = sorted(self._tags_get(uuid, consts.TagType.TASK, session))
         return task
 
@@ -321,11 +323,10 @@ class Connection(object):
             update({"status": status_value}, synchronize_session=False)
         )
         if not result:
-            status = " or ".join(statuses)
-            msg = ("Task with uuid='%(uuid)s' and in statuses:'"
-                   "%(statuses)s' not found.'") % {"uuid": uuid,
-                                                   "statuses": status}
-            raise exceptions.RallyException(msg)
+            raise exceptions.DBRecordNotFound(
+                criteria="uuid=%(uuid)s and status in [%(statuses)s]"
+                         % {"uuid": uuid, "statuses": ", ".join(statuses)},
+                table="tasks")
         return result
 
     @serialize
@@ -384,10 +385,14 @@ class Connection(object):
                 if status is not None:
                     task = base_query.first()
                     if task:
-                        raise exceptions.TaskInvalidStatus(uuid=uuid,
-                                                           require=status,
-                                                           actual=task.status)
-                raise exceptions.TaskNotFound(uuid=uuid)
+                        raise exceptions.DBConflict(
+                            "Task `%(uuid)s` in `%(actual)s` status but "
+                            "`%(require)s` is required."
+                            % {"uuid": uuid,
+                               "require": status, "actual": task.status})
+
+                raise exceptions.DBRecordNotFound(
+                    criteria="uuid: %s" % uuid, table="tasks")
 
     def _subtasks_get_all_by_task_uuid(self, task_uuid, session=None):
         result = (self.model_query(models.Subtask, session=session).filter_by(
@@ -576,7 +581,9 @@ class Connection(object):
                 session=session).filter_by(uuid=deployment).first()
 
         if not stored_deployment:
-            raise exceptions.DeploymentNotFound(deployment=deployment)
+            raise exceptions.DBRecordNotFound(
+                criteria="name or uuid is %s" % deployment,
+                table="deployments")
         return stored_deployment
 
     @serialize
@@ -586,7 +593,8 @@ class Connection(object):
             deployment.update(values)
             deployment.save()
         except db_exc.DBDuplicateEntry:
-            raise exceptions.DeploymentNameExists(deployment=values["name"])
+            raise exceptions.DBRecordExists(
+                field="name", value=values["name"], table="deployments")
         return deployment
 
     def deployment_delete(self, uuid):
@@ -595,12 +603,15 @@ class Connection(object):
             count = (self.model_query(models.Resource, session=session).
                      filter_by(deployment_uuid=uuid).count())
             if count:
-                raise exceptions.DeploymentIsBusy(uuid=uuid)
+                raise exceptions.DBConflict(
+                    "There are allocated resources for the deployment %s"
+                    % uuid)
 
             count = (self.model_query(models.Deployment, session=session).
                      filter_by(uuid=uuid).delete(synchronize_session=False))
             if not count:
-                raise exceptions.DeploymentNotFound(deployment=uuid)
+                raise exceptions.DBRecordNotFound(
+                    criteria="uuid: %s" % uuid, table="deployments")
 
     @serialize
     def deployment_get(self, deployment):
@@ -647,7 +658,8 @@ class Connection(object):
         count = (self.model_query(models.Resource).
                  filter_by(id=id).delete(synchronize_session=False))
         if not count:
-            raise exceptions.ResourceNotFound(id=id)
+            raise exceptions.DBRecordNotFound(
+                criteria="id: %s" % id, table="resources")
 
     @serialize
     def verifier_create(self, name, vtype, platform, source, version,
@@ -670,7 +682,8 @@ class Connection(object):
                 sa.or_(models.Verifier.name == verifier_id,
                        models.Verifier.uuid == verifier_id)).first()
         if not verifier:
-            raise exceptions.ResourceNotFound(id=verifier_id)
+            raise exceptions.DBRecordNotFound(
+                criteria="name or uuid is %s" % verifier_id, table="verifiers")
         return verifier
 
     @serialize
@@ -689,7 +702,9 @@ class Connection(object):
                            models.Verifier.uuid == verifier_id))
             count = query.delete(synchronize_session=False)
             if not count:
-                raise exceptions.ResourceNotFound(id=verifier_id)
+                raise exceptions.DBRecordNotFound(
+                    criteria="name or uuid is %s" % verifier_id,
+                    table="verifiers")
 
     @serialize
     def verifier_update(self, verifier_id, properties):
@@ -733,7 +748,8 @@ class Connection(object):
             models.Verification, session=session).filter_by(
             uuid=verification_uuid).first()
         if not verification:
-            raise exceptions.ResourceNotFound(id=verification_uuid)
+            raise exceptions.DBRecordNotFound(
+                criteria="uuid: %s" % verification_uuid, table="verifications")
         return verification
 
     @serialize
@@ -776,7 +792,8 @@ class Connection(object):
                 models.Verification, session=session).filter_by(
                 uuid=verification_uuid).delete(synchronize_session=False)
         if not count:
-            raise exceptions.ResourceNotFound(id=verification_uuid)
+            raise exceptions.DBRecordNotFound(
+                criteria="uuid: %s" % verification_uuid, table="verifications")
 
     @serialize
     def verification_update(self, verification_uuid, properties):
