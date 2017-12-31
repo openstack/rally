@@ -162,7 +162,8 @@ class CinderVolumeTypesTestCase(test.ScenarioTestCase):
     def test_create_and_update_volume_type(self, mock_update_volume_type,
                                            mock_create_volume_type):
         scenario = volume_types.CreateAndUpdateVolumeType(self._get_context())
-        fake_type = mock.Mock()
+        fake_type = mock.MagicMock()
+        fake_type.name = "any"
         create_description = "test create"
         update_description = "test update"
         mock_create_volume_type.return_value = fake_type
@@ -173,7 +174,7 @@ class CinderVolumeTypesTestCase(test.ScenarioTestCase):
             description=create_description,
             is_public=True)
         mock_update_volume_type.assert_called_once_with(
-            fake_type, update_name=False,
+            fake_type, name="any",
             description=update_description,
             is_public=None)
 

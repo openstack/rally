@@ -231,7 +231,7 @@ class CinderV2ServiceTestCase(test.ScenarioTestCase):
 
         result = self.service.update_volume_type(volume_type,
                                                  description=description,
-                                                 update_name=True,
+                                                 name=None,
                                                  is_public=None)
         self.assertEqual(
             self.cinder.volume_types.update.return_value,

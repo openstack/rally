@@ -93,7 +93,7 @@ class CreateAndUpdateVolumeType(scenario.OpenStackScenario):
 
         service.update_volume_type(
             volume_type,
-            update_name=update_name,
+            name=volume_type.name if not update_name else False,
             description=update_description,
             is_public=update_is_public)
 
@@ -127,10 +127,10 @@ class CreateAndListVolumeTypes(cinder_utils.CinderBasic):
 @validation.add("required_params", params=[("create_specs", "provider")])
 @validation.add("required_services", services=[consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup@openstack": ["cinder"]},
-                    name="CinderVolumeTypes.create_volume_type"
-                         "_and_encryption_type",
-                    platform="openstack")
+@scenario.configure(
+    context={"admin_cleanup@openstack": ["cinder"]},
+    name="CinderVolumeTypes.create_volume_type_and_encryption_type",
+    platform="openstack")
 class CreateVolumeTypeAndEncryptionType(cinder_utils.CinderBasic):
 
     def run(self, create_specs=None, provider=None, cipher=None,
@@ -175,10 +175,10 @@ class CreateVolumeTypeAndEncryptionType(cinder_utils.CinderBasic):
 @validation.add("required_params", params=[("create_specs", "provider")])
 @validation.add("required_services", services=[consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup@openstack": ["cinder"]},
-                    name="CinderVolumeTypes.create_and_list_"
-                         "encryption_type",
-                    platform="openstack")
+@scenario.configure(
+    context={"admin_cleanup@openstack": ["cinder"]},
+    name="CinderVolumeTypes.create_and_list_encryption_type",
+    platform="openstack")
 class CreateAndListEncryptionType(cinder_utils.CinderBasic):
 
     def run(self, create_specs=None, provider=None, cipher=None,
@@ -243,10 +243,10 @@ class CreateAndSetVolumeTypeKeys(cinder_utils.CinderBasic):
 @validation.add("required_services", services=[consts.Service.CINDER])
 @validation.add("required_contexts", contexts="volume_types")
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup@openstack": ["cinder"]},
-                    name="CinderVolumeTypes.create_get_and_delete_"
-                         "encryption_type",
-                    platform="openstack")
+@scenario.configure(
+    context={"admin_cleanup@openstack": ["cinder"]},
+    name="CinderVolumeTypes.create_get_and_delete_encryption_type",
+    platform="openstack")
 class CreateGetAndDeleteEncryptionType(cinder_utils.CinderBasic):
 
     def run(self, provider=None, cipher=None,
@@ -284,10 +284,10 @@ class CreateGetAndDeleteEncryptionType(cinder_utils.CinderBasic):
 @validation.add("required_contexts", contexts="volume_types")
 @validation.add("required_params", params=[("create_specs", "provider")])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup@openstack": ["cinder"]},
-                    name="CinderVolumeTypes.create_and_delete_"
-                         "encryption_type",
-                    platform="openstack")
+@scenario.configure(
+    context={"admin_cleanup@openstack": ["cinder"]},
+    name="CinderVolumeTypes.create_and_delete_encryption_type",
+    platform="openstack")
 class CreateAndDeleteEncryptionType(cinder_utils.CinderBasic):
 
     def run(self, create_specs=None, provider=None, cipher=None,
@@ -381,10 +381,10 @@ class CreateAndUpdateEncryptionType(cinder_utils.CinderBasic):
 @validation.add("required_platform", platform="openstack", admin=True)
 @validation.add("required_api_versions", component="cinder", versions=["2"])
 @validation.add("required_services", services=consts.Service.CINDER)
-@scenario.configure(context={"admin_cleanup@openstack": ["cinder"]},
-                    name="CinderVolumeTypes.create_volume_type_"
-                         "add_and_list_type_access",
-                    platform="openstack")
+@scenario.configure(
+    context={"admin_cleanup@openstack": ["cinder"]},
+    name="CinderVolumeTypes.create_volume_type_add_and_list_type_access",
+    platform="openstack")
 class CreateVolumeTypeAddAndListTypeAccess(scenario.OpenStackScenario):
 
     def run(self, description=None, is_public=False):
