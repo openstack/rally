@@ -390,7 +390,7 @@ class EnvManager(object):
                 LOG.exception(msg)
                 check_result = {"message": msg, "available": False}
                 if not isinstance(e, jsonschema.ValidationError):
-                    check_result["traceback"] = sys.exc_info()
+                    check_result["traceback"] = list(sys.exc_info())
 
             result[p.get_fullname()] = check_result
 
@@ -424,7 +424,7 @@ class EnvManager(object):
                 LOG.exception(msg)
                 info = {"info": None, "error": msg}
                 if not isinstance(e, jsonschema.ValidationError):
-                    info["traceback"] = sys.exc_info()
+                    info["traceback"] = list(sys.exc_info())
 
             result[p.get_fullname()] = info
 
@@ -433,6 +433,7 @@ class EnvManager(object):
     _CLEANUP_FORMAT = {
         "type": "object",
         "properties": {
+            "message": {"type": "string"},
             "discovered": {"type": "integer"},
             "deleted": {"type": "integer"},
             "failed": {"type": "integer"},
@@ -483,16 +484,22 @@ class EnvManager(object):
         for p in self._get_platforms():
             try:
                 cleanup_info = p.cleanup(task_uuid)
+                cleanup_info.setdefault("message", "Succeeded")
                 jsonschema.validate(cleanup_info, self._CLEANUP_FORMAT)
             except Exception as e:
                 msg = "Plugin %s.cleanup() method is broken" % p.get_fullname()
                 LOG.exception(msg)
                 cleanup_info = {
+                    "message": "Failed",
                     "discovered": 0, "deleted": 0, "failed": 0,
                     "resources": {}, "errors": [{"message": msg}]
                 }
-                if not isinstance(e, jsonschema.ValidationError):
-                    cleanup_info["errors"][0]["traceback"] = sys.exc_info()
+                if isinstance(e, NotImplementedError):
+                    cleanup_info["message"] = "Not implemented"
+                    cleanup_info["errors"] = []
+                elif not isinstance(e, jsonschema.ValidationError):
+                    cleanup_info["errors"][0]["traceback"] = list(
+                        sys.exc_info())
 
             result[p.get_fullname()] = cleanup_info
 
@@ -506,15 +513,17 @@ class EnvManager(object):
         """
         cleanup_info = {"skipped": True}
         if not skip_cleanup:
-            cleanup_info = self.cleanup()
+            cleanup_info["info"] = self.cleanup()
             cleanup_info["skipped"] = False
-            if cleanup_info["errors"]:
+            cleanup_info["failed"] = bool(any(
+                v["errors"] for v in cleanup_info["info"].values()))
+            if cleanup_info["failed"]:
                 return {
                     "cleanup_info": cleanup_info,
                     "destroy_info": {
                         "skipped": True,
                         "platforms": {},
-                        "message": "Skipped because cleanup failed"
+                        "message": "Skipped because cleanup has errors"
                     }
                 }
 
@@ -551,7 +560,7 @@ class EnvManager(object):
                 platforms[name]["message"] = "Failed to destroy"
                 platforms[name]["status"]["new"] = (
                     platform.STATUS.FAILED_TO_DESTROY)
-                platforms[name]["traceback"] = sys.exc_info()
+                platforms[name]["traceback"] = list(sys.exc_info())
                 new_env_status = STATUS.FAILED_TO_DESTROY
             else:
                 db.platform_set_status(p.uuid,
