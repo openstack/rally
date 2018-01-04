@@ -64,6 +64,12 @@ class RoleGenerator(context.Context):
             raise exceptions.NotFoundException(
                 "There is no role with name `%s`" % context_role)
 
+    def _get_user_role_ids(self, user_id, project_id):
+        keystone = identity.Identity(osclients.Clients(self.credential))
+        user_roles = keystone.list_roles(user_id=user_id,
+                                         project_id=project_id)
+        return [role.id for role in user_roles]
+
     def _get_consumer(self, func_name):
         def consume(cache, args):
             role_id, user_id, project_id = args
@@ -90,21 +96,29 @@ class RoleGenerator(context.Context):
                              "role_id": role.id,
                              "threads": threads})
                 for user in self.context["users"]:
-                    args = (role.id, user["id"], user["tenant_id"])
-                    queue.append(args)
+                    if "roles" not in user:
+                        user["roles"] = self._get_user_role_ids(
+                            user["id"],
+                            user["tenant_id"])
+                        user["assigned_roles"] = []
+                    if role.id not in user["roles"]:
+                        args = (role.id, user["id"], user["tenant_id"])
+                        queue.append(args)
+                        user["assigned_roles"].append(role.id)
 
         broker.run(publish, self._get_consumer("add_role"), threads)
         self.context["roles"] = roles_dict
 
     def cleanup(self):
-        """Remove all roles from users."""
+        """Remove assigned roles from users."""
         threads = self.workers
 
         def publish(queue):
             for role_id in self.context["roles"]:
-                LOG.debug("Removing role %s from all users" % role_id)
+                LOG.debug("Removing assigned role %s from all users" % role_id)
                 for user in self.context["users"]:
-                    args = (role_id, user["id"], user["tenant_id"])
-                    queue.append(args)
+                    if role_id in user["assigned_roles"]:
+                        args = (role_id, user["id"], user["tenant_id"])
+                        queue.append(args)
 
         broker.run(publish, self._get_consumer("revoke_role"), threads)

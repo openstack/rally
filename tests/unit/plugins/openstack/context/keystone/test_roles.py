@@ -87,8 +87,10 @@ class RoleGeneratorTestCase(test.TestCase):
         ctx = roles.RoleGenerator(self.context)
         ctx.context["roles"] = {"r1": "test_role1",
                                 "r2": "test_role2"}
-        ctx.context["users"] = [{"id": "u1", "tenant_id": "t1"},
-                                {"id": "u2", "tenant_id": "t2"}]
+        ctx.context["users"] = [{"id": "u1", "tenant_id": "t1",
+                                 "assigned_roles": ["r1", "r2"]},
+                                {"id": "u2", "tenant_id": "t2",
+                                 "assigned_roles": ["r1", "r2"]}]
         ctx.credential = mock.MagicMock()
         ctx.cleanup()
         calls = [
@@ -107,17 +109,23 @@ class RoleGeneratorTestCase(test.TestCase):
         mock_osclients.Clients.return_value = fc
         self.create_default_roles_and_patch_add_remove_functions(fc)
 
+        def _get_user_role_ids_side_effect(user_id, project_id):
+            return ["r1", "r2"] if user_id == "u3" else []
+
         with roles.RoleGenerator(self.context) as ctx:
             ctx.context["users"] = [{"id": "u1", "tenant_id": "t1"},
-                                    {"id": "u2", "tenant_id": "t2"}]
+                                    {"id": "u2", "tenant_id": "t2"},
+                                    {"id": "u3", "tenant_id": "t3"}]
 
+            ctx._get_user_role_ids = mock.MagicMock()
+            ctx._get_user_role_ids.side_effect = _get_user_role_ids_side_effect
             ctx.setup()
             ctx.credential = mock.MagicMock()
             calls = [
                 mock.call(user="u1", role="r1", tenant="t1"),
                 mock.call(user="u2", role="r1", tenant="t2"),
                 mock.call(user="u1", role="r2", tenant="t1"),
-                mock.call(user="u2", role="r2", tenant="t2")
+                mock.call(user="u2", role="r2", tenant="t2"),
             ]
             fc.keystone().roles.add_user_role.assert_has_calls(calls,
                                                                any_order=True)
@@ -128,7 +136,7 @@ class RoleGeneratorTestCase(test.TestCase):
             self.assertEqual(2, len(ctx.context["roles"]))
             self.assertEqual(2, len(fc.keystone().roles.list()))
 
-        # Cleanup (called by content manager)
+        # Cleanup (called by context manager)
         self.assertEqual(2, len(fc.keystone().roles.list()))
         self.assertEqual(4, fc.keystone().roles.add_user_role.call_count)
         self.assertEqual(4, fc.keystone().roles.remove_user_role.call_count)
