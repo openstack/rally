@@ -412,15 +412,6 @@ class Verification(BASE, RallyBase):
     tests = sa.Column(sa_types.MutableJSONEncodedDict, default={})
 
 
-class Worker(BASE, RallyBase):
-    __tablename__ = "workers"
-    __table_args__ = (
-        schema.UniqueConstraint("hostname", name="uniq_worker@hostname"),
-    )
-    id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
-    hostname = sa.Column(sa.String(255))
-
-
 # TODO(boris-42): Remove it after oslo.db > 1.4.1 will be released.
 def drop_all_objects(engine):
     """Drop all database objects.
