@@ -594,6 +594,9 @@
             users:
               tenants: 1
               users_per_tenant: 1
+          sla:
+            failure_rate:
+              max: 100
         -
           scenario:
             CinderVolumes.create_volume_backup:
@@ -607,6 +610,9 @@
             users:
               tenants: 1
               users_per_tenant: 1
+          sla:
+            failure_rate:
+              max: 100
     -
       title: CinderVolumeBackups.create_incremental_volume_backup tests
       scenario:
@@ -620,6 +626,9 @@
         users:
           tenants: 2
           users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 100
 
     -
       title: CinderVolumes.create_and_restore_volume_backup tests
@@ -637,6 +646,9 @@
             users:
               tenants: 1
               users_per_tenant: 1
+          sla:
+            failure_rate:
+              max: 100
         -
           scenario:
             CinderVolumes.create_and_restore_volume_backup:
@@ -650,6 +662,9 @@
             users:
               tenants: 1
               users_per_tenant: 1
+          sla:
+            failure_rate:
+              max: 100
     -
       title: CinderVolumes.create_and_list_volume_backups tests
       workloads:
@@ -668,6 +683,9 @@
             users:
               tenants: 1
               users_per_tenant: 1
+          sla:
+            failure_rate:
+              max: 100
         -
           description: "Create volume backup and list, don't delete backup."
           scenario:
@@ -683,6 +701,9 @@
             users:
               tenants: 1
               users_per_tenant: 1
+          sla:
+            failure_rate:
+              max: 100
     -
       title: CinderVolumes.create_nested_snapshots_and_attach_volume tests
       scenario:
