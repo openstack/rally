@@ -59,6 +59,24 @@ class Network(context.Context):
                 "type": "array",
                 "items": {"type": "string"},
                 "uniqueItems": True
+            },
+            "router": {
+                "type": "object",
+                "properties": {
+                    "external": {
+                        "type": "boolean"
+                    },
+                    "external_gateway_info": {
+                        "description": "The external gateway information .",
+                        "type": "object",
+                        "properties": {
+                            "network_id": {"type": "string"},
+                            "enable_snat": {"type": "boolean"}
+                        },
+                        "additionalProperties": False
+                    }
+                },
+                "additionalProperties": False
             }
         },
         "additionalProperties": False
@@ -69,7 +87,8 @@ class Network(context.Context):
         "networks_per_tenant": 1,
         "subnets_per_network": 1,
         "network_create_args": {},
-        "dns_nameservers": None
+        "dns_nameservers": None,
+        "router": {"external": True}
     }
 
     def setup(self):
@@ -92,9 +111,9 @@ class Network(context.Context):
                 network_create_args = self.config["network_create_args"].copy()
                 network = net_wrapper.create_network(
                     tenant_id,
-                    add_router=True,
                     subnets_num=self.config["subnets_per_network"],
                     network_create_args=network_create_args,
+                    router_create_args=self.config["router"],
                     **kwargs)
                 self.context["tenants"][tenant_id]["networks"].append(network)
 

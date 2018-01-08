@@ -36,7 +36,10 @@
                     "networks_per_tenant": 1,
                     "subnets_per_network": 1,
                     "network_create_args": {},
-                    "dns_nameservers": ["10.2.0.1"]
+                    "dns_nameservers": ["10.2.0.1"],
+                    "router": {
+                        "external": false
+                    }
                 }
             }
         }
