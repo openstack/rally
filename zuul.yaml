@@ -12,25 +12,15 @@
     run: tests/ci/playbooks/rally-install/run.yaml
     timeout: 1800
 
-- job:
-    name: tox-functional
-    parent: tox
-    description: |
-      Run functional tests for a Rally project under cPython version 2.7.
-      Uses tox with the ``functional`` environment.
-    vars:
-      tox_envlist: functional
-    timeout: 600
-
 - project:
     name: openstack/rally
     check:
       jobs:
         - rally-install-ubuntu-xenial
         - rally-install-centos-7
-        - tox-functional
+        - openstack-tox-functional
     gate:
       jobs:
         - rally-install-ubuntu-xenial
         - rally-install-centos-7
-        - tox-functional
+        - openstack-tox-functional
