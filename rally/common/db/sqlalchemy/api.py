@@ -28,7 +28,6 @@ from alembic import script as alembic_script
 from oslo_config import cfg
 from oslo_db import exception as db_exc
 from oslo_db.sqlalchemy import session as db_session
-from oslo_utils import timeutils
 import six
 import sqlalchemy as sa
 import sqlalchemy.orm   # noqa
@@ -787,36 +786,3 @@ class Connection(object):
             verification.update(properties)
             verification.save()
         return verification
-
-    @serialize
-    def register_worker(self, values):
-        try:
-            worker = models.Worker()
-            worker.update(values)
-            worker.update({"updated_at": timeutils.utcnow()})
-            worker.save()
-            return worker
-        except db_exc.DBDuplicateEntry:
-            raise exceptions.WorkerAlreadyRegistered(
-                worker=values["hostname"])
-
-    @serialize
-    def get_worker(self, hostname):
-        try:
-            return (self.model_query(models.Worker).
-                    filter_by(hostname=hostname).one())
-        except sa.orm.exc.NoResultFound:
-            raise exceptions.WorkerNotFound(worker=hostname)
-
-    def unregister_worker(self, hostname):
-        count = (self.model_query(models.Worker).
-                 filter_by(hostname=hostname).delete())
-        if count == 0:
-            raise exceptions.WorkerNotFound(worker=hostname)
-
-    def update_worker(self, hostname):
-        count = (self.model_query(models.Worker).
-                 filter_by(hostname=hostname).
-                 update({"updated_at": timeutils.utcnow()}))
-        if count == 0:
-            raise exceptions.WorkerNotFound(worker=hostname)

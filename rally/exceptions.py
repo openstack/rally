@@ -203,16 +203,6 @@ class ValidationError(RallyException):
     msg_fmt = "Validation error: %(message)s"
 
 
-class WorkerNotFound(NotFoundException):
-    error_code = 469
-    msg_fmt = "Worker %(worker)s could not be found"
-
-
-class WorkerAlreadyRegistered(RallyException):
-    error_code = 525
-    msg_fmt = "Worker %(worker)s already registered"
-
-
 class MultiplePluginsFound(RallyException):
     error_code = 470
 

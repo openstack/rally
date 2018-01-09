@@ -199,7 +199,7 @@ class MigrationTestCase(rtest.DBTestCase,
         # drop all tables after a test run
         self.addCleanup(db.schema_cleanup)
 
-        table = self.get_metadata().tables["workers"]
+        table = self.get_metadata().tables["tags"]
         self.get_metadata().remove(table)
 
         # run migration scripts
@@ -211,7 +211,7 @@ class MigrationTestCase(rtest.DBTestCase,
         action, object = diff[0]
         self.assertEqual("remove_table", action)
         self.assertIsInstance(object, sa.Table)
-        self.assertEqual("workers", object.name)
+        self.assertEqual("tags", object.name)
 
 
 class MigrationWalkTestCase(rtest.DBTestCase,
