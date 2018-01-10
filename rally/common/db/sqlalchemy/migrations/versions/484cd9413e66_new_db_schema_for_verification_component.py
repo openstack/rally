@@ -26,12 +26,11 @@ down_revision = "e654a0648db0"
 branch_labels = None
 depends_on = None
 
-import uuid
-
 from alembic import op
 from oslo_utils import timeutils
 import sqlalchemy as sa
 
+from rally.common.db.sqlalchemy import models
 from rally.common.db.sqlalchemy import types as sa_types
 from rally import exceptions
 
@@ -45,10 +44,6 @@ _MAP_OLD_TO_NEW_TEST_STATUSES = {
     "FAIL": "fail",
     "SKIP": "skip"
 }
-
-
-def UUID():
-    return str(uuid.uuid4())
 
 
 verification_helper = sa.Table(
@@ -88,7 +83,7 @@ def upgrade():
     verifiers_table = op.create_table(
         "verifiers",
         sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
-        sa.Column("uuid", sa.String(36), default=UUID, nullable=False),
+        sa.Column("uuid", sa.String(36), nullable=False),
 
         sa.Column("name", sa.String(255), unique=True),
         sa.Column("description", sa.Text),
@@ -114,7 +109,7 @@ def upgrade():
     verifications_table = op.create_table(
         "verifications_new",
         sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
-        sa.Column("uuid", sa.String(36), default=UUID, nullable=False),
+        sa.Column("uuid", sa.String(36), nullable=False),
 
         sa.Column("verifier_uuid", sa.String(36), nullable=False),
         sa.Column("deployment_uuid", sa.String(36), nullable=False),
@@ -143,7 +138,7 @@ def upgrade():
     default_verifier = None
     for vresult in connection.execute(results_helper.select()):
         if default_verifier is None:
-            vuuid = UUID()
+            vuuid = models.UUID()
             connection.execute(
                 verifiers_table.insert(),
                 [{

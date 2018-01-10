@@ -28,7 +28,6 @@ depends_on = None
 
 
 import json
-import uuid
 
 from alembic import op
 import sqlalchemy as sa
@@ -37,15 +36,11 @@ from rally import consts
 from rally import exceptions
 
 
-def UUID():
-    return str(uuid.uuid4())
-
-
 task_helper = sa.Table(
     "tasks",
     sa.MetaData(),
     sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
-    sa.Column("uuid", sa.String(36), default=UUID, nullable=False),
+    sa.Column("uuid", sa.String(36), nullable=False),
     sa.Column("status", sa.Enum(*list(consts.TaskStatus),
                                 name="enum_tasks_status"),
               default=consts.TaskStatus.INIT, nullable=False),
