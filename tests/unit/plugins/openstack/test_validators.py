@@ -48,6 +48,24 @@ config = dict(args={"image": {"id": "fake_id",
               )
 
 
+@mock.patch("rally.plugins.openstack.context.keystone.roles.RoleGenerator")
+def test_with_roles_ctx(mock_role_generator):
+
+    @validators.with_roles_ctx()
+    def func(config, context):
+        pass
+
+    config = {"contexts": {}}
+    context = {"admin": {"credential": mock.MagicMock()},
+               "task": mock.MagicMock()}
+    func(config, context)
+    mock_role_generator().setup.assert_not_called()
+
+    config = {"contexts": {"roles": "admin"}}
+    func(config, context)
+    mock_role_generator().setup.assert_called_once_with()
+
+
 @ddt.ddt
 class ImageExistsValidatorTestCase(test.TestCase):
 
@@ -283,7 +301,7 @@ class FlavorExistsValidatorTestCase(test.TestCase):
         self.validator._get_validated_flavor = mock.Mock(
             side_effect=expected_e)
 
-        config = mock.Mock()
+        config = {}
         ctx = mock.MagicMock()
         actual_e = self.assertRaises(
             validators.validation.ValidationError,
