@@ -56,86 +56,6 @@ class RallyBase(models.ModelBase):
         super(RallyBase, self).save(session=session)
 
 
-class Deployment(BASE, RallyBase):
-    """Represent a deployment of OpenStack."""
-    __tablename__ = "deployments"
-    __table_args__ = (
-        sa.Index("deployment_uuid", "uuid", unique=True),
-        sa.Index("deployment_parent_uuid", "parent_uuid"),
-    )
-
-    id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
-    uuid = sa.Column(sa.String(36), default=UUID, nullable=False)
-    parent_uuid = sa.Column(
-        sa.String(36),
-        sa.ForeignKey(uuid, use_alter=True, name="fk_parent_uuid"),
-        default=None,
-    )
-    name = sa.Column(sa.String(255), unique=True)
-    started_at = sa.Column(sa.DateTime)
-    completed_at = sa.Column(sa.DateTime)
-    # XXX(akscram): Do we need to explicitly store a name of the
-    #               deployment engine?
-    # engine_name = sa.Column(sa.String(36))
-
-    config = sa.Column(
-        sa_types.MutableJSONEncodedDict,
-        default={},
-        nullable=False,
-    )
-
-    credentials = sa.Column(
-        sa_types.MutableJSONEncodedDict, default={}, nullable=False)
-
-    status = sa.Column(
-        sa.Enum(*consts.DeployStatus, name="enum_deploy_status"),
-        name="enum_deployments_status",
-        default=consts.DeployStatus.DEPLOY_INIT,
-        nullable=False,
-    )
-
-    parent = sa.orm.relationship(
-        "Deployment",
-        backref=sa.orm.backref("subdeploys"),
-        remote_side=[uuid],
-        foreign_keys=parent_uuid,
-    )
-
-
-class Resource(BASE, RallyBase):
-    """Represent a resource of a deployment."""
-    __tablename__ = "resources"
-    __table_args__ = (
-        sa.Index("resource_deployment_uuid", "deployment_uuid"),
-        sa.Index("resource_provider_name", "deployment_uuid", "provider_name"),
-        sa.Index("resource_type", "deployment_uuid", "type"),
-        sa.Index("resource_provider_name_and_type", "deployment_uuid",
-                 "provider_name", "type"),
-    )
-
-    id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
-    provider_name = sa.Column(sa.String(255))
-    type = sa.Column(sa.String(255))
-
-    info = sa.Column(
-        sa_types.MutableJSONEncodedDict,
-        default={},
-        nullable=False,
-    )
-
-    deployment_uuid = sa.Column(
-        sa.String(36),
-        sa.ForeignKey(Deployment.uuid),
-        nullable=False,
-    )
-    deployment = sa.orm.relationship(
-        Deployment,
-        backref=sa.orm.backref("resources"),
-        foreign_keys=deployment_uuid,
-        primaryjoin=(deployment_uuid == Deployment.uuid),
-    )
-
-
 class Env(BASE, RallyBase):
     """Represent a environment."""
     __tablename__ = "envs"
@@ -183,24 +103,12 @@ class Task(BASE, RallyBase):
     __table_args__ = (
         sa.Index("task_uuid", "uuid", unique=True),
         sa.Index("task_status", "status"),
-        sa.Index("task_deployment", "deployment_uuid"),
     )
 
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
     uuid = sa.Column(sa.String(36), default=UUID, nullable=False)
 
-    deployment_uuid = sa.Column(
-        sa.String(36),
-        sa.ForeignKey(Deployment.uuid),
-        nullable=False,
-    )
-
-    deployment = sa.orm.relationship(
-        Deployment,
-        backref=sa.orm.backref("tasks"),
-        foreign_keys=deployment_uuid,
-        primaryjoin=(deployment_uuid == Deployment.uuid),
-    )
+    env_uuid = sa.Column(sa.String(36), nullable=False)
 
     # we do not save the whole input task
     input_task = deferred(sa.Column(sa.Text, default=""))
@@ -433,9 +341,7 @@ class Verification(BASE, RallyBase):
     verifier_uuid = sa.Column(sa.String(36),
                               sa.ForeignKey(Verifier.uuid),
                               nullable=False)
-    deployment_uuid = sa.Column(sa.String(36),
-                                sa.ForeignKey(Deployment.uuid),
-                                nullable=False)
+    env_uuid = sa.Column(sa.String(36), nullable=False)
 
     run_args = sa.Column(sa_types.MutableJSONEncodedDict)
 

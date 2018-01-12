@@ -28,6 +28,7 @@ class Verification(object):
                              in the database
         """
         self._db_entry = verification
+        self._db_entry["deployment_uuid"] = self._db_entry["env_uuid"]
 
     def __getattr__(self, attr):
         return self._db_entry[attr]
@@ -38,7 +39,7 @@ class Verification(object):
     def to_dict(self, item=None):
         data = {}
         formatters = ["created_at", "updated_at"]
-        fields = ["deployment_uuid", "verifier_uuid", "uuid", "id",
+        fields = ["deployment_uuid", "env_uuid", "verifier_uuid", "uuid", "id",
                   "unexpected_success", "status", "tests", "skipped",
                   "tags", "tests_duration", "run_args", "success",
                   "expected_failures", "tests_count", "failures"]

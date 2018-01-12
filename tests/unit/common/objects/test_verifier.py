@@ -77,13 +77,12 @@ class VerifierTestCase(test.TestCase):
         mock_verifier_update.assert_called_once_with(self.db_obj["uuid"],
                                                      status="some-status")
 
-    @mock.patch("rally.common.objects.verifier.db.deployment_get")
-    def test_deployment_property(self, mock_deployment_get):
+    @mock.patch("rally.env.env_mgr.EnvManager.get")
+    def test_deployment_property(self, mock_env_manager_get):
         v = objects.Verifier(self.db_obj)
-        mock_deployment_get.return_value = {"name": "foo", "uuid": "bar"}
         v.set_deployment("some-deployment")
-        self.assertEqual("foo", v.deployment["name"])
-        self.assertEqual("bar", v.deployment["uuid"])
+        self.assertEqual(mock_env_manager_get.return_value, v.deployment._env)
+        mock_env_manager_get.assert_called_once_with("some-deployment")
 
     def test_deployment_property_raise_exc(self):
         v = objects.Verifier(self.db_obj)

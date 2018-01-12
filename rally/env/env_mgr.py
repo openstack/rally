@@ -292,8 +292,8 @@ class EnvManager(object):
                 p.platform_data, p.plugin_data = platform_data, plugin_data
                 try:
                     p.destroy()
-                    LOG.warrning("Couldn't store platform %s data to DB."
-                                 "Attempt to destroy it succeeded." % p.uuid)
+                    LOG.warning("Couldn't store platform %s data to DB."
+                                "Attempt to destroy it succeeded." % p.uuid)
                 except Exception:
                     LOG.exception(
                         "Couldn't store data of platform(%(uuid)s): %(name)s  "
@@ -509,7 +509,7 @@ class EnvManager(object):
     def destroy(self, skip_cleanup=False):
         """Destroys all platforms related to env.
 
-        :param skip_cleanup: By default, before destroying plaform it's cleaned
+        :param skip_cleanup: Skip cleaning up platform resources
         """
         cleanup_info = {"skipped": True}
         if not skip_cleanup:
@@ -569,6 +569,12 @@ class EnvManager(object):
                 platforms[name]["message"] = "Successfully destroyed"
                 platforms[name]["status"]["new"] = platform.STATUS.DESTROYED
 
+        from rally.common import objects
+
+        for verifier in objects.Verifier.list():
+            verifier.set_deployment(self.uuid)
+            verifier.manager.uninstall()
+
         db.env_set_status(self.uuid, STATUS.DESTROYING, new_env_status)
 
         return result
@@ -578,7 +584,7 @@ class EnvManager(object):
 
         It deletes all Task and Verify results related to this env as well.
 
-        :param Force: Use it if you don't want to perform status check
+        :param force: Use it if you don't want to perform status check
         """
         _status = self.status
         if not force and _status != STATUS.DESTROYED:

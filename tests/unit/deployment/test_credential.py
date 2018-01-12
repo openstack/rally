@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import jsonschema
-
 from rally.deployment import credential
 from tests.unit import test
 
@@ -48,37 +46,3 @@ class CredentialTestCase(test.TestCase):
         cred.verify_connection()
         self.assertEqual({"bar": 42}, cred.to_dict())
         self.assertEqual({"foo": "foo-type"}, cred.list_services())
-
-
-@credential.configure_builder("foo")
-class FooCredentialBuilder(credential.CredentialBuilder):
-
-    CONFIG_SCHEMA = {
-        "type": "object",
-        "properties": {
-            "bar": {"type": "integer"}
-        },
-        "required": ["bar"],
-        "additionalProperties": False
-    }
-
-    def build_credentials(self):
-        return {"admin": {"bar": self.config["bar"]}, "users": []}
-
-
-class CredentialBuilderTestCase(test.TestCase):
-
-    def setUp(self):
-        super(CredentialBuilderTestCase, self).setUp()
-        self.cred_builder_cls = credential.get_builder("foo")
-
-    def test_configure_and_get(self):
-        self.assertIs(FooCredentialBuilder, self.cred_builder_cls)
-
-    def test_validate(self):
-        self.cred_builder_cls.validate({"bar": 42})
-
-    def test_validate_error(self):
-        self.assertRaises(jsonschema.ValidationError,
-                          self.cred_builder_cls.validate,
-                          {"bar": "spam"})

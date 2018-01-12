@@ -328,7 +328,7 @@ class Connection(object):
         return result
 
     @serialize
-    def task_list(self, status=None, deployment=None, tags=None):
+    def task_list(self, status=None, env=None, tags=None):
         session = get_session()
         tasks = []
         with session.begin():
@@ -337,9 +337,8 @@ class Connection(object):
             filters = {}
             if status is not None:
                 filters["status"] = status
-            if deployment is not None:
-                filters["deployment_uuid"] = self.deployment_get(
-                    deployment)["uuid"]
+            if env is not None:
+                filters["env_uuid"] = self.env_get(env)["uuid"]
             if filters:
                 query = query.filter_by(**filters)
 
@@ -657,14 +656,18 @@ class Connection(object):
     def env_delete_cascade(self, uuid):
         session = get_session()
         with session.begin():
+            (self.model_query(models.Task, session=session)
+                .filter_by(env_uuid=uuid)
+                .delete())
+            (self.model_query(models.Verification, session=session)
+                .filter_by(env_uuid=uuid)
+                .delete())
             (self.model_query(models.Platform, session=session)
                  .filter_by(env_uuid=uuid)
                  .delete())
             (self.model_query(models.Env, session=session)
                  .filter_by(uuid=uuid)
                  .delete())
-            # NOTE(boris-42): Add queries to delete corresponding
-            #                 task and verify results, when they switch to Env
 
     @serialize
     def platforms_list(self, env_uuid):
@@ -705,96 +708,6 @@ class Connection(object):
         return bool(self.model_query(models.Platform)
                         .filter_by(uuid=uuid)
                         .update(values))
-
-    def _deployment_get(self, deployment, session=None):
-        stored_deployment = self.model_query(
-            models.Deployment,
-            session=session).filter_by(name=deployment).first()
-        if not stored_deployment:
-            stored_deployment = self.model_query(
-                models.Deployment,
-                session=session).filter_by(uuid=deployment).first()
-
-        if not stored_deployment:
-            raise exceptions.DBRecordNotFound(
-                criteria="name or uuid is %s" % deployment,
-                table="deployments")
-        return stored_deployment
-
-    @serialize
-    def deployment_create(self, values):
-        deployment = models.Deployment()
-        try:
-            deployment.update(values)
-            deployment.save()
-        except db_exc.DBDuplicateEntry:
-            raise exceptions.DBRecordExists(
-                field="name", value=values["name"], table="deployments")
-        return deployment
-
-    def deployment_delete(self, uuid):
-        session = get_session()
-        with session.begin():
-            count = (self.model_query(models.Resource, session=session).
-                     filter_by(deployment_uuid=uuid).count())
-            if count:
-                raise exceptions.DBConflict(
-                    "There are allocated resources for the deployment %s"
-                    % uuid)
-
-            count = (self.model_query(models.Deployment, session=session).
-                     filter_by(uuid=uuid).delete(synchronize_session=False))
-            if not count:
-                raise exceptions.DBRecordNotFound(
-                    criteria="uuid: %s" % uuid, table="deployments")
-
-    @serialize
-    def deployment_get(self, deployment):
-        return self._deployment_get(deployment)
-
-    @serialize
-    def deployment_update(self, deployment, values):
-        session = get_session()
-        values.pop("uuid", None)
-        with session.begin():
-            dpl = self._deployment_get(deployment, session=session)
-            dpl.update(values)
-        return dpl
-
-    @serialize
-    def deployment_list(self, status=None, parent_uuid=None, name=None):
-        query = (self.model_query(models.Deployment).
-                 filter_by(parent_uuid=parent_uuid))
-
-        if name:
-            query = query.filter_by(name=name)
-        if status:
-            query = query.filter_by(status=status)
-        return query.all()
-
-    @serialize
-    def resource_create(self, values):
-        resource = models.Resource()
-        resource.update(values)
-        resource.save()
-        return resource
-
-    @serialize
-    def resource_get_all(self, deployment_uuid, provider_name=None, type=None):
-        query = (self.model_query(models.Resource).
-                 filter_by(deployment_uuid=deployment_uuid))
-        if provider_name is not None:
-            query = query.filter_by(provider_name=provider_name)
-        if type is not None:
-            query = query.filter_by(type=type)
-        return query.all()
-
-    def resource_delete(self, id):
-        count = (self.model_query(models.Resource).
-                 filter_by(id=id).delete(synchronize_session=False))
-        if not count:
-            raise exceptions.DBRecordNotFound(
-                criteria="id: %s" % id, table="resources")
 
     @serialize
     def verifier_create(self, name, vtype, platform, source, version,
@@ -851,13 +764,13 @@ class Connection(object):
         return verifier
 
     @serialize
-    def verification_create(self, verifier_id, deployment_id, tags=None,
+    def verification_create(self, verifier_id, env, tags=None,
                             run_args=None):
         verifier = self._verifier_get(verifier_id)
-        deployment = self._deployment_get(deployment_id)
+        env = self.env_get(env)
         verification = models.Verification()
         verification.update({"verifier_uuid": verifier.uuid,
-                             "deployment_uuid": deployment["uuid"],
+                             "env_uuid": env["uuid"],
                              "run_args": run_args})
         verification.save()
 
@@ -888,7 +801,7 @@ class Connection(object):
         return verification
 
     @serialize
-    def verification_list(self, verifier_id=None, deployment_id=None,
+    def verification_list(self, verifier_id=None, env=None,
                           tags=None, status=None):
         session = get_session()
         with session.begin():
@@ -896,10 +809,9 @@ class Connection(object):
             if verifier_id:
                 verifier = self._verifier_get(verifier_id, session=session)
                 filter_by["verifier_uuid"] = verifier.uuid
-            if deployment_id:
-                deployment = self._deployment_get(deployment_id,
-                                                  session=session)
-                filter_by["deployment_uuid"] = deployment.uuid
+            if env:
+                env = self.env_get(env)
+                filter_by["env_uuid"] = env["uuid"]
             if status:
                 filter_by["status"] = status
 

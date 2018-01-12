@@ -70,7 +70,7 @@ class TestTaskSamples(unittest.TestCase):
         user_ctx.setup()
         self.addCleanup(user_ctx.cleanup)
 
-        os_creds = deployment["config"]["creds"]["openstack"]
+        os_creds = deployment["config"]["openstack"]
 
         user = copy.copy(os_creds["admin"])
         user["username"] = ctx["users"][0]["credential"].username

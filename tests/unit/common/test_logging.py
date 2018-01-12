@@ -138,6 +138,23 @@ class RallyContaxtAdapterTestCase(test.TestCase):
         self.assertTrue(args[0][0].startswith("[radapter.exception(Exception("
                                               "\"!2!\"))] Do not transmit"))
 
+    @mock.patch("rally.common.logging.getLogger")
+    def test_error(self, mock_get_logger):
+        radapter = rally_logging.RallyContextAdapter(mock.MagicMock(), {})
+        radapter.log = mock.MagicMock()
+
+        radapter.error("foo", "bar")
+
+        # the number of the line which calls foo
+        lineno = 146
+        mock_get_logger.assert_called_once_with("%s:%s" % (__file__, lineno))
+
+        logger = mock_get_logger.return_value
+        self.assertEqual(1, logger.warning.call_count)
+        args = logger.warning.call_args_list[0]
+        self.assertTrue(args[0][0].startswith("[radapter.error(\"foo\", "
+                                              "\"bar\")] Do not use *args "))
+
 
 class ExceptionLoggerTestCase(test.TestCase):
 

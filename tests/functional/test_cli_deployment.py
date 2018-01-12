@@ -109,27 +109,6 @@ class DeploymentTestCase(unittest.TestCase):
             self.fail("rally deployment fails to raise error for wrong"
                       " authentication info")
 
-    def test_recreate(self):
-        rally = utils.Rally()
-        rally.env.update(TEST_ENV)
-        rally("deployment create --name t_create_env --fromenv")
-        rally("deployment recreate --deployment t_create_env")
-        self.assertIn("t_create_env", rally("deployment list"))
-
-    def test_recreate_from_file(self):
-        rally = utils.Rally()
-        rally.env.update(TEST_ENV)
-        rally("deployment create --name t_create_env --fromenv")
-        config = json.loads(rally("deployment config"))
-        config["openstack"]["auth_url"] = "http://foo/"
-        file = utils.JsonTempFile(config)
-        rally("deployment recreate --deployment t_create_env "
-              "--filename %s" % file.filename)
-        self.assertIn("t_create_env", rally("deployment list"))
-        self.assertEqual(config,
-                         json.loads(rally("deployment config")))
-        self.assertIn("http://foo/", rally("deployment show"))
-
     def test_use(self):
         rally = utils.Rally()
         rally.env.update(TEST_ENV)
