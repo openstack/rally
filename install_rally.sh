@@ -746,9 +746,9 @@ install_required_sw "$(which_missing_packages)"
 pip uninstall -y rally || true
 # Install rally
 if [ "$DEVELOPMENT_MODE" = "true" ]; then
-    pip install -e .
+    pip install --constraint ./upper-constraints.txt --editable .
 else
-    pip install .
+    pip install --constraint ./upper-constraints.txt .
 fi
 
 cd "$ORIG_WD"
