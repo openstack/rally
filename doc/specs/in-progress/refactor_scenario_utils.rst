@@ -197,9 +197,9 @@ Suggested change
            |   | # version/service Like keystone_v2/keystone_v3 or
            |   | # nova_network/neutron. This will be used in
            |   | # main.py for implementation.
-           |   +-- kestone_v2.py
+           |   +-- keystone_v2.py
            |   |
-           |   +-- kestone_v3.py
+           |   +-- keystone_v3.py
            |
            +-- network/
            |   | # Here is common service when we care to do things
@@ -292,7 +292,7 @@ Inside services/identity/keystone_v3.py:
             """Implementation."""
 
         def domain_create(self, *args, **kwargs):
-            """Specific method for KesytoneV3."""
+            """Specific method for KeystoneV3."""
 
 
 Both context.keystone and scenario.keystone can use now services/identity.py
