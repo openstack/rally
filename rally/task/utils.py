@@ -169,7 +169,8 @@ def wait_is_ready(resource, is_ready, update_resource=None,
                 resource_name=resource_repr,
                 resource_type=resource.__class__.__name__,
                 resource_id=getattr(resource, "id", "<no id>"),
-                resource_status=get_status(resource))
+                resource_status=get_status(resource),
+                timeout=timeout)
 
 
 def wait_for_status(resource, ready_statuses, failure_statuses=None,
@@ -248,7 +249,8 @@ def wait_for_status(resource, ready_statuses, failure_statuses=None,
                 resource_name=resource_repr,
                 resource_type=resource.__class__.__name__,
                 resource_id=getattr(resource, id_attr, "<no id>"),
-                resource_status=get_status(resource, status_attr))
+                resource_status=get_status(resource, status_attr),
+                timeout=timeout)
 
 
 @logging.log_deprecated("Use wait_for_status instead.", "0.1.2", once=True)
@@ -279,7 +281,8 @@ def wait_for_delete(resource, update_resource=None, timeout=60,
                 resource_name=getattr(resource, "name", repr(resource)),
                 resource_type=resource.__class__.__name__,
                 resource_id=getattr(resource, "id", "<no id>"),
-                resource_status=get_status(resource))
+                resource_status=get_status(resource),
+                timeout=timeout)
 
 
 def format_exc(exc):

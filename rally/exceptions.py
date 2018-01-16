@@ -163,9 +163,9 @@ class RallyAssertionError(RallyException):
 
 class TimeoutException(RallyException):
     error_code = 517
-    msg_fmt = ("Rally tired waiting for %(resource_type)s %(resource_name)s:"
-               "%(resource_id)s to become %(desired_status)s current "
-               "status %(resource_status)s")
+    msg_fmt = ("Rally tired waiting %(timeout).2f seconds for "
+               "%(resource_type)s %(resource_name)s:%(resource_id)s to "
+               "become %(desired_status)s current status %(resource_status)s")
 
 
 class GetResourceFailure(RallyException):

@@ -216,7 +216,8 @@ class MagnumScenario(scenario.OpenStackScenario):
                     resource_name=podname,
                     resource_type="Pod",
                     resource_id=resp.metadata.uid,
-                    resource_status=resp.status)
+                    resource_status=resp.status,
+                    timeout=CONF.openstack.k8s_pod_create_timeout)
             common_utils.interruptable_sleep(
                 CONF.openstack.k8s_pod_create_poll_interval)
 
@@ -260,6 +261,7 @@ class MagnumScenario(scenario.OpenStackScenario):
                         resource_name=rcname,
                         resource_type="ReplicationController",
                         resource_id=resp.metadata.uid,
-                        resource_status=status)
+                        resource_status=status,
+                        timeout=CONF.openstack.k8s_rc_create_timeout)
                 common_utils.interruptable_sleep(
                     CONF.openstack.k8s_rc_create_poll_interval)
