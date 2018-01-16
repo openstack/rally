@@ -25,7 +25,7 @@ RUN echo '[ ! -z "$TERM" -a -r /etc/motd ] && cat /etc/motd' \
 ║  /home/rally/source    - a directory with documentation, pre created tasks, ║\n\
 ║      sampes and source code                                                 ║\n\
 ║  /etc/rally/rally.conf - a default configuration file of rally. To override ║\n\
-║      it, mount custom configration file to /home/rally/.rally/rally.conf    ║\n\
+║      it, mount custom configuration file to /home/rally/.rally/rally.conf    ║\n\
 ║                                                                             ║\n\
 ║  Rally at readthedocs - http://rally.readthedocs.org                        ║\n\
 ║  How to contribute - http://rally.readthedocs.org/en/latest/contribute.html ║\n\
