@@ -496,7 +496,8 @@ class CinderServersTestCase(test.ScenarioTestCase):
                                       fakearg="fake")
                             )
             self._test_atomic_action_timer(scenario.atomic_actions(),
-                                           "cinder.clone_volume")
+                                           "cinder.clone_volume",
+                                           count=nested_level)
         mock_service.create_volume.assert_has_calls(expected)
 
     def test_create_volume_from_snapshot(self):
