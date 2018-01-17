@@ -372,7 +372,7 @@ class EnvManagerTestCase(test.TestCase):
                 "just_broken@check": {
                     "message": broken_msg % "just_broken@check",
                     "available": False,
-                    "traceback": (Exception, mock.ANY, mock.ANY)
+                    "traceback": [Exception, mock.ANY, mock.ANY]
                 }
             },
             env_mgr.EnvManager({"uuid": "44"}).check_health())
@@ -430,7 +430,7 @@ class EnvManagerTestCase(test.TestCase):
                 "broken@info": {
                     "error": "Plugin broken@info.info() method is broken",
                     "info": None,
-                    "traceback": (Exception, mock.ANY, mock.ANY)
+                    "traceback": [Exception, mock.ANY, mock.ANY]
                 }
             },
             env_mgr.EnvManager({"uuid": "44"}).get_info())
@@ -465,7 +465,7 @@ class EnvManagerTestCase(test.TestCase):
         class CleanValid(platform.Platform):
 
             def cleanup(self, task_uuid=None):
-                return valid_result
+                return dict(valid_result)
 
         @platform.configure(name="wrong", platform="clean")
         class CleanWrongFormat(platform.Platform):
@@ -479,13 +479,16 @@ class EnvManagerTestCase(test.TestCase):
             def cleanup(self, task_uuid):
                 raise Exception("This should not happen")
 
-        for p in [CleanValid, CleanWrongFormat, CleanBroken]:
+        @platform.configure(name="not_impl", platform="clean")
+        class NotImplBroken(platform.Platform):
+            pass
+
+        for p in [CleanValid, CleanWrongFormat, CleanBroken, NotImplBroken]:
             self.addCleanup(p.unregister)
 
         mock__get_platforms.return_value = [
-            CleanValid("spec1"),
-            CleanBroken("spec2"),
-            CleanWrongFormat("spec3")
+            CleanValid("spec1"), CleanBroken("spec2"),
+            CleanWrongFormat("spec3"), NotImplBroken("spec4")
         ]
 
         result = env_mgr.EnvManager({"uuid": 424}).cleanup()
@@ -495,10 +498,12 @@ class EnvManagerTestCase(test.TestCase):
             mock.call(424, env_mgr.STATUS.CLEANING, env_mgr.STATUS.READY)
         ])
         self.assertIsInstance(result, dict)
-        self.assertEqual(3, len(result))
+        self.assertEqual(4, len(result))
+        valid_result["message"] = "Succeeded"
         self.assertEqual(valid_result, result["valid@clean"])
         self.assertEqual(
             {
+                "message": "Failed",
                 "discovered": 0, "deleted": 0, "failed": 0, "resources": {},
                 "errors": [{
                     "message": "Plugin wrong@clean.cleanup() method is broken",
@@ -508,29 +513,49 @@ class EnvManagerTestCase(test.TestCase):
         )
         self.assertEqual(
             {
+                "message": "Failed",
                 "discovered": 0, "deleted": 0, "failed": 0, "resources": {},
                 "errors": [{
                     "message": "Plugin broken@clean.cleanup() method is "
                                "broken",
-                    "traceback": (Exception, mock.ANY, mock.ANY)
+                    "traceback": [Exception, mock.ANY, mock.ANY]
                 }]
             },
             result["broken@clean"]
         )
+        self.assertEqual(
+            {
+                "message": "Not implemented",
+                "discovered": 0, "deleted": 0, "failed": 0, "resources": {},
+                "errors": []
+            },
+            result["not_impl@clean"]
+        )
 
-    @mock.patch("rally.env.env_mgr.EnvManager.cleanup",
-                return_value={"errors": [121]})
+    @mock.patch("rally.env.env_mgr.EnvManager.cleanup")
     def test_destory_cleanup_failed(self, mock_env_manager_cleanup):
+        mock_env_manager_cleanup.return_value = {
+            "platform_1": {
+                "errors": [],
+            },
+            "platform_2": {
+                "errors": [121],
+            }
+        }
         self.assertEqual(
             {
                 "cleanup_info": {
-                    "errors": [121],
-                    "skipped": False
+                    "skipped": False,
+                    "failed": True,
+                    "info": {
+                        "platform_1": {"errors": []},
+                        "platform_2": {"errors": [121]}
+                    }
                 },
                 "destroy_info": {
                     "skipped": True,
                     "platforms": {},
-                    "message": "Skipped because cleanup failed"
+                    "message": "Skipped because cleanup has errors"
                 }
             },
             env_mgr.EnvManager({"uuid": 42}).destroy()
@@ -606,7 +631,7 @@ class EnvManagerTestCase(test.TestCase):
                             "old": platform.STATUS.READY,
                             "new": platform.STATUS.FAILED_TO_DESTROY
                         },
-                        "traceback": (Exception, mock.ANY, mock.ANY)
+                        "traceback": [Exception, mock.ANY, mock.ANY]
                     }
                 }
             },

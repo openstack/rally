@@ -22,6 +22,7 @@ from six.moves.urllib import parse
 from rally.cli import envutils
 from rally.common import logging
 from rally.common.plugin import plugin
+from rally.common import utils
 from rally import consts
 from rally import exceptions
 
@@ -64,6 +65,8 @@ class OSClient(plugin.Plugin):
 
     def __init__(self, credential, api_info, cache_obj):
         self.credential = credential
+        if isinstance(self.credential, dict):
+            self.credential = utils.Struct(**self.credential)
         self.api_info = api_info
         self.cache = cache_obj
 
@@ -90,9 +93,9 @@ class OSClient(plugin.Plugin):
         # version is a string object.
         # For those clients which doesn't accept string value(for example
         # zaqarclient), this method should be overridden.
-        version = (version
-                   or self.api_info.get(self.get_name(), {}).get("version")
-                   or self._meta_get("default_version"))
+        version = (version or
+                   self.api_info.get(self.get_name(), {}).get("version") or
+                   self._meta_get("default_version"))
         if version is not None:
             version = str(version)
         return version
@@ -124,9 +127,9 @@ class OSClient(plugin.Plugin):
         Choose service type between transmitted(preferable value if present),
         service type from api_info(configured from a context) and default.
         """
-        return (service_type
-                or self.api_info.get(self.get_name(), {}).get("service_type")
-                or self._meta_get("default_service_type"))
+        return (service_type or
+                self.api_info.get(self.get_name(), {}).get("service_type") or
+                self._meta_get("default_service_type"))
 
     @classmethod
     def is_service_type_configurable(cls):

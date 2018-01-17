@@ -12,9 +12,27 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import jsonschema
+
+from rally.env import env_mgr
 from rally.env import platform
 
 from tests.unit import test
+
+
+class PlatformBaseTestCase(test.TestCase):
+
+    def _check_schema(self, schema, obj):
+        jsonschema.validate(obj, schema)
+
+    def _check_health_schema(self, obj):
+        self._check_schema(env_mgr.EnvManager._HEALTH_FORMAT, obj)
+
+    def _check_cleanup_schema(self, obj):
+        self._check_schema(env_mgr.EnvManager._CLEANUP_FORMAT, obj)
+
+    def _check_info_schema(self, obj):
+        self._check_schema(env_mgr.EnvManager._INFO_FORMAT, obj)
 
 
 class PlatformTestCase(test.TestCase):
