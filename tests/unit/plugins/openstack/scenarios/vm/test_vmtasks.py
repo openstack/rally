@@ -181,7 +181,8 @@ class VMTasksTestCase(test.ScenarioTestCase):
             resource_name="foo_name",
             resource_id="foo_id",
             desired_status="foo_desired_status",
-            resource_status="foo_resource_status")
+            resource_status="foo_resource_status",
+            timeout=2)
         exc = self.assertRaises(exceptions.TimeoutException,
                                 scenario.run,
                                 "foo_image", "foo_flavor", "foo_interpreter",
