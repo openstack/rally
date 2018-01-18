@@ -15,7 +15,7 @@ Overview
 * New JSON report
 * ElasticSearch exporter
 * `OSProfiler support
-  <https://rally.readthedocs.io/en/0.10.0/quick_start/tutorial/step_11_profiling_openstack_internals.html>`_
+  <https://rally.readthedocs.io/en/0.10.0/quick_start/tutorial/step_10_profiling_openstack_internals.html>`_
 * Restructure of configuration options.
 
 Details
