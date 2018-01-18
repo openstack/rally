@@ -120,7 +120,7 @@ class TaskTestCase(test.TestCase):
         self.assertEqual(mock_db_task_list.return_value["uuis"],
                          tasks[0]["uuid"])
 
-    @mock.patch("rally.common.objects.deploy.db.task_update")
+    @mock.patch("rally.common.objects.task.db.task_update")
     @mock.patch("rally.common.objects.task.db.task_create")
     def test_update(self, mock_task_create, mock_task_update):
         mock_task_create.return_value = self.task

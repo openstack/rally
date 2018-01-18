@@ -13,10 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.common import db
 from rally.common import logging
 from rally import consts
-from rally.deployment import credential
 from rally.env import env_mgr
 from rally import exceptions
 
@@ -83,9 +81,7 @@ class Deployment(object):
         self._env_data = self._env.data
         self._all_credentials = {}
         for p in self._env_data["platforms"]:
-            if p["plugin_name"].startswith("existing@"):
-                p["plugin_name"] = p["plugin_name"][9:]
-            self._all_credentials[p["plugin_name"]] = [p["platform_data"]]
+            self._all_credentials[p["platform_name"]] = [p["platform_data"]]
 
         self.config = {}
         for p_name, p_cfg in self._env_data["spec"].items():
@@ -151,14 +147,8 @@ class Deployment(object):
 
         return [Deployment(e) for e in envs]
 
-    def _update(self, values):
-        self.deployment = db.deployment_update(self._env.uuid, values)
-
     def get_validation_context(self):
-        ctx = {}
-        for platform in self.get_platforms():
-            ctx.update(credential.get(platform).get_validation_context())
-        return ctx
+        return self._env.get_validation_context()
 
     def verify_connections(self):
         for platform_name, result in self._env.check_health().items():
@@ -173,27 +163,28 @@ class Deployment(object):
     def get_all_credentials(self):
         all_credentials = {}
         for platform, credentials in self._all_credentials.items():
-            credential_cls = credential.get(platform)
-            admin = credentials[0]["admin"]
-            if admin:
-                admin = credential_cls(
-                    permission=consts.EndpointPermission.ADMIN, **admin)
-            all_credentials[platform] = [{
-                "admin": admin,
-                "users": [credential_cls(**user) for user in
-                          credentials[0]["users"]]}]
+            if platform == "openstack":
+                from rally.plugins.openstack import credential
+
+                admin = credentials[0]["admin"]
+                if admin:
+                    admin = credential.OpenStackCredential(
+                        permission=consts.EndpointPermission.ADMIN, **admin)
+                all_credentials[platform] = [{
+                    "admin": admin,
+                    "users": [credential.OpenStackCredential(**user)
+                              for user in credentials[0]["users"]]}]
+            else:
+                all_credentials[platform] = credentials
         return all_credentials
 
     def get_credentials_for(self, platform):
         if platform == "default":
             return {"admin": None, "users": []}
+
+        creds = self.get_all_credentials()
         try:
-            creds = self._all_credentials[platform][0]
+            return creds[platform][0]
         except (KeyError, IndexError):
             raise exceptions.RallyException(
                 "No credentials found for %s" % platform)
-
-        admin = creds["admin"]
-        credential_cls = credential.get(platform)
-        return {"admin": credential_cls(**admin) if admin else None,
-                "users": [credential_cls(**user) for user in creds["users"]]}

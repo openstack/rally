@@ -173,3 +173,6 @@ class OpenStack(platform.Platform):
                 "services": osclients.Clients(active_user).list_services()
             }
         }
+
+    def _get_validation_context(self):
+        return {"users@openstack": {}}
