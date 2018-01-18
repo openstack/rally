@@ -19,7 +19,6 @@ import copy
 import os
 
 import ddt
-import jsonschema
 import mock
 from oslo_config import cfg
 
@@ -33,8 +32,7 @@ from tests.unit import test
 
 FAKE_DEPLOYMENT_CONFIG = {
     # TODO(akscram): A fake engine is more suitable for that.
-    "type": "ExistingCloud",
-    "creds": {"openstack": {
+    "openstack": {
         "auth_url": "http://example.net:5000/v2.0/",
         "admin": {
             "username": "admin",
@@ -47,7 +45,8 @@ FAKE_DEPLOYMENT_CONFIG = {
             "profiler_conn_str": None
         },
         "region_name": "RegionOne",
-        "endpoint_type": consts.EndpointType.INTERNAL}}
+        "endpoint_type": consts.EndpointType.INTERNAL
+    }
 }
 
 
@@ -90,7 +89,7 @@ class TaskAPITestCase(test.TestCase):
         mock_task_engine.return_value.validate.assert_called_once_with()
 
         mock_task.assert_called_once_with(
-            temporary=True, deployment_uuid=fake_deployment["uuid"])
+            temporary=True, env_uuid=fake_deployment["uuid"])
         mock_deployment_get.assert_called_once_with(fake_deployment["uuid"])
         self.assertFalse(mock_task.get.called)
 
@@ -248,7 +247,7 @@ class TaskAPITestCase(test.TestCase):
         self.task_inst.create(
             deployment=mock_deployment_get.return_value["uuid"], tags=tags)
         mock_task.assert_called_once_with(
-            deployment_uuid=mock_deployment_get.return_value["uuid"],
+            env_uuid=mock_deployment_get.return_value["uuid"],
             tags=tags)
 
     @mock.patch("rally.common.objects.Deployment.get",
@@ -326,7 +325,7 @@ class TaskAPITestCase(test.TestCase):
             status=consts.DeployStatus.DEPLOY_INCONSISTENT,
             name="foo")
         mock_deployment_get.return_value = fake_deployment
-        fake_task_dict = {"deployment_uuid": deployment_uuid,
+        fake_task_dict = {"env_uuid": deployment_uuid,
                           "uuid": "some_uuid"}
         fake_task = objects.Task(task=fake_task_dict)
         mock_task_get.return_value = fake_task
@@ -344,16 +343,13 @@ class TaskAPITestCase(test.TestCase):
     @mock.patch("rally.api.CONF", spec=cfg.CONF)
     def test_start_exception(self, mock_conf, mock_task_engine,
                              mock_deployment_get, mock_task, mock_task_config):
-        fake_deployment = fakes.FakeDeployment(
+        mock_deployment_get.return_value = fakes.FakeDeployment(
             status=consts.DeployStatus.DEPLOY_FINISHED,
             name="foo", uuid="deployment_uuid")
-        mock_deployment_get.return_value = fake_deployment
         mock_task.return_value.is_temporary = False
         mock_task_engine.return_value.run.side_effect = TypeError
         self.assertRaises(TypeError, self.task_inst.start,
                           deployment="deployment_uuid", config="config")
-        fake_deployment.update_status.assert_called_once_with(
-            consts.DeployStatus.DEPLOY_INCONSISTENT)
 
     @mock.patch("rally.api.objects.Task")
     @mock.patch("rally.api.objects.Deployment.get")
@@ -543,7 +539,7 @@ class TaskAPITestCase(test.TestCase):
                 task_results=task_results)
         )
 
-        mock_task.assert_called_once_with(deployment_uuid="deployment_uuid",
+        mock_task.assert_called_once_with(env_uuid="deployment_uuid",
                                           tags=None)
         mock_task.return_value.update_status.assert_has_calls(
             [mock.call(consts.TaskStatus.RUNNING),
@@ -615,7 +611,7 @@ class TaskAPITestCase(test.TestCase):
                 task_results=task_results)
         )
 
-        mock_task.assert_called_once_with(deployment_uuid="deployment_uuid",
+        mock_task.assert_called_once_with(env_uuid="deployment_uuid",
                                           tags=None)
         mock_task.return_value.update_status.assert_has_calls(
             [mock.call(consts.TaskStatus.RUNNING),
@@ -650,9 +646,8 @@ class TaskAPITestCase(test.TestCase):
             hooks_results=workload["hooks"], start_time=workload["start_time"])
 
     @mock.patch("rally.api.objects.Deployment.get")
-    @mock.patch("rally.api.jsonschema.validate", return_value=True)
     def test_import_results_with_inconsistent_deployment(
-            self, mock_jsonschema_validate, mock_deployment_get):
+            self, mock_deployment_get):
         fake_deployment = fakes.FakeDeployment(
             uuid="deployment_uuid", admin="fake_admin", users=["fake_user"],
             status=consts.DeployStatus.DEPLOY_INCONSISTENT,
@@ -667,9 +662,8 @@ class TaskAPITestCase(test.TestCase):
 
     @mock.patch("rally.api.objects.Task")
     @mock.patch("rally.api.objects.Deployment.get")
-    @mock.patch("rally.api.jsonschema.validate", return_value=True)
     def test_import_results_with_error_data(
-            self, mock_jsonschema_validate, mock_deployment_get, mock_task):
+            self, mock_deployment_get, mock_task):
         mock_deployment_get.return_value = fakes.FakeDeployment(
             uuid="deployment_uuid", admin="fake_admin", users=["fake_user"],
             status=consts.DeployStatus.DEPLOY_FINISHED)
@@ -694,8 +688,7 @@ class BaseDeploymentTestCase(test.TestCase):
         self.deployment_inst = api._Deployment(mock_api)
         self.deployment_config = copy.deepcopy(FAKE_DEPLOYMENT_CONFIG)
         self.deployment_uuid = "599bdf1d-fe77-461a-a810-d59b1490f4e3"
-        creds = copy.deepcopy(FAKE_DEPLOYMENT_CONFIG)["creds"]
-        admin_credential = creds["openstack"]
+        admin_credential = copy.deepcopy(self.deployment_config["openstack"])
         admin_credential["endpoint"] = None
         admin_credential.update(admin_credential.pop("admin"))
         admin_credential["permission"] = consts.EndpointPermission.ADMIN
@@ -711,59 +704,59 @@ class BaseDeploymentTestCase(test.TestCase):
 
 
 class DeploymentAPITestCase(BaseDeploymentTestCase):
-    @mock.patch("rally.common.objects.deploy.db.deployment_update")
-    @mock.patch("rally.common.objects.deploy.db.deployment_create")
-    @mock.patch("rally.deployment.engines.existing.ExistingCloud.validate")
-    def test_create(self, mock_existing_cloud_validate,
-                    mock_deployment_create, mock_deployment_update):
-        mock_deployment_create.return_value = self.deployment
-        mock_deployment_update.return_value = self.deployment
+    @mock.patch("rally.api.objects.Deployment")
+    def test_create(self, mock_deployment):
         dep = self.deployment_inst.create(config=self.deployment_config,
                                           name="fake_deployment")
-        self.assertIsInstance(dep, dict)
-        mock_deployment_create.assert_called_once_with({
-            "name": "fake_deployment",
-            "config": self.deployment_config,
-        })
-        mock_existing_cloud_validate.assert_called_once_with()
-        mock_deployment_update.assert_has_calls([
-            mock.call(self.deployment_uuid,
-                      {"credentials": {"openstack": [self.credentials]}})
-        ])
+        self.assertEqual(mock_deployment.return_value.to_dict.return_value,
+                         dep)
+        mock_deployment.assert_called_once_with(
+            name="fake_deployment",
+            config=self.deployment_config,
+            extras={})
 
-    @mock.patch("rally.common.objects.deploy.db.deployment_update")
-    @mock.patch("rally.common.objects.deploy.db.deployment_create")
-    @mock.patch("rally.deployment.engines.existing.ExistingCloud.validate",
-                side_effect=jsonschema.ValidationError("ValidationError"))
-    def test_create_validation_error(
-            self, mock_existing_cloud_validate, mock_deployment_create,
-            mock_deployment_update):
-        mock_deployment_create.return_value = self.deployment
-        self.assertRaises(jsonschema.ValidationError,
-                          self.deployment_inst.create,
-                          config=self.deployment_config,
-                          name="fake_deployment")
-        mock_deployment_update.assert_called_once_with(
-            self.deployment_uuid,
-            {"status": consts.DeployStatus.DEPLOY_FAILED})
+    @mock.patch("rally.api.objects.Deployment")
+    def test_create_duplicate(self, mock_deployment):
 
-    @mock.patch("rally.api.LOG")
-    @mock.patch("rally.common.objects.deploy.db.deployment_create",
-                side_effect=exceptions.DBRecordExists(
-                    field="name", value="fake_deploy", table="deployments"))
-    def test_create_duplication_error(self, mock_deployment_create, mock_log):
-        self.assertRaises(exceptions.DBRecordExists,
-                          self.deployment_inst.create,
-                          config=self.deployment_config,
-                          name="fake_deployment")
+        exc = exceptions.DBRecordExists(
+            field="name", value="fake_deployment", table="envs")
 
-    @mock.patch("rally.common.objects.deploy.db.deployment_delete")
-    @mock.patch("rally.common.objects.deploy.db.deployment_update")
-    @mock.patch("rally.common.objects.deploy.db.deployment_get")
-    def test_destroy(self, mock_deployment_get, mock_deployment_update,
-                     mock_deployment_delete):
-        mock_deployment_get.return_value = self.deployment
-        mock_deployment_update.return_value = self.deployment
+        mock_deployment.side_effect = exc
+
+        a_exc = self.assertRaises(
+            exceptions.DBRecordExists,
+            self.deployment_inst.create, config=self.deployment_config,
+            name="fake_deployment")
+        self.assertEqual(exc, a_exc)
+
+    @mock.patch("rally.api.objects.Deployment")
+    def test_create_with_old_cfg(self, mock_deployment):
+        mock_deployment.return_value.spec = ""
+
+        config = {"type": "ExistingCloud",
+                  "creds": self.deployment_config}
+
+        dep = self.deployment_inst.create(config=config,
+                                          name="fake_deployment")
+        self.assertEqual(mock_deployment.return_value.to_dict.return_value,
+                         dep)
+        mock_deployment.assert_called_once_with(
+            name="fake_deployment",
+            config=self.deployment_config,
+            extras={})
+
+        config = {"type": "Something",
+                  "creds": self.deployment_config}
+
+        e = self.assertRaises(
+            exceptions.RallyException,
+            self.deployment_inst.create, config=config,
+            name="fake_deployment")
+        self.assertIn("You are using deployment type which doesn't exist.",
+                      "%s" % e)
+
+    @mock.patch("rally.common.objects.deploy.env_mgr.EnvManager.get")
+    def test_destroy(self, mock_env_manager_get):
 
         list_verifiers = [{"name": "f1", "uuid": "1"},
                           {"name": "f2", "uuid": "2"}]
@@ -771,133 +764,35 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
 
         self.deployment_inst.destroy(deployment=self.deployment_uuid)
 
-        mock_deployment_get.assert_called_once_with(self.deployment_uuid)
-        mock_deployment_delete.assert_called_once_with(self.deployment_uuid)
-        self.deployment_inst.api.verifier.list.assert_called_once_with()
-        self.assertEqual(
-            [mock.call(verifier_id=m["name"],
-                       deployment_id=self.deployment["name"],
-                       force=True)
-             for m in list_verifiers],
-            self.deployment_inst.api.verifier.delete.call_args_list)
+        mock_env_manager_get.assert_called_once_with(self.deployment_uuid)
+        mock_env_manager_get.return_value.destroy.assert_called_once_with(
+            skip_cleanup=True
+        )
 
-    @mock.patch("rally.common.objects.deploy.db.deployment_update")
-    @mock.patch("rally.common.objects.deploy.db.deployment_get")
-    def test_recreate(self, mock_deployment_get, mock_deployment_update):
-        mock_deployment_get.return_value = self.deployment
-        mock_deployment_update.return_value = self.deployment
-        self.deployment_inst.recreate(deployment=self.deployment_uuid)
-        mock_deployment_get.assert_called_once_with(self.deployment_uuid)
-        mock_deployment_update.assert_has_calls([
-            mock.call(
-                self.deployment_uuid,
-                {"credentials":
-                    {"openstack": [{"admin": self.credentials["admin"],
-                                    "users": self.credentials["users"]}]}})
-        ])
+    def test_recreate(self):
+        e = self.assertRaises(exceptions.RallyException,
+                              self.deployment_inst.recreate, deployment="")
+        self.assertIn("Sorry, but recreate method", "%s" % e)
 
-    @mock.patch("rally.common.objects.deploy.db.deployment_update")
-    @mock.patch("rally.common.objects.deploy.db.deployment_get")
-    def test_recreate_config(self, mock_deployment_get,
-                             mock_deployment_update):
-        mock_deployment_get.return_value = self.deployment
-        mock_deployment_update.return_value = self.deployment
-        config = copy.deepcopy(self.deployment_config)
-        config["creds"]["openstack"]["admin"] = {
-            "username": "admin",
-            "password": "pass1",
-            "tenant_name": "demo"}
-        config["creds"]["openstack"]["users"] = [
-            {"username": "user1",
-             "password": "pass2",
-             "tenant_name": "demo"}]
-
-        self.deployment_inst.recreate(deployment=self.deployment_uuid,
-                                      config=config)
-        mock_deployment_get.assert_called_once_with(self.deployment_uuid)
-        mock_deployment_update.assert_has_calls([
-            mock.call(self.deployment_uuid, {"config": config}),
-        ])
-
-    @mock.patch("rally.common.objects.deploy.db.deployment_update")
-    @mock.patch("rally.common.objects.deploy.db.deployment_get")
-    def test_recreate_old_config(self, mock_deployment_get,
-                                 mock_deployment_update):
-        mock_deployment_get.return_value = self.deployment
-        mock_deployment_update.return_value = self.deployment
-        config = copy.deepcopy(self.deployment_config["creds"])
-        config["openstack"]["admin"] = {
-            "username": "admin",
-            "password": "pass1",
-            "tenant_name": "demo"}
-        config["openstack"]["users"] = [
-            {"username": "user1",
-             "password": "pass2",
-             "tenant_name": "demo"}]
-
-        self.deployment_inst.recreate(deployment=self.deployment_uuid,
-                                      config=config)
-        mock_deployment_get.assert_called_once_with(self.deployment_uuid)
-        mock_deployment_update.assert_has_calls([
-            mock.call(self.deployment_uuid,
-                      {"config": {"type": "ExistingCloud", "creds": config}}),
-        ])
-
-    @mock.patch("rally.common.objects.deploy.db.deployment_update")
-    @mock.patch("rally.common.objects.deploy.db.deployment_get")
-    def test_recreate_config_invalid(self, mock_deployment_get,
-                                     mock_deployment_update):
-        mock_deployment_get.return_value = self.deployment
-        mock_deployment_update.return_value = self.deployment
-        config = copy.deepcopy(self.deployment_config)
-        config["admin"] = {"foo": "bar"}
-
-        self.assertRaises(jsonschema.ValidationError,
-                          self.deployment_inst.recreate,
-                          deployment=self.deployment_uuid,
-                          config=config)
-
-    @mock.patch("rally.common.objects.deploy.db.deployment_update")
-    @mock.patch("rally.common.objects.deploy.db.deployment_get")
-    def test_recreate_config_wrong_type(self, mock_deployment_get,
-                                        mock_deployment_update):
-        mock_deployment_get.return_value = self.deployment
-        mock_deployment_update.return_value = self.deployment
-        config = copy.deepcopy(self.deployment_config)
-        config["type"] = "foo"
-
-        self.assertRaises(exceptions.RallyException,
-                          self.deployment_inst.recreate,
-                          deployment=self.deployment_uuid,
-                          config=config)
-
-    @mock.patch("rally.common.objects.deploy.db.deployment_get")
-    def test_get(self, mock_deployment_get):
+    @mock.patch("rally.common.objects.deploy.env_mgr.EnvManager.get")
+    def test_get(self, mock_env_manager_get):
         origin_config = copy.deepcopy(self.deployment_config)
-        deployment_id = "aaaa-bbbb-cccc-dddd"
-        mock_deployment_get.return_value = self.deployment
-        ret = self.deployment_inst.get(deployment=deployment_id)
+        mock_env_manager_get.return_value.data = {
+            "spec": self.deployment_config,
+            "platforms": [],
+            "id": self.id(),
+            "uuid": self.deployment["uuid"],
+            "extras": {},
+            "name": self.deployment["name"],
+            "created_at": mock.Mock(),
+            "updated_at": mock.Mock()}
+        ret = self.deployment_inst.get(deployment=self.deployment["uuid"])
         for key in self.deployment:
             self.assertIn(key, ret)
-            if key != "config":
-                self.assertEqual(self.deployment[key], ret[key])
-        self.assertEqual(origin_config["creds"], ret["config"])
-
-    @mock.patch("rally.common.objects.deploy.db.deployment_get")
-    def test_get_deprecated_formats(self, mock_deployment_get):
-        origin_config = copy.deepcopy(self.deployment_config)
-        self.deployment_config.update(
-            **self.deployment_config.pop("creds")["openstack"])
-        deployment_id = "aaaa-bbbb-cccc-dddd"
-        mock_deployment_get.return_value = self.deployment
-        ret = self.deployment_inst.get(deployment=deployment_id)
-        for key in self.deployment:
-            self.assertIn(key, ret)
-            if key != "config":
-                self.assertEqual(self.deployment[key], ret[key])
-        origin_config.pop("type")
-
-        self.assertEqual(origin_config["creds"], ret["config"])
+            if key not in ("credentials", "config"):
+                self.assertEqual(self.deployment[key], ret[key],
+                                 "The key '%s' differs." % key)
+        self.assertEqual(origin_config, ret["config"])
 
     @mock.patch("rally.common.objects.Deployment.list")
     def test_list(self, mock_deployment_list):

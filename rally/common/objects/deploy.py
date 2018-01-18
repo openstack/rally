@@ -13,14 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import datetime as dt
-
-import jsonschema
-
 from rally.common import db
 from rally.common import logging
 from rally import consts
 from rally.deployment import credential
+from rally.env import env_mgr
 from rally import exceptions
 
 
@@ -48,15 +45,57 @@ CREDENTIALS_SCHEMA = {
 }
 
 
+_STATUS_OLD_TO_NEW = {
+    consts.DeployStatus.DEPLOY_INIT: env_mgr.STATUS.INIT,
+    consts.DeployStatus.DEPLOY_STARTED: env_mgr.STATUS.INIT,
+    consts.DeployStatus.DEPLOY_FINISHED: env_mgr.STATUS.READY,
+    consts.DeployStatus.DEPLOY_FAILED: env_mgr.STATUS.FAILED_TO_CREATE,
+    consts.DeployStatus.DEPLOY_INCONSISTENT: env_mgr.STATUS.FAILED_TO_CREATE,
+    consts.DeployStatus.DEPLOY_SUBDEPLOY: env_mgr.STATUS.INIT,
+    consts.DeployStatus.CLEANUP_STARTED: env_mgr.STATUS.CLEANING,
+    consts.DeployStatus.CLEANUP_FAILED: env_mgr.STATUS.READY,
+    consts.DeployStatus.CLEANUP_FINISHED: env_mgr.STATUS.READY
+}
+_STATUS_NEW_TO_OLD = {
+    env_mgr.STATUS.INIT: consts.DeployStatus.DEPLOY_INIT,
+    env_mgr.STATUS.READY: consts.DeployStatus.DEPLOY_FINISHED,
+    env_mgr.STATUS.FAILED_TO_CREATE: consts.DeployStatus.DEPLOY_FAILED,
+    env_mgr.STATUS.CLEANING: consts.DeployStatus.CLEANUP_STARTED,
+    env_mgr.STATUS.DESTROYING: consts.DeployStatus.DEPLOY_INIT,
+    env_mgr.STATUS.FAILED_TO_DESTROY: consts.DeployStatus.DEPLOY_INCONSISTENT,
+    env_mgr.STATUS.DESTROYED: consts.DeployStatus.DEPLOY_INIT
+}
+
+
 class Deployment(object):
     """Represents a deployment object."""
     TIME_FORMAT = consts.TimeFormat.ISO8601
 
-    def __init__(self, deployment=None, **attributes):
+    def __init__(self, deployment=None, name=None, config=None, extras=None):
         if deployment:
-            self.deployment = deployment
+            self._env = deployment
         else:
-            self.deployment = db.deployment_create(attributes)
+            self._env = env_mgr.EnvManager.create(
+                name=name,
+                spec=config or {},
+                description="",
+                extras=extras or {})
+        self._env_data = self._env.data
+        self._all_credentials = {}
+        for p in self._env_data["platforms"]:
+            if p["plugin_name"].startswith("existing@"):
+                p["plugin_name"] = p["plugin_name"][9:]
+            self._all_credentials[p["plugin_name"]] = [p["platform_data"]]
+
+        self.config = {}
+        for p_name, p_cfg in self._env_data["spec"].items():
+            if p_name.startswith("existing@"):
+                p_name = p_name[9:]
+            self.config[p_name] = p_cfg
+
+    @property
+    def env_obj(self):
+        return self._env
 
     def __getitem__(self, key):
         # TODO(astudenov): remove this in future releases
@@ -65,48 +104,55 @@ class Deployment(object):
                         "Use deployment.get_credentials_for('openstack')"
                         "['%s'] to get credentials." % (key, key))
             return self.get_credentials_for("openstack")[key]
-        return self.deployment[key]
+        if key == "status":
+            status = self._env.status
+            return _STATUS_NEW_TO_OLD.get(status, status)
+        elif key == "extra":
+            return self._env_data["extras"]
+        if hasattr(self._env, key):
+            return getattr(self._env, key)
+        elif hasattr(self, key):
+            return getattr(self, key)
+        return self._env_data[key]
 
     def to_dict(self):
-        result = {}
-        formatters = ["created_at", "completed_at", "started_at", "updated_at"]
-        for field, value in self.deployment.items():
-            if field in formatters:
-                if value is None:
-                    value = "n/a"
-                else:
-                    value = value.strftime(self.TIME_FORMAT)
-            result[field] = value
-        return result
+        return {
+            "id": self._env_data["id"],
+            "uuid": self._env_data["uuid"],
+            "parent_uuid": None,
+            "name": self._env_data["name"],
+            "created_at": self._env_data["created_at"].strftime(
+                self.TIME_FORMAT),
+            "started_at": self._env_data["created_at"].strftime(
+                self.TIME_FORMAT),
+            "completed_at": "n/a",
+            "updated_at": self._env_data["updated_at"].strftime(
+                self.TIME_FORMAT),
+            "config": self.config,
+            "credentials": self._all_credentials,
+            "status": self["status"],
+        }
 
     @staticmethod
     def get(deploy):
-        return Deployment(db.deployment_get(deploy))
+        return Deployment(env_mgr.EnvManager.get(deploy))
 
     @staticmethod
     def list(status=None, parent_uuid=None, name=None):
-        return [Deployment(deployment) for deployment in
-                db.deployment_list(status, parent_uuid, name)]
+        # we do not use parent_uuid...
+        if name:
+            try:
+                env = env_mgr.EnvManager(name)
+            except exceptions.DBRecordNotFound:
+                return []
+            envs = [env]
+        else:
+            envs = env_mgr.EnvManager.list(status=status)
 
-    @staticmethod
-    def delete_by_uuid(uuid):
-        db.deployment_delete(uuid)
+        return [Deployment(e) for e in envs]
 
     def _update(self, values):
-        self.deployment = db.deployment_update(self.deployment["uuid"], values)
-
-    def update_status(self, status):
-        self._update({"status": status})
-
-    def update_name(self, name):
-        self._update({"name": name})
-
-    def update_config(self, config):
-        self._update({"config": config})
-
-    def update_credentials(self, credentials):
-        jsonschema.validate(credentials, CREDENTIALS_SCHEMA)
-        self._update({"credentials": credentials})
+        self.deployment = db.deployment_update(self._env.uuid, values)
 
     def get_validation_context(self):
         ctx = {}
@@ -115,38 +161,34 @@ class Deployment(object):
         return ctx
 
     def verify_connections(self):
-        for platform_creds in self.get_all_credentials().values():
-            for creds in platform_creds:
-                if creds["admin"]:
-                    creds["admin"].verify_connection()
-
-                for user in creds["users"]:
-                    user.verify_connection()
+        for platform_name, result in self._env.check_health().items():
+            if not result["available"]:
+                raise exceptions.RallyException(
+                    "Platform %s is not available: %s." % (platform_name,
+                                                           result["message"]))
 
     def get_platforms(self):
-        return self.deployment["credentials"].keys()
+        return self._all_credentials.keys()
 
     def get_all_credentials(self):
         all_credentials = {}
-        for platform in self.get_platforms():
-            all_credentials[platform] = []
+        for platform, credentials in self._all_credentials.items():
             credential_cls = credential.get(platform)
-            for credentials in self.deployment["credentials"][platform]:
-                try:
-                    admin = credentials["admin"]
-                except Exception:
-                    raise KeyError(credentials)
-                all_credentials[platform].append({
-                    "admin": credential_cls(**admin) if admin else None,
-                    "users": [credential_cls(**user) for user in
-                              credentials["users"]]})
+            admin = credentials[0]["admin"]
+            if admin:
+                admin = credential_cls(
+                    permission=consts.EndpointPermission.ADMIN, **admin)
+            all_credentials[platform] = [{
+                "admin": admin,
+                "users": [credential_cls(**user) for user in
+                          credentials[0]["users"]]}]
         return all_credentials
 
     def get_credentials_for(self, platform):
         if platform == "default":
             return {"admin": None, "users": []}
         try:
-            creds = self.deployment["credentials"][platform][0]
+            creds = self._all_credentials[platform][0]
         except (KeyError, IndexError):
             raise exceptions.RallyException(
                 "No credentials found for %s" % platform)
@@ -155,30 +197,3 @@ class Deployment(object):
         credential_cls = credential.get(platform)
         return {"admin": credential_cls(**admin) if admin else None,
                 "users": [credential_cls(**user) for user in creds["users"]]}
-
-    def set_started(self):
-        self._update({"started_at": dt.datetime.now(),
-                      "status": consts.DeployStatus.DEPLOY_STARTED})
-
-    def set_completed(self):
-        self._update({"completed_at": dt.datetime.now(),
-                      "status": consts.DeployStatus.DEPLOY_FINISHED})
-
-    def add_resource(self, provider_name, type=None, info=None):
-        return db.resource_create({
-            "deployment_uuid": self.deployment["uuid"],
-            "provider_name": provider_name,
-            "type": type,
-            "info": info,
-        })
-
-    def get_resources(self, provider_name=None, type=None):
-        return db.resource_get_all(self.deployment["uuid"],
-                                   provider_name=provider_name, type=type)
-
-    @staticmethod
-    def delete_resource(resource_id):
-        db.resource_delete(resource_id)
-
-    def delete(self):
-        db.deployment_delete(self.deployment["uuid"])

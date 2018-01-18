@@ -171,22 +171,21 @@ class TaskTestCase(test.TestCase):
              "validation_result": {"a": "fake"}}
         )
 
-    @mock.patch("rally.common.objects.task.db.deployment_get")
-    def test_to_dict(self, mock_deployment_get):
+    @mock.patch("rally.common.objects.task.db.env_get")
+    def test_to_dict(self, mock_env_get):
         workloads = [{"created_at": dt.datetime.now(),
                       "updated_at": dt.datetime.now()}]
-        self.task.update({"deployment_uuid": "deployment_uuid",
-                          "deployment_name": "deployment_name",
+        self.task.update({"env_uuid": "deployment_uuid",
+                          "deployment_uuid": "deployment_uuid",
                           "created_at": dt.datetime.now(),
                           "updated_at": dt.datetime.now()})
 
-        mock_deployment_get.return_value = {"name": "deployment_name"}
+        mock_env_get.return_value = {"name": "deployment_name"}
 
         task = objects.Task(task=self.task)
         serialized_task = task.to_dict()
 
-        mock_deployment_get.assert_called_once_with(
-            self.task["deployment_uuid"])
+        mock_env_get.assert_called_once_with(self.task["env_uuid"])
         self.assertEqual(self.task, serialized_task)
 
         self.task["subtasks"] = [{"workloads": workloads}]

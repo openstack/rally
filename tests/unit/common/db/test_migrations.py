@@ -24,6 +24,7 @@ import pprint
 import uuid
 
 import alembic
+import jsonschema
 import mock
 from oslo_db.sqlalchemy import test_migrations
 from oslo_db.sqlalchemy import utils as db_utils
@@ -36,7 +37,6 @@ from rally.common import db
 from rally.common.db.sqlalchemy import api
 from rally.common.db.sqlalchemy import models
 from rally import consts
-from rally.deployment.engines import existing
 from tests.unit.common.db import test_migrations_base
 from tests.unit import test as rtest
 
@@ -346,6 +346,71 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                       "users": six.b(json.dumps([]))
                       }])
 
+    _OLD_DEPLOYMENT_SCHEMA = {
+        "type": "object",
+        "description": "Deprecated schema (openstack only)",
+        "properties": {
+            "type": {"type": "string"},
+            "auth_url": {"type": "string"},
+            "region_name": {"type": "string"},
+            "endpoint": {"type": ["string", "null"]},
+            "endpoint_type": {"enum": [consts.EndpointType.ADMIN,
+                                       consts.EndpointType.INTERNAL,
+                                       consts.EndpointType.PUBLIC,
+                                       None]},
+            "https_insecure": {"type": "boolean"},
+            "https_cacert": {"type": "string"},
+            "profiler_hmac_key": {"type": ["string", "null"]},
+            "profiler_conn_str": {"type": ["string", "null"]},
+            "admin": {"$ref": "#/definitions/user"},
+            "users": {"type": "array",
+                      "items": {"$ref": "#/definitions/user"},
+                      "minItems": 1},
+            "extra": {"type": "object", "additionalProperties": True}
+        },
+        "anyOf": [
+            {"description": "The case when the admin is specified and the "
+                            "users can be created via 'users' context or "
+                            "'existing_users' will be used.",
+             "required": ["type", "auth_url", "admin"]},
+            {"description": "The case when the only existing users are "
+                            "specified.",
+             "required": ["type", "auth_url", "users"]}
+        ],
+        "additionalProperties": False,
+        "definitions": {
+            "user": {
+                "type": "object",
+                "oneOf": [
+                    {
+                        "description": "Keystone V2.0",
+                        "properties": {
+                            "username": {"type": "string"},
+                            "password": {"type": "string"},
+                            "tenant_name": {"type": "string"},
+                        },
+                        "required": ["username", "password", "tenant_name"],
+                        "additionalProperties": False
+                    },
+                    {
+                        "description": "Keystone V3.0",
+                        "properties": {
+                            "username": {"type": "string"},
+                            "password": {"type": "string"},
+                            "domain_name": {"type": "string"},
+                            "user_domain_name": {"type": "string"},
+                            "project_name": {"type": "string"},
+                            "project_domain_name": {"type": "string"},
+                        },
+                        "required": ["username", "password", "project_name"],
+                        "additionalProperties": False
+                    }
+                ],
+            }
+        }
+
+    }
+
     def _check_54e844ebfbc3(self, engine, data):
         self.assertEqual("54e844ebfbc3",
                          api.get_backend().schema_revision(engine=engine))
@@ -377,7 +442,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                         self.assertEqual(endpoint_type,
                                          config["endpoint_type"])
 
-                    existing.ExistingCloud({"config": config}).validate()
+                    jsonschema.validate(config, self._OLD_DEPLOYMENT_SCHEMA)
                 else:
                     if not deployment.uuid.startswith("should-not-be-changed"):
                         self.fail("Config of deployment '%s' is not changes, "
@@ -867,7 +932,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                         self.assertEqual(endpoint_type,
                                          config["endpoint_type"])
 
-                    existing.ExistingCloud({"config": config}).validate()
+                    jsonschema.validate(config, self._OLD_DEPLOYMENT_SCHEMA)
                 else:
                     if not deployment.uuid.startswith("should-not-be-changed"):
                         self.fail("Config of deployment '%s' is not changes, "
@@ -2285,3 +2350,174 @@ class MigrationWalkTestCase(rtest.DBTestCase,
             conn.execute(
                 deployment_table.delete().where(
                     deployment_table.c.uuid == deployment_uuid))
+
+    def _pre_upgrade_7287df262dbc(self, engine):
+        deployment_table = db_utils.get_table(engine, "deployments")
+        task_table = db_utils.get_table(engine, "tasks")
+        verifier_table = db_utils.get_table(engine, "verifiers")
+        verification_table = db_utils.get_table(engine, "verifications")
+
+        self._7287df262dbc_deployments = [
+            # empty config
+            (str(uuid.uuid4()), {"type": "ExistingCloud", "creds": {}}),
+            # OpenStack default config
+            (str(uuid.uuid4()), {
+                "type": "ExistingCloud",
+                "creds": {
+                    "openstack": {
+                        "auth_url": "http://example.net:5000/v2.0/",
+                        "region_name": "RegionOne",
+                        "endpoint_type": "public",
+                        "admin": {
+                            "username": "admin",
+                            "password": "myadminpass",
+                            "tenant_name": "demo"
+                        },
+                        "https_insecure": False,
+                        "https_cacert": ""
+                    }
+                }
+            }),
+            # some custom unknown thing
+            (str(uuid.uuid4()), {"some_special_deployment": "foo"})
+        ]
+        self._7287df262dbc_task_uuid = str(uuid.uuid4())
+        self._7287df262dbc_verifier_uuid = str(uuid.uuid4())
+        self._7287df262dbc_verification_uuid = str(uuid.uuid4())
+
+        with engine.connect() as conn:
+            conn.execute(
+                deployment_table.insert(),
+                [{
+                    "uuid": d_uuid,
+                    "name": str(uuid.uuid4()),
+                    "config": (
+                        json.dumps(d_cfg) if d_cfg
+                        else six.b(json.dumps(d_cfg))),
+                    "enum_deployments_status": consts.DeployStatus.DEPLOY_INIT,
+                    "credentials": six.b(json.dumps([]))
+                } for d_uuid, d_cfg in self._7287df262dbc_deployments]
+            )
+
+            conn.execute(
+                task_table.insert(),
+                [{
+                    "uuid": self._7287df262dbc_task_uuid,
+                    "created_at": timeutils.utcnow(),
+                    "updated_at": timeutils.utcnow(),
+                    "status": consts.TaskStatus.FINISHED,
+                    "validation_result": six.b(json.dumps({})),
+                    "deployment_uuid": self._7287df262dbc_deployments[0][0]
+                }]
+            )
+
+            conn.execute(
+                verifier_table.insert(),
+                [{
+                    "uuid": self._7287df262dbc_verifier_uuid,
+                    "name": str(uuid.uuid4()),
+                    "type": str(uuid.uuid4()),
+                    "created_at": timeutils.utcnow(),
+                    "updated_at": timeutils.utcnow(),
+                    "status": consts.VerifierStatus.INIT
+                }]
+            )
+
+            conn.execute(
+                verification_table.insert(),
+                [{
+                    "uuid": self._7287df262dbc_verification_uuid,
+                    "deployment_uuid": self._7287df262dbc_deployments[0][0],
+                    "verifier_uuid": self._7287df262dbc_verifier_uuid,
+                    "status": consts.VerificationStatus.INIT,
+                    "created_at": timeutils.utcnow(),
+                    "updated_at": timeutils.utcnow(),
+                }]
+            )
+
+    def _check_7287df262dbc(self, engine, data):
+        env_table = db_utils.get_table(engine, "envs")
+        platform_table = db_utils.get_table(engine, "platforms")
+        task_table = db_utils.get_table(engine, "tasks")
+        verifier_table = db_utils.get_table(engine, "verifiers")
+        verification_table = db_utils.get_table(engine, "verifications")
+
+        with engine.connect() as conn:
+
+            task = conn.execute(task_table.select().where(
+                task_table.c.uuid == self._7287df262dbc_task_uuid)).first()
+            self.assertNotIn("deployment_uuid", task)
+            self.assertIn("env_uuid", task)
+            self.assertEqual(self._7287df262dbc_deployments[0][0],
+                             task["env_uuid"])
+            conn.execute(
+                task_table.delete().where(
+                    task_table.c.uuid == self._7287df262dbc_task_uuid))
+
+            v_id = self._7287df262dbc_verification_uuid
+            verification = conn.execute(verification_table.select().where(
+                verification_table.c.uuid == v_id)).first()
+            self.assertNotIn("deployment_uuid", verification)
+            self.assertIn("env_uuid", verification)
+            self.assertEqual(self._7287df262dbc_deployments[0][0],
+                             verification["env_uuid"])
+            conn.execute(
+                verification_table.delete().where(
+                    verification_table.c.uuid == v_id))
+            conn.execute(
+                verifier_table.delete().where(
+                    verifier_table.c.uuid == self._7287df262dbc_verifier_uuid))
+
+            for d_uuid, d_cfg in self._7287df262dbc_deployments:
+                env = conn.execute(env_table.select().where(
+                    env_table.c.uuid == d_uuid)).first()
+                if d_cfg.get("creds", {}):
+                    # openstack deployment
+                    env_spec = json.loads(env["spec"])
+                    self.assertEqual({"existing@openstack"},
+                                     set(env_spec.keys()))
+                    self.assertEqual(
+                        d_cfg["creds"]["openstack"],
+                        env_spec["existing@openstack"])
+
+                    platforms = conn.execute(platform_table.select().where(
+                        platform_table.c.env_uuid == d_uuid)).fetchall()
+                    self.assertEqual(1, len(platforms))
+                    self.assertEqual("READY", platforms[0].status)
+                    self.assertEqual("existing@openstack",
+                                     platforms[0].plugin_name)
+                    self.assertEqual(env_spec["existing@openstack"],
+                                     json.loads(platforms[0].plugin_spec))
+                    self.assertEqual("openstack",
+                                     platforms[0].platform_name)
+                    self.assertEqual(
+                        {"admin": {
+                            "username": "admin",
+                            "tenant_name": "demo",
+                            "password": "myadminpass",
+                            "region_name": "RegionOne",
+                            "https_insecure": False,
+                            "https_cacert": "",
+                            "endpoint_type": "public",
+                            "auth_url": "http://example.net:5000/v2.0/"},
+                            "users": []},
+                        json.loads(platforms[0].platform_data))
+
+                    conn.execute(
+                        platform_table.delete().where(
+                            platform_table.c.env_uuid == d_uuid))
+                else:
+                    if "creds" in d_cfg:
+                        # empty deployment
+                        self.assertEqual({}, json.loads(env["spec"]))
+                    else:
+                        # something
+                        self.assertEqual(d_cfg, json.loads(env["spec"]))
+
+                    platforms = conn.execute(platform_table.select().where(
+                        platform_table.c.env_uuid == d_uuid)).fetchall()
+                    self.assertEqual(0, len(platforms))
+
+                conn.execute(
+                    env_table.delete().where(
+                        env_table.c.uuid == d_uuid))

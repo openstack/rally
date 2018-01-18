@@ -23,7 +23,6 @@ import traceback
 
 import jinja2
 import jinja2.meta
-import jsonschema
 from oslo_config import cfg
 import requests
 from requests.packages import urllib3
@@ -35,7 +34,6 @@ from rally.common.plugin import discover
 from rally.common import utils
 from rally.common import version as rally_version
 from rally import consts
-from rally.deployment import engine as deploy_engine
 from rally import exceptions
 from rally.task import engine
 from rally.task import exporter as texporter
@@ -73,45 +71,38 @@ class _Deployment(APIGroup):
 
         # NOTE(andreykurilin): the following transformation is a preparatory
         #   step for further refactoring (it will be done soon).
-        print_warning = True
-        if "type" not in config:
-            # it looks like a new format! wow!
-            config = {"type": "ExistingCloud",
-                      "creds": config}
-            print_warning = False
+        print_warning = False
+
+        extras = {}
+        if "type" in config:
+            if config["type"] != "ExistingCloud":
+                raise exceptions.RallyException(
+                    "You are using deployment type which doesn't exist. Please"
+                    " check the latest documentation and fix deployment "
+                    "config.")
+
+            config = config["creds"]
+            extras = config.get("extra", {})
+            print_warning = True
 
         try:
-            deployment = objects.Deployment(name=name, config=config)
+            deployment = objects.Deployment(name=name, config=config,
+                                            extras=extras)
         except exceptions.DBRecordExists:
             if logging.is_debug():
                 LOG.exception("Deployment with such name exists")
             raise
 
-        deployer = deploy_engine.Engine.get_engine(
-            deployment["config"]["type"], deployment)
-        try:
-            deployer.validate()
-        except jsonschema.ValidationError:
-            LOG.error("Deployment %s: Schema validation error." %
-                      deployment["uuid"])
-            deployment.update_status(consts.DeployStatus.DEPLOY_FAILED)
-            raise
-
-        if print_warning and config.get("type", "") == "ExistingCloud":
+        if print_warning:
             # credentials are stored in the list, but it contains one item.
-            new_conf = dict(
-                (name, cred[0])
-                for name, cred in deployer._get_creds(config).items())
+            new_conf = deployment.spec
             LOG.warning(
                 "The used config schema is deprecated since Rally 0.10.0. "
                 "The new one is much simpler, try it now:\n%s"
                 % json.dumps(new_conf, indent=4)
             )
 
-        with deployer:
-            credentials = deployer.make_deploy()
-            deployment.update_credentials(credentials)
-            return deployment
+        return deployment
 
     def create(self, config, name):
         return self._create(config, name).to_dict()
@@ -121,26 +112,11 @@ class _Deployment(APIGroup):
 
         :param deployment: UUID or name of the deployment
         """
-        # TODO(akscram): We have to be sure that there are no running
-        #                tasks for this deployment.
-        # TODO(akscram): Check that the deployment have got a status that
-        #                is equal to "*->finished" or "deploy->inconsistent".
-        deployment = objects.Deployment.get(deployment)
-        try:
-            deployer = deploy_engine.Engine.get_engine(
-                deployment["config"]["type"], deployment)
-            with deployer:
-                deployer.make_cleanup()
-        except exceptions.PluginNotFound:
-            LOG.info("Deployment %s will be deleted despite exception"
-                     % deployment["uuid"])
 
-        for verifier in self.api.verifier.list():
-            self.api.verifier.delete(verifier_id=verifier["name"],
-                                     deployment_id=deployment["name"],
-                                     force=True)
+        deploy = objects.Deployment.get(deployment)
 
-        deployment.delete()
+        deploy.env_obj.destroy(skip_cleanup=True)
+        deploy.env_obj.delete()
 
     def recreate(self, deployment, config=None):
         """Performs a cleanup and then makes a deployment again.
@@ -149,47 +125,8 @@ class _Deployment(APIGroup):
         :param config: an optional dict with deployment config to update before
                        redeploy
         """
-        deployment = objects.Deployment.get(deployment)
-        deployer = deploy_engine.Engine.get_engine(
-            deployment["config"]["type"], deployment)
-
-        print_warning = True
-        if config and "type" not in config:
-            # it looks like a new format! wow!
-            config = {"type": "ExistingCloud",
-                      "creds": config}
-            print_warning = False
-
-        if config:
-            if deployment["config"]["type"] != config["type"]:
-                raise exceptions.RallyException(
-                    "Can't change deployment type.")
-            try:
-                deployer.validate(config)
-            except jsonschema.ValidationError:
-                LOG.error("Config schema validation error.")
-                raise
-
-        if (config and print_warning and
-                config.get("type", "") == "ExistingCloud"):
-            # credentials are stored in the list, but it contains one item.
-            new_conf = dict(
-                (name, cred[0])
-                for name, cred in deployer._get_creds(config).items())
-            LOG.warning(
-                "The used config schema is deprecated since Rally 0.10.0. "
-                "The new one is much simpler, try it now:\n%s"
-                % json.dumps(new_conf, indent=4)
-            )
-
-        with deployer:
-            deployer.make_cleanup()
-
-            if config:
-                deployment.update_config(config)
-
-            credentials = deployer.make_deploy()
-            deployment.update_credentials(credentials)
+        raise exceptions.RallyException("Sorry, but recreate method of "
+                                        "deployments is temporary disabled.")
 
     def _get(self, deployment):
         """Get the deployment.
@@ -200,24 +137,7 @@ class _Deployment(APIGroup):
         return objects.Deployment.get(deployment)
 
     def get(self, deployment):
-        deployment = self._get(deployment).to_dict()
-        if deployment["config"].get("type", "") == "ExistingCloud":
-            deployment_creds = {}
-            if "creds" not in deployment["config"]:
-                extra = deployment["config"].pop("extra", None)
-                deployment["config"] = {
-                    "type": deployment["config"].pop("type"),
-                    "creds": {"openstack": deployment["config"]}
-                }
-                if extra is not None:
-                    deployment["config"]["extra"] = extra
-            for platform, creds in deployment["config"]["creds"].items():
-                if isinstance(creds, dict):
-                    deployment_creds[platform] = creds
-                else:
-                    deployment_creds[platform] = creds[0]
-            deployment["config"] = deployment_creds
-        return deployment
+        return self._get(deployment).to_dict()
 
     def service_list(self, deployment):
         """Get the services list.
@@ -244,6 +164,7 @@ class _Deployment(APIGroup):
         :returns: Service list
         """
         result = {}
+
         all_credentials = self._get(deployment).get_all_credentials()
         for platform in all_credentials:
             result[platform] = []
@@ -398,7 +319,7 @@ class _Task(APIGroup):
                 uuid=deployment["uuid"],
                 status=deployment["status"])
 
-        return objects.Task(deployment_uuid=deployment["uuid"],
+        return objects.Task(env_uuid=deployment["uuid"],
                             tags=tags).to_dict()
 
     def validate(self, deployment, config, task_instance=None, task=None):
@@ -421,7 +342,7 @@ class _Task(APIGroup):
             task = objects.Task.get(task)
             deployment = task["deployment_uuid"]
         else:
-            task = objects.Task(deployment_uuid=deployment, temporary=True)
+            task = objects.Task(env_uuid=deployment, temporary=True)
         deployment = objects.Deployment.get(deployment)
 
         try:
@@ -490,11 +411,7 @@ class _Task(APIGroup):
         LOG.info("Run Task %s against Deployment %s"
                  % (task["uuid"], deployment["uuid"]))
 
-        try:
-            task_engine.run()
-        except Exception:
-            deployment.update_status(consts.DeployStatus.DEPLOY_INCONSISTENT)
-            raise
+        task_engine.run()
 
         return task["uuid"], task.get_status(task["uuid"])
 
@@ -563,7 +480,7 @@ class _Task(APIGroup):
                 uuid=deployment["uuid"],
                 status=deployment["status"])
 
-        task_inst = objects.Task(deployment_uuid=deployment["uuid"],
+        task_inst = objects.Task(env_uuid=deployment["uuid"],
                                  tags=tags)
         task_inst.update_status(consts.TaskStatus.RUNNING)
         for subtask in task_results["subtasks"]:

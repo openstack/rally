@@ -15,7 +15,6 @@
 
 import abc
 
-import jsonschema
 import six
 
 from rally.common.plugin import plugin
@@ -59,35 +58,3 @@ class Credential(plugin.Plugin):
     @classmethod
     def get_validation_context(cls):
         return {}
-
-
-def configure_builder(platform):
-    def wrapper(cls):
-        cls = plugin.configure(name="credential_builder",
-                               platform=platform)(cls)
-        return cls
-    return wrapper
-
-
-def get_builder(platform):
-    return CredentialBuilder.get(name="credential_builder",
-                                 platform=platform)
-
-
-@plugin.base()
-@six.add_metaclass(abc.ABCMeta)
-class CredentialBuilder(plugin.Plugin):
-    """Base class for extensions of ExistingCloud deployment."""
-
-    CONFIG_SCHEMA = {"type": "null"}
-
-    def __init__(self, config):
-        self.config = config
-
-    @classmethod
-    def validate(cls, config):
-        jsonschema.validate(config, cls.CONFIG_SCHEMA)
-
-    @abc.abstractmethod
-    def build_credentials(self):
-        """Builds credentials from provided configuration"""

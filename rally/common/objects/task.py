@@ -307,6 +307,8 @@ class Task(object):
             self.task = task or db.task_create(attributes)
 
     def __getitem__(self, key):
+        if key == "deployment_uuid":
+            key = "env_uuid"
         return self.task[key]
 
     @staticmethod
@@ -319,8 +321,8 @@ class Task(object):
 
     def to_dict(self):
         db_task = self.task
-        deployment_name = db.deployment_get(
-            self.task["deployment_uuid"])["name"]
+        deployment_name = db.env_get(self.task["env_uuid"])["name"]
+        db_task["deployment_uuid"] = db_task["env_uuid"]
         db_task["deployment_name"] = deployment_name
         self._serialize_dt(db_task)
         for subtask in db_task.get("subtasks", []):
@@ -340,7 +342,7 @@ class Task(object):
     @staticmethod
     def list(status=None, deployment=None, tags=None):
         return [Task(db_task) for db_task in db.task_list(
-            status, deployment=deployment, tags=tags)]
+            status, env=deployment, tags=tags)]
 
     @staticmethod
     def delete_by_uuid(uuid, status=None):

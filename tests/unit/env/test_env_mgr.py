@@ -533,7 +533,7 @@ class EnvManagerTestCase(test.TestCase):
         )
 
     @mock.patch("rally.env.env_mgr.EnvManager.cleanup")
-    def test_destory_cleanup_failed(self, mock_env_manager_cleanup):
+    def test_destroy_cleanup_failed(self, mock_env_manager_cleanup):
         mock_env_manager_cleanup.return_value = {
             "platform_1": {
                 "errors": [],
@@ -580,12 +580,17 @@ class EnvManagerTestCase(test.TestCase):
         ])
         mock__get_platforms.assert_called_once_with()
 
+    @mock.patch("rally.common.objects.Verifier.list")
     @mock.patch("rally.common.db.env_set_status")
     @mock.patch("rally.common.db.platform_set_status")
     @mock.patch("rally.env.env_mgr.EnvManager._get_platforms")
-    def test_destory_with_platforms(self, mock__get_platforms,
+    def test_destroy_with_platforms(self, mock__get_platforms,
                                     mock_platform_set_status,
-                                    mock_env_set_status):
+                                    mock_env_set_status,
+                                    mock_verifier_list):
+        verifier = mock.Mock()
+        mock_verifier_list.return_value = [verifier]
+
         platform1 = mock.MagicMock()
         platform1.get_fullname.return_value = "p_destroyed"
         platform1.status = platform.STATUS.DESTROYED
@@ -652,6 +657,9 @@ class EnvManagerTestCase(test.TestCase):
                       platform.STATUS.DESTROYING,
                       platform.STATUS.FAILED_TO_DESTROY)
         ])
+
+        verifier.set_deployment.assert_called_once_with(666)
+        verifier.manager.uninstall.assert_called_once_with()
 
     @mock.patch("rally.common.db.env_get_status")
     @mock.patch("rally.common.db.env_delete_cascade")

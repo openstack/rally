@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import jsonschema
 import mock
 
 from rally import consts
@@ -81,79 +80,3 @@ class OpenStackCredentialTestCase(test.TestCase):
         mock_clients.assert_called_once_with(
             self.credential, api_info="fake_info", cache={})
         self.assertIs(mock_clients.return_value, clients)
-
-
-class OpenStackCredentialBuilderTestCase(test.TestCase):
-
-    def setUp(self):
-        super(OpenStackCredentialBuilderTestCase, self).setUp()
-        self.config = {
-            "auth_url": "http://example.net:5000/v2.0/",
-            "region_name": "RegionOne",
-            "endpoint_type": consts.EndpointType.INTERNAL,
-            "https_insecure": False,
-            "https_cacert": "cacert",
-            "admin": {
-                "username": "admin",
-                "password": "myadminpass",
-                "tenant_name": "demo"
-            },
-            "users": [
-                {
-                    "username": "user1",
-                    "password": "userpass",
-                    "tenant_name": "demo"
-                }
-            ]
-        }
-        self.cred_builder_cls = credential.get_builder("openstack")
-
-    def test_validate(self):
-        self.cred_builder_cls.validate(self.config)
-
-    def test_validate_error(self):
-        self.assertRaises(jsonschema.ValidationError,
-                          self.cred_builder_cls.validate,
-                          {"foo": "bar"})
-
-    def test_build_credentials(self):
-        creds_builder = self.cred_builder_cls(self.config)
-        creds = creds_builder.build_credentials()
-        self.assertEqual({
-            "admin": {
-                "auth_url": "http://example.net:5000/v2.0/",
-                "username": "admin",
-                "password": "myadminpass",
-                "permission": consts.EndpointPermission.ADMIN,
-                "domain_name": None,
-                "endpoint": None,
-                "endpoint_type": consts.EndpointType.INTERNAL,
-                "https_cacert": "cacert",
-                "https_insecure": False,
-                "profiler_hmac_key": None,
-                "profiler_conn_str": None,
-                "project_domain_name": None,
-                "region_name": "RegionOne",
-                "tenant_name": "demo",
-                "user_domain_name": None,
-            },
-            "users": [
-                {
-                    "auth_url": "http://example.net:5000/v2.0/",
-                    "username": "user1",
-                    "password": "userpass",
-                    "permission": consts.EndpointPermission.USER,
-                    "domain_name": None,
-                    "endpoint": None,
-                    "endpoint_type": consts.EndpointType.INTERNAL,
-                    "https_cacert": "cacert",
-                    "https_insecure": False,
-                    "profiler_hmac_key": None,
-                    "profiler_conn_str": None,
-                    "project_domain_name": None,
-                    "region_name": "RegionOne",
-                    "tenant_name": "demo",
-                    "user_domain_name": None,
-                }
-            ]
-        }, creds)
