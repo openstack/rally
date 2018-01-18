@@ -63,25 +63,38 @@ available options:
     Options:
       -h, --help             Print this help text
       -v, --verbose          Verbose mode
-      -s, --system           Instead of creating a virtualenv, install as
-                             system package.
+      -s, --system           Install system-wide.
       -d, --target DIRECTORY Install Rally virtual environment into DIRECTORY.
-                             (Default: $HOME/rally).
-      -f, --overwrite        Remove target directory if it already exists.
+                             (Default: /root/rally if not root).
+      --url                  Git repository public URL to download Rally from.
+                             This is useful when you have only installation script and want
+                             to install Rally from custom repository.
+                             (Default: https://git.openstack.org/openstack/rally).
+                             (Ignored when you are already in git repository).
+      --branch               Git branch name, tag (Rally release), commit hash, ref, or other
+                             tree-ish to install. (Default: master)
+                             Ignored when you are already in git repository.
+      -f, --overwrite        Deprecated. Use -r instead.
+      -r, --recreate         Remove target directory if it already exist.
+                             If neither '-r' nor '-R' is set default behaviour is to ask.
+      -R, --no-recreate      Do not remove target directory if it already exist.
+                             If neither '-r' nor '-R' is set default behaviour is to ask.
       -y, --yes              Do not ask for confirmation: assume a 'yes' reply
                              to every question.
       -D, --dbtype TYPE      Select the database type. TYPE can be one of
-                             'sqlite', 'mysql', 'postgres'.
+                             'sqlite', 'mysql', 'postgresql'.
                              Default: sqlite
       --db-user USER         Database user to use. Only used when --dbtype
-                             is either 'mysql' or 'postgres'.
+                             is either 'mysql' or 'postgresql'.
       --db-password PASSWORD Password of the database user. Only used when
-                             --dbtype is either 'mysql' or 'postgres'.
+                             --dbtype is either 'mysql' or 'postgresql'.
       --db-host HOST         Database host. Only used when --dbtype is
-                             either 'mysql' or 'postgres'
+                             either 'mysql' or 'postgresql'
       --db-name NAME         Name of the database. Only used when --dbtype is
-                             either 'mysql' or 'postgres'
+                             either 'mysql' or 'postgresql'
       -p, --python EXE       The python interpreter to use. Default: /usr/bin/python.
+      --develop              Install Rally with editable source code try. (Default: false)
+      --no-color             Disable output coloring.
 
 
 **Notes:** the script will check if all the software required by Rally
