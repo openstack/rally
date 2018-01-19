@@ -99,21 +99,27 @@ Rally was deployed for cluster using `ExistingCloud`_ type of deployment.
 
 .. code-block:: console
 
- $ nova image-show TestVM
- +----------------------------+-------------------------------------------------+
- | Property                   | Value                                           |
- +----------------------------+-------------------------------------------------+
- | OS-EXT-IMG-SIZE:size       | 13167616                                        |
- | created                    | 2014-08-21T11:18:49Z                            |
- | id                         | 7a0d90cb-4372-40ef-b711-8f63b0ea9678            |
- | metadata murano_image_info | {"title": "Murano Demo", "type": "cirros.demo"} |
- | minDisk                    | 0                                               |
- | minRam                     | 64                                              |
- | name                       | TestVM                                          |
- | progress                   | 100                                             |
- | status                     | ACTIVE                                          |
- | updated                    | 2014-08-21T11:18:50Z                            |
- +----------------------------+-------------------------------------------------+
+ $ glance image-show d1c116f4-3c38-4aa6-8fa1-f7a28c4e72a6
+ +------------------+--------------------------------------+
+ | Property         | Value                                |
+ +------------------+--------------------------------------+
+ | checksum         | 053ad369d58aa98afb1d355aa16b0663     |
+ | container_format | bare                                 |
+ | created_at       | 2018-01-09T06:23:18Z                 |
+ | disk_format      | qcow2                                |
+ | id               | d1c116f4-3c38-4aa6-8fa1-f7a28c4e72a6 |
+ | min_disk         | 0                                    |
+ | min_ram          | 0                                    |
+ | name             | TestVM                               |
+ | owner            | 01cb845eee6449cea4381865a1270736     |
+ | protected        | False                                |
+ | size             | 5254208                              |
+ | status           | active                               |
+ | tags             | []                                   |
+ | updated_at       | 2018-01-09T06:23:18Z                 |
+ | virtual_size     | None                                 |
+ | visibility       | public                               |
+ +------------------+--------------------------------------+
 
 
 **Task configuration file (in JSON format):**
