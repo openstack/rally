@@ -16,7 +16,7 @@
 import mock
 
 from rally import consts
-from rally.deployment import credential
+from rally.plugins.openstack import credential
 from tests.unit import test
 
 
@@ -24,8 +24,7 @@ class OpenStackCredentialTestCase(test.TestCase):
 
     def setUp(self):
         super(OpenStackCredentialTestCase, self).setUp()
-        cred_cls = credential.get("openstack")
-        self.credential = cred_cls(
+        self.credential = credential.OpenStackCredential(
             "foo_url", "foo_user", "foo_password",
             tenant_name="foo_tenant",
             permission=consts.EndpointPermission.ADMIN)

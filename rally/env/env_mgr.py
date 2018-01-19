@@ -591,3 +591,10 @@ class EnvManager(object):
             raise exceptions.ManagerInvalidState(
                 mgr="Env", expected=STATUS.DESTROYED, actual=_status)
         db.env_delete_cascade(self.uuid)
+
+    def get_validation_context(self):
+        """Return a validation context for a workload."""
+        context = {}
+        for p in self._get_platforms():
+            context.update(p._get_validation_context())
+        return context

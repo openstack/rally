@@ -111,3 +111,7 @@ class Platform(plugin.Plugin, validation.ValidatablePluginMixin):
         """Return information about platform as dictionary."""
         raise NotImplementedError(
             "Platform %s doesn't support info action" % self.get_fullname())
+
+    def get_validation_context(self):
+        """Return a validation context for a platform."""
+        return {}

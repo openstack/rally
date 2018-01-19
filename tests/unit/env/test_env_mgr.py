@@ -683,3 +683,22 @@ class EnvManagerTestCase(test.TestCase):
         mock_env_get_status.return_value = "WRONG"
         env_mgr.EnvManager({"uuid": "44"}).delete(force=True)
         mock_env_delete_cascade.assert_called_once_with("44")
+
+    @mock.patch("rally.env.env_mgr.EnvManager._get_platforms")
+    def test_get_validation_context(self, mock__get_platforms):
+        platform1 = mock.MagicMock()
+        platform1._get_validation_context.return_value = {
+            "users@openstack": {}}
+
+        platform2 = mock.MagicMock()
+        platform2._get_validation_context.return_value = {
+            "foo_bar": "xxx"}
+
+        mock__get_platforms.return_value = [platform1, platform2]
+
+        env = env_mgr.EnvManager({"uuid": "44"})
+
+        self.assertEqual({"users@openstack": {},
+                          "foo_bar": "xxx"}, env.get_validation_context())
+        platform1._get_validation_context.assert_called_once_with()
+        platform2._get_validation_context.assert_called_once_with()

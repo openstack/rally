@@ -15,14 +15,12 @@
 
 from rally.common import logging
 from rally import consts
-from rally.deployment import credential
 from rally.plugins.openstack import osclients
 
 LOG = logging.getLogger(__file__)
 
 
-@credential.configure("openstack")
-class OpenStackCredential(credential.Credential):
+class OpenStackCredential(object):
     """Credential for OpenStack."""
 
     def __init__(self, auth_url, username, password, tenant_name=None,
