@@ -12,15 +12,26 @@
     run: tests/ci/playbooks/rally-install/run.yaml
     timeout: 1800
 
+- job:
+    name: rally-tox-self
+    parent: tox
+    description: |
+      Run test for rally project.
+
+      Uses tox with the ``self`` environment.
+    vars:
+      tox_envlist: self
+
 - project:
-    name: openstack/rally
     check:
       jobs:
         - rally-install-ubuntu-xenial
         - rally-install-centos-7
         - openstack-tox-functional
+        - rally-tox-self
     gate:
       jobs:
         - rally-install-ubuntu-xenial
         - rally-install-centos-7
         - openstack-tox-functional
+        - rally-tox-self
