@@ -164,9 +164,9 @@ Where can I discuss and propose changes?
 
 .. _Source code: https://github.com/openstack/rally
 .. _Rally roadmap: https://docs.google.com/a/mirantis.com/spreadsheets/d/16DXpfbqvlzMFaqaXAcJsBzzpowb_XpymaK2aFY2gA2g/edit#gid=0
-.. _Project space: http://launchpad.net/rally
+.. _Project space: https://launchpad.net/rally
 .. _Bugs: https://bugs.launchpad.net/rally
-.. _Patches on review: https://review.openstack.org/#/q/status:open+rally,n,z
+.. _Patches on review: https://review.openstack.org/#/q/status:open+project:openstack/rally,n,z
 .. _Meeting logs: http://eavesdrop.openstack.org/meetings/rally/2016/
 .. _IRC logs: http://irclog.perlgeek.de/openstack-rally
 .. _Gitter chat: https://gitter.im/rally-dev/Lobby
