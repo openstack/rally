@@ -39,7 +39,7 @@ class ConnectionTestCase(test.DBTestCase):
 class TasksTestCase(test.DBTestCase):
     def setUp(self):
         super(TasksTestCase, self).setUp()
-        self.env = db.env_create(self.id(), "INIT", "", {}, {}, {})
+        self.env = db.env_create(self.id(), "INIT", "", {}, {}, {}, [])
 
     def _get_task(self, uuid):
         return db.task_get(uuid)
@@ -383,7 +383,7 @@ class TasksTestCase(test.DBTestCase):
 class SubtaskTestCase(test.DBTestCase):
     def setUp(self):
         super(SubtaskTestCase, self).setUp()
-        self.env = db.env_create(self.id(), "INIT", "", {}, {}, {})
+        self.env = db.env_create(self.id(), "INIT", "", {}, {}, {}, [])
         self.task = db.task_create({"env_uuid": self.env["uuid"]})
 
     def test_subtask_create(self):
@@ -403,7 +403,7 @@ class SubtaskTestCase(test.DBTestCase):
 class WorkloadTestCase(test.DBTestCase):
     def setUp(self):
         super(WorkloadTestCase, self).setUp()
-        self.env = db.env_create(self.id(), "INIT", "", {}, {}, {})
+        self.env = db.env_create(self.id(), "INIT", "", {}, {}, {}, [])
         self.task = db.task_create({"env_uuid": self.env["uuid"]})
         self.task_uuid = self.task["uuid"]
         self.subtask = db.subtask_create(self.task_uuid, title="foo")
@@ -557,7 +557,7 @@ class WorkloadTestCase(test.DBTestCase):
 class WorkloadDataTestCase(test.DBTestCase):
     def setUp(self):
         super(WorkloadDataTestCase, self).setUp()
-        self.env = db.env_create(self.id(), "INIT", "", {}, {}, {})
+        self.env = db.env_create(self.id(), "INIT", "", {}, {}, {}, [])
         self.task = db.task_create({"env_uuid": self.env["uuid"]})
         self.task_uuid = self.task["uuid"]
         self.subtask = db.subtask_create(self.task_uuid, title="foo")
@@ -608,8 +608,8 @@ class WorkloadDataTestCase(test.DBTestCase):
 class EnvTestCase(test.DBTestCase):
 
     def test_env_get(self):
-        env1 = db.env_create("name", "STATUS42", "descr", {}, {}, [])
-        env2 = db.env_create("name2", "STATUS42", "descr", {}, {}, [])
+        env1 = db.env_create("name", "STATUS42", "descr", {}, {}, {}, [])
+        env2 = db.env_create("name2", "STATUS42", "descr", {}, {}, {}, [])
 
         self.assertEqual(env1, db.env_get(env1["uuid"]))
         self.assertEqual(env1, db.env_get(env1["name"]))
@@ -621,7 +621,7 @@ class EnvTestCase(test.DBTestCase):
                           db.env_get, "non-existing-env")
 
     def test_env_get_status(self):
-        env = db.env_create("name", "STATUS42", "descr", {}, {}, [])
+        env = db.env_create("name", "STATUS42", "descr", {}, {}, {}, [])
         self.assertEqual("STATUS42", db.env_get_status(env["uuid"]))
 
     def test_env_get_status_non_existing(self):
@@ -630,7 +630,7 @@ class EnvTestCase(test.DBTestCase):
 
     def test_env_list(self):
         for i in range(3):
-            db.env_create("name %s" % i, "STATUS42", "descr", {}, {}, [])
+            db.env_create("name %s" % i, "STATUS42", "descr", {}, {}, {}, [])
             self.assertEqual(i + 1, len(db.env_list()))
 
         all_ = db.env_list()
@@ -642,9 +642,9 @@ class EnvTestCase(test.DBTestCase):
                          set(e["name"] for e in db.env_list()))
 
     def test_env_list_filter_by_status(self):
-        db.env_create("name 1", "STATUS42", "descr", {}, {}, [])
-        db.env_create("name 2", "STATUS42", "descr", {}, {}, [])
-        db.env_create("name 3", "STATUS43", "descr", {}, {}, [])
+        db.env_create("name 1", "STATUS42", "descr", {}, {}, {}, [])
+        db.env_create("name 2", "STATUS42", "descr", {}, {}, {}, [])
+        db.env_create("name 3", "STATUS43", "descr", {}, {}, {}, [])
 
         result = db.env_list("STATUS42")
         self.assertEqual(2, len(result))
@@ -656,7 +656,8 @@ class EnvTestCase(test.DBTestCase):
 
     def test_env_create(self):
         env = db.env_create(
-            "name", "status", "descr", {"extra": "test"}, {"spec": "spec"}, [])
+            "name", "status", "descr",
+            {"extra": "test"}, {"conf": "c1"}, {"spec": "spec"}, [])
 
         self.assertIsInstance(env, dict)
         self.assertIsNotNone(env["uuid"])
@@ -664,13 +665,15 @@ class EnvTestCase(test.DBTestCase):
         self.assertEqual("name", env["name"])
         self.assertEqual("status", env["status"])
         self.assertEqual("descr", env["description"])
+        self.assertEqual({"conf": "c1"}, env["config"])
         self.assertEqual({"extra": "test"}, env["extras"])
         self.assertEqual({"spec": "spec"}, env["spec"])
 
     def test_env_create_duplicate_env(self):
-        db.env_create("name", "status", "descr", {}, {}, [])
-        self.assertRaises(exceptions.DBRecordExists,
-                          db.env_create, "name", "status", "descr", {}, {}, [])
+        db.env_create("name", "status", "descr", {}, {}, {}, [])
+        self.assertRaises(
+            exceptions.DBRecordExists,
+            db.env_create, "name", "status", "descr", {}, {}, {}, [])
 
     def teet_env_create_with_platforms(self):
         platforms = [
@@ -682,36 +685,37 @@ class EnvTestCase(test.DBTestCase):
             }
             for i in range(3)
         ]
-        env = db.env_create("name", "status", "descr", {}, {}, platforms)
+        env = db.env_create("name", "status", "descr", {}, {}, {}, platforms)
         db_platforms = db.platforms_list(env["uuid"])
         self.assertEqual(3, len(db_platforms))
 
     def test_env_rename(self):
-        env = db.env_create(
-            "name", "status", "descr", {"extra": "test"}, {"spec": "spec"}, [])
+        env = db.env_create("name", "status", "descr",
+                            {"extra": "test"}, {"spec": "spec"}, {}, [])
 
         self.assertTrue(db.env_rename(env["uuid"], env["name"], "name2"))
         self.assertEqual("name2", db.env_get(env["uuid"])["name"])
 
     def test_env_rename_duplicate(self):
-        env1 = db.env_create("name", "status", "descr", {}, {}, [])
-        env2 = db.env_create("name2", "status", "descr", {}, {}, [])
+        env1 = db.env_create("name", "status", "descr", {}, {}, {}, [])
+        env2 = db.env_create("name2", "status", "descr", {}, {}, {}, [])
         self.assertRaises(
             exceptions.DBRecordExists,
             db.env_rename, env1["uuid"], env1["name"], env2["name"])
 
     def test_env_update(self):
-        env = db.env_create("name", "status", "descr", {}, {}, [])
+        env = db.env_create("name", "status", "descr", {}, {}, {}, [])
         self.assertTrue(db.env_update(env["uuid"]))
         self.assertTrue(
-            db.env_update(env["uuid"], "another_descr", {"extra": 123}))
+            db.env_update(env["uuid"], "another_descr", {"e": 123}, {"c": 1}))
 
         env = db.env_get(env["uuid"])
         self.assertEqual("another_descr", env["description"])
-        self.assertEqual({"extra": 123}, env["extras"])
+        self.assertEqual({"e": 123}, env["extras"])
+        self.assertEqual({"c": 1}, env["config"])
 
     def test_evn_set_status(self):
-        env = db.env_create("name", "status", "descr", {}, {}, [])
+        env = db.env_create("name", "status", "descr", {}, {}, {}, [])
 
         self.assertRaises(
             exceptions.DBConflict,
@@ -735,7 +739,7 @@ class EnvTestCase(test.DBTestCase):
             }
             for i in range(3)
         ]
-        env = db.env_create("name", "status", "descr", {}, {}, platforms)
+        env = db.env_create("name", "status", "descr", {}, {}, {}, platforms)
         db.env_delete_cascade(env["uuid"])
 
         self.assertEqual(0, len(db.env_list()))
@@ -755,8 +759,10 @@ class PlatformTestCase(test.DBTestCase):
             }
             for i in range(5)
         ]
-        self.env1 = db.env_create("env1", "init", "", {}, {}, platforms[:2])
-        self.env2 = db.env_create("env2", "init", "", {}, {}, platforms[2:])
+        self.env1 = db.env_create(
+            "env1", "init", "", {}, {}, {}, platforms[:2])
+        self.env2 = db.env_create(
+            "env2", "init", "", {}, {}, {}, platforms[2:])
 
     def test_platform_get(self):
         for p in db.platforms_list(self.env1["uuid"]):
@@ -861,7 +867,7 @@ class VerificationTestCase(test.DBTestCase):
         super(VerificationTestCase, self).setUp()
 
         self.verifier = db.verifier_create("a", "b", "c", "d", "e", False)
-        self.env = db.env_create(self.id(), "INIT", "", {}, {}, {})
+        self.env = db.env_create(self.id(), "INIT", "", {}, {}, {}, [])
 
     def _create_verification(self, tags=None, env_uuid=None):
         tags = tags or []
@@ -884,7 +890,8 @@ class VerificationTestCase(test.DBTestCase):
                           "1234")
 
     def test_verification_list(self):
-        another_env = db.env_create(self.id() + "2", "INIT", "", {}, {}, {})
+        another_env = db.env_create(
+            self.id() + "2", "INIT", "", {}, {}, {}, [])
         v1 = self._create_verification(tags=["foo", "bar"],
                                        env_uuid=another_env["uuid"])
         v2 = self._create_verification()

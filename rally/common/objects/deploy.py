@@ -113,20 +113,16 @@ class Deployment(object):
 
     def to_dict(self):
         return {
-            "id": self._env_data["id"],
             "uuid": self._env_data["uuid"],
             "parent_uuid": None,
             "name": self._env_data["name"],
-            "created_at": self._env_data["created_at"].strftime(
-                self.TIME_FORMAT),
-            "started_at": self._env_data["created_at"].strftime(
-                self.TIME_FORMAT),
+            "created_at": self._env_data["created_at"],
+            "started_at": self._env_data["created_at"],
             "completed_at": "n/a",
-            "updated_at": self._env_data["updated_at"].strftime(
-                self.TIME_FORMAT),
+            "updated_at": self._env_data["updated_at"],
             "config": self.config,
             "credentials": self._all_credentials,
-            "status": self["status"],
+            "status": self["status"]
         }
 
     @staticmethod

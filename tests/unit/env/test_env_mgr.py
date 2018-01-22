@@ -12,6 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
+import datetime as dt
+
 import mock
 
 from rally.env import env_mgr
@@ -26,7 +29,14 @@ class EnvManagerTestCase(test.TestCase):
         data = {"uuid": "any", "balbalba": "balbal"}
         mgr = env_mgr.EnvManager(data)
         self.assertEqual("any", mgr.uuid)
-        self.assertEqual(data, mgr._env)
+        expected = copy.deepcopy(data)
+        expected["platforms"] = []
+        self.assertEqual(expected, mgr._env)
+
+    def test__str__(self):
+        data = {"uuid": "env_uuid", "name": "env_name"}
+        mgr = env_mgr.EnvManager(data)
+        self.assertEqual("Env `env_name (env_uuid)'", str(mgr))
 
     @mock.patch("rally.common.db.env_get_status")
     def test_status_property(self, mock_env_get_status):
@@ -38,12 +48,16 @@ class EnvManagerTestCase(test.TestCase):
     @mock.patch("rally.common.db.platforms_list")
     @mock.patch("rally.common.db.env_get")
     def test_data_property(self, mock_env_get, mock_platforms_list):
-        mock_platforms_list.return_value = [42, 43, 44]
+        created_at = dt.datetime.now()
+        updated_at = dt.datetime.now()
+        mock_platforms_list.return_value = [
+            {"created_at": created_at, "updated_at": updated_at}]
+
         mock_env_get.return_value = {
             "id": "66",
             "uuid": "666",
-            "created_at": mock.Mock(),
-            "updated_at": mock.Mock(),
+            "created_at": created_at,
+            "updated_at": updated_at,
             "name": "42",
             "description": "Some description",
             "status": "some status",
@@ -52,11 +66,15 @@ class EnvManagerTestCase(test.TestCase):
         }
 
         result = env_mgr.EnvManager({"uuid": 111}).data
-        for field in ["name", "description", "status", "spec", "extras",
-                      "created_at", "updated_at", "uuid", "id"]:
-            self.assertEqual(mock_env_get.return_value[field], result[field])
-        self.assertEqual(mock_platforms_list.return_value, result["platforms"])
-
+        for key in ["name", "description", "status", "spec", "extras", "uuid"]:
+            self.assertEqual(mock_env_get.return_value[key], result[key])
+        self.assertEqual(created_at.isoformat(), result["created_at"])
+        self.assertEqual(updated_at.isoformat(), result["updated_at"])
+        self.assertEqual(
+            [{"created_at": created_at.isoformat(),
+              "updated_at": updated_at.isoformat()}],
+            result["platforms"]
+        )
         mock_platforms_list.assert_called_once_with(111)
         mock_env_get.assert_called_once_with(111)
 
@@ -123,13 +141,19 @@ class EnvManagerTestCase(test.TestCase):
     @mock.patch("rally.common.db.env_create")
     def test__validate_and_create_env_empty_spec(self, mock_env_create):
         mock_env_create.return_value = {"uuid": "1"}
-        env = env_mgr.EnvManager._validate_and_create_env(
-            "name", "descr", {"extras": ""}, {})
+        env = env_mgr.EnvManager._validate_and_create_env("name", {})
 
         self.assertIsInstance(env, env_mgr.EnvManager)
         self.assertEqual("1", env.uuid)
         mock_env_create.assert_called_once_with(
-            "name", env_mgr.STATUS.INIT, "descr", {"extras": ""}, {}, [])
+            "name", env_mgr.STATUS.INIT, "", {}, {}, {}, [])
+
+    def test__validate_and_create_env_invalid_spec(self):
+        self.assertRaises(
+            exceptions.ManagerInvalidSpec,
+            env_mgr.EnvManager._validate_and_create_env,
+            "n", {"!description": {"it's": "wrong"}}
+        )
 
     @mock.patch("rally.common.db.env_create")
     def test__validate_and_create_env_with_spec(self, mock_env_create):
@@ -143,6 +167,10 @@ class EnvManagerTestCase(test.TestCase):
                 "additionalProperties": False
             }
 
+        @platform.configure("other", platform="valid1")
+        class Platform1b(Platform1):
+            pass
+
         @platform.configure("2", platform="valid2")
         class Platform2(platform.Platform):
             CONFIG_SCHEMA = {
@@ -155,7 +183,13 @@ class EnvManagerTestCase(test.TestCase):
         self.addCleanup(Platform2.unregister)
 
         env_mgr.EnvManager._validate_and_create_env(
-            "n", "d", "ext", {"valid1": {"a": "str"}})
+            "n",
+            {
+                "!description": "d",
+                "!extras": {"ext": 1},
+                "valid1": {"a": "str"}
+            }
+        )
 
         expected_platforms = [{
             "status": platform.STATUS.INIT,
@@ -165,24 +199,29 @@ class EnvManagerTestCase(test.TestCase):
         }]
 
         mock_env_create.assert_called_once_with(
-            "n", env_mgr.STATUS.INIT, "d", "ext",
+            "n", env_mgr.STATUS.INIT, "d", {"ext": 1}, {},
             {"existing@valid1": {"a": "str"}}, expected_platforms)
 
         mock_env_create.reset_mock()
         self.assertRaises(
             exceptions.ManagerInvalidSpec,
             env_mgr.EnvManager._validate_and_create_env,
-            "n", "d", "ext", {"valid1": {"a": "str"}, "2@valid2": {"c": 1}}
-        )
+            "n", {"valid1": {"a": "str"}, "2@valid2": {"c": 1}})
         self.assertFalse(mock_env_create.called)
 
         mock_env_create.reset_mock()
         self.assertRaises(
-            exceptions.RallyException,
+            exceptions.ManagerInvalidSpec,
             env_mgr.EnvManager._validate_and_create_env,
-            "n", "d", "ext", {"non_existing@nope": {"a": "str"}}
+            "n", {"non_existing@nope": {"a": "str"}}
         )
         self.assertFalse(mock_env_create.called)
+
+        self.assertRaises(
+            exceptions.ManagerInvalidSpec,
+            env_mgr.EnvManager._validate_and_create_env,
+            "n", {"valid1": {"a": "str"}, "other@valid1": {"a": "str"}}
+        )
 
     @mock.patch("rally.common.db.env_set_status")
     @mock.patch("rally.common.db.platform_set_data")
@@ -287,10 +326,31 @@ class EnvManagerTestCase(test.TestCase):
     def test_create(self, mock_env_create, mock_env_set_status,
                     mock_platforms_list):
         # NOTE(boris-42): Just check with empty spec that just check workflow
-        result = env_mgr.EnvManager.create("a", "descr", "extras", {})
+        result = env_mgr.EnvManager.create("a", {})
 
         self.assertIsInstance(result, env_mgr.EnvManager)
         self.assertEqual(121, result.uuid)
+
+    @mock.patch("rally.env.env_mgr.EnvManager._create_platforms")
+    @mock.patch("rally.env.env_mgr.EnvManager._validate_and_create_env")
+    def test_create_override_spec_values(self, mock__validate_and_create_env,
+                                         mock__create_platforms):
+
+        default_spec = {
+            "!description": "default description",
+            "!extras": {"e": 1},
+            "!config": {"c": 2},
+            "some@platform": {}
+        }
+        env_mgr.EnvManager.create(
+            "a", default_spec, description="d", config="c", extras="e")
+        mock__validate_and_create_env.assert_called_once_with(
+            "a",
+            {
+                "!description": "d", "!config": "c", "!extras": "e",
+                "some@platform": {}
+            }
+        )
 
     @mock.patch("rally.common.db.env_rename")
     def test_rename(self, mock_env_rename):
@@ -305,13 +365,9 @@ class EnvManagerTestCase(test.TestCase):
     def test_update(self, mock_env_update):
         env = env_mgr.EnvManager(
             {"uuid": "11", "description": "d", "extras": "e"})
-
-        self.assertTrue(env.update())
-        self.assertEqual(0, mock_env_update.call_count)
-
-        env.update(description="d2", extras="e2")
+        env.update(description="d2", config="c2", extras="e2")
         mock_env_update.assert_called_once_with(
-            "11", description="d2", extras="e2")
+            "11", description="d2", config="c2", extras="e2")
 
     def test_update_spec(self):
         self.assertRaises(NotImplementedError,
@@ -372,7 +428,7 @@ class EnvManagerTestCase(test.TestCase):
                 "just_broken@check": {
                     "message": broken_msg % "just_broken@check",
                     "available": False,
-                    "traceback": [Exception, mock.ANY, mock.ANY]
+                    "traceback": mock.ANY
                 }
             },
             env_mgr.EnvManager({"uuid": "44"}).check_health())
@@ -430,7 +486,7 @@ class EnvManagerTestCase(test.TestCase):
                 "broken@info": {
                     "error": "Plugin broken@info.info() method is broken",
                     "info": None,
-                    "traceback": [Exception, mock.ANY, mock.ANY]
+                    "traceback": mock.ANY
                 }
             },
             env_mgr.EnvManager({"uuid": "44"}).get_info())
@@ -518,7 +574,7 @@ class EnvManagerTestCase(test.TestCase):
                 "errors": [{
                     "message": "Plugin broken@clean.cleanup() method is "
                                "broken",
-                    "traceback": [Exception, mock.ANY, mock.ANY]
+                    "traceback": mock.ANY
                 }]
             },
             result["broken@clean"]
@@ -562,11 +618,11 @@ class EnvManagerTestCase(test.TestCase):
         )
         mock_env_manager_cleanup.assert_called_once_with()
 
+    @mock.patch("rally.common.objects.Verifier.list")
     @mock.patch("rally.env.env_mgr.EnvManager._get_platforms", return_value=[])
     @mock.patch("rally.common.db.env_set_status")
-    def test_destroy_no_platforms(self,
-                                  mock_env_set_status, mock__get_platforms):
-
+    def test_destroy_no_platforms(self, mock_env_set_status,
+                                  mock__get_platforms, mock_verifier_list):
         self.assertEqual(
             {
                 "cleanup_info": {"skipped": True},
@@ -636,7 +692,7 @@ class EnvManagerTestCase(test.TestCase):
                             "old": platform.STATUS.READY,
                             "new": platform.STATUS.FAILED_TO_DESTROY
                         },
-                        "traceback": [Exception, mock.ANY, mock.ANY]
+                        "traceback": mock.ANY
                     }
                 }
             },

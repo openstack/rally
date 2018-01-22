@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
+
 import mock
 
 from rally.env import platform
@@ -160,35 +162,47 @@ class ExistingPlatformTestCase(test_platform.PlatformBaseTestCase):
     @mock.patch("rally.plugins.openstack.osclients.Clients")
     def test_check_failed_admin(self, mock_clients):
         mock_clients.return_value.verified_keystone.side_effect = Exception
-        pdata = {"admin": mock.MagicMock()}
+        pdata = {"admin": {"username": "balbab", "password": "12345"}}
         result = existing.OpenStack({}, platform_data=pdata).check_health()
         self._check_health_schema(result)
         self.assertEqual(
             {"available": False,
-             "message": "Bad admin creds: %s" % pdata["admin"],
-             "traceback": [Exception, mock.ANY, mock.ANY]},
+             "message":
+                "Bad admin creds: \n%s"
+                % json.dumps({"username": "balbab", "password": "***"},
+                             indent=2, sort_keys=True),
+             "traceback": mock.ANY},
             result)
+        self.assertIn("Traceback (most recent call last)", result["traceback"])
 
     @mock.patch("rally.plugins.openstack.osclients.Clients")
     def test_check_failed_users(self, mock_clients):
         mock_clients.return_value.keystone.side_effect = Exception
-        pdata = {"admin": None, "users": [mock.MagicMock()]}
+        pdata = {"admin": None,
+                 "users": [{"username": "balbab", "password": "12345"}]}
         result = existing.OpenStack({}, platform_data=pdata).check_health()
         self._check_health_schema(result)
         self.assertEqual(
             {"available": False,
-             "message": "Bad user creds: %s" % pdata["users"][0],
-             "traceback": [Exception, mock.ANY, mock.ANY]},
+             "message":
+                "Bad user creds: \n%s"
+                % json.dumps({"username": "balbab", "password": "***"},
+                             indent=2, sort_keys=True),
+             "traceback": mock.ANY},
             result)
+        self.assertIn("Traceback (most recent call last)", result["traceback"])
 
     @mock.patch("rally.plugins.openstack.osclients.Clients")
     def test_info(self, mock_clients):
-        mock_clients.return_value.list_services.return_value = ["a", "b"]
-        p = existing.OpenStack({},
-                               platform_data={"admin": None, "users": ["u1"]})
+        mock_clients.return_value.services.return_value = ["a", "b"]
+        platform_data = {
+            "admin": None,
+            "users": [{"username": "u1", "password": "123"}]
+        }
+        p = existing.OpenStack({}, platform_data=platform_data)
 
         result = p.info()
-        mock_clients.assert_called_once_with("u1")
-        mock_clients.return_value.list_services.assert_called_once_with()
+        mock_clients.assert_called_once_with(platform_data["users"][0])
+        mock_clients.return_value.services.assert_called_once_with()
         self.assertEqual({"info": {"services": ["a", "b"]}}, result)
         self._check_info_schema(result)
