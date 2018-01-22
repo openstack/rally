@@ -309,7 +309,9 @@ class DeploymentCommands(object):
             return 1
         print("Using deployment: %s" % deployment["uuid"])
 
-        fileutils.update_globals_file("RALLY_DEPLOYMENT",
+        fileutils.update_globals_file(envutils.ENV_DEPLOYMENT,
+                                      deployment["uuid"])
+        fileutils.update_globals_file(envutils.ENV_ENV,
                                       deployment["uuid"])
 
         if "openstack" in deployment["credentials"]:

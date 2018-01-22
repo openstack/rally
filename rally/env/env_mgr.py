@@ -359,12 +359,15 @@ class EnvManager(object):
                      platform plugins and their arguments.
         :returns: EnvManager instance corresponding to created Env
         """
-        if description is not None:
-            spec["!description"] = description
-        if extras is not None:
-            spec["!extras"] = extras
-        if config is not None:
-            spec["!config"] = config
+        # NOTE(boris-42): this allows to avoid validation copy paste. If spec
+        #                 is not dict it will fail during validation process
+        if isinstance(spec, dict):
+            if description is not None:
+                spec["!description"] = description
+            if extras is not None:
+                spec["!extras"] = extras
+            if config is not None:
+                spec["!config"] = config
 
         self = cls._validate_and_create_env(name, spec)
         self._create_platforms()
@@ -613,6 +616,9 @@ class EnvManager(object):
 
         from rally.common import objects
 
+        # TODO(boris-42): This is breaking all kinds of rules of good
+        #                 architecture, and we should remove this thing from
+        #                 here...
         for verifier in objects.Verifier.list():
             verifier.set_env(self.uuid)
             verifier.manager.uninstall()

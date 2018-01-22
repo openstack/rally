@@ -298,10 +298,14 @@ class DeploymentCommandsTestCase(test.TestCase):
         with mock.patch("rally.cli.commands.deployment.open", mock.mock_open(),
                         create=True) as mock_file:
             self.deployment.use(self.fake_api, deployment_id)
-            self.assertEqual(2, mock_path_exists.call_count)
-            mock_update_env_file.assert_called_once_with(os.path.expanduser(
-                "~/.rally/globals"),
-                "RALLY_DEPLOYMENT", "%s\n" % deployment_id)
+            self.assertEqual(3, mock_path_exists.call_count)
+            mock_update_env_file.assert_has_calls([
+                mock.call(os.path.expanduser("~/.rally/globals"),
+                          "RALLY_DEPLOYMENT", "%s\n" % deployment_id),
+                mock.call(os.path.expanduser("~/.rally/globals"),
+                          "RALLY_ENV", "%s\n" % deployment_id),
+            ])
+
             mock_file.return_value.write.assert_any_call(
                 "export OS_ENDPOINT='fake_endpoint'\n")
             mock_file.return_value.write.assert_any_call(
@@ -340,10 +344,13 @@ class DeploymentCommandsTestCase(test.TestCase):
         with mock.patch("rally.cli.commands.deployment.open", mock.mock_open(),
                         create=True) as mock_file:
             self.deployment.use(self.fake_api, deployment_id)
-            self.assertEqual(2, mock_path_exists.call_count)
-            mock_update_env_file.assert_called_once_with(os.path.expanduser(
-                "~/.rally/globals"),
-                "RALLY_DEPLOYMENT", "%s\n" % deployment_id)
+            self.assertEqual(3, mock_path_exists.call_count)
+            mock_update_env_file.assert_has_calls([
+                mock.call(os.path.expanduser("~/.rally/globals"),
+                          "RALLY_DEPLOYMENT", "%s\n" % deployment_id),
+                mock.call(os.path.expanduser("~/.rally/globals"),
+                          "RALLY_ENV", "%s\n" % deployment_id)
+            ])
             mock_file.return_value.write.assert_any_call(
                 "export OS_ENDPOINT='fake_endpoint'\n")
             mock_file.return_value.write.assert_any_call(
@@ -376,8 +383,10 @@ class DeploymentCommandsTestCase(test.TestCase):
         self.assertIsNone(status)
         self.fake_api.deployment.get.assert_called_once_with(
             deployment="fake_name")
-        mock_update_globals_file.assert_called_once_with(
-            envutils.ENV_DEPLOYMENT, "fake_uuid")
+        mock_update_globals_file.assert_has_calls([
+            mock.call(envutils.ENV_DEPLOYMENT, "fake_uuid"),
+            mock.call(envutils.ENV_ENV, "fake_uuid")
+        ])
         mock__update_openrc_deployment_file.assert_called_once_with(
             "fake_uuid", "foo_admin")
 

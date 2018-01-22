@@ -186,16 +186,13 @@ class Rally(object):
         if not isinstance(cmd, list):
             cmd = cmd.split(" ")
         try:
-            if getjson:
+            if no_logs or getjson:
                 cmd = self.args + ["--log-file", "/dev/null"] + cmd
-            else:
-                cmd = self.args + cmd
-
-            if no_logs:
                 with open(os.devnull, "w") as DEVNULL:
                     output = encodeutils.safe_decode(subprocess.check_output(
                         cmd, stderr=DEVNULL, env=self.env))
             else:
+                cmd = self.args + cmd
                 output = encodeutils.safe_decode(subprocess.check_output(
                     cmd, stderr=subprocess.STDOUT, env=self.env))
 

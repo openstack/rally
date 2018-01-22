@@ -22,11 +22,12 @@ from rally.common import fileutils
 from rally import exceptions
 
 PATH_GLOBALS = "~/.rally/globals"
+ENV_ENV = "RALLY_ENV"
 ENV_DEPLOYMENT = "RALLY_DEPLOYMENT"
 ENV_TASK = "RALLY_TASK"
 ENV_VERIFIER = "RALLY_VERIFIER"
 ENV_VERIFICATION = "RALLY_VERIFICATION"
-ENVVARS = [ENV_DEPLOYMENT, ENV_TASK, ENV_VERIFIER, ENV_VERIFICATION]
+ENVVARS = [ENV_ENV, ENV_DEPLOYMENT, ENV_TASK, ENV_VERIFIER, ENV_VERIFICATION]
 
 MSG_MISSING_ARG = "Missing argument: --%(arg_name)s"
 
@@ -69,9 +70,31 @@ def default_from_global(arg_name, env_name,
     return decorator.decorator(default_from_global)
 
 
-def with_default_deployment(cli_arg_name="uuid"):
+def with_default_env():
+    # NOTE(boris-42): This allows smooth transition from deployment to env
+    #                 set ENV_ENV from ENV_DEPLOYMENT if ENV is not presented
+    #                 This should be removed with rally env command
+    if not os.environ.get(ENV_ENV):
+        if os.environ.get(ENV_DEPLOYMENT):
+            os.environ[ENV_ENV] = ENV_DEPLOYMENT
+
     return default_from_global(
-        "deployment", ENV_DEPLOYMENT, cli_arg_name,
+        "env", ENV_ENV, "env",
+        message="There is no default env. To set it use command:\n"
+                "\trally env use <env_uuid>|<env_name>\n"
+                "or pass uuid or name to your command using --%(arg_name)s")
+
+
+def with_default_deployment(cli_arg_name="uuid"):
+    # NOTE(boris-42): This allows smooth transition from deployment to env
+    #                 set ENV_ENV from ENV_DEPLOYMENT and use ENV_ENV
+    #                 This should be removed with rally env command
+    if not os.environ.get(ENV_ENV):
+        if os.environ.get(ENV_DEPLOYMENT):
+            os.environ[ENV_ENV] = ENV_DEPLOYMENT
+
+    return default_from_global(
+        "deployment", ENV_ENV, cli_arg_name,
         message="There is no default deployment.\n"
                 "\tPlease use command:\n"
                 "\trally deployment use <deployment_uuid>|<deployment_name>\n"
