@@ -814,30 +814,28 @@ class SwiftContainer(SwiftMixin):
 _mistral_order = get_order(1100)
 
 
-class MistralMixin(SynchronizedDeletion, base.ResourceManager):
-
-    def delete(self):
-        self._manager().delete(self.raw_resource["id"])
-
-
 @base.resource("mistral", "workbooks", order=next(_mistral_order),
                tenant_resource=True)
-class MistralWorkbooks(MistralMixin):
+class MistralWorkbooks(SynchronizedDeletion, base.ResourceManager):
     def delete(self):
-        self._manager().delete(self.raw_resource["name"])
+        self._manager().delete(self.raw_resource.name)
 
 
 @base.resource("mistral", "workflows", order=next(_mistral_order),
                tenant_resource=True)
-class MistralWorkflows(MistralMixin):
+class MistralWorkflows(SynchronizedDeletion, base.ResourceManager):
     pass
 
 
 @base.resource("mistral", "executions", order=next(_mistral_order),
                tenant_resource=True)
-class MistralExecutions(MistralMixin):
-    pass
+class MistralExecutions(SynchronizedDeletion, base.ResourceManager):
 
+    def name(self):
+        # NOTE(andreykurilin): Mistral Execution doesn't have own name which
+        #   we can use for filtering, but it stores workflow id and name, even
+        #   after workflow deletion.
+        return self.raw_resource.workflow_name
 
 # MURANO
 

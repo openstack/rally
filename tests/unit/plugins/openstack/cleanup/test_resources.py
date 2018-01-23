@@ -915,34 +915,29 @@ class ManilaSecurityServiceTestCase(test.TestCase):
             "fake_id")
 
 
-class MistralMixinTestCase(test.TestCase):
-
-    def test_delete(self):
-        mistral = resources.MistralMixin()
-        mistral._service = "mistral"
-        mistral.user = mock.MagicMock()
-        mistral._resource = "some_resources"
-        mistral.raw_resource = {"id": "TEST_ID"}
-        mistral.user.mistral().some_resources.delete.return_value = None
-
-        mistral.delete()
-        mistral.user.mistral().some_resources.delete.assert_called_once_with(
-            "TEST_ID")
-
-
 class MistralWorkbookTestCase(test.TestCase):
 
     def test_delete(self):
-        mistral = resources.MistralWorkbooks()
-        mistral._service = "mistral"
-        mistral.user = mock.MagicMock()
-        mistral._resource = "some_resources"
-        mistral.raw_resource = {"name": "TEST_NAME"}
-        mistral.user.mistral().some_resources.delete.return_value = None
+        clients = mock.MagicMock()
+        resource = mock.Mock()
+        resource.name = "TEST_NAME"
+
+        mistral = resources.MistralWorkbooks(
+            user=clients,
+            resource=resource)
 
         mistral.delete()
-        mistral.user.mistral().some_resources.delete.assert_called_once_with(
+
+        clients.mistral().workbooks.delete.assert_called_once_with(
             "TEST_NAME")
+
+
+class MistralExecutionsTestCase(test.TestCase):
+
+    def test_name(self):
+        execution = mock.MagicMock(workflow_name="bar")
+        execution.name = "foo"
+        self.assertEqual("bar", resources.MistralExecutions(execution).name())
 
 
 class SenlinMixinTestCase(test.TestCase):

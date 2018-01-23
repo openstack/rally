@@ -58,18 +58,40 @@
           users_per_tenant: 2
     -
       title: MistralExecutions.create_execution_from_workbook tests
-      scenario:
-        MistralExecutions.create_execution_from_workbook:
-          definition: "~/.rally/extra/mistral_wb.yaml"
-          workflow_name: "wf1"
-          params: "~/.rally/extra/mistral_params.json"
-          wf_input: "~/.rally/extra/mistral_input.json"
-          do_delete: true
-      runner:
-        constant:
-          times: 50
-          concurrency: 10
-      contexts:
-        users:
-          tenants: 2
-          users_per_tenant: 2
+      workloads:
+        -
+          description: MistralExecutions.create_execution_from_workbook scenario\
+            with delete option
+          scenario:
+            MistralExecutions.create_execution_from_workbook:
+              definition: "~/.rally/extra/mistral_wb.yaml"
+              workflow_name: "wf1"
+              params: "~/.rally/extra/mistral_params.json"
+              wf_input: "~/.rally/extra/mistral_input.json"
+              do_delete: true
+          runner:
+            constant:
+              times: 50
+              concurrency: 10
+          contexts:
+            users:
+              tenants: 2
+              users_per_tenant: 2
+        -
+          description: MistralExecutions.create_execution_from_workbook scenario\
+            without delete option
+          scenario:
+            MistralExecutions.create_execution_from_workbook:
+              definition: "~/.rally/extra/mistral_wb.yaml"
+              workflow_name: "wf1"
+              params: "~/.rally/extra/mistral_params.json"
+              wf_input: "~/.rally/extra/mistral_input.json"
+              do_delete: false
+          runner:
+            constant:
+              times: 50
+              concurrency: 10
+          contexts:
+            users:
+              tenants: 2
+              users_per_tenant: 2
