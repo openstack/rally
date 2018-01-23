@@ -32,7 +32,7 @@ scenarios in Rally is just impossible in case of r/o Keystone backends like
 *LDAP* and *AD*.
 
 2. *Safety:* Rally can be run from an isolated group of users, and if something
-goes wrong, this won’t affect the rest of the cloud users.
+goes wrong, this won't affect the rest of the cloud users.
 
 
 Registering deployment with existing users in Rally

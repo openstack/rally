@@ -14,7 +14,7 @@ messages count and messages size in queue during tasks.
 Problem description
 -------------------
 
-Heavy usage of queue isn’t checked.
+Heavy usage of queue isn't checked.
 
 Possible solution
 -----------------

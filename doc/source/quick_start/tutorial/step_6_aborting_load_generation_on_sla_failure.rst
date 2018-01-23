@@ -61,7 +61,7 @@ running more and more simultaneously authentication requests and things may go
 wrong if something is not set properly (like on my DevStack deployment in Small
 VM on my laptop).
 
-Let’s run Rally task with **an argument that prescribes Rally to stop load on
+Let's run Rally task with **an argument that prescribes Rally to stop load on
 SLA failure**:
 
 .. code-block:: console
@@ -80,7 +80,7 @@ On the resulting table there are 2 interesting things:
 1. Average duration was 8.58 sec which is more than 5 seconds
 2. Rally performed only 2495 (instead of 6000) authentication requests
 
-To understand better what has happened let’s generate HTML report:
+To understand better what has happened let's generate HTML report:
 
 .. code-block:: bash
 
@@ -94,7 +94,7 @@ request reaches 65 seconds at the end of the load generation. **Rally stopped
 load at the very last moment just before bad things happened. The reason why it
 runs so many attempts to authenticate is because of not enough good success
 criteria.** We had to run a lot of iterations to make average duration bigger
-than 5 seconds. Let’s chose better success criteria for this task and run it
+than 5 seconds. Let's chose better success criteria for this task and run it
 one more time.
 
 .. code-block:: yaml
@@ -122,7 +122,7 @@ Now our task is going to be successful if the following three conditions hold:
 2. maximum duration of any authentication should be less than 10 seconds
 3. no failed authentication should appear
 
-Let’s run it!
+Let's run it!
 
 .. code-block:: console
 

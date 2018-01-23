@@ -32,7 +32,7 @@ New Features & API changes
   users. To do this, one should set up the "users" section of the deployment
   configuration of the ExistingCloud type. This feature also makes it safer to
   run Rally against production clouds: when run from an isolated group of
-  users, Rally won’t affect rest of the cloud users if something goes wrong.
+  users, Rally won't affect rest of the cloud users if something goes wrong.
 
 * New decorator *@osclients.Clients.register* can add new OpenStack clients
   at runtime

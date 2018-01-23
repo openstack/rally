@@ -69,7 +69,7 @@ runs a set of Nova scenarios:
 
 In both scenarios above, the *"^cirros.*-disk$"* image is passed to the
 scenario as an argument (so that these scenarios use an appropriate image while
-booting servers). Let’s say you want to run the same set of scenarios with the
+booting servers). Let's say you want to run the same set of scenarios with the
 same runner/context/sla, but you want to try another image while booting server
 to compare the performance. The most elegant solution is then to turn the image
 name into a template variable:
@@ -294,7 +294,7 @@ increasing concurrency. The input task file (*task.yaml*) below uses the
       {% endfor %}
 
 
-In this case, you don’t need to pass any arguments via
+In this case, you don't need to pass any arguments via
 *--task-args/--task-args-file*, but as soon as you start this task, Rally will
 automatically unfold the for-loop for you:
 

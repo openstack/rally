@@ -14,7 +14,7 @@
 Historical background
 ---------------------
 
-Tempest, OpenStack’s official test suite, is a powerful tool for running a set
+Tempest, OpenStack's official test suite, is a powerful tool for running a set
 of functional tests against an OpenStack cluster. Tempest automatically runs
 against every patch in every project of OpenStack, which lets us avoid merging
 changes that break functionality.
