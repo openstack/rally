@@ -65,7 +65,7 @@ class OpenStack(platform.Platform):
             "auth_url": {"type": "string"},
             "region_name": {"type": "string"},
             "endpoint": {"type": ["string", "null"]},
-            "endpoint_type": {"enum": ["public", "private", "admin", None]},
+            "endpoint_type": {"enum": ["public", "internal", "admin", None]},
             "https_insecure": {"type": "boolean"},
             "https_cacert": {"type": "string"},
             "profiler_hmac_key": {"type": ["string", "null"]},
