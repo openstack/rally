@@ -167,7 +167,7 @@ def obj_from_name(resource_config, resources, typename):
 
     pattern = re.compile(patternstr)
     matching = [resource for resource in resources
-                if re.search(pattern, resource.name)]
+                if re.search(pattern, resource.name or "")]
     if not matching:
         raise exceptions.InvalidScenarioArgument(
             "{typename} with pattern '{pattern}' not found".format(
