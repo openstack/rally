@@ -142,7 +142,7 @@ class NeutronWrapperTestCase(test.TestCase):
         subnets_cidrs = iter(range(subnets_num))
         subnets_ids = iter(range(subnets_num))
         service._generate_cidr = mock.Mock(
-            side_effect=lambda: "cidr-%d" % next(subnets_cidrs))
+            side_effect=lambda v: "cidr-%d" % next(subnets_cidrs))
         service.client.create_subnet = mock.Mock(
             side_effect=lambda i: {
                 "subnet": {"id": "subnet-%d" % next(subnets_ids)}})
@@ -236,6 +236,7 @@ class NeutronWrapperTestCase(test.TestCase):
     def test_delete_network(self, mock_neutron_wrapper_supports_extension):
         service = self.get_wrapper()
         service.client.list_ports.return_value = {"ports": []}
+        service.client.list_subnets.return_value = {"subnets": []}
         service.client.delete_network.return_value = "foo_deleted"
         result = service.delete_network({"id": "foo_id", "router_id": None,
                                          "subnets": []})
@@ -267,6 +268,8 @@ class NeutronWrapperTestCase(test.TestCase):
         service.client.list_dhcp_agent_hosting_networks.return_value = (
             {"agents": [{"id": agent_id} for agent_id in agents]})
         service.client.list_ports.return_value = ({"ports": ports})
+        service.client.list_subnets.return_value = (
+            {"subnets": [{"id": id_} for id_ in subnets]})
         service.client.delete_network.return_value = "foo_deleted"
 
         result = service.delete_network(
@@ -315,6 +318,8 @@ class NeutronWrapperTestCase(test.TestCase):
             {"agents": [{"id": agent_id} for agent_id in agents]})
         service.client.list_ports.return_value = ({"ports": ports})
         service.client.delete_network.return_value = "foo_deleted"
+        service.client.list_subnets.return_value = {"subnets": [
+            {"id": id_} for id_ in subnets]}
 
         if should_raise:
             self.assertRaises(exception_type, service.delete_network,

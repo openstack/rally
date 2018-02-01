@@ -86,7 +86,7 @@ class NetworkTestCase(test.TestCase):
             dns_kwargs["dns_nameservers"] = tuple(
                 dns_kwargs["dns_nameservers"])
         create_calls = [
-            mock.call(tenant,
+            mock.call(tenant, dualstack=False,
                       subnets_num=1, network_create_args={"fakearg": "fake"},
                       router_create_args={"external": True},
                       **dns_kwargs)

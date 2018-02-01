@@ -572,3 +572,34 @@ class ListAgents(utils.NeutronScenario):
         """
         agent_args = agent_args or {}
         self._list_agents(**agent_args)
+
+
+@validation.add("required_services",
+                services=[consts.Service.NEUTRON])
+@validation.add("required_contexts", contexts=["network"])
+@validation.add("required_platform", platform="openstack", users=True)
+@scenario.configure(context={"cleanup@openstack": ["neutron"]},
+                    name="NeutronSubnets.delete_subnets",
+                    platform="openstack")
+class DeleteSubnets(utils.NeutronScenario):
+
+    def run(self):
+        """Delete a subnet that belongs to each precreated network.
+
+        Each runner instance picks a specific subnet from the list based on its
+        positional location in the list of users. By doing so, we can start
+        multiple threads with sufficient number of users created and spread
+        delete requests across all of them, so that they hit different subnets
+        concurrently.
+
+        Concurrent execution of this scenario should help reveal any race
+        conditions and other concurrency issues in Neutron IP allocation layer,
+        among other things.
+        """
+        tenant_id = self.context["tenant"]["id"]
+        users = self.context["tenants"][tenant_id]["users"]
+        number = users.index(self.context["user"])
+        for network in self.context["tenants"][tenant_id]["networks"]:
+            # delete one of subnets based on the user sequential number
+            subnet_id = network["subnets"][number]
+            self._delete_subnet({"subnet": {"id": subnet_id}})

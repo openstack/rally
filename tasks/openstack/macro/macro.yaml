@@ -1,10 +1,11 @@
-{%- macro user_context(tenants,users_per_tenant, use_existing_users) -%}
+{%- macro user_context(tenants,users_per_tenant, use_existing_users, use_round_robin) -%}
 {%- if use_existing_users and caller is not defined -%} {}
 {%- else %}
   {%- if not use_existing_users %}
         users:
           tenants: {{ tenants }}
           users_per_tenant: {{ users_per_tenant }}
+          user_choice_method: {{ "round_robin" if use_round_robin else "random" }}
   {%- endif %}
   {%- if caller is defined %}
     {{ caller() }}

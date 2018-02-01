@@ -1,0 +1,19 @@
+---
+  NeutronSubnets.delete_subnets:
+    -
+      runner:
+        type: "constant"
+        times: 15
+        concurrency: 15
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 15
+          user_choice_method: "round_robin"
+        network:
+          subnets_per_network: 15
+          dualstack: true
+          router: {}
+      sla:
+        failure_rate:
+          max: 0

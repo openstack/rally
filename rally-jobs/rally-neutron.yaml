@@ -617,6 +617,26 @@
         failure_rate:
           max: 20
 
+  NeutronSubnets.delete_subnets:
+    -
+      runner:
+        type: "constant"
+        times: {{smoke or 15}}
+        concurrency: {{smoke or 15}}
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: {{smoke or 15}}
+          user_choice_method: "round_robin"
+        quotas:
+          neutron:
+            network: -1
+            subnet: -1
+        network:
+          subnets_per_network: 15
+          dualstack: True
+          router: {}
+
   Quotas.neutron_update:
     -
       args:

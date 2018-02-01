@@ -243,3 +243,20 @@
         {{ constant_runner(concurrency=2*controllers_amount, times=8*controllers_amount, is_smoke=smoke) }}
       sla:
         {{ no_failures_sla() }}
+
+  NeutronSubnets.delete_subnets:
+    -
+      runner:
+        type: "constant"
+        times: 15
+        concurrency: 15
+      context:
+        {{ user_context(tenants_amount, users_amount, use_existing_users, use_round_robin) }}
+        quotas:
+          neutron:
+            network: -1
+            subnet: -1
+        network:
+          subnets_per_network: 15
+          dualstack: True
+          router: {}
