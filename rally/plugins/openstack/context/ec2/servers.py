@@ -39,7 +39,8 @@ class EC2ServerGenerator(context.Context):
                     "name": {
                         "type": "string"
                     }
-                }
+                },
+                "additionalProperties": False
             },
             "flavor": {
                 "type": "object",
@@ -47,7 +48,8 @@ class EC2ServerGenerator(context.Context):
                     "name": {
                         "type": "string"
                     }
-                }
+                },
+                "additionalProperties": False
             },
             "servers_per_tenant": {
                 "type": "integer",

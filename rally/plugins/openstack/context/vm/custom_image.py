@@ -55,7 +55,8 @@ class BaseCustomImageGenerator(context.Context):
                     "name": {
                         "type": "string"
                     }
-                }
+                },
+                "additionalProperties": False
             },
             "flavor": {
                 "type": "object",
@@ -63,7 +64,8 @@ class BaseCustomImageGenerator(context.Context):
                     "name": {
                         "type": "string"
                     }
-                }
+                },
+                "additionalProperties": False
             },
             "username": {
                 "type": "string"

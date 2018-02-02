@@ -77,10 +77,12 @@ class SaharaCluster(context.Context):
                 }
             },
             "node_configs": {
-                "type": "object"
+                "type": "object",
+                "additionalProperties": True
             },
             "cluster_configs": {
-                "type": "object"
+                "type": "object",
+                "additionalProperties": True
             },
             "enable_anti_affinity": {
                 "type": "boolean"

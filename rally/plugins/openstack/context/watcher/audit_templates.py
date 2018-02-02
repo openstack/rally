@@ -49,7 +49,8 @@ class AuditTemplateGenerator(context.Context):
                                 "name": {
                                     "type": "string"
                                 }
-                            }
+                            },
+                            "additionalProperties": False
                         },
                         "strategy": {
                             "type": "object",
@@ -57,9 +58,11 @@ class AuditTemplateGenerator(context.Context):
                                 "name": {
                                     "type": "string"
                                 }
-                            }
+                            },
+                            "additionalProperties": False
                         },
                     },
+                    "additionalProperties": False,
                 },
             }
         },

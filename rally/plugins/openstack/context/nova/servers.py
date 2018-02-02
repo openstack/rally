@@ -38,14 +38,16 @@ class ServerGenerator(context.Context):
                 "type": "object",
                 "properties": {
                     "name": {"type": "string"}
-                }
+                },
+                "additionalProperties": False
             },
             "flavor": {
                 "description": "Name of flavor to boot server(s) with.",
                 "type": "object",
                 "properties": {
                     "name": {"type": "string"}
-                }
+                },
+                "additionalProperties": False
             },
             "servers_per_tenant": {
                 "description": "Number of servers to boot in each Tenant.",
@@ -60,11 +62,18 @@ class ServerGenerator(context.Context):
                 "type": "array",
                 "description": "List of networks to attach to server.",
                 "items": {"oneOf": [
-                    {"type": "object",
-                     "properties": {"net-id": {"type": "string"}},
-                     "description": "Network ID in a format like OpenStack API"
-                                    " expects to see."},
-                    {"type": "string", "description": "Network ID."}]},
+                    {
+                        "type": "object",
+                        "properties": {"net-id": {"type": "string"}},
+                        "description": "Network ID in a format like OpenStack "
+                                       "API expects to see.",
+                        "additionalProperties": False
+                    },
+                    {
+                        "type": "string",
+                        "description": "Network ID."
+                    }
+                ]},
                 "minItems": 1
             }
         },

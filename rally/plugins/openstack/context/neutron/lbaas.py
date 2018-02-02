@@ -32,7 +32,8 @@ class Lbaas(context.Context):
         "$schema": consts.JSON_SCHEMA,
         "properties": {
             "pool": {
-                "type": "object"
+                "type": "object",
+                "additionalProperties": True
             },
             "lbaas_version": {
                 "type": "integer",

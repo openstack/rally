@@ -28,6 +28,7 @@ class DummyContext(context.Context):
             "fail_setup": {"type": "boolean"},
             "fail_cleanup": {"type": "boolean"}
         },
+        "additionalProperties": False,
     }
 
     def setup(self):

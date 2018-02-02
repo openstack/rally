@@ -48,7 +48,8 @@ class MonascaMetricGenerator(context.Context):
                     "url": {
                         "type": "string"
                     }
-                }
+                },
+                "additionalProperties": False
             },
             "metrics_per_tenant": {
                 "type": "integer",
@@ -65,7 +66,8 @@ class MonascaMetricGenerator(context.Context):
                         "value_meta_value": {
                             "type": "string"
                         }
-                    }
+                    },
+                    "additionalProperties": False
                 }
             }
         },

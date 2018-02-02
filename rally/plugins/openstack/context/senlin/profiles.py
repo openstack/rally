@@ -34,6 +34,7 @@ class ProfilesGenerator(context.Context):
             },
             "properties": {
                 "type": "object",
+                "additionalProperties": True,
             }
         },
         "additionalProperties": False,
