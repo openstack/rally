@@ -73,12 +73,15 @@ class HeatDataplane(context.Context):
             },
             "files": {
                 "type": "object",
+                "additionalProperties": True
             },
             "parameters": {
                 "type": "object",
+                "additionalProperties": True
             },
             "context_parameters": {
                 "type": "object",
+                "additionalProperties": True
             },
         },
         "additionalProperties": False

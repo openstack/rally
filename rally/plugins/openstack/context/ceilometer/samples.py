@@ -79,7 +79,8 @@ class CeilometerSampleGenerator(context.Context):
                         "created_at": {
                             "type": "string"
                         }
-                    }
+                    },
+                    "additionalProperties": False
                 }
             },
             "batch_size": {

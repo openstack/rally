@@ -70,12 +70,13 @@ class ShareNetworks(context.Context):
         "properties": {
             "use_share_networks": {
                 "type": "boolean",
-                "description": "specifies whether manila should use share "
+                "description": "Specifies whether manila should use share "
                                "networks for share creation or not."},
 
             "share_networks": {
                 "type": "object",
-                "description": SHARE_NETWORKS_ARG_DESCR
+                "description": SHARE_NETWORKS_ARG_DESCR,
+                "additionalProperties": True
             },
         },
         "additionalProperties": False

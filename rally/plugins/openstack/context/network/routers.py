@@ -48,7 +48,8 @@ class Router(context.Context):
                 "properties": {
                     "network_id": {"type": "string"},
                     "enable_snat": {"type": "boolean"}
-                }
+                },
+                "additionalProperties": False
             },
             "network_id": {
                 "description": "Network ID",
@@ -62,7 +63,8 @@ class Router(context.Context):
                     "properties": {
                         "ip_address": {"type": "string"},
                         "subnet_id": {"type": "string"}
-                    }
+                    },
+                    "additionalProperties": False,
                 }
             },
             "distributed": {

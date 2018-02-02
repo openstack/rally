@@ -13,6 +13,7 @@
 #    under the License.
 
 import copy
+import json
 
 from rally.common.plugin import plugin
 from rally import plugins
@@ -35,9 +36,10 @@ class ConfigSchemasTestCase(test.TestCase):
     def fail(self, p, schema, msg):
         super(ConfigSchemasTestCase, self).fail(
             "Config schema of plugin '%s' (%s) is invalid. %s "
-            "(Schema: %s)" % (p.get_name(),
+            "Schema: \n%s" % (p.get_name(),
                               "%s.%s" % (p.__module__, p.__name__),
-                              msg, schema))
+                              msg,
+                              json.dumps(schema, indent=3)))
 
     def _check_anyOf_or_oneOf(self, p, schema, definitions):
         if "anyOf" in schema or "oneOf" in schema:
@@ -61,6 +63,11 @@ class ConfigSchemasTestCase(test.TestCase):
         if unexpected_keys:
             self.fail(p, schema, ("Found unexpected key(s) for object type: "
                                   "%s." % ", ".join(unexpected_keys)))
+        if "additionalProperties" not in schema:
+            self.fail(p, schema,
+                      "'additionalProperties' is required field for objects. "
+                      "Specify `'additionalProperties': True` explicitly to "
+                      "accept not validated properties.")
 
         if "patternProperties" in schema:
             if "properties" in schema:
@@ -147,7 +154,7 @@ class ConfigSchemasTestCase(test.TestCase):
             pass
         elif schema == {}:
             # NOTE(andreykurilin): an empty dict means that the user can
-            #   transmit whatever he want in whatever he want format. It is
+            #   transmit whatever he wants in whatever he wants format. It is
             #   not the case which we want to support.
             self.fail(p, schema, "Empty schema is not allowed.")
         elif "$ref" in schema:
@@ -161,7 +168,7 @@ class ConfigSchemasTestCase(test.TestCase):
     @plugins.ensure_plugins_are_loaded
     def test_schema_is_valid(self):
         for p in plugin.Plugin.get_all():
-            if not hasattr(p, "CONFIG_SCHEMA"):
+            if not hasattr(p, "CONFIG_SCHEMA") or "tests.unit" in p.__module__:
                 continue
             # allow only top level definitions
             definitions = p.CONFIG_SCHEMA.get("definitions", {})

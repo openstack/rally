@@ -186,6 +186,7 @@ class RPSScenarioRunner(runner.ScenarioRunner):
                                 "minimum": 1
                             }
                         },
+                        "additionalProperties": False,
                         "required": ["start", "end", "step"]
                     }
                 ],
