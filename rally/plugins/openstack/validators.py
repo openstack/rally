@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import inspect
 import os
 import re
 import six
@@ -27,10 +28,33 @@ from rally.common import yamlutils as yaml
 from rally import consts
 from rally import exceptions
 from rally.plugins.common import validators
+from rally.plugins.openstack.context.keystone import roles
 from rally.plugins.openstack.context.nova import flavors as flavors_ctx
 from rally.plugins.openstack import types as openstack_types
 
 LOG = logging.getLogger(__name__)
+
+
+def with_roles_ctx():
+    """Add roles to users for validate
+
+    """
+    def decorator(func):
+        def wrapper(*args, **kw):
+            func_type = inspect.getcallargs(func, *args, **kw)
+            config = func_type.get("config", {})
+            context = func_type.get("context", {})
+            if config.get("contexts", {}).get("roles") \
+                    and context.get("admin", {}):
+                context["config"] = config["contexts"]
+                rolegenerator = roles.RoleGenerator(context)
+                with rolegenerator:
+                    rolegenerator.setup()
+                    func(*args, **kw)
+            else:
+                func(*args, **kw)
+        return wrapper
+    return decorator
 
 
 @validation.add("required_platform", platform="openstack", users=True)
@@ -48,6 +72,7 @@ class ImageExistsValidator(validation.Validator):
         self.param_name = param_name
         self.nullable = nullable
 
+    @with_roles_ctx()
     def validate(self, context, config, plugin_cls, plugin_cfg):
 
         image_args = config.get("args", {}).get(self.param_name)
@@ -91,6 +116,7 @@ class ExternalNetworkExistsValidator(validation.Validator):
         super(ExternalNetworkExistsValidator, self).__init__()
         self.param_name = param_name
 
+    @with_roles_ctx()
     def validate(self, context, config, plugin_cls, plugin_cfg):
 
         ext_network = config.get("args", {}).get(self.param_name)
@@ -138,6 +164,7 @@ class RequiredNeutronExtensionsValidator(validation.Validator):
             self.req_ext = [extensions]
             self.req_ext.extend(args)
 
+    @with_roles_ctx()
     def validate(self, context, config, plugin_cls, plugin_cfg):
         clients = context["users"][0]["credential"].clients()
         extensions = clients.neutron().list_extensions()["extensions"]
@@ -189,6 +216,7 @@ class FlavorExistsValidator(validation.Validator):
                 pass
             self.fail("Flavor '%s' not found" % flavor_value)
 
+    @with_roles_ctx()
     def validate(self, context, config, plugin_cls, plugin_cfg):
         # flavors do not depend on user or tenant, so checking for one user
         # should be enough
@@ -263,6 +291,7 @@ class ImageValidOnFlavorValidator(FlavorExistsValidator):
         except (glance_exc.HTTPNotFound, exceptions.InvalidScenarioArgument):
             self.fail("Image '%s' not found" % image_args)
 
+    @with_roles_ctx()
     def validate(self, context, config, plugin_cls, plugin_cfg):
 
         flavor = None
@@ -423,6 +452,7 @@ class ValidateHeatTemplateValidator(validation.Validator):
             self.params = [params]
             self.params.extend(args)
 
+    @with_roles_ctx()
     def validate(self, context, config, plugin_cls, plugin_cfg):
 
         for param_name in self.params:
@@ -462,6 +492,7 @@ class RequiredCinderServicesValidator(validation.Validator):
         super(RequiredCinderServicesValidator, self).__init__()
         self.services = services
 
+    @with_roles_ctx()
     def validate(self, context, config, plugin_cls, plugin_cfg):
 
         clients = context["admin"]["credential"].clients()
@@ -537,6 +568,7 @@ class VolumeTypeExistsValidator(validation.Validator):
         self.param = param_name
         self.nullable = nullable
 
+    @with_roles_ctx()
     def validate(self, context, config, plugin_cls, plugin_cfg):
         volume_type = config.get("args", {}).get(self.param, False)
 
