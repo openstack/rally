@@ -30,3 +30,5 @@
           network_create_args: {}
           dns_nameservers:
             - "10.2.0.1"
+          router:
+            external: false

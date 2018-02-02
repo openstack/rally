@@ -657,6 +657,8 @@
           dns_nameservers:
             - "8.8.8.8"
             - "8.8.4.4"
+          router:
+            external: false
       sla:
         failure_rate:
           max: 0

@@ -194,12 +194,14 @@ class NeutronWrapper(NetworkWrapper):
 
         The following keyword arguments are accepted:
 
-        * add_router: Create an external router and add an interface to each
+        * add_router: Deprecated, please use router_create_args instead.
+                      Create an external router and add an interface to each
                       subnet created. Default: False
         * subnets_num: Number of subnets to create per network. Default: 0
         * dns_nameservers: Nameservers for each subnet. Default:
                            8.8.8.8, 8.8.4.4
         * network_create_args: Additional network creation arguments.
+        * router_create_args: Additional router creation arguments.
 
         :param tenant_id: str, tenant ID
         :param kwargs: Additional options, left open-ended for compatbilitiy.
@@ -213,8 +215,13 @@ class NeutronWrapper(NetworkWrapper):
         network = self.client.create_network(network_args)["network"]
 
         router = None
-        if kwargs.get("add_router", False):
-            router = self.create_router(external=True, tenant_id=tenant_id)
+        router_args = dict(kwargs.get("router_create_args", {}))
+        add_router = kwargs.get("add_router", False)
+        if router_args or add_router:
+            router_args["external"] = (
+                router_args.get("external", False) or add_router)
+            router_args["tenant_id"] = tenant_id
+            router = self.create_router(**router_args)
 
         subnets = []
         subnets_num = kwargs.get("subnets_num", 0)
