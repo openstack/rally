@@ -1,0 +1,12 @@
+---
+  Gnocchi.get_status:
+    -
+      args:
+        detailed: false
+      runner:
+        type: constant
+        times: 10
+        concurrency: 2
+      sla:
+        failure_rate:
+          max: 0
