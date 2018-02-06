@@ -779,7 +779,7 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
         origin_config = copy.deepcopy(self.deployment_config)
         mock_env_manager_get.return_value.data = {
             "spec": self.deployment_config,
-            "platforms": [],
+            "platforms": {},
             "id": self.id(),
             "uuid": self.deployment["uuid"],
             "extras": {},

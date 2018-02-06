@@ -80,7 +80,7 @@ class Deployment(object):
                 extras=extras or {})
         self._env_data = self._env.data
         self._all_credentials = {}
-        for p in self._env_data["platforms"]:
+        for p in self._env_data["platforms"].values():
             self._all_credentials[p["platform_name"]] = [p["platform_data"]]
 
         self.config = {}

@@ -51,7 +51,8 @@ class EnvManagerTestCase(test.TestCase):
         created_at = dt.datetime.now()
         updated_at = dt.datetime.now()
         mock_platforms_list.return_value = [
-            {"created_at": created_at, "updated_at": updated_at}]
+            {"created_at": created_at, "updated_at": updated_at,
+             "platform_name": "foo"}]
 
         mock_env_get.return_value = {
             "id": "66",
@@ -71,8 +72,9 @@ class EnvManagerTestCase(test.TestCase):
         self.assertEqual(created_at.isoformat(), result["created_at"])
         self.assertEqual(updated_at.isoformat(), result["updated_at"])
         self.assertEqual(
-            [{"created_at": created_at.isoformat(),
-              "updated_at": updated_at.isoformat()}],
+            {"foo": {"created_at": created_at.isoformat(),
+                     "updated_at": updated_at.isoformat(),
+                     "platform_name": "foo"}},
             result["platforms"]
         )
         mock_platforms_list.assert_called_once_with(111)
