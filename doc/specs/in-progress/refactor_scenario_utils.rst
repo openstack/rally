@@ -256,7 +256,7 @@ Implementation of IdentityService in services/identity/identity.py:
                 if version == "2":
                     self.impl = KeystoneV2Service()
                 else:
-                    self.impl = KeysotneServiceV3()
+                    self.impl = KeystoneServiceV3()
             else:
                 self.impl = auto_discover_version()
 
