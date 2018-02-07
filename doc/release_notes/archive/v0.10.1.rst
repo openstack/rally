@@ -1,0 +1,47 @@
+=============
+Rally v0.10.1
+=============
+
+Overview
+--------
+
++------------------+-----------------------+
+| Release date     |     **12/05/2017**    |
++------------------+-----------------------+
+
+Details
+-------
+
+This release is fully backward compatible with Rally 0.10.0 and contains just
+bug fixes.
+
+Fixed bugs
+~~~~~~~~~~
+
+* [deployment] Suppress deprecation warning about an old format in case of
+  using `--fromenv option of rally deployment create
+  <https://rally.readthedocs.io/en/0.10.1/cli_reference.html#deployment-create-fromenv>`_
+
+* [deployment] Failure `rally deployment show
+  <https://rally.readthedocs.io/en/0.10.1/cli_reference.html#deployment-show>`_
+  while displaying the information about deployment with a config in an old
+  format.
+
+* [task] New json report processed the hook results in a wrong way
+
+  `Launchpad bug-report #1734336
+  <https://bugs.launchpad.net/rally/+bug/1734336>`_
+
+* [task] Failure while generating trends reports in case of failures in setup
+  method of any context
+
+  `Launchpad bug-report #1732193
+  <https://bugs.launchpad.net/rally/+bug/1732193>`_
+
+* [task] Failure to export results in ElasticSearch 5.x cluster in case of
+  extra ``/`` in the end of destination url.
+
+Thanks
+~~~~~~
+
+ 2 Everybody!
