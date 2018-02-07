@@ -152,12 +152,12 @@ class EnvManager(object):
 
     @property
     def cached_data(self):
-        platforms = []
+        platforms = {}
         for p in self._env["platforms"]:
             p = copy.deepcopy(p)
             for k in ["created_at", "updated_at"]:
                 p[k] = p[k].isoformat()
-            platforms.append(p)
+            platforms[p["platform_name"]] = p
 
         return {
             "uuid": self._env["uuid"],

@@ -41,12 +41,12 @@ class DeploymentTestCase(test.TestCase):
             "status": env_mgr.STATUS.INIT,
             "spec": {},
             "extras": {},
-            "platforms": []
+            "platforms": {}
         }
 
     @mock.patch("rally.common.objects.deploy.env_mgr.EnvManager.create")
     def test_init(self, mock_env_manager_create):
-        objects.Deployment(mock.MagicMock(data={"platforms": [], "spec": {}}))
+        objects.Deployment(mock.MagicMock(data={"platforms": {}, "spec": {}}))
         self.assertFalse(mock_env_manager_create.called)
         deploy = objects.Deployment()
         mock_env_manager_create.assert_called_once_with(
@@ -86,10 +86,10 @@ class DeploymentTestCase(test.TestCase):
         deploy = objects.Deployment(deployment=self.env)
         self.assertEqual([], list(deploy.get_platforms()))
 
-        self.env.data["platforms"] = [
-            {"platform_name": "openstack", "platform_data": {}},
-            {"platform_name": "foo", "platform_data": {}}
-        ]
+        self.env.data["platforms"] = {
+            "openstack": {"platform_name": "openstack", "platform_data": {}},
+            "foo": {"platform_name": "foo", "platform_data": {}}
+        }
 
         deploy = objects.Deployment(deployment=self.env)
 
@@ -177,7 +177,7 @@ class DeploymentTestCase(test.TestCase):
                 "id": 1,
                 "name": "foo_env_name",
                 "uuid": "eeecf2c6-8b5d-4ed7-92e5-b7cdc335e885",
-                "platforms": [],
+                "platforms": {},
                 "spec": {
                     "existing@openstack": {
                         "endpoint": None,
@@ -227,7 +227,7 @@ class DeploymentTestCase(test.TestCase):
                     "id": 1,
                     "name": "foo_env_name",
                     "uuid": "eeecf2c6-8b5d-4ed7-92e5-b7cdc335e885",
-                    "platforms": [],
+                    "platforms": {},
                     "extras": {"foo": "bar"},
                     "spec": {
                         "existing@openstack": {
