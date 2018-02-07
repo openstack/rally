@@ -1,0 +1,263 @@
+=============
+Rally v0.11.0
+=============
+
+Overview
+--------
+
++------------------+-----------------------+
+| Release date     |     **02/15/2018**    |
++------------------+-----------------------+
+
+* Stabilize Rally releases (see requirements section)
+* Publishing docker images is returned!
+* Environment introduction (see Deployment section)
+
+Details
+-------
+
+Requirements
+~~~~~~~~~~~~
+
+As for long time we tried to make our releases stable and workable even after
+a year from release date. For this purpose, upper limits for all our
+requirements were used. Such solution helped to make releases more stable, but
+it did not work well and created more pain than a profit.
+The main issue was related to new releases of not-direct rally
+dependencies which can be incompatible which each other.
+
+From Rally 0.11.0 we are stopping adding upper version limits for our
+`requirements
+<https://github.com/openstack/rally/blob/0.11.0/requirements.txt>`_ (this does
+not apply to cases when we sure that some new releases of dependency broke us
+for sure).
+
+As alternative solution, the `upper-constraints file
+<https://github.com/openstack/rally/blob/0.11.0/upper-constraints.txt>`_ is
+selected. It is a file with a list of packages and their versions which we used
+in our CI while testing. Versions from this list are suggested to use in
+production.
+Please note, that it also contains not direct Rally dependencies (dependencies
+of rally dependencies and dependencies of dependencies of rally dependencies
+as well) and packages which possibly doesn't relate to Rally at all.
+
+The example ou usage:
+
+  .. console:: bash
+
+     $ git clone https://github.com/openstack/rally && cd rally
+     $ pip install . --constraint upper-constraints.txt
+
+Logging
+~~~~~~~
+
+The default value of ``use_stderr`` option of Rally config is changed to
+**True**. It is done to ensure that json output of rally commands will not be
+messed with logging and integration with third-party tools and scripts should
+become simpler.
+
+Docker
+~~~~~~
+
+Unfortunately, we lost access to `rallyforge organization at DockerHub
+<https://hub.docker.com/r/rallyforge/>`_, so our docker images were not
+published anywhere officially for some time. Docker Support did not help us a
+lot. At least, the original repo is removed now and we can start new
+organization at DockerHub from the scratch.
+
+The new docker images for Rally+OpenStack plugins with an updated HowTo you
+can find at `xrally/xrally-openstack repo
+<https://hub.docker.com/r/xrally/xrally-openstack>`_. It contains all Rally
+releases + latest tag which maps to master branch.
+
+
+Command Line Interface
+~~~~~~~~~~~~~~~~~~~~~~
+
+* Introduce `rally db ensure
+  <https://rally.readthedocs.io/en/0.11.0/cli_reference.html#rally-db-ensure>`_
+  command. It is going to create Rally DB if it doesn't exist, otherwise it
+  does nothing.
+
+* Various improvements for `rally db
+  <https://rally.readthedocs.io/en/0.11.0/cli_reference.html#category-db>`_.
+  Such as printing results of operations as well as connection string to DB,
+  hiding credentials by default, etc.
+
+* Various changes in returning error codes. Error codes become different for
+  different exceptions. Also, `rally task start
+  <https://rally.readthedocs.io/en/0.11.0/cli_reference.html#rally-task-start>`_
+  began to return 1 in case of any runtime issues and 2 if any workload doesn't
+  pass it's SLA.
+
+* The new CLI for new component (see ``Environments & Deployments`` section
+  for more details) - `rally env
+  <https://rally.readthedocs.io/en/0.11.0/cli_reference.html#category-env>`_
+
+Environments & Deployments
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Deployment Component is fundamental part of Rally which is used by Task and
+Verification components. Whereas Task and Verification components experienced
+redesigns (some parts were redesigned even several times), Deployment component
+was only extended over the time.
+Currently, we are at the point when further extending requires much work and
+user experience become worth. It is a hard decision, as like we had done with
+Verification component in Rally 0.8, the Deployment component is re-written
+from the scratch. To be clear, the new version of the component has not only
+the new code, but the new name as well - it is the Environment.
+
+We are at the stage when Rally is suitable not only for OpenStack but for
+various platforms and systems. The Environment is some entity against which
+Rally should perform load. The specific Environment can include credentials for
+OpenStack or for Kubernetes or for both. The Environment is a way to describe
+the complex system/cloud which all of us have. As well it can be used for
+simple systems as easy as for complex.
+
+If you are regular Rally user which tests OpenStack clusters, nothing is
+changing for you at this moment. `rally deployment
+<https://rally.readthedocs.io/en/0.11.0/cli_reference.html#category-deployment>`_
+CLI still works and it is not even deprecated. It will be kept for a while.
+But you can start looking at our new CLI `rally env
+<https://rally.readthedocs.io/en/0.11.0/cli_reference.html#category-env>`_ .
+
+As for writing plugins for external platforms - we are working on updating our
+documentary.
+
+Task component
+~~~~~~~~~~~~~~
+
+* The json results are extended with context execution stats (i.e when and
+  which context was executed, how much time setup and cleanup methods took,
+  etc). Also, `volumes@openstack
+  <https://rally.readthedocs.io/en/0.11.0/plugins/plugin_reference.html#volumes-context>`_
+  and
+  `volume_types@openstack
+  <https://rally.readthedocs.io/en/0.11.0/plugins/plugin_reference.html#volume-types-context>`_
+  are ported to include detailed stats of executed actions. In further
+  releases, all existing contexts will be adopted to the similar behavior.
+
+* Better OSProfiler integration
+
+  Rally environment&deployment config began accept
+  ``profiler_conn_str`` property which is used to generate OSProfiler native
+  html-report and to embed it to Rally's html-report.
+
+* HTML report is extended to include a timestamp of failures.
+
+Plugins
+~~~~~~~
+
+As it mentioned above, the Deployment Component will be replaced soon. Such
+decision led to abandoning all deployment-related plugins (engines, providers,
+etc).
+
+
+**Scenarios**:
+
+* *NEW!!*
+
+ `NovaServers.boot_server_attach_volume_and_list_attachments
+ <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#novaservers-boot-server-attach-volume-and-list-attachments-scenario>`_
+
+
+* *UPDATED!!*
+
+ - Extend several Nova&Neutron related scenarios with
+   ``create_floating_ip_args`` parameter
+
+   `NovaServers.boot_and_associate_floating_ip
+   <https://rally.readthedocs.io/en/0.11.0/plugins/plugin_reference.html#novaservers-boot-and-associate-floating-ip-scenario>`_
+   `NovaServers.boot_server_associate_and_dissociate_floating_ip
+   <https://rally.readthedocs.io/en/0.11.0/plugins/plugin_reference.html#novaservers-boot-server-associate-and-dissociate-floating-ip-scenario>`_
+
+ - Modify Bgpvpn scenarios to test true bgpvpn
+
+   All Bgpvpn scenarios began to boot a server to add active port in the
+   network associated to the bgpvpn which allows to test not only the record in
+   the database, but true bgpvpn
+
+
+**Contexts**:
+
+*UPDATED!!*
+
+`network@openstack
+<https://rally.readthedocs.io/en/latest/plugins/plugin_reference.html#network-context>`_
+context is extended with ability to specify external router information.
+
+Fixed bugs
+~~~~~~~~~~
+
+* [backported into 0.10.1][deployment] Suppress deprecation warning about an
+  old format in case of using `--fromenv option of rally deployment create
+  <https://rally.readthedocs.io/en/0.11.0/cli_reference.html#deployment-create-fromenv>`_
+
+* [backported into 0.10.1][deployment] Failure `rally deployment show
+  <https://rally.readthedocs.io/en/0.11.0/cli_reference.html#deployment-show>`_
+  while displaying the information about deployment with a config in an old
+  format.
+
+* [backported into 0.10.1][task] New json report processed the hook results in
+  a wrong way
+
+  `Launchpad bug-report #1734336
+  <https://bugs.launchpad.net/rally/+bug/1734336>`_
+
+* [backported into 0.10.1][task] Failure while generating trends reports in
+  case of failures in setup method of any context
+
+  `Launchpad bug-report #1732193
+  <https://bugs.launchpad.net/rally/+bug/1732193>`_
+
+* [backported into 0.10.1][task] Failure to export results in ElasticSearch 5.x
+  cluster in case of extra ``/`` in the end of destination url.
+
+* [deployment] OpenStack deployment creation with `--fromenv
+  <https://rally.readthedocs.io/en/0.11.0/cli_reference.html#deployment-create-fromenv>`_
+  option used old deprecated format.
+
+* [verify] Rally did not support creating verifiers from Gerrit/SSH source.
+
+  `Launchpad bug-report #1737529
+  <https://bugs.launchpad.net/rally/+bug/1737529>`_
+
+* [task][openstack] Removing default security group in users@openstack context
+  did not take into account that neutron can return multiple resources in some
+  configuration instead of one security group which relates to requested
+  tenant.
+
+* [task][openstack] Existing openstack users get their roles un-assigned if
+  they are equal to what roles@openstack context is configured to assign.
+
+  `Launchpad bug-report #1720270
+  <https://bugs.launchpad.net/rally/+bug/1720270>`_
+
+* [task][openstack] Validation step ignores roles@openstack context and
+  marks as "invalid" valid cases
+
+  Some actions in openstack can be performed only if the user has specific
+  role. Since these roles can be different in different OpenStack installations
+  Rally has `roles@openstack context
+  <https://rally.readthedocs.io/en/0.11.0/plugins/plugin_reference.html#roles-context>`_
+  context which can assign roles to the users.
+  Validation step did not check for specified roles in workload config and made
+  wrong assumption about accessibility of resources
+
+  `Launchpad bug-report #1539878
+  <https://bugs.launchpad.net/rally/+bug/1539878>`_
+
+* [task][openstack] Wrong identifiers were used for filtering Mistral resources
+  while cleanup step.
+
+* [task][openstack] `NovaServers.boot_and_live_migrate_server
+  <https://rally.readthedocs.io/en/0.11.0/plugins/plugin_reference.html#novaservers-boot-and-live-migrate-server-scenario>`_
+  does wrong target host selection
+
+  `Launchpad bug-report #1734914
+  <https://bugs.launchpad.net/rally/+bug/1734914>`_
+
+Thanks
+~~~~~~
+
+ 2 Everybody!
