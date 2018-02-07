@@ -78,7 +78,7 @@ class DBCommands(object):
         print(db.schema_revision())
 
     @cliutils.args("--creds", action="store_true", dest="show_creds",
-                   help="Hide credentials from connection string")
+                   help="Do not hide credentials from connection string")
     def show(self, api, show_creds=False):
         """Show the connection string."""
         if not show_creds:
