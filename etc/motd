@@ -1,0 +1,19 @@
+###############################################################################
+# Welcome to Rally Docker container!                                          #
+#                                                                             #
+#  WARNING: DO NOT OVERRIDE /home/rally DIRECTORY                             #
+#                                                                             #
+#  /home/rally/data      - a default place with rally database. Use it for    #
+#      mounting own directories and synchronizing rally database.             #
+#  /home/rally/source    - a directory with documentation, pre created tasks, #
+#      sampes and source code                                                 #
+#  /etc/rally/rally.conf - a default configuration file of rally. To override #
+#      it, mount custom configuration file to /home/rally/.rally/rally.conf   #
+#                                                                             #
+#  Rally at readthedocs - http://rally.readthedocs.org                        #
+#  How to contribute - http://rally.readthedocs.org/en/latest/contribute.html #
+#  If you have any questions, you can reach the Rally team by:                #
+#    * e-mail - openstack-dev@lists.openstack.org with tag [Rally] in subject #
+#    * gitter - https://gitter.im/xRally/Lobby room                           #
+#    * irc - "#openstack-rally" channel at freenode.net                       #
+###############################################################################
