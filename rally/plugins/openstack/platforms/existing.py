@@ -13,7 +13,8 @@
 #    under the License.
 
 import copy
-import sys
+import json
+import traceback
 
 from rally.common import logging
 from rally.env import platform
@@ -145,21 +146,28 @@ class OpenStack(platform.Platform):
                 osclients.Clients(
                     self.platform_data["admin"]).verified_keystone()
             except Exception:
+                d = copy.deepcopy(self.platform_data["admin"])
+                d["password"] = "***"
                 return {
                     "available": False,
-                    "message": ("Bad admin creds: %s"
-                                % self.platform_data["admin"]),
-                    "traceback": list(sys.exc_info())
+                    "message": (
+                        "Bad admin creds: \n%s"
+                        % json.dumps(d, indent=2, sort_keys=True)),
+                    "traceback": traceback.format_exc()
                 }
 
         for user in self.platform_data["users"]:
             try:
                 osclients.Clients(user).keystone()
             except Exception:
+                d = copy.deepcopy(user)
+                d["password"] = "***"
                 return {
                     "available": False,
-                    "message": ("Bad user creds: %s" % user),
-                    "traceback": list(sys.exc_info())
+                    "message": (
+                        "Bad user creds: \n%s"
+                        % json.dumps(d, indent=2, sort_keys=True)),
+                    "traceback": traceback.format_exc()
                 }
 
         return {"available": True}
@@ -168,9 +176,10 @@ class OpenStack(platform.Platform):
         """Return information about cloud as dict."""
         active_user = (self.platform_data["admin"] or
                        self.platform_data["users"][0])
+        services = osclients.Clients(active_user).services()
         return {
             "info": {
-                "services": osclients.Clients(active_user).list_services()
+                "services": services
             }
         }
 

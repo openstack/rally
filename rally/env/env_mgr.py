@@ -13,7 +13,7 @@
 #    under the License.
 
 import copy
-import sys
+import traceback
 
 import jsonschema
 
@@ -22,6 +22,7 @@ from rally.common import logging
 from rally.common import utils
 from rally.env import platform
 from rally import exceptions
+from rally import plugins
 
 
 LOG = logging.getLogger(__name__)
@@ -53,61 +54,64 @@ class _EnvStatus(utils.ImmutableMixin, utils.EnumMixin):
 
 STATUS = _EnvStatus()
 
+SPEC_SCHEMA = {
+    "type": "object",
+    "patternProperties": {
+        "!version": {
+            "type": "integer",
+            "description": "Env format version"
+        },
+        "!description": {
+            "type": "string",
+            "description": "User specific description of deployment"
+        },
+        "!extras": {
+            "type": "object",
+            "description": (
+                "External information provided by users, can be used for"
+                "integration of other tooling outside of rally or just"
+                "providing some specific meta information")
+        },
+        "!config": {
+            "type": "object",
+            "properties": {
+                "*": {
+                    "type": "object",
+                    "description": (
+                        "Keys are option's name, values are option's values"),
+                    "properties": {
+                        "*": {"type": "object"}
+                    }
+                },
+            },
+            "description": "Keys are groups, values are options names"
+        },
+        "^[^!@]+(@[^!@]+)?$": {
+            "type": "object",
+            "description": (
+                "Key is platform plugin name, values are plugin specs")
+        }
+    },
+    "additionalProperties": False
+}
+
 
 class EnvManager(object):
     """Implements life cycle management of Rally Envs.
 
+    EnvManager is one of key Rally components, It manages and stores
+    information about tested platforms.
 
-    EnvManager is one of key Rally components,
-    It manages and stores information about tested platforms. Every Env has:
+    Env manager is using platform plugins to: create, delete, cleanup,
+    check health, obtain information about about platforms.
+
+    Every Env has:
     - unique name and UUID
     - dates when it was created and updated
-    - platform plugins spec and data
-    - platform data
-
-
-    Env Input has next syntax:
-
-    {
-        "type": "object",
-        "properties": {
-            "version": {
-                "type": "integer",
-                "description": "Env version"
-            },
-            "description": {
-                "type": "string",
-                "description": "User specific description of deployment"
-            },
-            "extras": {
-                "type": "object",
-                "description": "Custom dict with  data"
-            },
-            "config": {
-                "type": "object",
-                "properties": {
-                    "*": {
-                        "type": "object",
-                        "*": {},
-                        "description": |
-                            Keys are option's name, values are option's values
-                    },
-                    "description": "Keys are groups, values are options names"
-                }
-            },
-            "platforms": {
-                "type": "object",
-                "properties": {
-                    "*": {
-                        "type": "object",
-                        "description": |
-                            Key is platform plugin name,
-                            values are plugin arguments
-                    }
-                }
-            }
-        }
-    }
+    - default config override
+    - platform plugins spec which are used to create platform
+    - as well as platform & plugin data which are used by other platform
+      commands
 
     Env.data property is dict that is consumed by other rally components,
     like task, verify and maybe something else in future.
@@ -131,11 +135,15 @@ class EnvManager(object):
     def __init__(self, _data):
         """Private method to initializes env manager.
 
-        THis method is not meant to be called directly, use one of
+        This method is not meant to be called directly, use one of
         next class methods: get(), create() or list().
         """
-        self._env = _data
+        self._env = copy.deepcopy(_data)
+        self._env["platforms"] = []
         self.uuid = self._env["uuid"]
+
+    def __str__(self):
+        return "Env `%(name)s (%(uuid)s)'" % self._env
 
     @property
     def status(self):
@@ -143,21 +151,32 @@ class EnvManager(object):
         return db.env_get_status(self.uuid)
 
     @property
-    def data(self):
-        """Returns full information about env including platforms."""
-        self._env = db.env_get(self.uuid)
+    def cached_data(self):
+        platforms = []
+        for p in self._env["platforms"]:
+            p = copy.deepcopy(p)
+            for k in ["created_at", "updated_at"]:
+                p[k] = p[k].isoformat()
+            platforms.append(p)
+
         return {
-            "id": self._env["id"],
             "uuid": self._env["uuid"],
-            "created_at": self._env["created_at"],
-            "updated_at": self._env["updated_at"],
+            "created_at": self._env["created_at"].isoformat(),
+            "updated_at": self._env["updated_at"].isoformat(),
             "name": self._env["name"],
             "description": self._env["description"],
             "status": self._env["status"],
             "spec": copy.deepcopy(self._env["spec"]),
             "extras": copy.deepcopy(self._env["extras"]),
-            "platforms": db.platforms_list(self.uuid)
+            "platforms": platforms
         }
+
+    @property
+    def data(self):
+        """Returns full information about env including platforms."""
+        self._env = db.env_get(self.uuid)
+        self._env["platforms"] = db.platforms_list(self.uuid)
+        return self.cached_data
 
     def _get_platforms(self):
         """Iterate over Envs platforms.
@@ -197,7 +216,7 @@ class EnvManager(object):
         return [cls(data) for data in db.env_list(status=status)]
 
     @classmethod
-    def _validate_and_create_env(cls, name, description, extras, spec):
+    def _validate_and_create_env(cls, name, spec):
         """Validated and create env and platforms DB records.
 
         Do NOT use this method directly. Call create() method instead.
@@ -209,10 +228,33 @@ class EnvManager(object):
 
         :returns: dict that contains env record stored in DB
         """
+
+        try:
+            jsonschema.validate(spec, SPEC_SCHEMA)
+        except jsonschema.ValidationError as err:
+            raise exceptions.ManagerInvalidSpec(
+                mgr="Env", spec=spec, errors=[str(err)])
+
+        spec.pop("!version", None)
+        config = spec.pop("!config", {})
+        extras = spec.pop("!extras", {})
+        description = spec.pop("!description", "")
+
+        existing_platforms = {}
         for p_name, p_spec in spec.items():
             if "@" not in p_name:
                 spec["existing@%s" % p_name] = p_spec
                 spec.pop(p_name)
+
+            platform_name = p_name.split("@")[1] if "@" in p_name else p_name
+            if platform_name in existing_platforms:
+                raise exceptions.ManagerInvalidSpec(
+                    mgr="Env", spec=spec,
+                    errors=["Using multiple plugins [%s, %s] with the same "
+                            "platform in single Env is not supported: "
+                            % (p_name, existing_platforms[platform_name])]
+                )
+            existing_platforms[platform_name] = p_name
 
         errors = []
         for p_name, p_spec in spec.items():
@@ -231,7 +273,7 @@ class EnvManager(object):
             })
 
         return cls(db.env_create(name, STATUS.INIT, description, extras,
-                                 spec, _platforms))
+                                 config, spec, _platforms))
 
     def _create_platforms(self):
         """Iterates over platform and creates them, storing results in DB.
@@ -306,7 +348,8 @@ class EnvManager(object):
         db.env_set_status(self.uuid, STATUS.INIT, new_env_status)
 
     @classmethod
-    def create(cls, name, description, extras, spec):
+    @plugins.ensure_plugins_are_loaded
+    def create(cls, name, spec, description=None, extras=None, config=None):
         """Creates DB record for new env and returns instance of Env class.
 
         :param name: User specified name of env
@@ -316,7 +359,14 @@ class EnvManager(object):
                      platform plugins and their arguments.
         :returns: EnvManager instance corresponding to created Env
         """
-        self = cls._validate_and_create_env(name, description, extras, spec)
+        if description is not None:
+            spec["!description"] = description
+        if extras is not None:
+            spec["!extras"] = extras
+        if config is not None:
+            spec["!config"] = config
+
+        self = cls._validate_and_create_env(name, spec)
         self._create_platforms()
         return self
 
@@ -329,22 +379,14 @@ class EnvManager(object):
             return True
         return db.env_rename(self.uuid, self._env["name"], new_name)
 
-    def update(self, description=None, extras=None):
+    def update(self, description=None, config=None, extras=None):
         """Update description and extras for environment.
 
         :param description: New description for env
         :param extras: New extras for env
         """
-        values = {}
-
-        if description and description != self._env["description"]:
-            values["description"] = description
-        if extras and extras != self._env["extras"]:
-            values["extras"] = extras
-
-        if values:
-            return db.env_update(self.uuid, **values)
-        return True
+        return db.env_update(
+            self.uuid, description=description, config=config, extras=extras)
 
     def update_spec(self, new_spec):
         """Update env spec. [not implemented]"""
@@ -358,12 +400,13 @@ class EnvManager(object):
         "properties": {
             "available": {"type": "boolean"},
             "message": {"type": "string"},
-            "traceback": {"type": "array", "minItems": 3, "maxItems": 3}
+            "traceback": {"type": "string"}
         },
         "required": ["available"],
         "additionalProperties": False
     }
 
+    @plugins.ensure_plugins_are_loaded
     def check_health(self):
         """Iterates over all platforms in env and returns their health.
 
@@ -390,7 +433,7 @@ class EnvManager(object):
                 LOG.exception(msg)
                 check_result = {"message": msg, "available": False}
                 if not isinstance(e, jsonschema.ValidationError):
-                    check_result["traceback"] = list(sys.exc_info())
+                    check_result["traceback"] = traceback.format_exc()
 
             result[p.get_fullname()] = check_result
 
@@ -401,12 +444,13 @@ class EnvManager(object):
         "properties": {
             "info": {},
             "error": {"type": "string"},
-            "traceback": {"type": "array", "minItems": 3, "maxItems": 3},
+            "traceback": {"type": "string"},
         },
         "required": ["info"],
         "additionalProperties": False
     }
 
+    @plugins.ensure_plugins_are_loaded
     def get_info(self):
         """Get detailed information about all platforms.
 
@@ -424,7 +468,7 @@ class EnvManager(object):
                 LOG.exception(msg)
                 info = {"info": None, "error": msg}
                 if not isinstance(e, jsonschema.ValidationError):
-                    info["traceback"] = list(sys.exc_info())
+                    info["traceback"] = traceback.format_exc()
 
             result[p.get_fullname()] = info
 
@@ -457,11 +501,7 @@ class EnvManager(object):
                         "resource_id": {"type": "string"},
                         "resource_type": {"type": "string"},
                         "message": {"type": "string"},
-                        "traceback": {
-                            "type": "array",
-                            "minItems": 3,
-                            "maxItems": 3
-                        }
+                        "traceback": {"type": "string"}
                     },
                     "required": ["message"],
                     "additionalProperties": False
@@ -472,6 +512,7 @@ class EnvManager(object):
         "additionalProperties": False
     }
 
+    @plugins.ensure_plugins_are_loaded
     def cleanup(self, task_uuid=None):
         """Cleans all platform in env.
 
@@ -498,14 +539,15 @@ class EnvManager(object):
                     cleanup_info["message"] = "Not implemented"
                     cleanup_info["errors"] = []
                 elif not isinstance(e, jsonschema.ValidationError):
-                    cleanup_info["errors"][0]["traceback"] = list(
-                        sys.exc_info())
+                    cleanup_info["errors"][0]["traceback"] = (
+                        traceback.format_exc())
 
             result[p.get_fullname()] = cleanup_info
 
         db.env_set_status(self.uuid, STATUS.CLEANING, STATUS.READY)
         return result
 
+    @plugins.ensure_plugins_are_loaded
     def destroy(self, skip_cleanup=False):
         """Destroys all platforms related to env.
 
@@ -560,7 +602,7 @@ class EnvManager(object):
                 platforms[name]["message"] = "Failed to destroy"
                 platforms[name]["status"]["new"] = (
                     platform.STATUS.FAILED_TO_DESTROY)
-                platforms[name]["traceback"] = list(sys.exc_info())
+                platforms[name]["traceback"] = traceback.format_exc()
                 new_env_status = STATUS.FAILED_TO_DESTROY
             else:
                 db.platform_set_status(p.uuid,

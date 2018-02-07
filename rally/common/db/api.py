@@ -291,10 +291,10 @@ def env_list(status=None):
     return get_impl().env_list(status=status)
 
 
-def env_create(name, status, description, extras, spec, platforms):
+def env_create(name, status, description, extras, config, spec, platforms):
     """Created db record of env and platforms."""
     return get_impl().env_create(
-        name, status, description, extras, spec, platforms)
+        name, status, description, extras, config, spec, platforms)
 
 
 def env_rename(uuid, old_name, new_name):
@@ -302,9 +302,10 @@ def env_rename(uuid, old_name, new_name):
     return get_impl().env_rename(uuid, old_name, new_name)
 
 
-def env_update(uuid, description=None, extras=None):
+def env_update(uuid, description=None, extras=None, config=None):
     """Update description and extra of envs. Returns op result as bool."""
-    return get_impl().env_update(uuid, description=description, extras=extras)
+    return get_impl().env_update(
+        uuid, description=description, extras=extras, config=config)
 
 
 def env_set_status(uuid, old_status, new_status):

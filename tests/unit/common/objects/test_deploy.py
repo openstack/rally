@@ -172,8 +172,8 @@ class DeploymentTestCase(test.TestCase):
         env = mock.Mock(
             status=env_mgr.STATUS.READY,
             data={
-                "created_at": dt.datetime(2017, 3, 10, 9, 5, 9, 68652),
-                "updated_at": dt.datetime(2017, 3, 10, 9, 5, 10, 117427),
+                "created_at": dt.datetime(2017, 3, 10, 9, 5, 8, 0).isoformat(),
+                "updated_at": dt.datetime(2017, 3, 10, 9, 5, 9, 0).isoformat(),
                 "id": 1,
                 "name": "foo_env_name",
                 "uuid": "eeecf2c6-8b5d-4ed7-92e5-b7cdc335e885",
@@ -191,17 +191,19 @@ class DeploymentTestCase(test.TestCase):
                             "project_domain_name": "Default"},
                         "https_cacert": "",
                         "endpoint_type": None,
-                        "auth_url": "foo_auth_url"}
-                }})
+                        "auth_url": "foo_auth_url"
+                    }
+                }
+            }
+        )
         deploy = objects.Deployment(deployment=env)
         config = {"openstack": env.data["spec"]["existing@openstack"]}
         self.assertEqual(
             {
-                "created_at": "2017-03-10T09:05:09",
-                "started_at": "2017-03-10T09:05:09",
-                "updated_at": "2017-03-10T09:05:10",
+                "created_at": "2017-03-10T09:05:08",
+                "started_at": "2017-03-10T09:05:08",
+                "updated_at": "2017-03-10T09:05:09",
                 "completed_at": "n/a",
-                "id": 1,
                 "uuid": "eeecf2c6-8b5d-4ed7-92e5-b7cdc335e885",
                 "name": "foo_env_name",
                 "parent_uuid": None,

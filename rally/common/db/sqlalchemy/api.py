@@ -598,7 +598,8 @@ class Connection(object):
         return query.all()
 
     @serialize
-    def env_create(self, name, status, description, extras, spec, platforms):
+    def env_create(self, name, status, description, extras, config,
+                   spec, platforms):
         try:
             env_uuid = models.UUID()
             for p in platforms:
@@ -607,9 +608,8 @@ class Connection(object):
             env = models.Env(
                 name=name, uuid=env_uuid,
                 status=status, description=description,
-                extras=extras, spec=spec
+                extras=extras, config=config, spec=spec
             )
-            # db_session.add(env)
             get_session().bulk_save_objects([env] + [
                 models.Platform(**p) for p in platforms
             ])
@@ -628,12 +628,14 @@ class Connection(object):
             raise exceptions.DBRecordExists(
                 field="name", value=new_name, table="envs")
 
-    def env_update(self, uuid, description=None, extras=None):
+    def env_update(self, uuid, description=None, extras=None, config=None):
         values = {}
         if description is not None:
             values["description"] = description
         if extras is not None:
             values["extras"] = extras
+        if config is not None:
+            values["config"] = config
 
         if not values:
             return True

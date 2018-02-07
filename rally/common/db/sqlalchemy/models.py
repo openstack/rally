@@ -71,6 +71,7 @@ class Env(BASE, RallyBase):
     description = sa.Column(sa.Text, default="")
     status = sa.Column(sa.String(36), nullable=False)
     extras = sa.Column(sa_types.MutableJSONEncodedDict, default={})
+    config = sa.Column(sa_types.MutableJSONEncodedDict, default={})
     spec = sa.Column(sa_types.MutableJSONEncodedDict, default={})
 
 
