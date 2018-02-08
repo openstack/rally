@@ -27,8 +27,7 @@ class CredentialTestCase(test.TestCase):
             "foo_url", "foo_user", "foo_password",
             tenant_name="foo_tenant",
             permission=consts.EndpointPermission.ADMIN)
-        self.assertEqual(credential.to_dict(),
-                         {"auth_url": "foo_url",
+        self.assertEqual({"auth_url": "foo_url",
                           "username": "foo_user",
                           "password": "foo_password",
                           "tenant_name": "foo_tenant",
@@ -41,39 +40,39 @@ class CredentialTestCase(test.TestCase):
                           "project_domain_name": None,
                           "user_domain_name": None,
                           "profiler_hmac_key": None,
-                          "profiler_conn_str": None})
+                          "profiler_conn_str": None},
+                         credential.to_dict())
 
     def test_to_dict_with_include_permission(self):
         credential = objects.Credential(
             "foo_url", "foo_user", "foo_password",
             tenant_name="foo_tenant",
             permission=consts.EndpointPermission.ADMIN)
-        self.assertEqual(credential.to_dict(include_permission=True),
-                         {"auth_url": "foo_url",
+        self.assertEqual({"auth_url": "foo_url",
                           "username": "foo_user",
                           "password": "foo_password",
                           "tenant_name": "foo_tenant",
                           "region_name": None,
                           "domain_name": None,
-                          "endpoint": None,
                           "permission": consts.EndpointPermission.ADMIN,
+                          "endpoint": None,
                           "endpoint_type": None,
                           "https_insecure": False,
                           "https_cacert": None,
                           "project_domain_name": None,
                           "user_domain_name": None,
                           "profiler_hmac_key": None,
-                          "profiler_conn_str": None})
+                          "profiler_conn_str": None},
+                         credential.to_dict(include_permission=True))
 
     def test_to_dict_with_kwarg_credential(self):
         credential = objects.Credential(
             "foo_url", "foo_user", "foo_password",
             tenant_name="foo_tenant",
-            permission=consts.EndpointPermission.ADMIN,
             endpoint="foo_endpoint",
+            permission=consts.EndpointPermission.ADMIN,
             endpoint_type=consts.EndpointType.PUBLIC)
-        self.assertEqual(credential.to_dict(),
-                         {"auth_url": "foo_url",
+        self.assertEqual({"auth_url": "foo_url",
                           "username": "foo_user",
                           "password": "foo_password",
                           "tenant_name": "foo_tenant",
@@ -86,4 +85,5 @@ class CredentialTestCase(test.TestCase):
                           "project_domain_name": None,
                           "user_domain_name": None,
                           "profiler_hmac_key": None,
-                          "profiler_conn_str": None})
+                          "profiler_conn_str": None},
+                         credential.to_dict())

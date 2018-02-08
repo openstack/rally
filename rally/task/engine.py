@@ -231,25 +231,24 @@ class TaskEngine(object):
         Typical usage:
             ...
 
-            engine = TaskEngine(config, task, deployment)
+            engine = TaskEngine(config, task, env)
             engine.validate()   # to test config
             engine.run()        # to run config
     """
 
-    def __init__(self, config, task, deployment,
-                 abort_on_sla_failure=False):
+    def __init__(self, config, task, env, abort_on_sla_failure=False):
         """TaskEngine constructor.
 
         :param config: An instance of a TaskConfig
         :param task: Instance of Task,
                      the current task which is being performed
-        :param deployment: Instance of Deployment,
+        :param env: Instance of Environment,
         :param abort_on_sla_failure: True if the execution should be stopped
                                      when some SLA check fails
         """
         self.config = config
         self.task = task
-        self.deployment = deployment
+        self.env = env
         self.abort_on_sla_failure = abort_on_sla_failure
 
     def _validate_workload(self, workload, vcontext=None, vtype=None):
@@ -340,10 +339,11 @@ class TaskEngine(object):
                               "Task validation of required platforms.")
     def _validate_config_platforms(self, config):
         # FIXME(andreykurilin): prepare the similar context object to others
-        credentials = self.deployment.get_all_credentials()
+        platforms = dict(
+            (p["platform_name"], p["platform_data"])
+            for p in self.env.data["platforms"].values())
         ctx = {"task": self.task,
-               "platforms": dict((p, creds[0])
-                                 for p, creds in credentials.items())}
+               "platforms": platforms}
         for subtask in config.subtasks:
             for workload in subtask["workloads"]:
                 self._validate_workload(
@@ -351,9 +351,30 @@ class TaskEngine(object):
 
     @logging.log_task_wrapper(LOG.info, "Task validation of semantic.")
     def _validate_config_semantic(self, config):
-        self.deployment.verify_connections()
-        validation_ctx = self.deployment.get_validation_context()
-        ctx_obj = {"task": self.task, "config": validation_ctx}
+        LOG.info("Check health of the environment '%s'." % self.env.uuid)
+        failed = []
+        for p, res in self.env.check_health().items():
+            LOG.info("Platform %s (available: %s): %s" %
+                     (p, res["available"], res["message"]))
+            if not res["available"]:
+                failed.append(p)
+                if logging.is_debug():
+                    LOG.error(res["traceback"])
+        if failed:
+            raise exceptions.ValidationError(
+                "One or several platforms are not available: %s. Check logs "
+                "for more details." % ", ".join(failed))
+        validation_ctx = self.env.get_validation_context()
+
+        env_data = self.env.data
+        env_data["platforms"] = dict(
+            (p["platform_name"], p["platform_data"])
+            for p in env_data["platforms"].values())
+
+        ctx_obj = {"task": self.task,
+                   "config": validation_ctx,
+                   "env": env_data}
+
         with context.ContextManager(ctx_obj):
             for subtask in config.subtasks:
                 for workload in subtask["workloads"]:
@@ -392,11 +413,17 @@ class TaskEngine(object):
         for k, v in ctx.items():
             context_config[context.Context.get(k).get_fullname()] = v
 
+        env_data = self.env.data
+        env_data["platforms"] = dict(
+            (p["platform_name"], p["platform_data"])
+            for p in env_data["platforms"].values())
+
         context_obj = {
             "task": self.task,
             "owner_id": owner_id,
             "scenario_name": scenario_name,
-            "config": context_config
+            "config": context_config,
+            "env": env_data
         }
         return context_obj
 

@@ -73,24 +73,24 @@ class TaskAPITestCase(test.TestCase):
     @mock.patch("rally.api.engine.TaskEngine")
     def test_validate(self, mock_task_engine, mock_deployment_get, mock_task,
                       mock_task_config):
-        fake_deployment = fakes.FakeDeployment(
-            uuid="deployment_uuid_1", admin="fake_admin", users=["fake_user"])
+        fake_deployment = mock.Mock()
+        fake_env = fake_deployment.env_obj
         mock_deployment_get.return_value = fake_deployment
 
         #######################################################################
         # The case #1 -- create temporary task
         #######################################################################
-        self.task_inst.validate(deployment=fake_deployment["uuid"],
+        self.task_inst.validate(deployment=fake_deployment.uuid,
                                 config="config")
 
         mock_task_engine.assert_called_once_with(
             mock_task_config.return_value, mock_task.return_value,
-            fake_deployment),
+            fake_env),
         mock_task_engine.return_value.validate.assert_called_once_with()
 
         mock_task.assert_called_once_with(
-            temporary=True, env_uuid=fake_deployment["uuid"])
-        mock_deployment_get.assert_called_once_with(fake_deployment["uuid"])
+            temporary=True, env_uuid=fake_deployment.uuid)
+        mock_deployment_get.assert_called_once_with(fake_deployment.uuid)
         self.assertFalse(mock_task.get.called)
 
         #######################################################################
@@ -105,12 +105,12 @@ class TaskAPITestCase(test.TestCase):
 
         task_uuid = "task-id"
 
-        self.task_inst.validate(deployment=fake_deployment["uuid"],
+        self.task_inst.validate(deployment=fake_deployment.uuid,
                                 config="config",
                                 task=task_uuid)
 
         mock_task_engine.assert_called_once_with(
-            mock_task_config.return_value, fake_task, fake_deployment)
+            mock_task_config.return_value, fake_task, fake_env)
         mock_task_engine.return_value.validate.assert_called_once_with()
 
         self.assertFalse(mock_task.called)
@@ -129,12 +129,12 @@ class TaskAPITestCase(test.TestCase):
 
         task_instance = fakes.FakeTask(uuid="task-id")
 
-        self.task_inst.validate(deployment=fake_deployment["uuid"],
+        self.task_inst.validate(deployment=fake_deployment.uuid,
                                 config="config",
                                 task_instance=task_instance)
 
         mock_task_engine.assert_called_once_with(
-            mock_task_config.return_value, fake_task, fake_deployment)
+            mock_task_config.return_value, fake_task, fake_env)
         mock_task_engine.return_value.validate.assert_called_once_with()
 
         self.assertFalse(mock_task.called)
@@ -151,7 +151,7 @@ class TaskAPITestCase(test.TestCase):
 
         e = self.assertRaises(exceptions.InvalidTaskException,
                               self.task_inst.validate,
-                              deployment=fake_deployment["uuid"],
+                              deployment=fake_deployment.uuid,
                               config="config",
                               task_instance=task_instance)
         self.assertIn("Who is a good boy?! Woof.", "%s" % e)
@@ -270,9 +270,10 @@ class TaskAPITestCase(test.TestCase):
         fake_task = fakes.FakeTask(uuid="some_uuid")
         fake_task.get_status = mock.Mock()
         mock_task.return_value = fake_task
-        mock_deployment_get.return_value = fakes.FakeDeployment(
+        fake_deployment = fakes.FakeDeployment(
             uuid="deployment_uuid", admin="fake_admin", users=["fake_user"],
             status=consts.DeployStatus.DEPLOY_FINISHED)
+        mock_deployment_get.return_value = fake_deployment
         task_config_instance = mock_task_config.return_value
 
         self.assertEqual(
@@ -285,7 +286,7 @@ class TaskAPITestCase(test.TestCase):
         mock_task_engine.assert_called_once_with(
             task_config_instance,
             mock_task.return_value,
-            mock_deployment_get.return_value,
+            fake_deployment.env_obj,
             abort_on_sla_failure=False
         )
         task_engine = mock_task_engine.return_value
@@ -805,90 +806,79 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
 
     @mock.patch("rally.common.objects.Deployment.get")
     def test_deployment_check(self, mock_deployment_get):
-        fake_credential1 = fakes.fake_credential()
-        fake_credential2 = fakes.fake_credential()
-
-        mock_deployment_get.return_value.get_all_credentials.return_value = {
-            "openstack": [{"admin": fake_credential1,
-                           "users": [fake_credential2]}]}
+        env = mock_deployment_get.return_value.env_obj
+        env.check_health.return_value = {
+            "foo": {"available": True}
+        }
 
         self.assertEqual(
-            {"openstack": [
-                {"services": fake_credential1.list_services.return_value}]},
+            {"foo": [{"services": []}]},
             self.deployment_inst.check(deployment="uuid"))
-
-        fake_credential1.verify_connection.assert_called_once_with()
-        fake_credential2.verify_connection.assert_called_once_with()
+        env.check_health.assert_called_once_with()
+        self.assertFalse(env.get_info.called)
 
     @mock.patch("rally.common.objects.Deployment.get")
-    def test_deployment_check_list_services_via_admin(self,
-                                                      mock_deployment_get):
-        fake_credential1 = fakes.fake_credential()
-        fake_credential2 = fakes.fake_credential()
-
-        mock_deployment_get.return_value.get_all_credentials.return_value = {
-            "openstack": [{"admin": fake_credential1,
-                           "users": [fake_credential2]}]}
+    def test_deployment_check_list_services(self, mock_deployment_get):
+        env = mock_deployment_get.return_value.env_obj
+        env.get_info.return_value = {
+            "existing@openstack": {"info": {"services": {"foo": "bar"}}}
+        }
+        env.check_health.return_value = {
+            "existing@openstack": {"available": True}
+        }
 
         self.assertEqual(
-            {"openstack": [
-                {"services": fake_credential1.list_services.return_value}]},
+            {"openstack": [{"services": [{"type": "foo", "name": "bar"}]}]},
             self.deployment_inst.check(deployment="uuid"))
-
-        fake_credential1.verify_connection.assert_called_once_with()
-        fake_credential1.list_services.assert_called_once_with()
-        fake_credential2.verify_connection.assert_called_once_with()
-        self.assertFalse(fake_credential2.list_services.called)
+        env.check_health.assert_called_once_with()
+        env.get_info.assert_called_once_with()
 
     @mock.patch("rally.common.objects.Deployment.get")
-    def test_deployment_check_list_services_via_user(self,
-                                                     mock_deployment_get):
-        fake_credential1 = fakes.fake_credential()
-        fake_credential2 = fakes.fake_credential()
+    def test_deployment_check_fails(self, mock_deployment_get):
+        env = mock_deployment_get.return_value.env_obj
+        env.get_info.return_value = {
+            "existing@openstack": {"info": {"services": [{"foo": "bar"}]}}
+        }
 
-        mock_deployment_get.return_value.get_all_credentials.return_value = {
-            "openstack": [{"admin": None,
-                           "users": [fake_credential2, fake_credential1]}]}
-
-        self.assertEqual(
-            {"openstack": [
-                {"services": fake_credential2.list_services.return_value}]},
-            self.deployment_inst.check(deployment="uuid"))
-
-        fake_credential2.verify_connection.assert_called_once_with()
-        fake_credential2.list_services.assert_called_once_with()
-        fake_credential1.verify_connection.assert_called_once_with()
-        self.assertFalse(fake_credential1.list_services.called)
-
-    @mock.patch("rally.api.traceback")
-    @mock.patch("rally.common.objects.Deployment.get")
-    def test_deployment_check_fails(self, mock_deployment_get, mock_traceback):
-        mock_traceback.format_exc.side_effect = ("Trace1", "Trace2")
-        fake_credential1 = fakes.fake_credential()
-        fake_credential2 = fakes.fake_credential()
-
-        fake_credential1.verify_connection.side_effect = KeyError("oops")
-        fake_credential2.verify_connection.side_effect = TypeError("ooooops")
-
-        mock_deployment_get.return_value.get_all_credentials.return_value = {
-            "openstack": [{"admin": fake_credential1,
-                           "users": [fake_credential2]}]}
+        trace1 = ("Traceback (most recent call last):\n"
+                  "  File '<ipython-input-3-e551aac575a4>', line 2, in "
+                  "<module>\n"
+                  "    raise Exception('asd: asd :asd asd ')\n"
+                  "Exception: asd: asd :asd asd \n")
+        msg1 = "Bad user creds: oops"
+        trace2 = ("Traceback (most recent call last):\n"
+                  "  File '<ipython-input-3-e551aac575a4>', line 2, in "
+                  "<module>\n"
+                  "    raise KeyError('asd: asd :asd asd2 ')\n"
+                  "KeyError: asd: asd :asd asd2 \n")
+        msg2 = "Ooops"
+        env.check_health.return_value = {
+            "existing@openstack": {
+                "available": False,
+                "message": msg1,
+                "traceback": trace1},
+            "foo@bar": {
+                "available": False,
+                "message": msg2,
+                "traceback": trace2
+            }
+        }
 
         self.assertEqual(
-            {"openstack": [
-                {"services": [],
-                 "admin_error": {
-                     "etype": "KeyError", "msg": "'oops'",
-                     "trace": "Trace1"},
-                 "user_error": {
-                     "etype": "TypeError", "msg": "ooooops",
-                     "trace": "Trace2"}}]},
+            {
+                "openstack": [{
+                    "services": [],
+                    "user_error": {"etype": "Exception",
+                                   "msg": msg1,
+                                   "trace": trace1}}],
+                "foo@bar": [{
+                    "services": [],
+                    "admin_error": {"etype": "KeyError",
+                                    "msg": msg2,
+                                    "trace": trace2}}]},
             self.deployment_inst.check(deployment="uuid"))
-
-        fake_credential1.verify_connection.assert_called_once_with()
-        fake_credential2.verify_connection.assert_called_once_with()
-        self.assertFalse(fake_credential1.list_services.called)
-        self.assertFalse(fake_credential2.list_services.called)
+        env.check_health.assert_called_once_with()
+        self.assertFalse(env.get_info.called)
 
     def test_service_list(self):
         fake_credential = fakes.fake_credential()
@@ -1223,10 +1213,10 @@ class VerifierAPITestCase(test.TestCase):
         self.assertFalse(mock_verifier_delete.called)
         self.verifier_inst.api.verification.list.assert_called_once_with(
             verifier_id=verifier_id, deployment_id=deployment_id)
-        verifier_obj.set_deployment.assert_called_once_with(deployment_id)
+        verifier_obj.set_env.assert_called_once_with(deployment_id)
         verifier_obj.manager.uninstall.assert_called_once_with()
 
-        verifier_obj.set_deployment.reset_mock()
+        verifier_obj.set_env.reset_mock()
         verifier_obj.manager.uninstall.reset_mock()
 
         self.verifier_inst.api.verification.list.reset_mock()
@@ -1236,7 +1226,7 @@ class VerifierAPITestCase(test.TestCase):
 
         self.verifier_inst.api.verification.list.assert_called_once_with(
             verifier_id=verifier_id, deployment_id=None)
-        self.assertFalse(verifier_obj.set_deployment.called)
+        self.assertFalse(verifier_obj.set_env.called)
         verifier_obj.manager.uninstall.assert_called_once_with(full=True)
         mock_verifier_delete.assert_called_once_with(verifier_id)
 
@@ -1763,7 +1753,7 @@ class VerificationAPITestCase(test.TestCase):
             results["totals"])
         self.verification_inst.api.verifier._get.assert_called_once_with(
             verifier_id)
-        verifier_obj.set_deployment.assert_called_once_with(deployment_id)
+        verifier_obj.set_env.assert_called_once_with(deployment_id)
         verifier_obj.manager.validate_args.assert_called_once_with(run_args)
         mock_verification_create.assert_called_once_with(
             verifier_id, deployment_id=deployment_id, run_args=run_args)
@@ -1831,7 +1821,7 @@ class VerificationAPITestCase(test.TestCase):
         self.verification_inst.start(verifier_id=verifier_id,
                                      deployment_id=deployment_id)
         mock_deployment_get.assert_called_once_with(deployment_id)
-        verifier_obj.set_deployment.assert_called_once_with(deployment_id)
+        verifier_obj.set_env.assert_called_once_with(deployment_id)
 
     @mock.patch("rally.api.objects.Verification.create")
     @mock.patch("rally.api._Verifier.configure")
@@ -1858,7 +1848,7 @@ class VerificationAPITestCase(test.TestCase):
                                      **run_args)
 
         mock_deployment_get.assert_called_once_with(deployment_id)
-        verifier_obj.set_deployment.assert_called_once_with(deployment_id)
+        verifier_obj.set_env.assert_called_once_with(deployment_id)
         verifier_obj.manager.validate.assert_called_once_with(run_args)
 
         mock_verification_create.assert_called_once_with(
@@ -1922,7 +1912,7 @@ class VerificationAPITestCase(test.TestCase):
                           deployment_id=deployment_id,
                           tags=tags, **run_args)
 
-        verifier_obj.set_deployment.assert_called_once_with(deployment_id)
+        verifier_obj.set_env.assert_called_once_with(deployment_id)
         verifier_obj.manager.validate.assert_called_once_with(run_args)
         mock_verification_create.assert_called_once_with(
             verifier_id=verifier_id, deployment_id=deployment_id, tags=tags,

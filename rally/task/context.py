@@ -131,6 +131,7 @@ class BaseContext(plugin.Plugin, functional.FunctionalMixin,
             #                   however we handle this
             self.config = config
         self.context = ctx
+        self.env = self.context.get("env", {})
 
     @classmethod
     def get_order(cls):

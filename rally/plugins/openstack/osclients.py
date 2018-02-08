@@ -427,14 +427,11 @@ class Heat(OSClient):
         #       when heatclient no longer uses it.
         kw_args = {}
         if self.credential.endpoint_type:
-            kw_args["endpoint_type"] = self.credential.endpoint_type
             kw_args["interface"] = self.credential.endpoint_type
 
         client = heat.Client(
             self.choose_version(version),
             session=self.keystone.get_session()[0],
-            # Remove endpoint once requirement is python-heatclient>=1.6
-            endpoint=self._get_endpoint(service_type),
             endpoint_override=self._get_endpoint(service_type),
             **kw_args)
         return client

@@ -19,7 +19,6 @@ import os
 import re
 import sys
 import time
-import traceback
 
 import jinja2
 import jinja2.meta
@@ -163,40 +162,55 @@ class _Deployment(APIGroup):
         :param deployment: UUID of deployment
         :returns: Service list
         """
+        env = self._get(deployment).env_obj
+
         result = {}
 
-        all_credentials = self._get(deployment).get_all_credentials()
-        for platform in all_credentials:
-            result[platform] = []
-            for credential in all_credentials[platform]:
-                no_error = True
-                result[platform].append({"services": []})
-                active_user = None
-                if credential["admin"]:
-                    active_user = credential["admin"]
-                    try:
-                        credential["admin"].verify_connection()
-                    except Exception as e:
-                        no_error = False
-                        result[platform][-1]["admin_error"] = {
-                            "etype": e.__class__.__name__,
-                            "msg": str(e),
-                            "trace": traceback.format_exc()}
-                for user in credential["users"]:
-                    try:
-                        user.verify_connection()
-                    except Exception as e:
-                        no_error = False
-                        result[platform][-1]["user_error"] = {
-                            "etype": e.__class__.__name__,
-                            "msg": str(e),
-                            "trace": traceback.format_exc()}
-                        break
+        for p, res in env.check_health().items():
+            name = "openstack" if p == "existing@openstack" else p
+            if not res["available"]:
+                # NOTE(andreykurilin): the old behavior supports 2 keys
+                #   for storing errors: admin_error and user_error.
+                #   Since admin/users is not mandatory thing for new design
+                #   of Platforms, let's put platform error to "admin_error"
+                key = "admin_error"
+                if name == "openstack":
+                    if res["message"].startswith("Bad user creds"):
+                        key = "user_error"
 
-                if no_error:
-                    active_user = active_user or credential["users"][0]
-                    services = active_user.list_services()
-                    result[platform][-1]["services"] = services
+                # NOTE(andreykurilin): the last not null line in traceback
+                #   includes Exception cls with a message. By parsing it, we
+                #   can get etype.
+                trace = res["traceback"].split("\n")
+                last_line = [l for l in trace if l][-1]
+                etype, _msg = last_line.split(":", 1)
+                result[name] = [
+                    {
+                        key: {
+                            "etype": etype,
+                            "msg": res["message"],
+                            "trace": res["traceback"]
+                        },
+                        "services": []
+                    }
+                ]
+            else:
+                if name == "openstack":
+                    services = env.get_info()[p]["info"]["services"]
+                    services = sorted(
+                        {"type": stype, "name": sname}
+                        for stype, sname in services.items())
+
+                    result[name] = [{"services": services}]
+                else:
+                    # NOTE(andreykurilin): the info method of platforms allows
+                    #   to return whatever single platform wants, i.e
+                    #   Platform X can return just a version and no services
+                    #   at all. Checking for 'services' key there is not a
+                    #   solution, since the value of it can have the format
+                    #   which differs from openstack-like (the old design of
+                    #   Deployment component)
+                    result[name] = [{"services": []}]
 
         return result
 
@@ -352,7 +366,7 @@ class _Task(APIGroup):
                 LOG.exception("Invalid Task")
             raise exceptions.InvalidTaskException(str(e))
 
-        engine.TaskEngine(config, task, deployment).validate()
+        engine.TaskEngine(config, task, deployment.env_obj).validate()
 
     def start(self, deployment, config, task=None, abort_on_sla_failure=False):
         """Validate and start a task.
@@ -402,7 +416,7 @@ class _Task(APIGroup):
                                 description=config.description)
 
         task_engine = engine.TaskEngine(
-            config, task, deployment,
+            config, task, deployment.env_obj,
             abort_on_sla_failure=abort_on_sla_failure)
 
         task_engine.validate()
@@ -686,7 +700,7 @@ class _Verifier(APIGroup):
         if deployment_id:
             LOG.info("Deleting deployment-specific data for verifier %s."
                      % verifier)
-            verifier.set_deployment(deployment_id)
+            verifier.set_env(deployment_id)
             verifier.manager.uninstall()
             LOG.info("Deployment-specific data has been successfully deleted!")
         else:
@@ -795,7 +809,7 @@ class _Verifier(APIGroup):
         """
         if not isinstance(verifier, objects.Verifier):
             verifier = self._get(verifier)
-        verifier.set_deployment(deployment_id)
+        verifier.set_env(deployment_id)
         LOG.info("Configuring verifier %s for deployment '%s' (UUID=%s)."
                  % (verifier,
                     verifier.deployment["name"],
@@ -856,7 +870,7 @@ class _Verifier(APIGroup):
                     verifier, verifier.status, consts.VerifierStatus.INSTALLED)
             )
 
-        verifier.set_deployment(deployment_id)
+        verifier.set_env(deployment_id)
         LOG.info("Overriding configuration of verifier %s for deployment '%s' "
                  "(UUID=%s)."
                  % (verifier,
@@ -985,7 +999,7 @@ class _Verification(APIGroup):
                     verifier, verifier.status, consts.VerifierStatus.INSTALLED)
             )
 
-        verifier.set_deployment(deployment_id)
+        verifier.set_env(deployment_id)
         if not verifier.manager.is_configured():
             self.api.verifier.configure(verifier=verifier,
                                         deployment_id=deployment_id)
@@ -1136,7 +1150,7 @@ class _Verification(APIGroup):
         # [1] https://blueprints.launchpad.net/rally/+spec/verification-import
 
         verifier = self.api.verifier._get(verifier_id)
-        verifier.set_deployment(deployment_id)
+        verifier.set_env(deployment_id)
         LOG.info("Importing test results into a new verification for "
                  "deployment '%s' (UUID=%s), using verifier %s."
                  % (verifier.deployment["name"],

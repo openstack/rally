@@ -31,24 +31,29 @@ class UserGeneratorBaseTestCase(test.ScenarioTestCase):
         self.osclients = self.osclients_patcher.start()
         self.addCleanup(self.osclients_patcher.stop)
 
-        self.deployment_patcher = mock.patch("%s.objects.Deployment.get" % CTX)
-        self.deployment_get = self.deployment_patcher.start()
-        self.addCleanup(self.deployment_patcher.stop)
-
         self.deployment_uuid = "deployment_id"
-        self.admin_cred = mock.MagicMock()
+
+        self.admin_cred = {
+            "username": "root", "password": "qwerty",
+            "auth_url": "https://example.com",
+            "project_domain_name": "foo",
+            "user_domain_name": "bar"}
+
+        self.platforms = {
+            "openstack": {
+                "admin": self.admin_cred,
+                "users": []
+            }
+        }
 
         self.context.update({
             "config": {"users": {}},
-            "admin": {"credential": self.admin_cred},
-            "users": [],
+            "env": {"platforms": self.platforms},
             "task": {"uuid": "task_id",
                      "deployment_uuid": self.deployment_uuid}
         })
 
     def test___init__for_new_users(self):
-        deployment = self.deployment_get.return_value
-        deployment.get_credentials_for.return_value = {"users": []}
         self.context["config"]["users"] = {
             "tenants": 1, "users_per_tenant": 1,
             "resource_management_workers": 1}
@@ -56,48 +61,33 @@ class UserGeneratorBaseTestCase(test.ScenarioTestCase):
         user_generator = users.UserGenerator(self.context)
 
         self.assertEqual([], user_generator.existing_users)
-        self.assertEqual(self.admin_cred.project_domain_name,
+        self.assertEqual(self.admin_cred["project_domain_name"],
                          user_generator.config["project_domain"])
-        self.assertEqual(self.admin_cred.user_domain_name,
+        self.assertEqual(self.admin_cred["user_domain_name"],
                          user_generator.config["user_domain"])
-
-        self.deployment_get.assert_called_once_with(self.deployment_uuid)
-        deployment.get_credentials_for.assert_called_once_with("openstack")
-
-        self.deployment_get.reset_mock()
-        deployment.get_credentials_for.reset_mock()
 
         # the case #2 - existing users are presented in deployment but
         #   the user forces to create new ones
-        deployment.get_credentials_for.return_value = {"users": [mock.Mock()]}
+        self.platforms["openstack"]["users"] = [mock.Mock()]
 
         user_generator = users.UserGenerator(self.context)
 
         self.assertEqual([], user_generator.existing_users)
-        self.assertEqual(self.admin_cred.project_domain_name,
+        self.assertEqual(self.admin_cred["project_domain_name"],
                          user_generator.config["project_domain"])
-        self.assertEqual(self.admin_cred.user_domain_name,
+        self.assertEqual(self.admin_cred["user_domain_name"],
                          user_generator.config["user_domain"])
 
-        self.deployment_get.assert_called_once_with(self.deployment_uuid)
-        deployment.get_credentials_for.assert_called_once_with("openstack")
-
     def test___init__for_existing_users(self):
-        deployment = self.deployment_get.return_value
         foo_user = mock.Mock()
-        deployment.get_credentials_for.return_value = {"users": [foo_user]}
+
+        self.platforms["openstack"]["users"] = [foo_user]
 
         user_generator = users.UserGenerator(self.context)
 
         self.assertEqual([foo_user], user_generator.existing_users)
         self.assertEqual({"user_choice_method": "random"},
                          user_generator.config)
-
-        self.deployment_get.assert_called_once_with(self.deployment_uuid)
-        deployment.get_credentials_for.assert_called_once_with("openstack")
-
-        self.deployment_get.reset_mock()
-        deployment.get_credentials_for.reset_mock()
 
         # the case #2: the config with `user_choice_method` option
         self.context["config"]["users"] = {"user_choice_method": "foo"}
@@ -106,9 +96,6 @@ class UserGeneratorBaseTestCase(test.ScenarioTestCase):
 
         self.assertEqual([foo_user], user_generator.existing_users)
         self.assertEqual({"user_choice_method": "foo"}, user_generator.config)
-
-        self.deployment_get.assert_called_once_with(self.deployment_uuid)
-        deployment.get_credentials_for.assert_called_once_with("openstack")
 
     def test_setup(self):
         user_generator = users.UserGenerator(self.context)
@@ -167,26 +154,34 @@ class UserGeneratorForExistingUsersTestCase(test.ScenarioTestCase):
         self.osclients = self.osclients_patcher.start()
         self.addCleanup(self.osclients_patcher.stop)
 
-        self.deployment_patcher = mock.patch("%s.objects.Deployment.get" % CTX)
-        self.deployment_get = self.deployment_patcher.start()
-        self.addCleanup(self.deployment_patcher.stop)
-
         self.deployment_uuid = "deployment_id"
 
+        self.platforms = {
+            "openstack": {
+                "admin": {"username": "root",
+                          "password": "qwerty",
+                          "auth_url": "https://example.com"},
+                "users": []
+            }
+        }
         self.context.update({
             "config": {"users": {}},
             "users": [],
+            "env": {"platforms": self.platforms},
             "task": {"uuid": "task_id",
                      "deployment_uuid": self.deployment_uuid}
         })
 
-    def test_use_existing_users(self):
-        user1 = mock.MagicMock(tenant_id="1", user_id="1",
-                               tenant_name="proj", username="usr")
-        user2 = mock.MagicMock(tenant_id="1", user_id="2",
-                               tenant_name="proj", username="usr")
-        user3 = mock.MagicMock(tenant_id="2", user_id="3",
-                               tenant_name="proj", username="usr")
+    @mock.patch("%s.credential.OpenStackCredential" % CTX)
+    @mock.patch("%s.osclients.Clients" % CTX)
+    def test_use_existing_users(self, mock_clients,
+                                mock_open_stack_credential):
+        user1 = {"tenant_name": "proj", "username": "usr",
+                 "password": "pswd", "auth_url": "https://example.com"}
+        user2 = {"tenant_name": "proj", "username": "usr",
+                 "password": "pswd", "auth_url": "https://example.com"}
+        user3 = {"tenant_name": "proj", "username": "usr",
+                 "password": "pswd", "auth_url": "https://example.com"}
 
         user_list = [user1, user2, user3]
 
@@ -197,21 +192,18 @@ class UserGeneratorForExistingUsersTestCase(test.ScenarioTestCase):
             @property
             def user_id(self):
                 self.USER_ID_COUNT += 1
-                return user_list[self.USER_ID_COUNT - 1].user_id
+                return "u%s" % self.USER_ID_COUNT
 
             @property
             def project_id(self):
                 self.PROJECT_ID_COUNT += 1
-                return user_list[self.PROJECT_ID_COUNT - 1].tenant_id
+                return "p%s" % (self.PROJECT_ID_COUNT % 2)
 
         auth_ref = AuthRef()
 
-        user1.clients.return_value.keystone.auth_ref = auth_ref
-        user2.clients.return_value.keystone.auth_ref = auth_ref
-        user3.clients.return_value.keystone.auth_ref = auth_ref
+        mock_clients.return_value.keystone.auth_ref = auth_ref
 
-        deployment = self.deployment_get.return_value
-        deployment.get_credentials_for.return_value = {"users": user_list}
+        self.platforms["openstack"]["users"] = user_list
 
         user_generator = users.UserGenerator(self.context)
         user_generator.setup()
@@ -220,16 +212,16 @@ class UserGeneratorForExistingUsersTestCase(test.ScenarioTestCase):
         self.assertIn("tenants", self.context)
         self.assertIn("user_choice_method", self.context)
         self.assertEqual("random", self.context["user_choice_method"])
+
+        creds = mock_open_stack_credential.return_value
         self.assertEqual(
-            [{"id": user1.user_id, "credential": user1,
-              "tenant_id": user1.tenant_id},
-             {"id": user2.user_id, "credential": user2,
-              "tenant_id": user2.tenant_id},
-             {"id": user3.user_id, "credential": user3,
-              "tenant_id": user3.tenant_id}], self.context["users"]
+            [{"id": "u1", "credential": creds, "tenant_id": "p1"},
+             {"id": "u2", "credential": creds, "tenant_id": "p0"},
+             {"id": "u3", "credential": creds, "tenant_id": "p1"}],
+            self.context["users"]
         )
-        self.assertEqual({"1": {"id": "1", "name": user1.tenant_name},
-                          "2": {"id": "2", "name": user3.tenant_name}},
+        self.assertEqual({"p0": {"id": "p0", "name": creds.tenant_name},
+                          "p1": {"id": "p1", "name": creds.tenant_name}},
                          self.context["tenants"])
 
 
@@ -246,13 +238,15 @@ class UserGeneratorForNewUsersTestCase(test.ScenarioTestCase):
         self.osclients = self.osclients_patcher.start()
         self.addCleanup(self.osclients_patcher.stop)
 
-        self.deployment_patcher = mock.patch("%s.objects.Deployment.get" % CTX)
-        self.deployment_get = self.deployment_patcher.start()
-        self.addCleanup(self.deployment_patcher.stop)
-
         # Force the case of creating new users
-        deployment = self.deployment_get.return_value
-        deployment.get_credentials_for.return_value = {"users": []}
+        self.platforms = {
+            "openstack": {
+                "admin": {"username": "root",
+                          "password": "qwerty",
+                          "auth_url": "https://example.com"},
+                "users": []
+            }
+        }
 
         self.context.update({
             "config": {
@@ -262,7 +256,7 @@ class UserGeneratorForNewUsersTestCase(test.ScenarioTestCase):
                     "resource_management_workers": self.threads,
                 }
             },
-            "admin": {"credential": mock.MagicMock()},
+            "env": {"platforms": self.platforms},
             "users": [],
             "task": {"uuid": "task_id", "deployment_uuid": "dep_uuid"}
         })
@@ -451,7 +445,7 @@ class UserGeneratorForNewUsersTestCase(test.ScenarioTestCase):
         tmp_context["config"]["users"] = {"tenants": 1,
                                           "users_per_tenant": 2,
                                           "resource_management_workers": 1}
-        tmp_context["admin"]["credential"] = credential
+        tmp_context["env"]["platforms"]["openstack"]["admin"] = credential
 
         credential_dict = credential.to_dict()
         user_list = [mock.MagicMock(id="id_%d" % i)
@@ -477,10 +471,11 @@ class UserGeneratorForNewUsersTestCase(test.ScenarioTestCase):
                 excluded_keys = ["auth_url", "username", "password",
                                  "tenant_name", "region_name",
                                  "project_domain_name",
-                                 "user_domain_name"]
+                                 "user_domain_name", "permission"]
                 for key in (set(credential_dict.keys()) - set(excluded_keys)):
                     self.assertEqual(credential_dict[key],
-                                     user_credential_dict[key])
+                                     user_credential_dict[key],
+                                     "The key '%s' differs." % key)
 
             tenants_ids = []
             for t in ctx.context["tenants"].keys():
@@ -504,7 +499,8 @@ class UserGeneratorForNewUsersTestCase(test.ScenarioTestCase):
                     "resource_management_workers": 1
                 }
             },
-            "admin": {"credential": credential},
+            "env": {"platforms": {"openstack": {"admin": credential,
+                                                "users": []}}},
             "task": {"uuid": "task_id", "deployment_uuid": "deployment_id"}
         }
 
@@ -526,7 +522,8 @@ class UserGeneratorForNewUsersTestCase(test.ScenarioTestCase):
                     "resource_management_workers": 1
                 }
             },
-            "admin": {"credential": credential},
+            "env": {"platforms": {"openstack": {"admin": credential,
+                                                "users": []}}},
             "task": {"uuid": "task_id", "deployment_uuid": "deployment_id"}
         }
 

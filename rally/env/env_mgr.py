@@ -614,7 +614,7 @@ class EnvManager(object):
         from rally.common import objects
 
         for verifier in objects.Verifier.list():
-            verifier.set_deployment(self.uuid)
+            verifier.set_env(self.uuid)
             verifier.manager.uninstall()
 
         db.env_set_status(self.uuid, STATUS.DESTROYING, new_env_status)
