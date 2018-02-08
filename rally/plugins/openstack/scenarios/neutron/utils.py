@@ -539,11 +539,25 @@ class NeutronScenario(scenario.OpenStackScenario):
         param: floating_ip_args: dict, POST /floatingips create options
         returns: dict, neutron floating IP
         """
+        from neutronclient.common import exceptions as ne
         floating_network_id = self._get_network_id(
             floating_network)
         args = {"floating_network_id": floating_network_id}
+
+        if not CONF.openstack.pre_newton_neutron:
+            args["description"] = self.generate_random_name()
         args.update(floating_ip_args)
-        return self.clients("neutron").create_floatingip({"floatingip": args})
+        try:
+            return self.clients("neutron").create_floatingip(
+                {"floatingip": args})
+        except ne.BadRequest as e:
+            error = "%s" % e
+            if "Unrecognized attribute" in error and "'description'" in error:
+                LOG.info("It looks like you have Neutron API of pre-Newton "
+                         "OpenStack release. Setting "
+                         "openstack.pre_newton_neutron option via Rally "
+                         "configuration should fix an issue.")
+            raise
 
     @atomic.action_timer("neutron.list_floating_ips")
     def _list_floating_ips(self, **kwargs):

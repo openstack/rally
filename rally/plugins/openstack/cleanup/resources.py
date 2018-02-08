@@ -20,7 +20,6 @@ from oslo_config import cfg
 from saharaclient.api import base as saharaclient_base
 
 from rally.common import logging
-from rally import consts
 from rally.plugins.openstack.cleanup import base
 from rally.plugins.openstack.services.identity import identity
 from rally.plugins.openstack.services.image import glance_v2
@@ -333,20 +332,18 @@ class NeutronBgpvpn(NeutronMixin):
         return []
 
 
-# NOTE(andreykurilin): There are scenarios which uses unified way for creating
-#   and associating floating ips. They do not care about nova-net and neutron.
-#   We should clean floating IPs for them, but hardcoding "neutron.floatingip"
-#   cleanup resource should not work in case of Nova-Net.
-#   Since we are planning to abandon support of Nova-Network in next rally
-#   release, let's apply dirty workaround to handle all resources.
 @base.resource("neutron", "floatingip", order=next(_neutron_order),
                tenant_resource=True)
 class NeutronFloatingIP(NeutronMixin):
     def name(self):
-        return base.NoName(self._resource)
+        return self.raw_resource.get("description", "")
 
     def list(self):
-        if consts.ServiceType.NETWORK not in self.user.services():
+        if CONF.openstack.pre_newton_neutron:
+            # NOTE(andreykurilin): Neutron API of pre-newton openstack
+            #   releases does not support description field in Floating IPs.
+            #   We do not want to remove not-rally resources, so let's just do
+            #   nothing here and move pre-newton logic into separate plugins
             return []
         return super(NeutronFloatingIP, self).list()
 
@@ -356,9 +353,7 @@ class NeutronFloatingIP(NeutronMixin):
 class NeutronPort(NeutronMixin):
     # NOTE(andreykurilin): port is the kind of resource that can be created
     #   automatically. In this case it doesn't have name field which matches
-    #   our resource name templates. But we still need to identify such
-    #   resources, so let's do it by using parent resources.
-
+    #   our resource name templates.
     ROUTER_INTERFACE_OWNERS = ("network:router_interface",
                                "network:router_interface_distributed",
                                "network:ha_router_replicated_interface")
@@ -391,37 +386,13 @@ class NeutronPort(NeutronMixin):
                                    if r["id"] == port["device_id"]]
                     if port_router:
                         parent_name = port_router[0]["name"]
-                # NOTE(andreykurilin): in case of existing network usage,
-                #   there is no way to identify ports that was created
-                #   automatically.
-                # FIXME(andreykurilin): find the way to filter ports created
-                #   by rally
-                # elif port["device_owner"] == "network:dhcp":
-                #     # port created while attaching a floating-ip to the VM
-                #     if port.get("fixed_ips"):
-                #         port_subnets = []
-                #         for fixedip in port["fixed_ips"]:
-                #             port_subnets.extend(
-                #                 [sn for sn in self._get_resources("subnets")
-                #                  if sn["id"] == fixedip["subnet_id"]])
-                #         if port_subnets:
-                #             parent_name = port_subnets[0]["name"]
-
-                # NOTE(andreykurilin): the same case as for floating ips
-                # if not parent_name:
-                #    port_net = [net for net in self._get_resources("networks")
-                #                if net["id"] == port["network_id"]]
-                #     if port_net:
-                #         parent_name = port_net[0]["name"]
-
                 if parent_name:
                     port["parent_name"] = parent_name
         return ports
 
     def name(self):
-        name = self.raw_resource.get("parent_name",
+        return self.raw_resource.get("parent_name",
                                      self.raw_resource.get("name", ""))
-        return name or base.NoName(self._resource)
 
     def delete(self):
         device_owner = self.raw_resource["device_owner"]

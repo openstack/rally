@@ -16,6 +16,7 @@
 import abc
 
 import netaddr
+from oslo_config import cfg
 import six
 
 from rally.common import logging
@@ -27,6 +28,7 @@ from neutronclient.common import exceptions as neutron_exceptions
 
 
 LOG = logging.getLogger(__name__)
+CONF = cfg.CONF
 
 
 cidr_incr = utils.RAMInt()
@@ -335,7 +337,6 @@ class NeutronWrapper(NetworkWrapper):
         if not tenant_id:
             raise ValueError("Missed tenant_id")
 
-        net_id = None
         if type(ext_network) is dict:
             net_id = ext_network["id"]
         elif ext_network:
@@ -354,6 +355,11 @@ class NeutronWrapper(NetworkWrapper):
 
         kwargs = {"floatingip": {"floating_network_id": net_id,
                                  "tenant_id": tenant_id}}
+
+        if not CONF.openstack.pre_newton_neutron:
+            descr = self.owner.generate_random_name()
+            kwargs["floatingip"]["description"] = descr
+
         if port_id:
             kwargs["floatingip"]["port_id"] = port_id
 
