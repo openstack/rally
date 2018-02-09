@@ -23,7 +23,7 @@ Fixed bugs
   <https://rally.readthedocs.io/en/0.10.1/cli_reference.html#deployment-create-fromenv>`_
 
 * [deployment] Failure `rally deployment show
-  <https://rally.readthedocs.io/en/0.10.1/cli_reference.html#deployment-show>`_
+  <https://rally.readthedocs.io/en/0.10.1/cli_reference.html#rally-deployment-show>`_
   while displaying the information about deployment with a config in an old
   format.
 

@@ -19,7 +19,7 @@ source
 
 Source of documentation. Latest version of documentation_.
 
-.. _documentation: http://rally.readthedocs.org/
+.. _documentation: https://rally.readthedocs.io/en/latest/
 
 
 specs
