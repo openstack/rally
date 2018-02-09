@@ -23,5 +23,10 @@ OPTS = {"openstack": [
     cfg.FloatOpt("neutron_create_loadbalancer_poll_interval",
                  default=float(2),
                  deprecated_group="benchmark",
-                 help="Neutron create loadbalancer poll interval")
+                 help="Neutron create loadbalancer poll interval"),
+    cfg.BoolOpt("pre_newton_neutron",
+                default=False,
+                help="Whether Neutron API is older then OpenStack Newton or "
+                     "not. Based in this option, some external fields for "
+                     "identifying resources can be applied.")
 ]}

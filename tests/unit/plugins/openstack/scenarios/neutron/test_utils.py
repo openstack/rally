@@ -20,7 +20,7 @@ from rally import exceptions
 from rally.plugins.openstack.scenarios.neutron import utils
 from tests.unit import test
 
-NEUTRON_UTILS = "rally.plugins.openstack.scenarios.neutron.utils."
+NEUTRON_UTILS = "rally.plugins.openstack.scenarios.neutron.utils"
 
 
 @ddt.ddt
@@ -149,7 +149,7 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "neutron.delete_network")
 
-    @mock.patch(NEUTRON_UTILS + "network_wrapper")
+    @mock.patch("%s.network_wrapper" % NEUTRON_UTILS)
     def test_create_subnet(self, mock_network_wrapper):
         network_id = "fake-id"
         start_cidr = "192.168.0.0/24"
@@ -567,8 +567,8 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
             self.scenario._create_network.assert_called_once_with(
                 network_create_args or {})
 
-    @mock.patch(NEUTRON_UTILS + "NeutronScenario._create_subnet")
-    @mock.patch(NEUTRON_UTILS + "NeutronScenario._create_network")
+    @mock.patch("%s.NeutronScenario._create_subnet" % NEUTRON_UTILS)
+    @mock.patch("%s.NeutronScenario._create_network" % NEUTRON_UTILS)
     def test_create_network_and_subnets(self,
                                         mock__create_network,
                                         mock__create_subnet):
@@ -755,7 +755,7 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "neutron.update_vip")
 
-    @mock.patch(NEUTRON_UTILS + "NeutronScenario.generate_random_name")
+    @mock.patch("%s.NeutronScenario.generate_random_name" % NEUTRON_UTILS)
     def test_create_security_group(self, mock_generate_random_name):
         security_group_create_args = {"description": "Fake security group"}
         expected_security_group = {
@@ -987,12 +987,40 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         self.clients("neutron").create_floatingip.return_value = fip
         mock_get_network_id = self.scenario._get_network_id = mock.Mock()
         mock_get_network_id.return_value = network_id
-        args = {"floating_network_id": network_id}
+        args = {"floating_network_id": network_id,
+                "description": "random_name"}
         args.update(floating_ip_args)
         expected_fip_data = {"floatingip": args}
         resultant_fip = self.scenario._create_floatingip(
             floating_network, **floating_ip_args)
         self.assertEqual(fip, resultant_fip)
+        self.clients("neutron").create_floatingip.assert_called_once_with(
+            expected_fip_data)
+        mock_get_network_id.assert_called_once_with(floating_network)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "neutron.create_floating_ip")
+
+    @mock.patch("%s.LOG.info" % NEUTRON_UTILS)
+    def test__create_floating_ip_in_pre_newton_openstack(self, mock_log_info):
+        floating_network = "floating"
+        fip = {"floatingip": {"id": "fip-id"}}
+        network_id = "net-id"
+        self.clients("neutron").create_floatingip.return_value = fip
+        mock_get_network_id = self.scenario._get_network_id = mock.Mock()
+        mock_get_network_id.return_value = network_id
+
+        from neutronclient.common import exceptions as n_exceptions
+        e = n_exceptions.BadRequest("Unrecognized attribute(s) 'description'")
+        self.clients("neutron").create_floatingip.side_effect = e
+
+        a_e = self.assertRaises(n_exceptions.BadRequest,
+                                self.scenario._create_floatingip,
+                                floating_network)
+        self.assertEqual(e, a_e)
+        self.assertTrue(mock_log_info.called)
+
+        expected_fip_data = {"floatingip": {"floating_network_id": network_id,
+                                            "description": "random_name"}}
         self.clients("neutron").create_floatingip.assert_called_once_with(
             expected_fip_data)
         mock_get_network_id.assert_called_once_with(floating_network)
@@ -1267,7 +1295,7 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
 
 class NeutronScenarioFunctionalTestCase(test.FakeClientsScenarioTestCase):
 
-    @mock.patch(NEUTRON_UTILS + "network_wrapper.generate_cidr")
+    @mock.patch("%s.network_wrapper.generate_cidr" % NEUTRON_UTILS)
     def test_functional_create_network_and_subnets(self, mock_generate_cidr):
         scenario = utils.NeutronScenario(context=self.context)
         network_create_args = {}

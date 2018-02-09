@@ -22,7 +22,6 @@ from neutronclient.common import exceptions as neutron_exceptions
 from novaclient import exceptions as nova_exc
 from watcherclient.common.apiclient import exceptions as watcher_exceptions
 
-from rally import consts
 from rally.plugins.openstack.cleanup import resources
 from tests.unit import test
 
@@ -407,23 +406,16 @@ class NeutronBgpvpnTestCase(test.TestCase):
 class NeutronFloatingIPTestCase(test.TestCase):
 
     def test_name(self):
-        fips = resources.NeutronFloatingIP({"name": "foo"})
-        self.assertIsInstance(fips.name(), resources.base.NoName)
+        fips = resources.NeutronFloatingIP({"name": "foo",
+                                            "description": "OoO"})
+        self.assertEqual(fips.name(), "OoO")
 
     def test_list(self):
         fips = {"floatingips": [{"tenant_id": "foo", "id": "foo"}]}
 
         user = mock.MagicMock()
-        user.services.return_value = {}
         user.neutron.return_value.list_floatingips.return_value = fips
 
-        self.assertEqual(
-            [], resources.NeutronFloatingIP(user=user,
-                                            tenant_uuid="foo").list())
-        self.assertFalse(user.neutron.return_value.list_floatingips.called)
-
-        user.services.return_value = {
-            consts.ServiceType.NETWORK: consts.Service.NEUTRON}
         self.assertEqual(fips["floatingips"], list(
             resources.NeutronFloatingIP(user=user, tenant_uuid="foo").list()))
         user.neutron.return_value.list_floatingips.assert_called_once_with(
@@ -469,10 +461,11 @@ class NeutronPortTestCase(test.TestCase):
             "device_id": "dev_id",
         }
 
-        self.assertIsInstance(
+        # automatically created or manually created port. No name field
+        self.assertEqual(
             resources.NeutronPort(resource=raw_res,
                                   user=mock.MagicMock()).name(),
-            resources.base.NoName)
+            "")
 
         raw_res["name"] = "foo"
         self.assertEqual("foo", resources.NeutronPort(
