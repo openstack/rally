@@ -16,12 +16,16 @@ import copy
 import json
 import traceback
 
+from oslo_config import cfg
+
 from rally.common import logging
 from rally.env import platform
 from rally.plugins.openstack import osclients
 
 
 LOG = logging.getLogger(__name__)
+
+CONF = cfg.CONF
 
 
 @platform.configure(name="existing", platform="openstack")
@@ -92,17 +96,17 @@ class OpenStack(platform.Platform):
         "additionalProperties": False
     }
 
-    _DEFAULTS = {
-        "region_name": None,
-        "endpoint_type": None,
-        "domain_name": None,
-        "user_domain_name": None,
-        "project_domain_name": None,
-        "https_insecure": False,
-        "https_cacert": None
-    }
-
     def create(self):
+        defaults = {
+            "region_name": None,
+            "endpoint_type": None,
+            "domain_name": None,
+            "user_domain_name": cfg.CONF.openstack.user_domain,
+            "project_domain_name": cfg.CONF.openstack.project_domain,
+            "https_insecure": False,
+            "https_cacert": None
+        }
+
         """Converts creds of real OpenStack to internal presentation."""
         new_data = copy.deepcopy(self.spec)
         if "endpoint" in new_data:
@@ -115,13 +119,13 @@ class OpenStack(platform.Platform):
             if "project_name" in admin:
                 admin["tenant_name"] = admin.pop("project_name")
             admin.update(new_data)
-            for k, v in self._DEFAULTS.items():
+            for k, v in defaults.items():
                 admin.setdefault(k, v)
         for user in users:
             if "project_name" in user:
                 user["tenant_name"] = user.pop("project_name")
             user.update(new_data)
-            for k, v in self._DEFAULTS.items():
+            for k, v in defaults.items():
                 user.setdefault(k, v)
         return {"admin": admin, "users": users}, {}
 
