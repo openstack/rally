@@ -75,16 +75,18 @@ class ExistingPlatformTestCase(test_platform.PlatformBaseTestCase):
                     {
                         "auth_url": "https://best", "endpoint_type": None,
                         "region_name": None,
-                        "domain_name": None, "user_domain_name": None,
-                        "project_domain_name": None,
+                        "domain_name": None,
+                        "user_domain_name": "default",
+                        "project_domain_name": "default",
                         "https_insecure": False, "https_cacert": None,
                         "tenant_name": "a", "username": "a", "password": "a"
                     },
                     {
                         "auth_url": "https://best", "endpoint_type": None,
                         "region_name": None,
-                        "domain_name": None, "user_domain_name": None,
-                        "project_domain_name": None,
+                        "domain_name": None,
+                        "user_domain_name": "default",
+                        "project_domain_name": "default",
                         "https_insecure": False, "https_cacert": None,
                         "tenant_name": "b", "username": "b", "password": "b"
                     }
