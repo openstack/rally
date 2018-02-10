@@ -197,9 +197,10 @@ class _Deployment(APIGroup):
             else:
                 if name == "openstack":
                     services = env.get_info()[p]["info"]["services"]
-                    services = sorted(
-                        {"type": stype, "name": sname}
-                        for stype, sname in services.items())
+                    # backward compatibility
+                    for s in services:
+                        if "name" not in s:
+                            s["name"] = "__unknown__"
 
                     result[name] = [{"services": services}]
                 else:

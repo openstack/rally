@@ -821,14 +821,18 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
     def test_deployment_check_list_services(self, mock_deployment_get):
         env = mock_deployment_get.return_value.env_obj
         env.get_info.return_value = {
-            "existing@openstack": {"info": {"services": {"foo": "bar"}}}
+            "existing@openstack": {"info": {
+                "services": [{"type": "foo", "name": "bar"},
+                             {"type": "volumev4"}]}}
         }
         env.check_health.return_value = {
             "existing@openstack": {"available": True}
         }
 
         self.assertEqual(
-            {"openstack": [{"services": [{"type": "foo", "name": "bar"}]}]},
+            {"openstack": [{
+                "services": [{"type": "foo", "name": "bar"},
+                             {"type": "volumev4", "name": "__unknown__"}]}]},
             self.deployment_inst.check(deployment="uuid"))
         env.check_health.assert_called_once_with()
         env.get_info.assert_called_once_with()
