@@ -102,7 +102,9 @@ def _process_workload(workload, workload_cfg, pos):
     for idx, itr in enumerate(workload["data"], 1):
         if itr["error"]:
             typ, msg, trace = itr["error"]
-            errors.append({"iteration": idx,
+            timestamp = dt.datetime.fromtimestamp(
+                itr["timestamp"]).isoformat(sep="\n")
+            errors.append({"iteration": idx, "timestamp": timestamp,
                            "type": typ, "message": msg, "traceback": trace})
 
         for i, additive in enumerate(itr["output"]["additive"]):

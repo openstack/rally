@@ -749,6 +749,7 @@
             <thead>
               <tr>
                 <th>
+                <th>Timestamp
                 <th>Iteration
                 <th>Exception type
                 <th>Exception message
@@ -761,6 +762,7 @@
                 <td>
                   <span ng-hide="i.expanded">&#9658;</span>
                   <span ng-show="i.expanded">&#9660;</span>
+                <td>{{i.timestamp}}
                 <td>{{i.iteration}}
                 <td>{{i.type}}
                 <td class="failure-mesg">{{i.message}}
