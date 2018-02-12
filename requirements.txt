@@ -9,45 +9,45 @@ Jinja2>=2.8,!=2.9.0,!=2.9.1,!=2.9.2,!=2.9.3,!=2.9.4    # BSD
 jsonschema>=2.6.0,<3.0.0                               # MIT
 morph                                                  # GPLv3+
 netaddr>=0.7.18                                        # BSD
-oslo.config>=4.6.0                                     # Apache Software License
+oslo.config>=5.1.0                                     # Apache Software License
 oslo.db>=4.27.0                                        # Apache Software License
-oslo.log>=3.30.0                                       # Apache Software License
-oslo.utils>=3.28.0                                     # Apache Software License
+oslo.log>=3.36.0                                       # Apache Software License
+oslo.utils>=3.33.0                                     # Apache Software License
 paramiko>=2.0.0                                        # LGPL
 pbr>=2.0.0,!=2.1.0                                     # Apache Software License
 PrettyTable>=0.7.1,<0.8                                # BSD
 pyOpenSSL>=16.2.0                                      # Apache License, Version 2.0
 PyYAML>=3.10                                           # MIT
-python-subunit>=0.0.18                                 # UNKNOWN
+python-subunit>=1.0.0                                  # UNKNOWN
 requests>=2.14.2                                       # Apache License, Version 2.0
 SQLAlchemy>=1.0.10,!=1.1.5,!=1.1.6,!=1.1.7,!=1.1.8     # MIT
-six>=1.9.0                                             # MIT
-virtualenv>=13.1.0                                     # MIT
+six>=1.10.0                                            # MIT
+virtualenv>=14.0.6                                     # MIT
 
 # OpenStack related
 boto>=2.32.1                                           # MIT
 gnocchiclient>=3.3.1                                   # Apache Software License
-keystoneauth1>=3.2.0                                   # Apache Software License
+keystoneauth1>=3.3.0                                   # Apache Software License
 os-faults>=0.1.15                                      # Apache Software License
 osprofiler>=1.4.0                                      # Apache Software License
 python-ceilometerclient>=2.5.0                         # Apache Software License
-python-cinderclient>=3.2.0                             # Apache Software License
+python-cinderclient>=3.3.0                             # Apache Software License
 python-designateclient>=2.7.0                          # Apache License, Version 2.0
 python-heatclient>=1.10.0                              # Apache Software License
 python-glanceclient>=2.8.0                             # Apache License, Version 2.0
-python-ironicclient>=1.14.0                            # Apache Software License
+python-ironicclient>=2.2.0                             # Apache Software License
 python-keystoneclient>=3.8.0                           # Apache Software License
-python-magnumclient>=2.0.0                             # Apache Software License
+python-magnumclient>=2.1.0                             # Apache Software License
 python-manilaclient>=1.16.0                            # Apache Software License
 python-mistralclient>=3.1.0                            # Apache Software License
 python-muranoclient>=0.8.2                             # Apache License, Version 2.0
 python-monascaclient>=1.7.0                            # Apache Software License
 python-neutronclient>=6.3.0                            # Apache Software License
 python-novaclient>=9.1.0                               # Apache License, Version 2.0
-python-saharaclient>=1.2.0                             # Apache License, Version 2.0
+python-saharaclient>=1.4.0                             # Apache License, Version 2.0
 python-senlinclient>=1.1.0                             # Apache Software License
 python-swiftclient>=3.2.0                              # Apache Software License
 python-troveclient>=2.2.0                              # Apache Software License
 python-watcherclient>=1.1.0                            # Apache Software License
 python-zaqarclient>=1.0.0                              # Apache Software License
-kubernetes>=1.0.0,<4.0.0                               # Apache License Version 2.0
+kubernetes>1.0.0,<4.0.0                                # Apache License Version 2.0
