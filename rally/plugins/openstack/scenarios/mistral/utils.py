@@ -14,9 +14,9 @@
 #    under the License.
 
 
-from oslo_config import cfg
 import yaml
 
+from rally.common import cfg
 from rally.plugins.openstack import scenario
 from rally.task import atomic
 from rally.task import utils

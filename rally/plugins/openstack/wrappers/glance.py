@@ -17,15 +17,16 @@ import abc
 import os
 import time
 
+from glanceclient import exc as glance_exc
+import requests
+import six
+
+from rally.common import cfg
 from rally.common import logging
 from rally.common import utils as rutils
 from rally import exceptions
 from rally.task import utils
 
-from glanceclient import exc as glance_exc
-from oslo_config import cfg
-import requests
-import six
 
 LOG = logging.getLogger(__name__)
 

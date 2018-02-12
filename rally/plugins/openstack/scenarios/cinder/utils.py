@@ -15,8 +15,7 @@
 
 import random
 
-from oslo_config import cfg
-
+from rally.common import cfg
 from rally.common import logging
 from rally import exceptions
 from rally.plugins.openstack import scenario

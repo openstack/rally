@@ -22,10 +22,10 @@ import time
 
 import jinja2
 import jinja2.meta
-from oslo_config import cfg
 import requests
 from requests.packages import urllib3
 
+from rally.common import cfg
 from rally.common import logging
 from rally.common import objects
 from rally.common import opts

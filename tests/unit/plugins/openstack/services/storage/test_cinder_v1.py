@@ -13,8 +13,8 @@
 #    under the License.
 
 import mock
-from oslo_config import cfg
 
+from rally.common import cfg
 from rally.plugins.openstack.services.storage import cinder_v1
 from tests.unit import fakes
 from tests.unit import test

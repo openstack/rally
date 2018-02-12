@@ -11,10 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from rally.common import cfg
 from rally import exceptions
 from rally.task import service
 
-from oslo_config import cfg
 
 CONF = cfg.CONF
 

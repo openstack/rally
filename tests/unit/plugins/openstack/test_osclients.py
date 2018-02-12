@@ -15,8 +15,8 @@
 
 import ddt
 import mock
-from oslo_config import cfg
 
+from rally.common import cfg
 from rally import consts
 from rally import exceptions
 from rally import osclients as deprecated_osclients  # noqa

@@ -16,8 +16,8 @@ import uuid
 
 import ddt
 import mock
-from oslo_config import cfg
 
+from rally.common import cfg
 from rally import exceptions
 from rally.plugins.openstack import service
 from rally.plugins.openstack.services.storage import block

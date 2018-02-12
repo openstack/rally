@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_config import cfg
+from rally.common import cfg
 
 OPTS = {"openstack": [
     cfg.IntOpt("murano_deploy_environment_timeout",

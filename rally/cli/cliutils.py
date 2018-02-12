@@ -25,13 +25,13 @@ import warnings
 
 import decorator
 import jsonschema
-from oslo_config import cfg
 from oslo_utils import encodeutils
 import prettytable
 import six
 import sqlalchemy.exc
 
 from rally import api
+from rally.common import cfg
 from rally.common import logging
 from rally.common.plugin import info
 from rally import exceptions

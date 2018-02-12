@@ -16,8 +16,7 @@ import random
 import time
 import uuid
 
-from oslo_config import cfg
-
+from rally.common import cfg
 from rally.plugins.openstack import scenario
 from rally.task import atomic
 

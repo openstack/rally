@@ -20,9 +20,9 @@ import os
 
 import ddt
 import mock
-from oslo_config import cfg
 
 from rally import api
+from rally.common import cfg
 from rally.common import objects
 from rally import consts
 from rally import exceptions

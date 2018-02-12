@@ -794,3 +794,8 @@
 
 # Neutron create loadbalancer poll interval (floating point value)
 #neutron_create_loadbalancer_poll_interval = 2.0
+
+# Whether Neutron API is older then OpenStack Newton or not. Based in
+# this option, some external fields for identifying resources can be
+# applied. (boolean value)
+#pre_newton_neutron = false

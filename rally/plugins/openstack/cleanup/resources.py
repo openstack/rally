@@ -16,9 +16,9 @@
 from boto import exception as boto_exception
 from neutronclient.common import exceptions as neutron_exceptions
 from novaclient import exceptions as nova_exc
-from oslo_config import cfg
 from saharaclient.api import base as saharaclient_base
 
+from rally.common import cfg
 from rally.common import logging
 from rally.plugins.openstack.cleanup import base
 from rally.plugins.openstack.services.identity import identity

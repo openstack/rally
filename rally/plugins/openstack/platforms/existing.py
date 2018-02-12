@@ -16,8 +16,7 @@ import copy
 import json
 import traceback
 
-from oslo_config import cfg
-
+from rally.common import cfg
 from rally.common import logging
 from rally.env import platform
 from rally.plugins.openstack import osclients

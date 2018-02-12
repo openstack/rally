@@ -25,13 +25,13 @@ import alembic
 from alembic import config as alembic_config
 import alembic.migration as alembic_migration
 from alembic import script as alembic_script
-from oslo_config import cfg
 from oslo_db import exception as db_exc
 from oslo_db.sqlalchemy import session as db_session
 import six
 import sqlalchemy as sa
 import sqlalchemy.orm   # noqa
 
+from rally.common import cfg
 from rally.common.db.sqlalchemy import models
 from rally import consts
 from rally import exceptions

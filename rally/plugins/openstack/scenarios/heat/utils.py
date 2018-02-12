@@ -13,9 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_config import cfg
 import requests
 
+from rally.common import cfg
 from rally.common import logging
 from rally import exceptions
 from rally.plugins.openstack import scenario

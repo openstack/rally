@@ -178,6 +178,25 @@ def check_import_of_logging(logical_line, physical_line, filename):
 
 
 @skip_ignored_lines
+def check_import_of_config(logical_line, physical_line, filename):
+    """Check correctness import of config module
+
+    N311
+    """
+
+    excluded_files = ["./rally/common/cfg.py"]
+
+    forbidden_imports = ["from oslo_config",
+                         "import oslo_config"]
+
+    if filename not in excluded_files:
+        for forbidden_import in forbidden_imports:
+            if logical_line.startswith(forbidden_import):
+                yield (0, "N311 Wrong module for config is imported. Please "
+                          "use `rally.common.cfg` instead.")
+
+
+@skip_ignored_lines
 def no_use_conf_debug_check(logical_line, physical_line, filename):
     """Check for "cfg.CONF.debug"
 
@@ -572,8 +591,7 @@ def check_opts_import_path(logical_line, physical_line, filename):
 
      N342
      """
-    excluded_files = ["./rally/osclients.py",
-                      "./rally/task/engine.py",
+    excluded_files = ["./rally/task/engine.py",
                       "./rally/task/context.py",
                       "./rally/task/scenario.py",
                       "./rally/common/opts.py"]
@@ -590,6 +608,7 @@ def check_opts_import_path(logical_line, physical_line, filename):
 def factory(register):
     register(check_assert_methods_from_mock)
     register(check_import_of_logging)
+    register(check_import_of_config)
     register(no_use_conf_debug_check)
     register(assert_true_instance)
     register(assert_equal_type)

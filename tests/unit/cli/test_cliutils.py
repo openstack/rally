@@ -16,7 +16,6 @@
 import ddt
 from keystoneclient import exceptions as keystone_exc
 import mock
-from oslo_config import cfg
 import six
 import sqlalchemy.exc
 
@@ -24,6 +23,7 @@ from rally.cli import cliutils
 from rally.cli.commands import deployment
 from rally.cli.commands import task
 from rally.cli.commands import verify
+from rally.common import cfg
 from rally import exceptions
 from tests.unit import test
 

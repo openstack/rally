@@ -11,8 +11,8 @@
 # under the License.
 
 import mock
-from oslo_config import cfg
 
+from rally.common import cfg
 from rally import exceptions
 from rally.plugins.openstack.scenarios.senlin import utils
 from tests.unit import test

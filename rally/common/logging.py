@@ -16,10 +16,11 @@
 import functools
 import traceback
 
-from oslo_config import cfg
 from oslo_log import handlers
 from oslo_log import log as oslogging
 import six
+
+from rally.common import cfg
 
 
 log = __import__("logging")

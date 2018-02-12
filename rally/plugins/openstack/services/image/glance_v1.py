@@ -14,8 +14,7 @@
 
 import os
 
-from oslo_config import cfg
-
+from rally.common import cfg
 from rally.common import utils as rutils
 from rally.plugins.openstack import service
 from rally.plugins.openstack.services.image import glance_common

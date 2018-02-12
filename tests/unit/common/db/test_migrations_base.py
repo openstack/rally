@@ -28,8 +28,8 @@ from alembic import command
 from alembic import config as alembic_config
 from alembic import migration
 from alembic import script as alembic_script
-from oslo_config import cfg
 
+from rally.common import cfg
 import rally.common.db.sqlalchemy.api as s_api
 from rally.common import logging
 

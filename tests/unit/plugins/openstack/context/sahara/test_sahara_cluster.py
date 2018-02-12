@@ -13,8 +13,8 @@
 # under the License.
 
 import mock
-from oslo_config import cfg
 
+from rally.common import cfg
 from rally import exceptions
 from rally.plugins.openstack.context.sahara import sahara_cluster
 from rally.plugins.openstack.scenarios.sahara import utils as sahara_utils

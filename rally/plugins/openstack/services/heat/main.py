@@ -11,8 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_config import cfg
-
+from rally.common import cfg
 from rally.common import utils as common_utils
 from rally.task import atomic
 from rally.task import utils

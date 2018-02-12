@@ -16,9 +16,8 @@
 import collections
 import uuid
 
-from oslo_config import cfg
-
 from rally.common import broker
+from rally.common import cfg
 from rally.common import logging
 from rally.common import utils as rutils
 from rally.common import validation

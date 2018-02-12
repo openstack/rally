@@ -18,9 +18,9 @@ import subprocess
 import sys
 
 import netaddr
-from oslo_config import cfg
 import six
 
+from rally.common import cfg
 from rally.common import logging
 from rally.common import sshutils
 from rally.plugins.openstack.scenarios.nova import utils as nova_utils

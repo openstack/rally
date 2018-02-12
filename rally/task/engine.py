@@ -20,8 +20,8 @@ import time
 import traceback
 
 import jsonschema
-from oslo_config import cfg
 
+from rally.common import cfg
 from rally.common import logging
 from rally.common import objects
 from rally.common import utils

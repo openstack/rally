@@ -15,10 +15,10 @@
 
 import random
 
-from oslo_config import cfg
 from oslo_utils import uuidutils
 from saharaclient.api import base as sahara_base
 
+from rally.common import cfg
 from rally.common import logging
 from rally.common import utils as rutils
 from rally import consts

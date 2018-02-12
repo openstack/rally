@@ -14,10 +14,10 @@
 #    under the License.
 
 import mock
-from oslo_config import cfg
 from oslo_utils import uuidutils
 from saharaclient.api import base as sahara_base
 
+from rally.common import cfg
 from rally import consts
 from rally import exceptions
 from rally.plugins.openstack.scenarios.sahara import utils

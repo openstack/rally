@@ -19,9 +19,9 @@ import tempfile
 import uuid
 import zipfile
 
-from oslo_config import cfg
 import yaml
 
+from rally.common import cfg
 from rally.common import fileutils
 from rally.common import utils as common_utils
 from rally.plugins.openstack import scenario

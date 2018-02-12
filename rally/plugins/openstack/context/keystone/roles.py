@@ -13,9 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_config import cfg
-
 from rally.common import broker
+from rally.common import cfg
 from rally.common import logging
 from rally.common import validation
 from rally import consts
