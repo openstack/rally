@@ -82,17 +82,22 @@ class Verifier(object):
     def update_properties(self, **properties):
         self._db_entry = db.verifier_update(self.uuid, **properties)
 
-    def set_deployment(self, deployment_id):
+    def set_env(self, env_id):
         from rally.common import objects
-        self._deployment = objects.Deployment.get(deployment_id)
+        self._deployment = objects.Deployment.get(env_id)
 
     @property
     def deployment(self):
+        # TODO(andreykurilin): deprecate this property someday
         if self._deployment is None:
             raise exceptions.RallyException(
                 "Verifier is not linked to any deployment. Please, call "
-                "`set_deployment` method.")
+                "`set_env` method.")
         return self._deployment
+
+    @property
+    def env(self):
+        return self.deployment.env_obj
 
     @property
     def manager(self):

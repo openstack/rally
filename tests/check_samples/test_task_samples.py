@@ -63,9 +63,14 @@ class TestTaskSamples(unittest.TestCase):
         deployment = rapi.deployment._get("MAIN")
         admin_cred = deployment.get_credentials_for("openstack")["admin"]
 
-        ctx = {"admin": {"credential": admin_cred},
-               "task": {"uuid": self.__class__.__name__,
-                        "deployment_uuid": deployment["uuid"]}}
+        ctx = {
+            "env": {
+                "platforms": {
+                    "openstack": {
+                        "admin": admin_cred.to_dict(),
+                        "users": []}}},
+            "task": {"uuid": self.__class__.__name__,
+                     "deployment_uuid": deployment["uuid"]}}
         user_ctx = users.UserGenerator(ctx)
         user_ctx.setup()
         self.addCleanup(user_ctx.cleanup)

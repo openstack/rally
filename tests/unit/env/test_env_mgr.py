@@ -716,7 +716,7 @@ class EnvManagerTestCase(test.TestCase):
                       platform.STATUS.FAILED_TO_DESTROY)
         ])
 
-        verifier.set_deployment.assert_called_once_with(666)
+        verifier.set_env.assert_called_once_with(666)
         verifier.manager.uninstall.assert_called_once_with()
 
     @mock.patch("rally.common.db.env_get_status")

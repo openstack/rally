@@ -15,7 +15,6 @@
 
 import mock
 
-from rally import consts
 from rally.plugins.openstack import credential
 from tests.unit import test
 
@@ -26,8 +25,7 @@ class OpenStackCredentialTestCase(test.TestCase):
         super(OpenStackCredentialTestCase, self).setUp()
         self.credential = credential.OpenStackCredential(
             "foo_url", "foo_user", "foo_password",
-            tenant_name="foo_tenant",
-            permission=consts.EndpointPermission.ADMIN)
+            tenant_name="foo_tenant")
 
     def test_to_dict(self):
         self.assertEqual({"auth_url": "foo_url",
@@ -36,8 +34,8 @@ class OpenStackCredentialTestCase(test.TestCase):
                           "tenant_name": "foo_tenant",
                           "region_name": None,
                           "domain_name": None,
+                          "permission": None,
                           "endpoint": None,
-                          "permission": consts.EndpointPermission.ADMIN,
                           "endpoint_type": None,
                           "https_insecure": False,
                           "https_cacert": None,
@@ -46,21 +44,6 @@ class OpenStackCredentialTestCase(test.TestCase):
                           "profiler_hmac_key": None,
                           "profiler_conn_str": None},
                          self.credential.to_dict())
-
-    @mock.patch("rally.plugins.openstack.osclients.Clients")
-    def test_verify_connection_admin(self, mock_clients):
-        self.credential.verify_connection()
-        mock_clients.assert_called_once_with(
-            self.credential, api_info=None, cache={})
-        mock_clients.return_value.verified_keystone.assert_called_once_with()
-
-    @mock.patch("rally.plugins.openstack.osclients.Clients")
-    def test_verify_connection_user(self, mock_clients):
-        self.credential.permission = consts.EndpointPermission.USER
-        self.credential.verify_connection()
-        mock_clients.assert_called_once_with(
-            self.credential, api_info=None, cache={})
-        mock_clients.return_value.keystone.assert_called_once_with()
 
     @mock.patch("rally.plugins.openstack.osclients.Clients")
     def test_list_services(self, mock_clients):

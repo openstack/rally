@@ -78,11 +78,14 @@ class VerifierTestCase(test.TestCase):
                                                      status="some-status")
 
     @mock.patch("rally.env.env_mgr.EnvManager.get")
-    def test_deployment_property(self, mock_env_manager_get):
+    def test_env_and_deployment_properties(self, mock_env_manager_get):
         v = objects.Verifier(self.db_obj)
-        v.set_deployment("some-deployment")
-        self.assertEqual(mock_env_manager_get.return_value, v.deployment._env)
-        mock_env_manager_get.assert_called_once_with("some-deployment")
+        v.set_env("some-env")
+        self.assertEqual(mock_env_manager_get.return_value,
+                         v.deployment.env_obj)
+        self.assertEqual(mock_env_manager_get.return_value,
+                         v.env)
+        mock_env_manager_get.assert_called_once_with("some-env")
 
     def test_deployment_property_raise_exc(self):
         v = objects.Verifier(self.db_obj)

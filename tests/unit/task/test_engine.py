@@ -26,7 +26,6 @@ from rally import exceptions
 from rally.task import context
 from rally.task import engine
 from rally.task import scenario
-from tests.unit import fakes
 from tests.unit import test
 
 
@@ -313,17 +312,17 @@ class TaskEngineTestCase(test.TestCase):
                          "Subtask configuration:\n<JSON>\n\n"
                          "Reason(s):\n trigger_error", e.format_message())
 
-    @mock.patch("rally.task.engine.context.Context")
+    @mock.patch("rally.task.engine.context.ContextManager.cleanup")
+    @mock.patch("rally.task.engine.context.ContextManager.setup")
     @mock.patch("rally.task.engine.TaskConfig")
-    @mock.patch("rally.task.engine.objects.Deployment.get",
-                return_value="FakeDeployment")
-    def test__validate_config_semantic(
-            self, mock_deployment_get,
-            mock_task_config, mock_context):
-        admin = fakes.fake_credential(foo="admin")
-        users = [fakes.fake_credential(bar="user1")]
-        deployment = fakes.FakeDeployment(
-            uuid="deployment_uuid", admin=admin, users=users)
+    def test__validate_config_semantic(self, mock_task_config,
+                                       mock_context_manager_setup,
+                                       mock_context_manager_cleanup):
+        env = mock.MagicMock(uuid="env_uuid")
+        env.check_health.return_value = {
+            "foo": {"available": True, "message": ""},
+            "bar": {"available": True, "message": ""}
+        }
 
         @scenario.configure("SomeScen.scenario")
         class SomeScen(scenario.Scenario):
@@ -344,41 +343,47 @@ class TaskEngineTestCase(test.TestCase):
 
         mock_task_instance.subtasks = [subtask1, subtask2]
         fake_task = mock.MagicMock()
-        eng = engine.TaskEngine(mock_task_instance, fake_task, deployment)
+        eng = engine.TaskEngine(mock_task_instance, fake_task, env)
 
         eng._validate_config_semantic(mock_task_instance)
+
+        env.check_health.return_value = {
+            "foo": {"available": True, "message": ""},
+            "bar": {"available": False, "message": "", "traceback": "AAAA"}
+        }
+        self.assertRaises(exceptions.ValidationError,
+                          eng._validate_config_semantic,
+                          mock_task_instance)
 
     @mock.patch("rally.task.engine.TaskConfig")
     @mock.patch("rally.task.engine.TaskEngine._validate_workload")
     def test__validate_config_platforms(
             self, mock__validate_workload, mock_task_config):
 
-        class FakeDeployment(object):
-            def __init__(self, credentials):
-                self._creds = credentials
-                self.get_all_credentials = mock.Mock()
-                self.get_all_credentials.return_value = self._creds
-
-        foo_cred1 = {"admin": "admin", "users": ["user1"]}
-        foo_cred2 = {"admin": "admin", "users": ["user1"]}
-        deployment = FakeDeployment({"foo": [foo_cred1, foo_cred2]})
+        foo_cred = {"admin": "admin", "users": ["user1"]}
+        env = mock.MagicMock(data={
+            "platforms": {
+                "foo": {
+                    "platform_name": "foo", "platform_data": foo_cred
+                }
+            }
+        })
 
         workload1 = "workload1"
         workload2 = "workload2"
         subtasks = [{"workloads": [workload1]},
                     {"workloads": [workload2]}]
         config = mock.Mock(subtasks=subtasks)
-        eng = engine.TaskEngine({}, mock.MagicMock(), deployment)
+        eng = engine.TaskEngine({}, mock.MagicMock(), env)
 
         eng._validate_config_platforms(config)
 
         self.assertEqual(
             [mock.call(w, vtype="platform",
-                       vcontext={"platforms": {"foo": foo_cred1},
+                       vcontext={"platforms": {"foo": foo_cred},
                                  "task": eng.task})
              for w in (workload1, workload2)],
             mock__validate_workload.call_args_list)
-        deployment.get_all_credentials.assert_called_once_with()
 
     @mock.patch("rally.common.objects.Task.get_status")
     @mock.patch("rally.task.engine.TaskConfig")
@@ -434,11 +439,9 @@ class TaskEngineTestCase(test.TestCase):
                 self._make_workload(name="a.task", description="foo",
                                     contexts={"context_a": {"b": 2}},
                                     position=2)]}]
-
-        deployment = fakes.FakeDeployment(
-            uuid="deployment_uuid", admin={"foo": "admin"})
         eng = engine.TaskEngine(mock_task_instance, mock.MagicMock(),
-                                deployment)
+                                mock.MagicMock())
+
         eng.run()
 
         self.assertEqual(2, mock_log.exception.call_count)
@@ -471,9 +474,7 @@ class TaskEngineTestCase(test.TestCase):
         fake_runner = mock.MagicMock()
         fake_runner_cls.return_value = fake_runner
         mock_scenario_runner.get.return_value = fake_runner_cls
-        deployment = fakes.FakeDeployment(
-            uuid="deployment_uuid", admin={"foo": "admin"})
-        eng = engine.TaskEngine(config, task, deployment)
+        eng = engine.TaskEngine(config, task, mock.MagicMock())
 
         eng.run()
 
@@ -575,13 +576,17 @@ class TaskEngineTestCase(test.TestCase):
         name = "test_ctx.test"
         context_config = {"test1": 1, "test2": 2}
 
-        eng = engine.TaskEngine({}, task, mock.MagicMock())
+        env = mock.MagicMock()
+        eng = engine.TaskEngine({}, task, env)
+
         result = eng._prepare_context(context_config, name, "foo_uuid")
+
         expected_result = {
             "task": task,
             "owner_id": "foo_uuid",
             "scenario_name": name,
-            "config": {"test1@testing": 1, "test2@testing": 2}
+            "config": {"test1@testing": 1, "test2@testing": 2},
+            "env": env.data
         }
         self.assertEqual(expected_result, result)
 

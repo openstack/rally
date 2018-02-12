@@ -52,7 +52,7 @@ def itersubclasses(cls, seen=None):
 def import_modules_from_package(package):
     """Import modules from package and append into sys.modules
 
-    :param package: Full package name. For example: rally.deployment.engines
+    :param package: Full package name. For example: rally.plugins.openstack
     """
     path = [os.path.dirname(rally.__file__), ".."] + package.split(".")
     path = os.path.join(*path)

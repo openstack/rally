@@ -20,7 +20,6 @@ from oslo_config import cfg
 
 from rally.common import broker
 from rally.common import logging
-from rally.common import objects
 from rally.common import utils as rutils
 from rally.common import validation
 from rally import consts
@@ -105,19 +104,19 @@ class UserGenerator(context.Context):
     def __init__(self, context):
         super(UserGenerator, self).__init__(context)
 
-        deployment = objects.Deployment.get(context["task"]["deployment_uuid"])
-        creds = deployment.get_credentials_for("openstack")
+        creds = self.env["platforms"]["openstack"]
         if creds.get("admin"):
-            context["admin"] = {"credential": creds["admin"]}
+            context["admin"] = {
+                "credential": credential.OpenStackCredential(**creds["admin"])}
 
         if creds["users"] and not (set(self.config) - {"user_choice_method"}):
             self.existing_users = creds["users"]
         else:
             self.existing_users = []
             self.credential = context["admin"]["credential"]
-            project_domain = (self.credential.project_domain_name or
+            project_domain = (self.credential["project_domain_name"] or
                               cfg.CONF.openstack.project_domain)
-            user_domain = (self.credential.user_domain_name or
+            user_domain = (self.credential["user_domain_name"] or
                            cfg.CONF.openstack.user_domain)
             self.DEFAULT_FOR_NEW_USERS["project_domain"] = project_domain
             self.DEFAULT_FOR_NEW_USERS["user_domain"] = user_domain
@@ -207,19 +206,19 @@ class UserGenerator(context.Context):
                                       domain_name=user_dom,
                                       default_role=default_role)
             user_credential = credential.OpenStackCredential(
-                auth_url=self.credential.auth_url,
+                auth_url=self.credential["auth_url"],
                 username=user.name,
                 password=password,
                 tenant_name=self.context["tenants"][tenant_id]["name"],
                 permission=consts.EndpointPermission.USER,
                 project_domain_name=project_dom,
                 user_domain_name=user_dom,
-                endpoint_type=self.credential.endpoint_type,
-                https_insecure=self.credential.https_insecure,
-                https_cacert=self.credential.https_cacert,
-                region_name=self.credential.region_name,
-                profiler_hmac_key=self.credential.profiler_hmac_key,
-                profiler_conn_str=self.credential.profiler_conn_str)
+                endpoint_type=self.credential["endpoint_type"],
+                https_insecure=self.credential["https_insecure"],
+                https_cacert=self.credential["https_cacert"],
+                region_name=self.credential["region_name"],
+                profiler_hmac_key=self.credential["profiler_hmac_key"],
+                profiler_conn_str=self.credential["profiler_conn_str"])
             users.append({"id": user.id,
                           "credential": user_credential,
                           "tenant_id": tenant_id})
@@ -284,9 +283,10 @@ class UserGenerator(context.Context):
                 msg="Failed to create the requested number of users.")
 
     def use_existing_users(self):
-        LOG.debug("Using existing users")
+        LOG.debug("Using existing users for OpenStack platform.")
         for user_credential in self.existing_users:
-            user_clients = user_credential.clients()
+            user_credential = credential.OpenStackCredential(**user_credential)
+            user_clients = osclients.Clients(user_credential)
             user_id = user_clients.keystone.auth_ref.user_id
             tenant_id = user_clients.keystone.auth_ref.project_id
 

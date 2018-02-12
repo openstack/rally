@@ -1851,6 +1851,7 @@ class FakeDeployment(dict):
             "default": [{"admin": None, "users": []}]}
         dict.__init__(self, **kwargs)
         self.update_status = mock.Mock()
+        self.env_obj = mock.Mock()
 
     def get_platforms(self):
         return [platform for platform in self["credentials"]]

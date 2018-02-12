@@ -19,10 +19,14 @@ from oslo_config import cfg
 
 from rally import consts
 from rally import exceptions
+from rally import osclients as deprecated_osclients  # noqa
 from rally.plugins.openstack import credential as oscredential
 from rally.plugins.openstack import osclients
 from tests.unit import fakes
 from tests.unit import test
+
+
+PATH = "rally.plugins.openstack.osclients"
 
 
 @osclients.configure("dummy", supported_versions=("0.1", "1"),
@@ -93,7 +97,7 @@ class OSClientTestCase(test.TestCase, OSClientTestCaseUtils):
         self.assertEqual("foo",
                          fake_client.choose_service_type("foo"))
 
-    @mock.patch("rally.osclients.Keystone.service_catalog")
+    @mock.patch("%s.Keystone.service_catalog" % PATH)
     @ddt.data(
         {"endpoint_type": None, "service_type": None, "region_name": None},
         {"endpoint_type": "et", "service_type": "st", "region_name": "rn"}
@@ -119,7 +123,7 @@ class OSClientTestCase(test.TestCase, OSClientTestCaseUtils):
         mock_url_for.assert_called_once_with(**call_args)
         mock_choose_service_type.assert_called_once_with(service_type)
 
-    @mock.patch("rally.osclients.Keystone.get_session")
+    @mock.patch("%s.Keystone.get_session" % PATH)
     def test__get_session(self, mock_keystone_get_session):
         osclient = osclients.OSClient(None, None, None)
         auth_url = "auth_url"
@@ -263,7 +267,7 @@ class TestCreateKeystoneClient(test.TestCase, OSClientTestCaseUtils):
         keystone = osclients.Keystone(None, None, None)
         self.assertRaises(exceptions.RallyException, lambda: keystone.keystone)
 
-    @mock.patch("rally.osclients.Keystone.get_session")
+    @mock.patch("%s.Keystone.get_session" % PATH)
     def test_auth_ref(self, mock_keystone_get_session):
         session = mock.MagicMock()
         auth_plugin = mock.MagicMock()
@@ -293,8 +297,8 @@ class TestCreateKeystoneClient(test.TestCase, OSClientTestCaseUtils):
             self.fail("keystone.auth_ref didn't raise"
                       " exceptions.AuthenticationFailed")
 
-    @mock.patch("rally.osclients.LOG.exception")
-    @mock.patch("rally.osclients.logging.is_debug")
+    @mock.patch("%s.LOG.exception" % PATH)
+    @mock.patch("%s.logging.is_debug" % PATH)
     @mock.patch("keystoneauth1.identity.base.BaseIdentityPlugin.get_access")
     def test_auth_ref_debug(self, mock_get_access,
                             mock_is_debug, mock_log_exception):
@@ -326,11 +330,11 @@ class OSClientsTestCase(test.TestCase):
         self.fake_keystone = fakes.FakeKeystoneClient()
 
         keystone_patcher = mock.patch(
-            "rally.osclients.Keystone.create_client",
+            "%s.Keystone.create_client" % PATH,
             return_value=self.fake_keystone)
         self.mock_create_keystone_client = keystone_patcher.start()
 
-        self.auth_ref_patcher = mock.patch("rally.osclients.Keystone.auth_ref")
+        self.auth_ref_patcher = mock.patch("%s.Keystone.auth_ref" % PATH)
         self.auth_ref = self.auth_ref_patcher.start()
 
         self.service_catalog = self.auth_ref.service_catalog
@@ -380,7 +384,7 @@ class OSClientsTestCase(test.TestCase):
         self.assertRaises(exceptions.InvalidAdminException,
                           self.clients.verified_keystone)
 
-    @mock.patch("rally.osclients.Keystone.get_session")
+    @mock.patch("%s.Keystone.get_session" % PATH)
     def test_verified_keystone_authentication_fails(self,
                                                     mock_keystone_get_session):
         self.auth_ref_patcher.stop()
@@ -395,7 +399,7 @@ class OSClientsTestCase(test.TestCase):
         self.assertRaises(exceptions.AuthenticationFailed,
                           self.clients.verified_keystone)
 
-    @mock.patch("rally.osclients.Nova._get_endpoint")
+    @mock.patch("%s.Nova._get_endpoint" % PATH)
     def test_nova(self, mock_nova__get_endpoint):
         fake_nova = fakes.FakeNovaClient()
         mock_nova__get_endpoint.return_value = "http://fake.to:2/fake"
@@ -427,7 +431,7 @@ class OSClientsTestCase(test.TestCase):
     def test_nova_service_type(self):
         self.clients.nova.is_service_type_configurable()
 
-    @mock.patch("rally.osclients.Neutron._get_endpoint")
+    @mock.patch("%s.Neutron._get_endpoint" % PATH)
     def test_neutron(self, mock_neutron__get_endpoint):
         fake_neutron = fakes.FakeNeutronClient()
         mock_neutron__get_endpoint.return_value = "http://fake.to:2/fake"
@@ -446,7 +450,7 @@ class OSClientsTestCase(test.TestCase):
             mock_neutron.client.Client.assert_called_once_with("2.0", **kw)
             self.assertEqual(fake_neutron, self.clients.cache["neutron"])
 
-    @mock.patch("rally.osclients.Neutron._get_endpoint")
+    @mock.patch("%s.Neutron._get_endpoint" % PATH)
     def test_neutron_endpoint_type(self, mock_neutron__get_endpoint):
         fake_neutron = fakes.FakeNeutronClient()
         mock_neutron__get_endpoint.return_value = "http://fake.to:2/fake"
@@ -454,7 +458,7 @@ class OSClientsTestCase(test.TestCase):
         mock_keystoneauth1 = mock.MagicMock()
         mock_neutron.client.Client.return_value = fake_neutron
         self.assertNotIn("neutron", self.clients.cache)
-        self.credential.endpoint_type = "internal"
+        self.credential["endpoint_type"] = "internal"
         with mock.patch.dict("sys.modules",
                              {"neutronclient.neutron": mock_neutron,
                               "keystoneauth1": mock_keystoneauth1}):
@@ -467,7 +471,7 @@ class OSClientsTestCase(test.TestCase):
             mock_neutron.client.Client.assert_called_once_with("2.0", **kw)
             self.assertEqual(fake_neutron, self.clients.cache["neutron"])
 
-    @mock.patch("rally.osclients.Heat._get_endpoint")
+    @mock.patch("%s.Heat._get_endpoint" % PATH)
     def test_heat(self, mock_heat__get_endpoint):
         fake_heat = fakes.FakeHeatClient()
         mock_heat__get_endpoint.return_value = "http://fake.to:2/fake"
@@ -482,12 +486,11 @@ class OSClientsTestCase(test.TestCase):
             self.assertEqual(fake_heat, client)
             kw = {
                 "session": mock_keystoneauth1.session.Session(),
-                "endpoint": mock_heat__get_endpoint.return_value,
                 "endpoint_override": mock_heat__get_endpoint.return_value}
             mock_heat.client.Client.assert_called_once_with("1", **kw)
         self.assertEqual(fake_heat, self.clients.cache["heat"])
 
-    @mock.patch("rally.osclients.Heat._get_endpoint")
+    @mock.patch("%s.Heat._get_endpoint" % PATH)
     def test_heat_endpoint_type_interface(self, mock_heat__get_endpoint):
         fake_heat = fakes.FakeHeatClient()
         mock_heat__get_endpoint.return_value = "http://fake.to:2/fake"
@@ -495,8 +498,7 @@ class OSClientsTestCase(test.TestCase):
         mock_keystoneauth1 = mock.MagicMock()
         mock_heat.client.Client.return_value = fake_heat
         self.assertNotIn("heat", self.clients.cache)
-        self.credential.endpoint_type = "internal"
-        self.credential.interface = "internal"
+        self.credential["endpoint_type"] = "internal"
         with mock.patch.dict("sys.modules",
                              {"heatclient": mock_heat,
                               "keystoneauth1": mock_keystoneauth1}):
@@ -504,14 +506,12 @@ class OSClientsTestCase(test.TestCase):
             self.assertEqual(fake_heat, client)
             kw = {
                 "session": mock_keystoneauth1.session.Session(),
-                "endpoint": mock_heat__get_endpoint.return_value,
                 "endpoint_override": mock_heat__get_endpoint.return_value,
-                "endpoint_type": "internal",
                 "interface": "internal"}
             mock_heat.client.Client.assert_called_once_with("1", **kw)
         self.assertEqual(fake_heat, self.clients.cache["heat"])
 
-    @mock.patch("rally.osclients.Glance._get_endpoint")
+    @mock.patch("%s.Glance._get_endpoint" % PATH)
     def test_glance(self, mock_glance__get_endpoint):
         fake_glance = fakes.FakeGlanceClient()
         mock_glance = mock.MagicMock()
@@ -531,7 +531,7 @@ class OSClientsTestCase(test.TestCase):
             mock_glance.Client.assert_called_once_with(**kw)
             self.assertEqual(fake_glance, self.clients.cache["glance"])
 
-    @mock.patch("rally.osclients.Cinder._get_endpoint")
+    @mock.patch("%s.Cinder._get_endpoint" % PATH)
     def test_cinder(self, mock_cinder__get_endpoint):
         fake_cinder = mock.MagicMock(client=fakes.FakeCinderClient())
         mock_cinder = mock.MagicMock()
@@ -551,7 +551,7 @@ class OSClientsTestCase(test.TestCase):
                 "2", **kw)
             self.assertEqual(fake_cinder, self.clients.cache["cinder"])
 
-    @mock.patch("rally.osclients.Manila._get_endpoint")
+    @mock.patch("%s.Manila._get_endpoint" % PATH)
     def test_manila(self, mock_manila__get_endpoint):
         mock_manila = mock.MagicMock()
         mock_manila__get_endpoint.return_value = "http://fake.to:2/fake"
@@ -577,7 +577,7 @@ class OSClientsTestCase(test.TestCase):
         self.assertRaises(exceptions.RallyException,
                           osclients.Manila.validate_version, "foo")
 
-    @mock.patch("rally.osclients.Ceilometer._get_endpoint")
+    @mock.patch("%s.Ceilometer._get_endpoint" % PATH)
     def test_ceilometer(self, mock_ceilometer__get_endpoint):
         fake_ceilometer = fakes.FakeCeilometerClient()
         mock_ceilometer = mock.MagicMock()
@@ -649,7 +649,7 @@ class OSClientsTestCase(test.TestCase):
             self.assertEqual(mock_monasca.client.Client.return_value,
                              self.clients.cache["monasca"])
 
-    @mock.patch("rally.osclients.Ironic._get_endpoint")
+    @mock.patch("%s.Ironic._get_endpoint" % PATH)
     def test_ironic(self, mock_ironic__get_endpoint):
         fake_ironic = fakes.FakeIronicClient()
         mock_ironic = mock.MagicMock()
@@ -669,7 +669,7 @@ class OSClientsTestCase(test.TestCase):
             mock_ironic.client.get_client.assert_called_once_with("1", **kw)
             self.assertEqual(fake_ironic, self.clients.cache["ironic"])
 
-    @mock.patch("rally.osclients.Sahara._get_endpoint")
+    @mock.patch("%s.Sahara._get_endpoint" % PATH)
     def test_sahara(self, mock_sahara__get_endpoint):
         fake_sahara = fakes.FakeSaharaClient()
         mock_sahara = mock.MagicMock()
@@ -710,7 +710,7 @@ class OSClientsTestCase(test.TestCase):
             self.assertEqual(fake_zaqar, self.clients.cache["zaqar"],
                              mock_keystoneauth1.session.Session())
 
-    @mock.patch("rally.osclients.Trove._get_endpoint")
+    @mock.patch("%s.Trove._get_endpoint" % PATH)
     def test_trove(self, mock_trove__get_endpoint):
         fake_trove = fakes.FakeTroveClient()
         mock_trove = mock.MagicMock()
@@ -774,7 +774,7 @@ class OSClientsTestCase(test.TestCase):
             mock_swift.client.Connection.assert_called_once_with(**kw)
             self.assertEqual(fake_swift, self.clients.cache["swift"])
 
-    @mock.patch("rally.osclients.EC2._get_endpoint")
+    @mock.patch("%s.EC2._get_endpoint" % PATH)
     def test_ec2(self, mock_ec2__get_endpoint):
         mock_boto = mock.Mock()
         self.fake_keystone.ec2 = mock.Mock()
@@ -798,7 +798,7 @@ class OSClientsTestCase(test.TestCase):
             mock_boto.connect_ec2_endpoint.assert_called_once_with(**kw)
             self.assertEqual(fake_ec2, self.clients.cache["ec2"])
 
-    @mock.patch("rally.osclients.Keystone.service_catalog")
+    @mock.patch("%s.Keystone.service_catalog" % PATH)
     def test_services(self, mock_keystone_service_catalog):
         available_services = {consts.ServiceType.IDENTITY: {},
                               consts.ServiceType.COMPUTE: {},
@@ -830,7 +830,7 @@ class OSClientsTestCase(test.TestCase):
             mock_murano.client.Client.assert_called_once_with("1", **kw)
             self.assertEqual(fake_murano, self.clients.cache["murano"])
 
-    @mock.patch("rally.osclients.Keystone.get_session")
+    @mock.patch("%s.Keystone.get_session" % PATH)
     @ddt.data(
         {},
         {"version": "2"},
@@ -900,7 +900,7 @@ class OSClientsTestCase(test.TestCase):
                 mock_senlin.client.Client.return_value,
                 self.clients.cache["senlin"])
 
-    @mock.patch("rally.osclients.Magnum._get_endpoint")
+    @mock.patch("%s.Magnum._get_endpoint" % PATH)
     def test_magnum(self, mock_magnum__get_endpoint):
         fake_magnum = fakes.FakeMagnumClient()
         mock_magnum = mock.MagicMock()
@@ -924,7 +924,7 @@ class OSClientsTestCase(test.TestCase):
             mock_magnum.client.Client.assert_called_once_with(**kw)
             self.assertEqual(fake_magnum, self.clients.cache["magnum"])
 
-    @mock.patch("rally.osclients.Watcher._get_endpoint")
+    @mock.patch("%s.Watcher._get_endpoint" % PATH)
     def test_watcher(self, mock_watcher__get_endpoint):
         fake_watcher = fakes.FakeWatcherClient()
         mock_watcher = mock.MagicMock()

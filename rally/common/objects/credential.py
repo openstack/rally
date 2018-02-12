@@ -13,13 +13,20 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from rally.common import logging
 from rally.plugins.openstack import credential
 
-# TODO(astudenov): remove this class in future releases
+
+LOG = logging.getLogger(__name__)
 
 
 class Credential(credential.OpenStackCredential):
     """Deprecated version of OpenStackCredential class"""
+    def __init__(self, *args, **kwargs):
+        super(Credential, self).__init__(*args, **kwargs)
+        LOG.warning("Class rally.common.objects.Credential is deprecated "
+                    "since Rally 0.11.0. Use raw dict for OpenStack "
+                    "credentials instead.")
 
     def to_dict(self, include_permission=False):
         dct = super(Credential, self).to_dict()
