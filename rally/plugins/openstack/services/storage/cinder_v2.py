@@ -180,7 +180,7 @@ class CinderV2Service(service.Service, cinder_common.CinderMixin):
                            description=None, is_public=None):
         """Update the name and/or description for a volume type.
 
-        :param volume_type: The ID or a instance of the :class:`VolumeType`
+        :param volume_type: The ID or an instance of the :class:`VolumeType`
                             to update.
         :param name: if None, updates name by generating random name.
                      else updates name with provided name
