@@ -16,10 +16,8 @@
 import copy
 import random
 
-from oslo_config import cfg
-
+from rally.common import cfg
 from rally.common import logging
-from rally.common.objects import task  # noqa
 from rally.common.plugin import plugin
 from rally.common import utils
 from rally.common import validation

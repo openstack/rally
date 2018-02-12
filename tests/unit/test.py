@@ -18,15 +18,15 @@ import os
 import uuid
 
 import mock
-from oslo_config import fixture
 from oslotest import base
 
+from rally.common import cfg
 from rally.common import db
 from rally import plugins
 from tests.unit import fakes
 
 
-class DatabaseFixture(fixture.Config):
+class DatabaseFixture(cfg.fixture.Config):
     """Create clean DB before starting test."""
     def setUp(self):
         super(DatabaseFixture, self).setUp()

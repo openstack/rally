@@ -17,10 +17,9 @@ from __future__ import print_function
 
 import re
 
-from oslo_config import cfg
-
 from rally.cli import cliutils
 from rally.cli import envutils
+from rally.common import cfg
 from rally.common import db
 
 

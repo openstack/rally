@@ -16,9 +16,9 @@
 import abc
 import collections
 
-from oslo_config import cfg
 import six
 
+from rally.common import cfg
 from rally.common import logging
 from rally.common.plugin import plugin
 from rally.common import utils

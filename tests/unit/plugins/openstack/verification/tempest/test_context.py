@@ -17,9 +17,9 @@ import os
 
 import ddt
 import mock
-from oslo_config import cfg
 import requests
 
+from rally.common import cfg
 from rally import exceptions
 from rally.plugins.openstack.verification.tempest import config
 from rally.plugins.openstack.verification.tempest import context

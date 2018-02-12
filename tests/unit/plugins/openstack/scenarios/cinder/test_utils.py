@@ -14,8 +14,8 @@
 #    under the License.
 
 import mock
-from oslo_config import cfg
 
+from rally.common import cfg
 from rally import exceptions
 from rally.plugins.openstack import osclients
 from rally.plugins.openstack.scenarios.cinder import utils

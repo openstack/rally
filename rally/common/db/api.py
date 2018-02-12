@@ -40,10 +40,10 @@ these objects be simple dictionaries.
 
 """
 
-from oslo_config import cfg
 from oslo_db import api as db_api
 from oslo_db import options as db_options
 
+from rally.common import cfg
 
 CONF = cfg.CONF
 

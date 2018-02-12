@@ -16,10 +16,10 @@
 import abc
 import os
 
-from oslo_config import cfg
 from six.moves.urllib import parse
 
 from rally.cli import envutils
+from rally.common import cfg
 from rally.common import logging
 from rally.common.plugin import plugin
 from rally.common import utils

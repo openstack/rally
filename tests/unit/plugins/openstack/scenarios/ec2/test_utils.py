@@ -13,8 +13,8 @@
 # under the License.
 
 import mock
-from oslo_config import cfg
 
+from rally.common import cfg
 from rally.plugins.openstack.scenarios.ec2 import utils
 from tests.unit import test
 

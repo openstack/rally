@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_config import cfg
+from rally.common import cfg
 
 OPTS = {"openstack": [
     cfg.FloatOpt("vm_ping_poll_interval",

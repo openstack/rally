@@ -15,8 +15,8 @@
 
 import ddt
 import mock
-from oslo_config import cfg
 
+from rally.common import cfg
 from rally import exceptions as rally_exceptions
 from rally.plugins.openstack.scenarios.nova import utils
 from tests.unit import fakes

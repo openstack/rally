@@ -16,10 +16,10 @@
 import inspect
 import os
 
-from oslo_config import cfg
 import six
 from six.moves import configparser
 
+from rally.common import cfg
 from rally.common import logging
 from rally import exceptions
 from rally.verification import utils

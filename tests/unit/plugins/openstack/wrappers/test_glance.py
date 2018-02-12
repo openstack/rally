@@ -18,8 +18,8 @@ import tempfile
 import ddt
 from glanceclient import exc as glance_exc
 import mock
-from oslo_config import cfg
 
+from rally.common import cfg
 from rally import exceptions
 from rally.plugins.openstack.wrappers import glance as glance_wrapper
 from tests.unit import test

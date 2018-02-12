@@ -13,8 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_config import cfg
-
+from rally.common import cfg
 from rally.common import logging
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.wrappers import glance as glance_wrapper
