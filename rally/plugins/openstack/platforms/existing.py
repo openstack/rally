@@ -180,10 +180,17 @@ class OpenStack(platform.Platform):
         """Return information about cloud as dict."""
         active_user = (self.platform_data["admin"] or
                        self.platform_data["users"][0])
-        services = osclients.Clients(active_user).services()
+        services = []
+        for stype, name in osclients.Clients(active_user).services().items():
+            if name == "__unknown__":
+                # `__unknown__` name misleads, let's just not include it...
+                services.append({"type": stype})
+            else:
+                services.append({"type": stype, "name": name})
+
         return {
             "info": {
-                "services": services
+                "services": sorted(services, key=lambda x: x["type"])
             }
         }
 

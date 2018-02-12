@@ -196,7 +196,9 @@ class ExistingPlatformTestCase(test_platform.PlatformBaseTestCase):
 
     @mock.patch("rally.plugins.openstack.osclients.Clients")
     def test_info(self, mock_clients):
-        mock_clients.return_value.services.return_value = ["a", "b"]
+        mock_clients.return_value.services.return_value = {
+            "foo": "bar",
+            "volumev4": "__unknown__"}
         platform_data = {
             "admin": None,
             "users": [{"username": "u1", "password": "123"}]
@@ -206,5 +208,10 @@ class ExistingPlatformTestCase(test_platform.PlatformBaseTestCase):
         result = p.info()
         mock_clients.assert_called_once_with(platform_data["users"][0])
         mock_clients.return_value.services.assert_called_once_with()
-        self.assertEqual({"info": {"services": ["a", "b"]}}, result)
+        self.assertEqual(
+            {
+                "info": {
+                    "services": [{"type": "foo", "name": "bar"},
+                                 {"type": "volumev4"}]}},
+            result)
         self._check_info_schema(result)
