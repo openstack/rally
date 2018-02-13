@@ -58,7 +58,7 @@ SPEC_SCHEMA = {
     "type": "object",
     "patternProperties": {
         "!version": {
-            "type": "integer",
+            "enum": [1],
             "description": "Env format version"
         },
         "!description": {
