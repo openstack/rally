@@ -350,24 +350,24 @@ def update_upper_constraints():
     # NOTE(andreykurilin): global OpenStack upper-constraints file includes
     #   comments which can be unrelated to Rally project, so let's just ignore
     #   them.
-    global_uc = parse_data(raw_g_uc, include_comments=False,
+    global_uc = parse_data(raw_g_uc,
+                           include_comments=False,
                            dependency_cls=UpperConstraint)
     with open("upper-constraints.txt") as f:
-        our_uc = parse_data(f.read(), dependency_cls=UpperConstraint)
+        our_uc = parse_data(f.read(),
+                            dependency_cls=UpperConstraint)
     with open("requirements.txt") as f:
         our_requirements = parse_data(f.read(), include_comments=False)
 
     for name, req in our_requirements.items():
         if isinstance(req, Comment):
-            print("continue")
             continue
-        print(req)
         if name not in our_uc:
             our_uc[name] = UpperConstraint(name)
 
         if name in global_uc:
             # we cannot use whatever we want versions in CI. OpenStack CI
-            # installs ignores versions listed in requirements of
+            # ignores versions listed in requirements of
             # particular project and use versions from global u-c file.
             # It means that we need to suggest to use the same versions
             our_uc[name].update(global_uc[name].version)
