@@ -41,36 +41,36 @@ Registering deployment with existing users in Rally
 The information about existing users in your OpenStack cloud should be passed
 to Rally at the
 :ref:`deployment initialization step <tutorial_step_1_setting_up_env_and_running_benchmark_from_samples>`.
-You have to use the **ExistingCloud** deployment plugin that just provides
-Rally with credentials of an already existing cloud. The difference from the
-deployment configuration we've seen previously is that you should set up the
-*"users"* section with the credentials of already existing users. Let's call
-this deployment configuration file *existing_users.json*:
+The difference from the deployment configuration we've seen previously is that
+you should set up the *"users"* section with the credentials of already
+existing users. Let's call this deployment configuration file
+*existing_users.json*:
 
 .. code-block:: json
 
     {
-        "type": "ExistingCloud",
-        "auth_url": "http://example.net:5000/v2.0/",
-        "region_name": "RegionOne",
-        "endpoint_type": "public",
-        "admin": {
-            "username": "admin",
-            "password": "pa55word",
-            "tenant_name": "demo"
-        },
-        "users": [
-            {
-                "username": "b1",
-                "password": "1234",
-                "tenant_name": "testing"
-            },
-            {
-                "username": "b2",
-                "password": "1234",
-                "tenant_name": "testing"
-            }
-        ]
+         "openstack": {
+             "auth_url": "http://example.net:5000/v2.0/",
+             "region_name": "RegionOne",
+             "endpoint_type": "public",
+             "admin": {
+                 "username": "admin",
+                 "password": "pa55word",
+                 "tenant_name": "demo"
+             },
+             "users": [
+                 {
+                     "username": "b1",
+                     "password": "1234",
+                     "tenant_name": "testing"
+                 },
+                 {
+                     "username": "b2",
+                     "password": "1234",
+                     "tenant_name": "testing"
+                 }
+             ]
+         }
     }
 
 This deployment configuration requires some basic information about the
@@ -81,7 +81,7 @@ it as usual:
 
 .. code-block:: console
 
-    $ rally deployment create --file existings_users --name our_cloud
+    $ rally deployment create --file existing_users --name our_cloud
     +--------------------------------------+----------------------------+-----------+------------------+--------+
     | uuid                                 | created_at                 | name      | status           | active |
     +--------------------------------------+----------------------------+-----------+------------------+--------+

@@ -51,12 +51,9 @@ add the HMAC key with the following :
 .. code-block:: json
 
     {
-      "type": "ExistingCloud",
-      "creds": {
       "openstack": {
         [...]
         "profiler_hmac_key": "SECRET_KEY"
-        }
       }
     }
 
