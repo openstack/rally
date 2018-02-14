@@ -33,6 +33,13 @@ def list_opts():
     return merged_opts.items()
 
 
+def update_opt_defaults():
+    logging.oslogging.cfg.set_defaults(
+        logging.oslogging._options.generic_log_opts,
+        use_stderr=True
+    )
+
+
 _registered = False
 
 

@@ -61,7 +61,7 @@
 
 # Log output to standard error. This option is ignored if
 # log_config_append is set. (boolean value)
-#use_stderr = false
+#use_stderr = true
 
 # Format string to use for log messages with context. (string value)
 #logging_context_format_string = %(asctime)s.%(msecs)03d %(process)d %(levelname)s %(name)s [%(request_id)s %(user_identity)s] %(instance)s%(message)s

@@ -1206,6 +1206,7 @@ class API(object):
                  project="rally",
                  version=rally_version.version_string(),
                  default_config_files=config_files)
+            CONF.set_default("use_stderr", True)
 
             logging.setup("rally")
             if not CONF.get("log_config_append"):
