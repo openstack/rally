@@ -38,7 +38,7 @@ class TaskTestCase(unittest.TestCase):
                 {
                     "runner": {
                         "type": "constant",
-                        "times": 100,
+                        "times": 20,
                         "concurrency": 5
                     },
                     "sla": {
@@ -186,17 +186,15 @@ class TaskTestCase(unittest.TestCase):
         rally("task start --task %s" % config.filename)
         json_report = rally.gen_report_path(extension="json")
         with open(json_report, "w+") as f:
-            f.write(rally("task results"))
+            f.write(rally("task results", no_logs=True))
         import_print = rally("task import --file %s" % json_report)
-        self.assertIn("successfully", import_print)
         task_uuid = re.search("UUID:\s([a-z0-9\-]+)", import_print).group(1)
         self.assertIn("Dummy.dummy_random_fail_in_atomic",
                       rally("task results --uuid %s" % task_uuid))
 
         # new json report
-        rally("task report --json --out %s" % json_report)
+        rally("task report --json --out %s" % json_report, no_logs=True)
         import_print = rally("task import --file %s" % json_report)
-        self.assertIn("successfully", import_print)
         task_uuid = re.search("UUID:\s([a-z0-9\-]+)", import_print).group(1)
         self.assertIn("Dummy.dummy_random_fail_in_atomic",
                       rally("task report --uuid %s --json" % task_uuid))
@@ -252,7 +250,7 @@ class TaskTestCase(unittest.TestCase):
         config = utils.TaskConfig(cfg)
         rally("task start --task %s" % config.filename)
         html_report = rally.gen_report_path(extension="html")
-        rally("task report --out %s" % html_report)
+        rally("task report --out %s" % html_report, no_logs=True)
         self.assertTrue(os.path.exists(html_report))
         self._assert_html_report_libs_are_embedded(html_report, False)
         self.assertRaises(utils.RallyCliError,
@@ -282,7 +280,7 @@ class TaskTestCase(unittest.TestCase):
             files.append(path)
             if os.path.exists(path):
                 os.remove(path)
-            rally("task results", report_path=path, raw=True)
+            rally("task results", report_path=path, raw=True, no_logs=True)
 
         html_report = rally.gen_report_path(extension="html")
         rally("task report --uuid %s --out %s" % (
@@ -299,7 +297,7 @@ class TaskTestCase(unittest.TestCase):
         if os.path.exists(task_result_file):
             os.remove(task_result_file)
         rally("task results", report_path=task_result_file,
-              raw=True)
+              raw=True, no_logs=True)
 
         task_run_output = rally(
             "task start --task %s" % config.filename)
@@ -308,7 +306,7 @@ class TaskTestCase(unittest.TestCase):
         html_report = rally.gen_report_path(extension="html")
         rally("task report --uuid"
               " %s %s --out %s" % (task_result_file, task_uuid,
-                                   html_report))
+                                   html_report), no_logs=True)
         self.assertTrue(os.path.exists(html_report))
         self.assertRaises(utils.RallyCliError,
                           rally, "task report --report %s" % FAKE_TASK_UUID)
@@ -327,7 +325,7 @@ class TaskTestCase(unittest.TestCase):
 
         html_report = rally.gen_report_path(extension="html")
         rally("task report --html-static %s --out %s"
-              % (task_result_file, html_report))
+              % (task_result_file, html_report), no_logs=True)
         self.assertTrue(os.path.exists(html_report))
         self._assert_html_report_libs_are_embedded(html_report)
 
@@ -337,7 +335,7 @@ class TaskTestCase(unittest.TestCase):
         config = utils.TaskConfig(cfg)
         rally("task start --task %s" % config.filename)
         html_report = rally.gen_report_path(extension="html")
-        rally("task report --out %s --html-static" % html_report)
+        rally("task report --out %s --html-static" % html_report, no_logs=True)
         self.assertTrue(os.path.exists(html_report))
         self._assert_html_report_libs_are_embedded(html_report)
 
@@ -355,7 +353,7 @@ class TaskTestCase(unittest.TestCase):
         config = utils.TaskConfig(cfg)
         rally("task start --task %s" % config.filename)
         json_report = rally.gen_report_path(extension="json")
-        rally("task report --out %s --json" % json_report)
+        rally("task report --out %s --json" % json_report, no_logs=True)
         self.assertTrue(os.path.exists(json_report))
         self._assert_json_report(json_report)
 
@@ -369,7 +367,7 @@ class TaskTestCase(unittest.TestCase):
             task_uuids.append(self._get_task_uuid(res))
         json_report = rally.gen_report_path(extension="json")
         rally("task report --json --uuid %s --out %s"
-              % (" ".join(task_uuids), json_report))
+              % (" ".join(task_uuids), json_report), no_logs=True)
         self.assertTrue(os.path.exists(json_report))
         self._assert_json_report(json_report)
 
@@ -425,11 +423,13 @@ class TaskTestCase(unittest.TestCase):
         rally("task start --task %s --tag trends_run run_once" %
               config2.filename)
 
-        tasks_list = rally("task list --uuids-only --tag trends_run")
+        tasks_list = rally("task list --uuids-only --tag trends_run",
+                           no_logs=True)
         uuids = [u for u in tasks_list.split("\n") if u]
 
         rally("task trends %(uuids)s --out %(report)s"
-              % {"uuids": " ".join(uuids), "report": report})
+              % {"uuids": " ".join(uuids), "report": report},
+              no_logs=True)
         del config1, config2
         self.assertTrue(os.path.exists(report))
 
@@ -598,7 +598,7 @@ class TaskTestCase(unittest.TestCase):
                "--deployment %(deployment_id)s --abort-on-sla-failure") %
               {"task_file": config.filename,
                "deployment_id": deployment_id})
-        results = json.loads(rally("task results"))
+        results = rally("task results", getjson=True)
         iterations_completed = len(results[0]["result"])
         self.assertEqual(times, iterations_completed)
 
@@ -674,7 +674,7 @@ class TaskTestCase(unittest.TestCase):
                            "--abort-on-sla-failure") %
                           {"task_file": config.filename,
                            "deployment_id": deployment_id})
-        results = json.loads(rally("task results"))
+        results = rally("task results", getjson=True)
         self.assertEqual(1, len(results),
                          "Second subtask should not be started")
         iterations_completed = len(results[0]["result"])
@@ -904,14 +904,14 @@ class TaskTestCase(unittest.TestCase):
             rally, cfg, "test_abort-thread_with_abort.txt")
         rally("task abort %s" % uuid)
         task.join()
-        results = json.loads(rally("task results"))
+        results = rally("task results", getjson=True)
         iterations_completed = len(results[0]["result"])
         # NOTE(msdubov): check that the task is really stopped before
         #                the specified number of iterations
         self.assertLess(iterations_completed, RUNNER_TIMES)
         self.assertIn("aborted", rally("task status"))
         report = rally.gen_report_path(extension="html")
-        rally("task report --out %s" % report)
+        rally("task report --out %s" % report, no_logs=True)
 
     def test_abort_soft(self):
         cfg = {
@@ -938,7 +938,7 @@ class TaskTestCase(unittest.TestCase):
             rally, cfg, "test_abort_soft-thread_with_soft_abort.txt")
         rally("task abort --soft")
         task.join()
-        results = json.loads(rally("task results"))
+        results = rally("task results", getjson=True)
         iterations_completed = len(results[0]["result"])
         self.assertEqual(3, iterations_completed)
         self.assertEqual(1, len(results))
@@ -978,16 +978,18 @@ class TaskTestCase(unittest.TestCase):
         config = utils.TaskConfig(cfg)
         rally("task start --task %s" % config.filename)
         html_report = rally.gen_report_path(extension="html")
-        rally("task export --type html --to %s" % html_report)
+        rally("task export --type html --to %s" % html_report, no_logs=True)
         self.assertTrue(os.path.exists(html_report))
         self._assert_html_report_libs_are_embedded(html_report, False)
 
-        rally("task export --type html-static --to %s" % html_report)
+        rally("task export --type html-static --to %s" % html_report,
+              no_logs=True)
         self.assertTrue(os.path.exists(html_report))
         self._assert_html_report_libs_are_embedded(html_report)
 
         junit_report = rally.gen_report_path(extension="junit")
-        rally("task export --type junit-xml --to %s" % junit_report)
+        rally("task export --type junit-xml --to %s" % junit_report,
+              no_logs=True)
         self.assertTrue(os.path.exists(junit_report))
 
     def test_export_bunch_uuids(self):
@@ -1053,7 +1055,7 @@ class SLATestCase(unittest.TestCase):
              "detail": mock.ANY,
              "pos": 0, "status": "PASS"}
         ]
-        data = rally("task sla-check --json", getjson=True)
+        data = rally("task sla-check --json", getjson=True, no_logs=True)
         self.assertEqual(expected, data)
 
 
@@ -1272,12 +1274,12 @@ class HookTestCase(unittest.TestCase):
     def test_hook_result_with_constant_runner(self):
         rally = utils.Rally()
         cfg = self._get_sample_task_config(
-            cmd="/bin/true",
+            cmd="true",
             description="event_hook",
             runner={"constant": {"times": 10, "concurrency": 3}})
         config = utils.TaskConfig(cfg)
         rally("task start --task %s" % config.filename)
-        results = json.loads(rally("task results"))
+        results = rally("task results", getjson=True)
         hook_results = results[0]["hooks"]
         hooks_cfg = cfg["subtasks"][0]["hooks"]
         expected = [self._get_result(hooks_cfg[0], iterations=[5])]
@@ -1287,13 +1289,13 @@ class HookTestCase(unittest.TestCase):
     def test_hook_result_with_constant_for_duration_runner(self):
         rally = utils.Rally()
         cfg = self._get_sample_task_config(
-            cmd="/bin/true",
+            cmd="true",
             description="event_hook",
             runner={"constant_for_duration": {
                 "concurrency": 3, "duration": 10}})
         config = utils.TaskConfig(cfg)
         rally("task start --task %s" % config.filename)
-        results = json.loads(rally("task results"))
+        results = rally("task results", getjson=True)
         hook_results = results[0]["hooks"]
         hooks_cfg = cfg["subtasks"][0]["hooks"]
         expected = [self._get_result(hooks_cfg[0], iterations=[5])]
@@ -1303,12 +1305,12 @@ class HookTestCase(unittest.TestCase):
     def test_hook_result_with_rps_runner(self):
         rally = utils.Rally()
         cfg = self._get_sample_task_config(
-            cmd="/bin/true",
+            cmd="true",
             description="event_hook",
             runner={"rps": {"rps": 3, "times": 10}})
         config = utils.TaskConfig(cfg)
         rally("task start --task %s" % config.filename)
-        results = json.loads(rally("task results"))
+        results = rally("task results", getjson=True)
         hook_results = results[0]["hooks"]
         hooks_cfg = cfg["subtasks"][0]["hooks"]
         expected = [self._get_result(hooks_cfg[0], iterations=[5])]
@@ -1318,12 +1320,12 @@ class HookTestCase(unittest.TestCase):
     def test_hook_result_with_serial_runner(self):
         rally = utils.Rally()
         cfg = self._get_sample_task_config(
-            cmd="/bin/true",
+            cmd="true",
             description="event_hook",
             runner={"serial": {"times": 10}})
         config = utils.TaskConfig(cfg)
         rally("task start --task %s" % config.filename)
-        results = json.loads(rally("task results"))
+        results = rally("task results", getjson=True)
         hook_results = results[0]["hooks"]
         hooks_cfg = cfg["subtasks"][0]["hooks"]
         expected = [self._get_result(hooks_cfg[0], iterations=[5])]
@@ -1333,12 +1335,12 @@ class HookTestCase(unittest.TestCase):
     def test_hook_result_error(self):
         rally = utils.Rally()
         cfg = self._get_sample_task_config(
-            cmd="/bin/false",
+            cmd="false",
             description="event_hook",
             runner={"constant": {"times": 20, "concurrency": 3}})
         config = utils.TaskConfig(cfg)
         rally("task start --task %s" % config.filename)
-        results = json.loads(rally("task results"))
+        results = rally("task results", getjson=True)
         hook_results = results[0]["hooks"]
         hooks_cfg = cfg["subtasks"][0]["hooks"]
         expected = [self._get_result(hooks_cfg[0], iterations=[5], error=True)]
@@ -1348,29 +1350,29 @@ class HookTestCase(unittest.TestCase):
     def test_time_hook(self):
         rally = utils.Rally()
         cfg = self._get_sample_task_config(
-            cmd="/bin/true",
+            cmd="true",
             description="event_hook",
             runner={"constant_for_duration":
-                        {"concurrency": 3, "duration": 10}})
+                        {"concurrency": 3, "duration": 5}})
         cfg["subtasks"][0]["hooks"].append({
             "description": "time_hook",
-            "action": {"sys_call": "/bin/true"},
+            "action": {"sys_call": "true"},
             "trigger": {
                 "event": {
                     "unit": "time",
-                    "at": [3, 6, 9],
+                    "at": [1, 2, 3],
                 }
             }
         })
 
         config = utils.TaskConfig(cfg)
         rally("task start --task %s" % config.filename)
-        results = json.loads(rally("task results"))
+        results = rally("task results", getjson=True)
         hook_results = results[0]["hooks"]
 
         hooks_cfg = cfg["subtasks"][0]["hooks"]
         expected = [self._get_result(hooks_cfg[0], iterations=[5]),
-                    self._get_result(hooks_cfg[1], seconds=[3, 6, 9])]
+                    self._get_result(hooks_cfg[1], seconds=[1, 2, 3])]
         self.assertEqual(
             expected,
             sorted(hook_results,
@@ -1381,7 +1383,7 @@ class HookTestCase(unittest.TestCase):
     def test_import_hook_result(self):
         rally = utils.Rally()
         cfg = self._get_sample_task_config(
-            cmd="/bin/true",
+            cmd="true",
             description="event_hook",
             runner={"constant": {"times": 10, "concurrency": 3}})
         cfg["subtasks"][0]["hooks"].extend(
@@ -1412,9 +1414,8 @@ class HookTestCase(unittest.TestCase):
         rally("task start --task %s" % config.filename)
         json_report = rally.gen_report_path(extension="json")
         with open(json_report, "w+") as f:
-            f.write(rally("task results"))
+            f.write(rally("task results", no_logs=True))
         import_print = rally("task import --file %s" % json_report)
-        self.assertIn("successfully", import_print)
         task_uuid = re.search("UUID:\s([a-z0-9\-]+)", import_print).group(1)
         results = rally("task results --uuid %s" % task_uuid)
         self.assertIn("Dummy.dummy", results)

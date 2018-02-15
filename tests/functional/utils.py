@@ -72,7 +72,7 @@ class Rally(object):
     """
     _DEPLOYMENT_CREATE_ARGS = ""
 
-    def __init__(self, force_new_db=False):
+    def __init__(self, force_new_db=False, plugin_path=None):
 
         # NOTE(sskripnick): we should change home dir to avoid races
         # and do not touch any user files in ~/.rally
@@ -111,6 +111,8 @@ class Rally(object):
             self.args = ["rally"]
             subprocess.call(["rally", "db", "recreate"], env=self.env)
 
+        if plugin_path:
+            self.args.extend(["--plugin-paths", os.path.abspath(plugin_path)])
         self.reports_root = os.environ.get("REPORTS_ROOT",
                                            "rally-cli-output-files")
         self._created_files = []
@@ -169,7 +171,7 @@ class Rally(object):
 
     def __call__(self, cmd, getjson=False, report_path=None, raw=False,
                  suffix=None, extension=None, keep_old=False,
-                 write_report=True):
+                 write_report=True, no_logs=False):
         """Call rally in the shell
 
         :param cmd: rally command
@@ -189,8 +191,13 @@ class Rally(object):
             else:
                 cmd = self.args + cmd
 
-            output = encodeutils.safe_decode(subprocess.check_output(
-                cmd, stderr=subprocess.STDOUT, env=self.env))
+            if no_logs:
+                with open(os.devnull, "w") as DEVNULL:
+                    output = encodeutils.safe_decode(subprocess.check_output(
+                        cmd, stderr=DEVNULL, env=self.env))
+            else:
+                output = encodeutils.safe_decode(subprocess.check_output(
+                    cmd, stderr=subprocess.STDOUT, env=self.env))
 
             if getjson:
                 return json.loads(output)

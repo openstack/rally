@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
 import re
 import unittest
 
@@ -79,14 +78,13 @@ class DeploymentTestCase(unittest.TestCase):
         rally = utils.Rally()
         rally.env.update(TEST_ENV)
         rally("deployment create --name t_create_env --fromenv")
-        config = json.loads(rally("deployment config"))
+        config = rally("deployment config", getjson=True)
         config["openstack"]["admin"]["password"] = "fakepassword"
         file = utils.JsonTempFile(config)
         rally("deployment create --name t_create_file_debug "
               "--filename %s" % file.filename)
         self.assertIn("t_create_file_debug", rally("deployment list"))
-        self.assertEqual(config,
-                         json.loads(rally("deployment config")))
+        self.assertEqual(config, rally("deployment config", getjson=True))
         self.assertRaises(utils.RallyCliError, rally, "deployment check")
 
         try:
@@ -129,7 +127,7 @@ class DeploymentTestCase(unittest.TestCase):
         rally = utils.Rally()
         rally.env.update(TEST_ENV)
         rally("deployment create --name t_create_env --fromenv")
-        config = json.loads(rally("deployment config"))
+        config = rally("deployment config", getjson=True)
         self.assertIn("openstack", config)
         self.assertEqual(TEST_ENV["OS_USERNAME"],
                          config["openstack"]["admin"]["username"])

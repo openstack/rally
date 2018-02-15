@@ -36,7 +36,7 @@ class EventTrigger(hook.HookTrigger):
                         "uniqueItems": True,
                         "items": {
                             "type": "integer",
-                            "minimum": 0,
+                            "minimum": 0
                         }
                     },
                 },
