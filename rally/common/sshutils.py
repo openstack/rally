@@ -175,6 +175,7 @@ class SSH(object):
         else:
             writes = []
 
+        data = None
         while True:
             # Block until data can be read/write.
             r, w, e = select.select([session], writes, [session], 1)
@@ -224,7 +225,7 @@ class SSH(object):
             if stderr_data:
                 details += " Last stderr data: '%s'." % stderr_data
             raise exceptions.SSHError(details)
-        return exit_status
+        return exit_status, data
 
     def execute(self, cmd, stdin=None, timeout=3600):
         """Execute the specified command on the server.
@@ -238,9 +239,9 @@ class SSH(object):
         stdout = six.moves.StringIO()
         stderr = six.moves.StringIO()
 
-        exit_status = self.run(cmd, stderr=stderr,
-                               stdout=stdout, stdin=stdin,
-                               timeout=timeout, raise_on_error=False)
+        exit_status, data = self.run(cmd, stderr=stderr, stdout=stdout,
+                                     stdin=stdin, timeout=timeout,
+                                     raise_on_error=False)
         stdout.seek(0)
         stderr.seek(0)
         return (exit_status, stdout.read(), stderr.read())

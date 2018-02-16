@@ -124,7 +124,8 @@ class SSHTestCase(test.TestCase):
         mock_string_io.side_effect = stdio = [mock.Mock(), mock.Mock()]
         stdio[0].read.return_value = "stdout fake data"
         stdio[1].read.return_value = "stderr fake data"
-        with mock.patch.object(self.ssh, "run", return_value=0) as mock_run:
+        with mock.patch.object(self.ssh, "run") as mock_run:
+            mock_run.return_value = (0, None)
             status, stdout, stderr = self.ssh.execute("cmd",
                                                       stdin="fake_stdin",
                                                       timeout=43)
@@ -210,14 +211,16 @@ class SSHRunTestCase(test.TestCase):
     @mock.patch("rally.common.sshutils.select")
     def test_run(self, mock_select):
         mock_select.select.return_value = ([], [], [])
-        self.assertEqual(0, self.ssh.run("cmd"))
+        exit_stat, data = self.ssh.run("cmd")
+        self.assertEqual(0, exit_stat)
 
     @mock.patch("rally.common.sshutils.select")
     def test_run_nonzero_status(self, mock_select):
         mock_select.select.return_value = ([], [], [])
         self.fake_session.recv_exit_status.return_value = 1
         self.assertRaises(exceptions.SSHError, self.ssh.run, "cmd")
-        self.assertEqual(1, self.ssh.run("cmd", raise_on_error=False))
+        exit_stat, data = self.ssh.run("cmd", raise_on_error=False)
+        self.assertEqual(1, exit_stat)
 
     @mock.patch("rally.common.sshutils.select")
     def test_run_stdout(self, mock_select):
