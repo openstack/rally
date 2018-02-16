@@ -6,7 +6,7 @@ Overview
 --------
 
 +------------------+-----------------------+
-| Release date     |     **02/15/2018**    |
+| Release date     |     **02/16/2018**    |
 +------------------+-----------------------+
 
 * Stabilize Rally releases (see requirements section)
