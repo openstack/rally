@@ -840,6 +840,22 @@ class IronicNodes(base.ResourceManager):
         return self.raw_resource.uuid
 
 
+# GNOCCHI
+
+_gnocchi_order = get_order(1400)
+
+
+@base.resource("gnocchi", "archive_policy_rule", order=next(_gnocchi_order),
+               admin_required=True, perform_for_admin_only=True)
+class GnocchiArchivePolicyRule(base.ResourceManager):
+
+    def name(self):
+        return self.raw_resource["name"]
+
+    def id(self):
+        return self.raw_resource["name"]
+
+
 # WATCHER
 
 _watcher_order = get_order(1500)

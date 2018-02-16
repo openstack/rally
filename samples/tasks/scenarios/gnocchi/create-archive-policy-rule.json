@@ -1,0 +1,20 @@
+{
+    "GnocchiArchivePolicyRule.create_archive_policy_rule": [
+        {
+            "args": {
+                "metric_pattern": "cpu_*",
+                "archive_policy_name": "low"
+            },
+            "runner": {
+                "type": "constant",
+                "times": 10,
+                "concurrency": 2
+            },
+            "sla": {
+                "failure_rate": {
+                    "max": 0
+                }
+            }
+        }
+    ]
+}
