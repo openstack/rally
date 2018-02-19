@@ -21,20 +21,19 @@ Revises:
 Create Date: 2016-01-07 00:27:39.687814
 
 """
+from alembic import op
+import sqlalchemy as sa
+
+from rally.common.db import api
+from rally.common.db import sa_types
+from rally import exceptions
+
 
 # revision identifiers, used by Alembic.
 revision = "ca3626f62937"
 down_revision = None
 branch_labels = None
 depends_on = None
-
-
-from alembic import op
-import sqlalchemy as sa
-
-import rally
-from rally.common.db.sqlalchemy import api
-from rally import exceptions
 
 
 def upgrade():
@@ -49,10 +48,7 @@ def upgrade():
         sa.Column("name", sa.String(length=255), nullable=True),
         sa.Column("started_at", sa.DateTime(), nullable=True),
         sa.Column("completed_at", sa.DateTime(), nullable=True),
-        sa.Column(
-            "config",
-            rally.common.db.sqlalchemy.types.MutableJSONEncodedDict(),
-            nullable=False),
+        sa.Column("config", sa_types.MutableJSONEncodedDict(), nullable=False),
         sa.Column("admin", sa.PickleType(), nullable=True),
         sa.Column("users", sa.PickleType(), nullable=False),
         sa.Column("enum_deployments_status", sa.Enum(
@@ -100,10 +96,7 @@ def upgrade():
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("provider_name", sa.String(length=255), nullable=True),
         sa.Column("type", sa.String(length=255), nullable=True),
-        sa.Column(
-            "info",
-            rally.common.db.sqlalchemy.types.MutableJSONEncodedDict(),
-            nullable=False),
+        sa.Column("info", sa_types.MutableJSONEncodedDict(), nullable=False),
         sa.Column("deployment_uuid", sa.String(length=36), nullable=False),
         sa.ForeignKeyConstraint(["deployment_uuid"], [u"deployments.uuid"]),
         sa.PrimaryKeyConstraint("id")
@@ -173,14 +166,8 @@ def upgrade():
         sa.Column("created_at", sa.DateTime(), nullable=True),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column(
-            "key",
-            rally.common.db.sqlalchemy.types.MutableJSONEncodedDict(),
-            nullable=False),
-        sa.Column(
-            "data",
-            rally.common.db.sqlalchemy.types.MutableJSONEncodedDict(),
-            nullable=False),
+        sa.Column("key", sa_types.MutableJSONEncodedDict(), nullable=False),
+        sa.Column("data", sa_types.MutableJSONEncodedDict(), nullable=False),
         sa.Column("task_uuid", sa.String(length=36), nullable=True),
         sa.ForeignKeyConstraint(["task_uuid"], ["tasks.uuid"], ),
         sa.PrimaryKeyConstraint("id")
@@ -192,10 +179,7 @@ def upgrade():
         sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("verification_uuid", sa.String(length=36), nullable=True),
-        sa.Column(
-            "data",
-            rally.common.db.sqlalchemy.types.MutableJSONEncodedDict(),
-            nullable=False),
+        sa.Column("data", sa_types.MutableJSONEncodedDict(), nullable=False),
         sa.ForeignKeyConstraint(["verification_uuid"], ["verifications.uuid"]),
         sa.PrimaryKeyConstraint("id")
     )

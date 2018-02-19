@@ -15,7 +15,7 @@
 
 from pbr import version as pbr_version
 
-from rally.common.db import api
+from rally.common.db import schema
 
 RALLY_VENDOR = "OpenStack Foundation"
 RALLY_PRODUCT = "OpenStack Rally"
@@ -30,4 +30,4 @@ def version_string():
 
 
 def database_revision():
-    return api.schema_revision(detailed=True)
+    return schema.schema_revision(detailed=True)

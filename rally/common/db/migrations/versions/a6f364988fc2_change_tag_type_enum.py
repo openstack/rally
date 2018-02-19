@@ -19,18 +19,16 @@ Revises: 37fdbb373e8d
 Create Date: 2017-01-17 18:47:10.700459
 
 """
+from alembic import op
+import sqlalchemy as sa
+
+from rally import exceptions
 
 # revision identifiers, used by Alembic.
 revision = "a6f364988fc2"
 down_revision = "37fdbb373e8d"
 branch_labels = None
 depends_on = None
-
-
-from alembic import op
-import sqlalchemy as sa
-
-from rally import exceptions
 
 
 TAG_TYPES = ["task", "subtask"]

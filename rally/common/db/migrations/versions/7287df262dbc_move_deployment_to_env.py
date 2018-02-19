@@ -27,7 +27,7 @@ from alembic import op
 from oslo_utils import timeutils
 import sqlalchemy as sa
 
-from rally.common.db.sqlalchemy import types as sa_types
+from rally.common.db import sa_types
 from rally import exceptions
 
 # revision identifiers, used by Alembic.

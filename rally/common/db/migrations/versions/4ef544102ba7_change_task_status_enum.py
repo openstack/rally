@@ -20,18 +20,18 @@ Create Date: 2016-04-22 21:28:50.745316
 
 """
 
+from alembic import op
+import sqlalchemy as sa
+
+from rally.common.db import sa_types
+from rally import consts
+from rally import exceptions
+
 # revision identifiers, used by Alembic.
 revision = "4ef544102ba7"
 down_revision = "f33f4610dcda"
 branch_labels = None
 depends_on = None
-
-from alembic import op
-import sqlalchemy as sa
-
-from rally.common.db.sqlalchemy import types as sa_types
-from rally import consts
-from rally import exceptions
 
 
 OLD_STATUS = [

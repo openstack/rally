@@ -33,9 +33,9 @@ class DBCommands(object):
         """
         print("Recreating database: ", end="")
         self.show(api, True)
-        db.schema_cleanup()
+        db.schema.schema_cleanup()
         print("Database deleted successfully")
-        db.schema_create()
+        db.schema.schema_create()
         print("Database created successfully")
         envutils.clear_env()
 
@@ -43,7 +43,7 @@ class DBCommands(object):
         """Create Rally database."""
         print("Creating database: ", end="")
         self.show(api, True)
-        db.schema_create()
+        db.schema.schema_create()
         print("Database created successfully")
 
     def ensure(self, api):
@@ -51,8 +51,8 @@ class DBCommands(object):
         print("Ensuring database exists: ", end="")
         self.show(api, True)
 
-        if not db.schema_revision():
-            db.schema_create()
+        if not db.schema.schema_revision():
+            db.schema.schema_create()
             print("Database created successfully")
         else:
             print("Database already exists, nothing to do")
@@ -62,9 +62,9 @@ class DBCommands(object):
         print("Upgrading database: ", end="")
         self.show(api, True)
 
-        start_revision = db.schema_revision()
-        db.schema_upgrade()
-        current_revision = db.schema_revision()
+        start_revision = db.schema.schema_revision()
+        db.schema.schema_upgrade()
+        current_revision = db.schema.schema_revision()
         if start_revision != current_revision:
             print("Database schema upgraded successfully "
                   "from {start} to {end} revision."
@@ -74,7 +74,7 @@ class DBCommands(object):
 
     def revision(self, api):
         """Print current Rally database revision UUID."""
-        print(db.schema_revision())
+        print(db.schema.schema_revision())
 
     @cliutils.args("--creds", action="store_true", dest="show_creds",
                    help="Do not hide credentials from connection string")

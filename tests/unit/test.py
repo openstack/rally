@@ -33,8 +33,8 @@ class DatabaseFixture(cfg.fixture.Config):
         db_url = os.environ.get("RALLY_UNITTEST_DB_URL", "sqlite://")
         db.engine_reset()
         self.conf.set_default("connection", db_url, group="database")
-        db.schema_cleanup()
-        db.schema_create()
+        db.schema.schema_cleanup()
+        db.schema.schema_create()
 
 
 class TestCase(base.BaseTestCase):

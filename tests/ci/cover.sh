@@ -41,6 +41,7 @@ baseline_missing=$(awk 'END { print $3 }' $baseline_report)
 
 # Checkout back and save coverage report
 git checkout -
+git clean -f -d
 
 current_report=$(mktemp -t rally_coverageXXXXXXX)
 py.test --cov=rally tests/unit/ --cov-report=html -n auto

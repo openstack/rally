@@ -23,7 +23,7 @@ Create Date: 2017-10-15 22:45:04.963524
 from alembic import op
 import sqlalchemy as sa
 
-from rally.common.db.sqlalchemy import types as sa_types
+from rally.common.db import sa_types
 from rally import exceptions
 from rally.task.processing import charts
 

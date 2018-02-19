@@ -12,47 +12,52 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""Fix test results for verifications
+"""Change verification statuses
 
-Revision ID: 37fdbb373e8d
-Revises: 484cd9413e66
-Create Date: 2016-12-29 19:54:23.804525
+Revision ID: f33f4610dcda
+Revises: a6f364988fc2
+Create Date: 2017-01-23 13:56:30.999593
 
 """
-
-# revision identifiers, used by Alembic.
-revision = "37fdbb373e8d"
-down_revision = "484cd9413e66"
-branch_labels = None
-depends_on = None
-
 
 from alembic import op
 import sqlalchemy as sa
 
-from rally.common.db.sqlalchemy import types as sa_types
 from rally import exceptions
+
+# revision identifiers, used by Alembic.
+revision = "f33f4610dcda"
+down_revision = "a6f364988fc2"
+branch_labels = None
+depends_on = None
 
 
 verifications_helper = sa.Table(
     "verifications",
     sa.MetaData(),
     sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
-    sa.Column("tests", sa_types.MutableJSONEncodedDict, default={})
+    sa.Column("failures", sa.Integer, default=0),
+    sa.Column("unexpected_success", sa.Integer, default=0),
+    sa.Column("status", sa.String(36), nullable=False)
 )
 
 
 def upgrade():
     connection = op.get_bind()
     for v in connection.execute(verifications_helper.select()):
-        tests = v.tests
-        for test in tests.values():
-            duration = test.pop("time")
-            test["duration"] = duration
+        new_status = v.status
+        if v.status == "finished" and (
+                v.failures != 0 or v.unexpected_success != 0):
+            new_status = "failed"
+        elif v.status == "failed":
+            new_status = "crashed"
+        else:
+            pass
 
-        connection.execute(
-            verifications_helper.update().where(
-                verifications_helper.c.id == v.id).values(tests=tests))
+        if new_status != v.status:
+            connection.execute(verifications_helper.update().where(
+                verifications_helper.c.id == v.id).values(
+                status=new_status))
 
 
 def downgrade():

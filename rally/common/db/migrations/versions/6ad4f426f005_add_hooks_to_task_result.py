@@ -21,18 +21,17 @@ Revises: 08e1515a576c
 Create Date: 2016-09-13 18:11:47.703023
 
 """
+from alembic import op  # noqa
+import sqlalchemy as sa  # noqa
+
+from rally.common.db import sa_types
+from rally import exceptions
 
 # revision identifiers, used by Alembic.
 revision = "6ad4f426f005"
 down_revision = "08e1515a576c"
 branch_labels = None
 depends_on = None
-
-from alembic import op  # noqa
-import sqlalchemy as sa  # noqa
-
-from rally.common.db.sqlalchemy import types as sa_types
-from rally import exceptions
 
 
 task_results_helper = sa.Table(

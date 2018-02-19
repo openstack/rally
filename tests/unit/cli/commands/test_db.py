@@ -29,47 +29,47 @@ class DBCommandsTestCase(test.TestCase):
         self.fake_api = fakes.FakeAPI()
 
     @mock.patch("rally.cli.commands.db.envutils")
-    @mock.patch("rally.cli.commands.db.db")
-    def test_recreate(self, mock_db, mock_envutils):
+    @mock.patch("rally.cli.commands.db.db.schema")
+    def test_recreate(self, mock_db_schema, mock_envutils):
         self.db_commands.recreate(self.fake_api)
         db_calls = [mock.call.schema_cleanup(),
                     mock.call.schema_create()]
-        self.assertEqual(db_calls, mock_db.mock_calls)
+        self.assertEqual(db_calls, mock_db_schema.mock_calls)
         envutils_calls = [mock.call.clear_env()]
         self.assertEqual(envutils_calls, mock_envutils.mock_calls)
 
-    @mock.patch("rally.cli.commands.db.db")
-    def test_create(self, mock_db):
+    @mock.patch("rally.cli.commands.db.db.schema")
+    def test_create(self, mock_db_schema):
         self.db_commands.create(self.fake_api)
         calls = [mock.call.schema_create()]
-        self.assertEqual(calls, mock_db.mock_calls)
+        self.assertEqual(calls, mock_db_schema.mock_calls)
 
-    @mock.patch("rally.cli.commands.db.db")
-    def test_ensure_create(self, mock_db):
-        mock_db.schema_revision.return_value = None
+    @mock.patch("rally.cli.commands.db.db.schema")
+    def test_ensure_create(self, mock_db_schema):
+        mock_db_schema.schema_revision.return_value = None
         self.db_commands.ensure(self.fake_api)
         calls = [mock.call.schema_revision(),
                  mock.call.schema_create()]
-        self.assertEqual(calls, mock_db.mock_calls)
+        self.assertEqual(calls, mock_db_schema.mock_calls)
 
-    @mock.patch("rally.cli.commands.db.db")
-    def test_ensure_exists(self, mock_db):
-        mock_db.schema_revision.return_value = "revision"
+    @mock.patch("rally.cli.commands.db.db.schema")
+    def test_ensure_exists(self, mock_db_schema):
+        mock_db_schema.schema_revision.return_value = "revision"
         self.db_commands.ensure(self.fake_api)
         calls = [mock.call.schema_revision()]
-        self.assertEqual(calls, mock_db.mock_calls)
+        self.assertEqual(calls, mock_db_schema.mock_calls)
 
-    @mock.patch("rally.cli.commands.db.db")
-    def test_upgrade(self, mock_db):
+    @mock.patch("rally.cli.commands.db.db.schema")
+    def test_upgrade(self, mock_db_schema):
         self.db_commands.upgrade(self.fake_api)
         calls = [mock.call.schema_upgrade()]
-        mock_db.assert_has_calls(calls)
+        mock_db_schema.assert_has_calls(calls)
 
-    @mock.patch("rally.cli.commands.db.db")
-    def test_revision(self, mock_db):
+    @mock.patch("rally.cli.commands.db.db.schema")
+    def test_revision(self, mock_db_schema):
         self.db_commands.revision(self.fake_api)
         calls = [mock.call.schema_revision()]
-        mock_db.assert_has_calls(calls)
+        mock_db_schema.assert_has_calls(calls)
 
     @mock.patch("rally.cli.commands.db.print")
     @mock.patch("rally.cli.commands.db.cfg.CONF.database")

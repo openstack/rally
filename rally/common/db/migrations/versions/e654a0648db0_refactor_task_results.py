@@ -20,13 +20,6 @@ Revises: 3177d36ea270
 Create Date: 2016-04-01 14:36:56.373349
 
 """
-
-# revision identifiers, used by Alembic.
-revision = "e654a0648db0"
-down_revision = "32fada9b2fde"
-branch_labels = None
-depends_on = None
-
 import datetime as dt
 import json
 import uuid
@@ -34,8 +27,15 @@ import uuid
 from alembic import op
 import sqlalchemy as sa
 
-from rally.common.db.sqlalchemy import types as sa_types
+from rally.common.db import sa_types
 from rally import exceptions
+
+# revision identifiers, used by Alembic.
+revision = "e654a0648db0"
+down_revision = "32fada9b2fde"
+branch_labels = None
+depends_on = None
+
 
 taskhelper = sa.Table(
     "tasks",

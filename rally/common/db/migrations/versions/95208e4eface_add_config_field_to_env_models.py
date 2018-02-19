@@ -12,35 +12,32 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""Upsize the size of task.title and subtask.title from 64 to 128
+"""Add config field to env models
 
-Revision ID: e0a5df2c5153
-Revises: 7948b83229f6
-Create Date: 2017-09-05 16:34:47.434748
+Revision ID: 95208e4eface
+Revises: 7287df262dbc
+Create Date: 2018-02-04 13:48:35.779255
 
 """
-
-# revision identifiers, used by Alembic.
-revision = "e0a5df2c5153"
-down_revision = "7948b83229f6"
-branch_labels = None
-depends_on = None
-
 
 from alembic import op
 import sqlalchemy as sa
 
+from rally.common.db import sa_types
 from rally import exceptions
 
 
-def upgrade():
-    with op.batch_alter_table("tasks") as batch_op:
-        batch_op.alter_column(
-            "title", type_=sa.String(128), existing_type=sa.String(64))
+# revision identifiers, used by Alembic.
+revision = "95208e4eface"
+down_revision = "7287df262dbc"
+branch_labels = None
+depends_on = None
 
-    with op.batch_alter_table("subtasks") as batch_op:
-        batch_op.alter_column(
-            "title", type_=sa.String(128), existing_type=sa.String(64))
+
+def upgrade():
+    with op.batch_alter_table("envs") as batch_op:
+        batch_op.add_column(
+            sa.Column("config", sa_types.MutableJSONEncodedDict))
 
 
 def downgrade():

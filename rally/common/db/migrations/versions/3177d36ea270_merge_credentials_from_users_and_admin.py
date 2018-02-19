@@ -21,17 +21,17 @@ Create Date: 2016-03-01 16:01:38.747048
 
 """
 
+from alembic import op
+import sqlalchemy as sa
+
+from rally import exceptions
+
+
 # revision identifiers, used by Alembic.
 revision = "3177d36ea270"
 down_revision = "ca3626f62937"
 branch_labels = None
 depends_on = None
-
-
-from alembic import op
-import sqlalchemy as sa
-
-from rally import exceptions
 
 
 deployments_helper = sa.Table(

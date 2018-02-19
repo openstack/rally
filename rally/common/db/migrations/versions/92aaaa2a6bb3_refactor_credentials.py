@@ -19,18 +19,17 @@ Revises: 4ef544102ba7
 Create Date: 2017-02-01 12:52:43.499663
 
 """
+from alembic import op
+import sqlalchemy as sa
+
+from rally.common.db import sa_types
+from rally import exceptions
 
 # revision identifiers, used by Alembic.
 revision = "92aaaa2a6bb3"
 down_revision = "4ef544102ba7"
 branch_labels = None
 depends_on = None
-
-from alembic import op
-import sqlalchemy as sa
-
-from rally.common.db.sqlalchemy import types as sa_types
-from rally import exceptions
 
 
 deployments_helper = sa.Table(

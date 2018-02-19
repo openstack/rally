@@ -40,418 +40,757 @@ these objects be simple dictionaries.
 
 """
 
-from oslo_db import api as db_api
+import collections
+import datetime as dt
+import time
+
+from oslo_db import exception as db_exc
 from oslo_db import options as db_options
+from oslo_db.sqlalchemy import session as db_session
+import six
+import sqlalchemy as sa
+import sqlalchemy.orm   # noqa
 
 from rally.common import cfg
+from rally.common.db import models
+from rally import consts
+from rally import exceptions
+from rally.task.processing import charts
+
 
 CONF = cfg.CONF
-
-
 db_options.set_defaults(CONF, connection="sqlite:////tmp/rally.sqlite")
 
+_FACADE = None
 
-IMPL = None
+
+def serialize_data(data):
+    if data is None:
+        return None
+    if isinstance(data, (six.integer_types,
+                         six.string_types,
+                         six.text_type,
+                         dt.date,
+                         dt.time,
+                         float,
+                         )):
+        return data
+    if isinstance(data, dict):
+        return collections.OrderedDict((k, serialize_data(v))
+                                       for k, v in data.items())
+    if isinstance(data, (list, tuple)):
+        return [serialize_data(i) for i in data]
+
+    if isinstance(data, models.RallyBase):
+        result = {}
+        for key in data.__dict__:
+            if not key.startswith("_"):
+                result[key] = serialize_data(getattr(data, key))
+        return result
+
+    raise exceptions.DBException("Can not serialize %s" % data)
 
 
-def get_impl():
-    global IMPL
+def serialize(fn):
+    def wrapper(*args, **kwargs):
+        result = fn(*args, **kwargs)
+        return serialize_data(result)
+    return wrapper
 
-    if not IMPL:
-        _BACKEND_MAPPING = {"sqlalchemy": "rally.common.db.sqlalchemy.api"}
-        IMPL = db_api.DBAPI.from_config(CONF, backend_mapping=_BACKEND_MAPPING)
 
-    return IMPL
+def _create_facade_lazily():
+    global _FACADE
+
+    if _FACADE is None:
+        _FACADE = db_session.EngineFacade.from_config(CONF)
+
+    return _FACADE
+
+
+def get_engine():
+    facade = _create_facade_lazily()
+    return facade.get_engine()
+
+
+def get_session(**kwargs):
+    facade = _create_facade_lazily()
+    return facade.get_session(**kwargs)
 
 
 def engine_reset():
-    """Reset DB engine."""
-    get_impl().engine_reset()
+    global _FACADE
+    _FACADE = None
 
 
-def schema_cleanup():
-    """Drop DB schema. This method drops existing database."""
-    get_impl().schema_cleanup()
+def model_query(model, session=None):
+    """The helper method to create query.
 
-
-def schema_upgrade(revision=None):
-    """Migrate the database to `revision` or the most recent revision."""
-    return get_impl().schema_upgrade(revision)
-
-
-def schema_create():
-    """Create database schema from models description."""
-    return get_impl().schema_create()
-
-
-def schema_revision(detailed=False):
-    """Return the schema revision."""
-    return get_impl().schema_revision(detailed=detailed)
-
-
-def schema_stamp(revision):
-    """Stamps database with provided revision."""
-    return get_impl().schema_stamp(revision)
-
-
-def task_get(uuid, detailed=False):
-    """Returns task by uuid.
-
-    :param uuid: UUID of the task.
-    :param detailed: whether return results of task or not (Defaults to False).
-    :raises DBRecordNotFound: if the task does not exist.
-    :returns: task dict with data on the task.
+    :param model: The instance of
+                  :class:`rally.common.db.sqlalchemy.models.RallyBase` to
+                  request it.
+    :param session: Reuse the session object or get new one if it is
+                    None.
+    :returns: The query object.
+    :raises Exception: when the model is not a sublcass of
+             :class:`rally.common.db.sqlalchemy.models.RallyBase`.
     """
-    return get_impl().task_get(uuid, detailed=detailed)
+    def issubclassof_rally_base(obj):
+        return isinstance(obj, type) and issubclass(obj, models.RallyBase)
+
+    if not issubclassof_rally_base(model):
+        raise exceptions.DBException(
+            "The model %s should be a subclass of RallyBase" % model)
+
+    session = session or get_session()
+    return session.query(model)
 
 
+def _tags_get(uuid, tag_type, session=None):
+    tags = (model_query(models.Tag, session=session).
+            filter_by(uuid=uuid, type=tag_type).all())
+
+    return list(set(t.tag for t in tags))
+
+
+def _uuids_by_tags_get(tag_type, tags):
+    tags = (model_query(models.Tag).
+            filter(models.Tag.type == tag_type,
+                   models.Tag.tag.in_(tags)).all())
+
+    return list(set(tag.uuid for tag in tags))
+
+
+def _task_get(uuid, load_only=None, session=None):
+    pre_query = model_query(models.Task, session=session)
+    if load_only:
+        pre_query = pre_query.options(sa.orm.load_only(load_only))
+
+    task = pre_query.filter_by(uuid=uuid).first()
+    if not task:
+        raise exceptions.DBRecordNotFound(
+            criteria="uuid: %s" % uuid, table="tasks")
+    task.tags = sorted(_tags_get(uuid, consts.TagType.TASK, session))
+    return task
+
+
+def _task_workload_data_get_all(workload_uuid):
+    session = get_session()
+    with session.begin():
+        results = (model_query(models.WorkloadData, session=session).
+                   filter_by(workload_uuid=workload_uuid).
+                   order_by(models.WorkloadData.chunk_order.asc()))
+
+    return sorted([raw for workload_data in results
+                   for raw in workload_data.chunk_data["raw"]],
+                  key=lambda x: x["timestamp"])
+
+
+@serialize
+def task_get(uuid=None, detailed=False):
+    session = get_session()
+    task = serialize_data(_task_get(uuid, session=session))
+
+    if detailed:
+        task["subtasks"] = _subtasks_get_all_by_task_uuid(
+            uuid, session=session)
+
+    return task
+
+
+@serialize
 def task_get_status(uuid):
-    """Returns task by uuid.
-
-    :param uuid: UUID of the task.
-    :raises DBRecordNotFound: if the task does not exist.
-    :returns: task dict with data on the task.
-    """
-    return get_impl().task_get_status(uuid)
+    return _task_get(uuid, load_only="status").status
 
 
+@serialize
 def task_create(values):
-    """Create task record in DB.
+    tags = values.pop("tags", [])
+    # TODO(ikhudoshyn): currently 'input_task'
+    # does not come in 'values'
+    # After completely switching to the new
+    # DB schema in API we should reconstruct
+    # input_task's from associated workloads
+    # the same is true for 'pass_sla',
+    # 'task_duration', 'validation_result'
+    # and 'validation_duration'
+    task = models.Task()
+    task.update(values)
+    task.save(get_session())
 
-    :param values: dict with record values.
-    :returns: task dict with data on the task.
-    """
-    return get_impl().task_create(values)
+    if tags:
+        get_session().bulk_save_objects(
+            models.Tag(uuid=task.uuid, tag=t,
+                       type=consts.TagType.TASK)
+            for t in set(tags)
+        )
+        task.tags = sorted(_tags_get(task.uuid, consts.TagType.TASK))
+    else:
+        task.tags = []
+    return task
 
 
+@serialize
 def task_update(uuid, values):
-    """Update task by values.
+    session = get_session()
+    values.pop("uuid", None)
+    tags = values.pop("tags", None)
+    with session.begin():
+        task = _task_get(uuid, session=session)
+        task.update(values)
 
-    :param uuid: UUID of the task.
-    :param values: dict with record values.
-    :raises DBRecordNotFound: if task is not found.
-    :returns: new updated task dict with data on the task.
-    """
-    return get_impl().task_update(uuid, values)
-
-
-def task_update_status(task_uuid, status, allowed_statuses):
-    """Update task status with specified value.
-
-    :param task_uuid: string with UUID of Task instance.
-    :param status: new value to be written into db instead of status.
-    :param allowed_statuses: list of expected statuses to update in db.
-    :raises DBConflict: if task is in improper status.
-    :raises DBRecordNotFound: if task is not found.
-    :returns: the count of rows match as returned by the database's
-              "row count" feature
-    """
-    return get_impl().task_update_status(task_uuid, allowed_statuses,
-                                         status)
+        if tags:
+            for t in set(tags):
+                tag = models.Tag()
+                tag.update({"uuid": task.uuid,
+                            "type": consts.TagType.TASK,
+                            "tag": t})
+                tag.save(session)
+        # take an updated instance of task
+        task = _task_get(uuid, session=session)
+    return task
 
 
+def task_update_status(uuid, status, allowed_statuses):
+    session = get_session()
+    result = (
+        session
+        .query(models.Task)
+        .filter(models.Task.uuid == uuid,
+                models.Task.status.in_(allowed_statuses))
+        .update({"status": status}, synchronize_session=False)
+    )
+    if not result:
+        raise exceptions.DBRecordNotFound(
+            criteria="uuid=%(uuid)s and status in [%(statuses)s]"
+                     % {"uuid": uuid, "statuses": ", ".join(allowed_statuses)},
+            table="tasks")
+    return result
+
+
+@serialize
 def task_list(status=None, env=None, tags=None):
-    """Get a list of tasks.
+    session = get_session()
+    tasks = []
+    with session.begin():
+        query = model_query(models.Task)
 
-    :param status: Task status to filter the returned list on. If set to
-        None, all the tasks will be returned.
-    :param env: Environment UUID to filter the returned list on.
-        If set to None, tasks from all environments will be returned.
-    :param tags: A list of tags to filter tasks by.
-    :returns: A list of dicts with data on the tasks.
-    """
-    return get_impl().task_list(status=status,
-                                env=env,
-                                tags=tags)
+        filters = {}
+        if status is not None:
+            filters["status"] = status
+        if env is not None:
+            filters["env_uuid"] = env_get(env)["uuid"]
+        if filters:
+            query = query.filter_by(**filters)
+
+        if tags:
+            uuids = _uuids_by_tags_get(consts.TagType.TASK, tags)
+            if not uuids:
+                return []
+            query = query.filter(models.Task.uuid.in_(uuids))
+
+        for task in query.all():
+            task.tags = sorted(
+                _tags_get(task.uuid, consts.TagType.TASK, session))
+            tasks.append(task)
+
+    return tasks
 
 
 def task_delete(uuid, status=None):
-    """Delete a task.
+    session = get_session()
+    with session.begin():
+        query = base_query = model_query(models.Task).filter_by(uuid=uuid)
+        if status is not None:
+            query = base_query.filter_by(status=status)
 
-    This method removes the task by the uuid, but if the status
-    argument is specified, then the task is removed only when these
-    statuses are equal otherwise an exception is raised.
+        (model_query(models.WorkloadData).filter_by(task_uuid=uuid).
+         delete(synchronize_session=False))
 
-    :param uuid: UUID of the task.
-    :raises DBRecordNotFound: if the task does not exist.
-    :raises DBConflict: if the status of the task does not
-                        equal to the status argument.
-    """
-    return get_impl().task_delete(uuid, status=status)
+        (model_query(models.Workload).filter_by(task_uuid=uuid).
+         delete(synchronize_session=False))
+
+        (model_query(models.Subtask).filter_by(task_uuid=uuid).
+         delete(synchronize_session=False))
+
+        (model_query(models.Tag).filter_by(
+            uuid=uuid, type=consts.TagType.TASK).
+         delete(synchronize_session=False))
+
+        count = query.delete(synchronize_session=False)
+        if not count:
+            if status is not None:
+                task = base_query.first()
+                if task:
+                    raise exceptions.DBConflict(
+                        "Task `%(uuid)s` in `%(actual)s` status but "
+                        "`%(require)s` is required."
+                        % {"uuid": uuid,
+                           "require": status, "actual": task.status})
+
+            raise exceptions.DBRecordNotFound(
+                criteria="uuid: %s" % uuid, table="tasks")
 
 
+def _subtasks_get_all_by_task_uuid(task_uuid, session=None):
+    result = model_query(models.Subtask, session=session).filter_by(
+        task_uuid=task_uuid).all()
+    subtasks = []
+    for subtask in result:
+        subtask = serialize_data(subtask)
+        subtask["workloads"] = []
+        workloads = (model_query(models.Workload, session=session).
+                     filter_by(subtask_uuid=subtask["uuid"]).all())
+        for workload in workloads:
+            workload.data = _task_workload_data_get_all(workload.uuid)
+            subtask["workloads"].append(serialize_data(workload))
+        subtasks.append(subtask)
+    return subtasks
+
+
+@serialize
 def subtask_create(task_uuid, title, description=None, contexts=None):
-    """Create a subtask.
+    subtask = models.Subtask(task_uuid=task_uuid)
+    subtask.update({
+        "title": title,
+        "description": description or "",
+        "contexts": contexts or {},
+    })
+    subtask.save(get_session())
+    return subtask
 
-    :param task_uuid: string with UUID of Task instance.
-    :param title: Subtask title.
-    :param description: string with the description of Subtask
-    :param contexts: a dict with config of Workload contexts
-    :returns: a dict with data on the subtask.
-    """
-    return get_impl().subtask_create(task_uuid, title, description, contexts)
 
-
+@serialize
 def subtask_update(subtask_uuid, values):
-    """Update a subtask.
-
-    :param subtask_uuid: string with UUID of Subtask instance.
-    :param values: dict with record values.
-    :returns: a dict with data on the subtask.
-    """
-    return get_impl().subtask_update(subtask_uuid, values)
+    subtask = model_query(models.Subtask).filter_by(uuid=subtask_uuid).first()
+    subtask.update(values)
+    subtask.save(get_session())
+    return subtask
 
 
+@serialize
+def workload_get(workload_uuid):
+    return model_query(models.Workload).filter_by(uuid=workload_uuid).first()
+
+
+@serialize
 def workload_create(task_uuid, subtask_uuid, name, description, position,
                     runner, runner_type, hooks, contexts, sla, args):
-    """Create a workload.
-
-    :param task_uuid: string with UUID of Task instance.
-    :param subtask_uuid: string with UUID of Subtask instance.
-    :param name: string with the name of Workload
-    :param description: string with the description of Workload
-    :param position: integer with an order of Workload in Subtask
-    :param runner: a dict with config of Workload runner
-    :param runner_type: a type of Workload runner
-    :param hooks: a list with Workload hooks config and results
-    :param contexts: a dict with config of Workload contexts
-    :param sla: a dict with config of Workload sla
-    :param args: a dict with arguments of Workload
-    :returns: a dict with data on the workload.
-    """
-    return get_impl().workload_create(
-        task_uuid, subtask_uuid, name=name, description=description,
-        position=position, runner=runner, runner_type=runner_type,
-        hooks=hooks, contexts=contexts, sla=sla, args=args)
+    workload = models.Workload(task_uuid=task_uuid,
+                               subtask_uuid=subtask_uuid,
+                               name=name,
+                               description=description,
+                               position=position,
+                               runner=runner,
+                               runner_type=runner_type,
+                               hooks=hooks,
+                               contexts=contexts or {},
+                               sla=sla,
+                               args=args)
+    workload.save(get_session())
+    return workload
 
 
-def workload_get(workload_uuid):
-    """Get a workload.
-
-    :param workload_uuid: string with UUID of Workload to fetch.
-    :returns: a dict with data on the workload.
-    """
-    return get_impl().workload_get(workload_uuid)
-
-
+@serialize
 def workload_data_create(task_uuid, workload_uuid, chunk_order, data):
-    """Create a workload data.
+    workload_data = models.WorkloadData(task_uuid=task_uuid,
+                                        workload_uuid=workload_uuid)
 
-    :param task_uuid: string with UUID of Task instance.
-    :param workload_uuid: string with UUID of Workload instance.
-    :param chunk_order: ordinal index of workload data.
-    :param data: dict with record values on the workload data.
-    :returns: a dict with data on the workload data.
-    """
-    return get_impl().workload_data_create(task_uuid, workload_uuid,
-                                           chunk_order, data)
+    raw_data = data.get("raw", [])
+    iter_count = len(raw_data)
+
+    failed_iter_count = 0
+
+    started_at = float("inf")
+    finished_at = 0
+    for d in raw_data:
+        if d.get("error"):
+            failed_iter_count += 1
+
+        timestamp = d["timestamp"]
+        duration = d["duration"]
+        finished = timestamp + duration
+
+        if timestamp < started_at:
+            started_at = timestamp
+
+        if finished > finished_at:
+            finished_at = finished
+
+    now = time.time()
+    if started_at == float("inf"):
+        started_at = now
+    if finished_at == 0:
+        finished_at = now
+
+    workload_data.update({
+        "task_uuid": task_uuid,
+        "workload_uuid": workload_uuid,
+        "chunk_order": chunk_order,
+        "iteration_count": iter_count,
+        "failed_iteration_count": failed_iter_count,
+        "chunk_data": {"raw": raw_data},
+        # TODO(ikhudoshyn)
+        "chunk_size": 0,
+        "compressed_chunk_size": 0,
+        "started_at": dt.datetime.fromtimestamp(started_at),
+        "finished_at": dt.datetime.fromtimestamp(finished_at)
+    })
+    workload_data.save(get_session())
+    return workload_data
 
 
-def workload_set_results(workload_uuid, subtask_uuid, task_uuid, load_duration,
-                         full_duration, start_time, sla_results,
-                         contexts_results, hooks_results=None):
-    """Set workload results.
+@serialize
+def workload_set_results(workload_uuid, subtask_uuid, task_uuid,
+                         load_duration, full_duration, start_time,
+                         sla_results, contexts_results, hooks_results=None):
+    session = get_session()
+    with session.begin():
+        workload_results = _task_workload_data_get_all(workload_uuid)
 
-    :param workload_uuid: string with UUID of Workload instance.
-    :param subtask_uuid: string with UUID of Workload's parent Subtask.
-    :param task_uuid: string with UUID of Workload's parent Task.
-    :param load_duration: float value of Workload's load duration
-    :param full_duration: float value of Workload's full duration (
-        generating load, executing contexts and etc)
-    :param start_time: a timestamp of load start
-    :param sla_results: a list with Workload's SLA results
-    :param contexts_results: a list with Contexts execution results
-    :param hooks_results: a list with Workload's Hooks results
-    :returns: a dict with data on the workload.
-    """
-    return get_impl().workload_set_results(
-        workload_uuid=workload_uuid,
-        subtask_uuid=subtask_uuid,
-        task_uuid=task_uuid,
-        load_duration=load_duration,
-        full_duration=full_duration,
-        start_time=start_time,
-        sla_results=sla_results,
-        hooks_results=hooks_results,
-        contexts_results=contexts_results)
+        iter_count = len(workload_results)
+
+        failed_iter_count = 0
+        max_duration = None
+        min_duration = None
+
+        for d in workload_results:
+            if d.get("error"):
+                failed_iter_count += 1
+
+            duration = d.get("duration", 0)
+
+            if max_duration is None or duration > max_duration:
+                max_duration = duration
+
+            if min_duration is None or min_duration > duration:
+                min_duration = duration
+
+        durations_stat = charts.MainStatsTable(
+            {"total_iteration_count": iter_count})
+
+        for itr in workload_results:
+            durations_stat.add_iteration(itr)
+
+        sla = sla_results or []
+        # NOTE(ikhudoshyn): we call it 'pass_sla'
+        # for the sake of consistency with other models
+        # so if no SLAs were specified, then we assume pass_sla == True
+        success = all([s.get("success") for s in sla])
+
+        session.query(models.Workload).filter_by(
+            uuid=workload_uuid).update(
+            {
+                "sla_results": {"sla": sla},
+                "contexts_results": contexts_results,
+                "hooks": hooks_results or [],
+                "load_duration": load_duration,
+                "full_duration": full_duration,
+                "min_duration": min_duration,
+                "max_duration": max_duration,
+                "total_iteration_count": iter_count,
+                "failed_iteration_count": failed_iter_count,
+                "start_time": start_time,
+                "statistics": {"durations": durations_stat.to_dict()},
+                "pass_sla": success}
+        )
+        task_values = {
+            "task_duration": models.Task.task_duration + load_duration}
+        if not success:
+            task_values["pass_sla"] = False
+
+        subtask_values = {
+            "duration": models.Subtask.duration + load_duration}
+        if not success:
+            subtask_values["pass_sla"] = False
+        session.query(models.Task).filter_by(uuid=task_uuid).update(
+            task_values)
+
+        session.query(models.Subtask).filter_by(uuid=subtask_uuid).update(
+            subtask_values)
 
 
+@serialize
 def env_get(uuid_or_name):
-    """Returns envs with corresponding uuid or name."""
-    return get_impl().env_get(uuid_or_name)
+    env = (model_query(models.Env)
+           .filter(sa.or_(models.Env.uuid == uuid_or_name,
+                          models.Env.name == uuid_or_name))
+           .first())
+    if not env:
+        raise exceptions.DBRecordNotFound(
+            criteria="uuid or name is %s" % uuid_or_name, table="envs")
+    return env
 
 
+@serialize
 def env_get_status(uuid):
-    """Returns status of env with corresponding uuid."""
-    return get_impl().env_get_status(uuid)
+    resp = (model_query(models.Env)
+            .filter_by(uuid=uuid)
+            .options(sa.orm.load_only("status"))
+            .first())
+    if not resp:
+        raise exceptions.DBRecordNotFound(
+            criteria="uuid: %s" % uuid, table="envs")
+    return resp["status"]
 
 
+@serialize
 def env_list(status=None):
-    """Return list of envs, filtered by status, if status provided."""
-    return get_impl().env_list(status=status)
+    query = model_query(models.Env)
+    if status:
+        query = query.filter_by(status=status)
+    return query.all()
 
 
+@serialize
 def env_create(name, status, description, extras, config, spec, platforms):
-    """Created db record of env and platforms."""
-    return get_impl().env_create(
-        name, status, description, extras, config, spec, platforms)
+    try:
+        env_uuid = models.UUID()
+        for p in platforms:
+            p["env_uuid"] = env_uuid
+
+        env = models.Env(
+            name=name, uuid=env_uuid,
+            status=status, description=description,
+            extras=extras, config=config, spec=spec
+        )
+        get_session().bulk_save_objects([env] + [
+            models.Platform(**p) for p in platforms
+        ])
+    except db_exc.DBDuplicateEntry:
+        raise exceptions.DBRecordExists(
+            field="name", value=name, table="envs")
+
+    return env_get(env_uuid)
 
 
 def env_rename(uuid, old_name, new_name):
-    """Renames env. Returns op result as bool"""
-    return get_impl().env_rename(uuid, old_name, new_name)
+    try:
+        return bool(model_query(models.Env)
+                    .filter_by(uuid=uuid, name=old_name)
+                    .update({"name": new_name}))
+    except db_exc.DBDuplicateEntry:
+        raise exceptions.DBRecordExists(
+            field="name", value=new_name, table="envs")
 
 
 def env_update(uuid, description=None, extras=None, config=None):
-    """Update description and extra of envs. Returns op result as bool."""
-    return get_impl().env_update(
-        uuid, description=description, extras=extras, config=config)
+    values = {}
+    if description is not None:
+        values["description"] = description
+    if extras is not None:
+        values["extras"] = extras
+    if config is not None:
+        values["config"] = config
+
+    if not values:
+        return True
+
+    return bool(model_query(models.Env)
+                .filter_by(uuid=uuid)
+                .update(values))
 
 
 def env_set_status(uuid, old_status, new_status):
-    """Set new env status. """
-    return get_impl().env_set_status(uuid, old_status, new_status)
+    count = (model_query(models.Env)
+             .filter_by(uuid=uuid, status=old_status)
+             .update({"status": new_status}))
+    if count:
+        return True
+    raise exceptions.DBConflict("Env %s should be in status %s actual %s"
+                                % (uuid, old_status, env_get_status(uuid)))
 
 
 def env_delete_cascade(uuid):
-    """Delete envs, platforms and all related to env resources."""
-    return get_impl().env_delete_cascade(uuid)
+    session = get_session()
+    with session.begin():
+        (model_query(models.Task, session=session)
+         .filter_by(env_uuid=uuid)
+         .delete())
+        (model_query(models.Verification, session=session)
+         .filter_by(env_uuid=uuid)
+         .delete())
+        (model_query(models.Platform, session=session)
+         .filter_by(env_uuid=uuid)
+         .delete())
+        (model_query(models.Env, session=session)
+         .filter_by(uuid=uuid)
+         .delete())
 
 
+@serialize
 def platforms_list(env_uuid):
-    """List platforms related to some env."""
-    return get_impl().platforms_list(env_uuid)
+    return model_query(models.Platform).filter_by(env_uuid=env_uuid).all()
 
 
+@serialize
 def platform_get(uuid):
-    """Returns platforms with corresponding uuid."""
-    return get_impl().platform_get(uuid)
+    p = model_query(models.Platform).filter_by(uuid=uuid).first()
+    if not p:
+        raise exceptions.DBRecordNotFound(
+            criteria="uuid = %s" % uuid, table="platforms")
+    return p
 
 
 def platform_set_status(uuid, old_status, new_status):
-    """Set's new status to platform"""
-    return get_impl().platform_set_status(uuid, old_status, new_status)
+    count = (model_query(models.Platform)
+             .filter_by(uuid=uuid, status=old_status)
+             .update({"status": new_status}))
+    if count:
+        return True
+
+    platform = platform_get(uuid)
+    raise exceptions.DBConflict(
+        "Platform %s should be in status %s actual %s"
+        % (uuid, old_status, platform["status"]))
 
 
 def platform_set_data(uuid, platform_data=None, plugin_data=None):
-    """Set's platform data."""
-    return get_impl().platform_set_data(uuid, platform_data, plugin_data)
+    values = {}
+    if platform_data is not None:
+        values["platform_data"] = platform_data
+    if plugin_data is not None:
+        values["plugin_data"] = plugin_data
+
+    if not values:
+        return True
+
+    return bool(model_query(models.Platform)
+                .filter_by(uuid=uuid)
+                .update(values))
 
 
-def verifier_create(name, vtype, platform, source, version, system_wide,
-                    extra_settings=None):
-    """Create a verifier record.
-
-    :param name: verifier name
-    :param vtype: verifier plugin name
-    :param platform: verifier plugin platform
-    :param source: path or URL to a verifier repo
-    :param version: branch, tag or commit ID of a verifier repo
-    :param system_wide: whether or not to use the system-wide environment
-    :param extra: verifier-specific installation options
-    :returns: a dict with verifier data
-    """
-    return get_impl().verifier_create(name=name, vtype=vtype,
-                                      platform=platform, source=source,
-                                      version=version, system_wide=system_wide,
-                                      extra_settings=extra_settings)
+@serialize
+def verifier_create(name, vtype, platform, source, version,
+                    system_wide, extra_settings=None):
+    verifier = models.Verifier(name=name, type=vtype, platform=platform,
+                               source=source, extra_settings=extra_settings,
+                               version=version, system_wide=system_wide)
+    verifier.save(get_session())
+    return verifier
 
 
+@serialize
 def verifier_get(verifier_id):
-    """Get a verifier record.
-
-    :param verifier_id: verifier name or UUID
-    :raises DBRecordNotFound: if verifier does not exist
-    :returns: a dict with verifier data
-    """
-    return get_impl().verifier_get(verifier_id)
+    return _verifier_get(verifier_id)
 
 
+def _verifier_get(verifier_id, session=None):
+    verifier = model_query(
+        models.Verifier, session=session).filter(
+            sa.or_(models.Verifier.name == verifier_id,
+                   models.Verifier.uuid == verifier_id)).first()
+    if not verifier:
+        raise exceptions.DBRecordNotFound(
+            criteria="name or uuid is %s" % verifier_id, table="verifiers")
+    return verifier
+
+
+@serialize
 def verifier_list(status=None):
-    """Get all verifier records.
-
-    :param status: status to filter verifiers by
-    :returns: a list of dicts with verifiers data
-    """
-    return get_impl().verifier_list(status)
+    query = model_query(models.Verifier)
+    if status:
+        query = query.filter_by(status=status)
+    return query.all()
 
 
 def verifier_delete(verifier_id):
-    """Delete a verifier record.
+    count = (model_query(models.Verifier)
+             .filter(sa.or_(models.Verifier.name == verifier_id,
+                            models.Verifier.uuid == verifier_id))
+             .delete(synchronize_session=False))
+    if not count:
+        raise exceptions.DBRecordNotFound(
+            criteria="name or uuid is %s" % verifier_id, table="verifiers")
 
-    :param verifier_id: verifier name or UUID
-    :raises DBRecordNotFound: if verifier does not exist
-    """
-    get_impl().verifier_delete(verifier_id)
 
-
+@serialize
 def verifier_update(verifier_id, **properties):
-    """Update a verifier record.
-
-    :param verifier_id: verifier name or UUID
-    :param properties: a dict with new properties to update verifier record
-    :raises DBRecordNotFound: if verifier does not exist
-    :returns: the updated dict with verifier data
-    """
-    return get_impl().verifier_update(verifier_id, properties)
+    session = get_session()
+    with session.begin():
+        verifier = _verifier_get(verifier_id, session=session)
+        verifier.update(properties)
+        verifier.save(session)
+    return verifier
 
 
-def verification_create(verifier_uuid, env, tags=None, run_args=None):
-    """Create a verification record.
+@serialize
+def verification_create(verifier_id, env, tags=None, run_args=None):
+    verifier = _verifier_get(verifier_id)
+    env = env_get(env)
+    verification = models.Verification()
+    verification.update({"verifier_uuid": verifier.uuid,
+                         "env_uuid": env["uuid"],
+                         "run_args": run_args})
+    verification.save(get_session())
 
-    :param verifier_uuid: verification UUID
-    :param env: Environment UUID
-    :param tags: a list of tags to assign them to verification
-    :param run_args: a dict with run arguments for verification
-    :returns: a dict with verification data
-    """
-    return get_impl().verification_create(verifier_uuid,
-                                          env=env,
-                                          tags=tags,
-                                          run_args=run_args)
+    if tags:
+        get_session().bulk_save_objects(
+            models.Tag(uuid=verification.uuid, tag=t,
+                       type=consts.TagType.VERIFICATION)
+            for t in set(tags)
+        )
+    return verification
 
 
+@serialize
 def verification_get(verification_uuid):
-    """Get a verification record.
-
-    :param verification_uuid: verification UUID
-    :raises DBRecordNotFound: if verification does not exist
-    :returns: a dict with verification data
-    """
-    return get_impl().verification_get(verification_uuid)
+    verification = _verification_get(verification_uuid)
+    verification.tags = sorted(_tags_get(verification.uuid,
+                                         consts.TagType.VERIFICATION))
+    return verification
 
 
-def verification_list(verifier_id=None, env=None, tags=None,
-                      status=None):
-    """List all verification records.
-
-    :param verifier_id: verifier name or UUID to filter verifications by
-    :param env: Environment name or UUID to filter verifications by
-    :param tags: tags to filter verifications by
-    :param status: status to filter verifications by
-    :returns: a list of dicts with verifications data
-    """
-    return get_impl().verification_list(verifier_id,
-                                        env=env,
-                                        tags=tags,
-                                        status=status)
+def _verification_get(verification_uuid, session=None):
+    verification = model_query(
+        models.Verification, session=session).filter_by(
+        uuid=verification_uuid).first()
+    if not verification:
+        raise exceptions.DBRecordNotFound(
+            criteria="uuid: %s" % verification_uuid, table="verifications")
+    return verification
 
 
-def verification_delete(verification_uuid):
-    """Delete a verification record.
+@serialize
+def verification_list(verifier_id=None, env=None, tags=None, status=None):
+    session = get_session()
+    with session.begin():
+        filter_by = {}
+        if verifier_id:
+            verifier = _verifier_get(verifier_id, session=session)
+            filter_by["verifier_uuid"] = verifier.uuid
+        if env:
+            env = env_get(env)
+            filter_by["env_uuid"] = env["uuid"]
+        if status:
+            filter_by["status"] = status
 
-    :param verification_uuid: verification UUID
-    :raises DBRecordNotFound: if verification does not exist
-    """
-    return get_impl().verification_delete(verification_uuid)
+        query = model_query(models.Verification, session=session)
+        if filter_by:
+            query = query.filter_by(**filter_by)
+
+        def add_tags_to_verifications(verifications):
+            for verification in verifications:
+                verification.tags = sorted(_tags_get(
+                    verification.uuid, consts.TagType.VERIFICATION))
+            return verifications
+
+        if tags:
+            uuids = _uuids_by_tags_get(consts.TagType.VERIFICATION, tags)
+            query = query.filter(models.Verification.uuid.in_(uuids))
+
+    return add_tags_to_verifications(query.all())
 
 
-def verification_update(uuid, **properties):
-    """Update a verification record.
+def verification_delete(uuid):
+    count = model_query(models.Verification).filter_by(uuid=uuid).delete()
+    if not count:
+        raise exceptions.DBRecordNotFound(criteria="uuid: %s" % uuid,
+                                          table="verifications")
 
-    :param uuid: verification UUID
-    :param properties: a dict with new properties to update verification record
-    :raises DBRecordNotFound: if verification does not exist
-    :returns: the updated dict with verification data
-    """
-    return get_impl().verification_update(uuid, properties)
+
+@serialize
+def verification_update(verification_uuid, **properties):
+    verification = _verification_get(verification_uuid)
+    verification.update(properties)
+    verification.save(get_session())
+    return verification

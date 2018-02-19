@@ -12,32 +12,46 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""Add config field to env models
+"""Fix test results for verifications
 
-Revision ID: 95208e4eface
-Revises: 7287df262dbc
-Create Date: 2018-02-04 13:48:35.779255
+Revision ID: 37fdbb373e8d
+Revises: 484cd9413e66
+Create Date: 2016-12-29 19:54:23.804525
 
 """
 
 from alembic import op
 import sqlalchemy as sa
 
-from rally.common.db.sqlalchemy import types as sa_types
+from rally.common.db import sa_types
 from rally import exceptions
 
-
 # revision identifiers, used by Alembic.
-revision = "95208e4eface"
-down_revision = "7287df262dbc"
+revision = "37fdbb373e8d"
+down_revision = "484cd9413e66"
 branch_labels = None
 depends_on = None
 
 
+verifications_helper = sa.Table(
+    "verifications",
+    sa.MetaData(),
+    sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
+    sa.Column("tests", sa_types.MutableJSONEncodedDict, default={})
+)
+
+
 def upgrade():
-    with op.batch_alter_table("envs") as batch_op:
-        batch_op.add_column(
-            sa.Column("config", sa_types.MutableJSONEncodedDict))
+    connection = op.get_bind()
+    for v in connection.execute(verifications_helper.select()):
+        tests = v.tests
+        for test in tests.values():
+            duration = test.pop("time")
+            test["duration"] = duration
+
+        connection.execute(
+            verifications_helper.update().where(
+                verifications_helper.c.id == v.id).values(tests=tests))
 
 
 def downgrade():

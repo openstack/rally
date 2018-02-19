@@ -15,45 +15,59 @@
 """
 SQLAlchemy models for rally data.
 """
-
+import datetime as dt
 import uuid
 
-from oslo_db.sqlalchemy.compat import utils as compat_utils
-from oslo_db.sqlalchemy import models
-from oslo_utils import timeutils
+import six
 import sqlalchemy as sa
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import deferred
-from sqlalchemy import schema
+import sqlalchemy.ext.declarative
+import sqlalchemy.orm   # noqa (used as sa.orm)
 
-from rally.common.db.sqlalchemy import types as sa_types
+from rally.common.db import sa_types
 from rally import consts
 
 
-BASE = declarative_base()
+BASE = sa.ext.declarative.declarative_base()
 
 
 def UUID():
     return str(uuid.uuid4())
 
 
-class RallyBase(models.ModelBase):
-
+class RallyBase(six.Iterator):
+    """Base class for models."""
+    __table_initialized__ = False
     metadata = None
-    created_at = sa.Column(sa.DateTime, default=lambda: timeutils.utcnow())
-    updated_at = sa.Column(sa.DateTime, default=lambda: timeutils.utcnow(),
-                           onupdate=lambda: timeutils.utcnow())
 
-    def save(self, session=None):
-        # NOTE(LimingWu): We can't direct import the api module. That will
-        # result in the cyclic reference import since the api has imported
-        # this module.
-        from rally.common.db.sqlalchemy import api as sa_api
+    created_at = sa.Column(sa.DateTime, default=dt.datetime.utcnow)
+    updated_at = sa.Column(sa.DateTime, default=dt.datetime.utcnow,
+                           onupdate=dt.datetime.utcnow)
 
-        if session is None:
-            session = sa_api.get_session()
+    def save(self, session):
+        """Save this object."""
 
-        super(RallyBase, self).save(session=session)
+        # NOTE(boris-42): This part of code should be look like:
+        #                       session.add(self)
+        #                       session.flush()
+        #                 But there is a bug in sqlalchemy and eventlet that
+        #                 raises NoneType exception if there is no running
+        #                 transaction and rollback is called. As long as
+        #                 sqlalchemy has this bug we have to create transaction
+        #                 explicitly.
+        with session.begin(subtransactions=True):
+            session.add(self)
+            session.flush()
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+    def get(self, key, default=None):
+        return getattr(self, key, default)
+
+    def update(self, values):
+        """Make the model object behave like a dict."""
+        for k, v in values.items():
+            setattr(self, k, v)
 
 
 class Env(BASE, RallyBase):
@@ -112,7 +126,7 @@ class Task(BASE, RallyBase):
     env_uuid = sa.Column(sa.String(36), nullable=False)
 
     # we do not save the whole input task
-    input_task = deferred(sa.Column(sa.Text, default=""))
+    input_task = sa.orm.deferred(sa.Column(sa.Text, default=""))
 
     title = sa.Column(sa.String(128), default="")
     description = sa.Column(sa.Text, default="")
@@ -121,7 +135,7 @@ class Task(BASE, RallyBase):
         sa_types.MutableJSONEncodedDict, default={}, nullable=False)
 
     # we do not calculate the duration of a validation step yet
-    validation_duration = deferred(sa.Column(sa.Float))
+    validation_duration = sa.orm.deferred(sa.Column(sa.Float))
 
     task_duration = sa.Column(sa.Float, default=0.0)
     pass_sla = sa.Column(sa.Boolean, default=True)
@@ -156,17 +170,17 @@ class Subtask(BASE, RallyBase):
 
     # we do not support subtask contexts feature yet, see
     # https://review.openstack.org/#/c/404168/
-    contexts = deferred(sa.Column(
+    contexts = sa.orm.deferred(sa.Column(
         sa_types.JSONEncodedDict, default={}, nullable=False))
 
-    contexts_results = deferred(sa.Column(
+    contexts_results = sa.orm.deferred(sa.Column(
         sa_types.MutableJSONEncodedList, default=[], nullable=False))
 
     sla = sa.Column(
         sa_types.JSONEncodedDict, default={}, nullable=False)
 
     # It is always False for now
-    run_in_parallel = deferred(
+    run_in_parallel = sa.orm.deferred(
         sa.Column(sa.Boolean, default=False, nullable=False))
 
     duration = sa.Column(sa.Float, default=0.0)
@@ -242,7 +256,7 @@ class Workload(BASE, RallyBase):
         sa_types.MutableJSONEncodedDict, default={}, nullable=False)
 
     pass_sla = sa.Column(sa.Boolean, default=True)
-    _profiling_data = deferred(sa.Column(sa.Text, default=""))
+    _profiling_data = sa.orm.deferred(sa.Column(sa.Text, default=""))
 
 
 class WorkloadData(BASE, RallyBase):
@@ -277,14 +291,17 @@ class WorkloadData(BASE, RallyBase):
     chunk_data = sa.Column(
         sa_types.MutableJSONEncodedDict, default={}, nullable=False)
     # all these fields are not used
-    iteration_count = deferred(sa.Column(sa.Integer, nullable=False))
-    failed_iteration_count = deferred(sa.Column(sa.Integer, nullable=False))
-    chunk_size = deferred(sa.Column(sa.Integer, nullable=False))
-    compressed_chunk_size = deferred(sa.Column(sa.Integer, nullable=False))
-    started_at = deferred(sa.Column(
-        sa.DateTime, default=lambda: timeutils.utcnow(), nullable=False))
-    finished_at = deferred(sa.Column(
-        sa.DateTime, default=lambda: timeutils.utcnow(), nullable=False))
+    iteration_count = sa.orm.deferred(sa.Column(sa.Integer, nullable=False))
+    failed_iteration_count = sa.orm.deferred(sa.Column(
+        sa.Integer, nullable=False))
+    chunk_size = sa.orm.deferred(sa.Column(
+        sa.Integer, nullable=False))
+    compressed_chunk_size = sa.orm.deferred(sa.Column(
+        sa.Integer, nullable=False))
+    started_at = sa.orm.deferred(sa.Column(
+        sa.DateTime, default=dt.datetime.utcnow, nullable=False))
+    finished_at = sa.orm.deferred(sa.Column(
+        sa.DateTime, default=dt.datetime.utcnow, nullable=False))
 
 
 class Tag(BASE, RallyBase):
@@ -295,9 +312,7 @@ class Tag(BASE, RallyBase):
 
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
     uuid = sa.Column(sa.String(36), default=UUID, nullable=False)
-
     type = sa.Column(sa.String(36), nullable=False)
-
     tag = sa.Column(sa.String(255), nullable=False)
 
 
@@ -358,52 +373,3 @@ class Verification(BASE, RallyBase):
     tests_duration = sa.Column(sa.Float, default=0.0)
 
     tests = sa.Column(sa_types.MutableJSONEncodedDict, default={})
-
-
-# TODO(boris-42): Remove it after oslo.db > 1.4.1 will be released.
-def drop_all_objects(engine):
-    """Drop all database objects.
-
-    Drops all database objects remaining on the default schema of the given
-    engine. Per-db implementations will also need to drop items specific to
-    those systems, such as sequences, custom types (e.g. pg ENUM), etc.
-    """
-    with engine.begin() as conn:
-        inspector = sa.inspect(engine)
-        metadata = schema.MetaData()
-        tbs = []
-        all_fks = []
-
-        for table_name in inspector.get_table_names():
-            fks = []
-            for fk in inspector.get_foreign_keys(table_name):
-                if not fk["name"]:
-                    continue
-                fks.append(
-                    schema.ForeignKeyConstraint((), (), name=fk["name"]))
-            table = schema.Table(table_name, metadata, *fks)
-            tbs.append(table)
-            all_fks.extend(fks)
-
-        if engine.name != "sqlite":
-            for fkc in all_fks:
-                conn.execute(schema.DropConstraint(fkc))
-        for table in tbs:
-            conn.execute(schema.DropTable(table))
-
-        if engine.name == "postgresql":
-            if compat_utils.sqla_100:
-                enums = [e["name"] for e in sa.inspect(conn).get_enums()]
-            else:
-                enums = conn.dialect._load_enums(conn).keys()
-
-            for e in enums:
-                conn.execute("DROP TYPE %s" % e)
-
-
-def drop_db():
-    # NOTE(LimingWu): We can't direct import the api module. That will
-    # result in the cyclic reference import since the api has imported
-    # this module.
-    from rally.common.db.sqlalchemy import api as sa_api
-    drop_all_objects(sa_api.get_engine())

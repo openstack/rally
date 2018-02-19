@@ -20,13 +20,6 @@ Create Date: 2016-09-12 15:47:11.279610
 
 """
 
-# revision identifiers, used by Alembic.
-revision = "08e1515a576c"
-down_revision = "54e844ebfbc3"
-branch_labels = None
-depends_on = None
-
-
 import json
 
 from alembic import op
@@ -34,6 +27,13 @@ import sqlalchemy as sa
 
 from rally import consts
 from rally import exceptions
+
+
+# revision identifiers, used by Alembic.
+revision = "08e1515a576c"
+down_revision = "54e844ebfbc3"
+branch_labels = None
+depends_on = None
 
 
 task_helper = sa.Table(

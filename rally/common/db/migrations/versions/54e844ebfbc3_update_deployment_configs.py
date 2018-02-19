@@ -12,25 +12,27 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""Remove admin domain name
+"""Update_deployment_configs
 
-Revision ID: 32fada9b2fde
-Revises: 5b983f0c9b9a
-Create Date: 2016-08-29 08:32:30.818019
+Previously we had bad deployment config validation
+
+Revision ID: 54e844ebfbc3
+Revises: 3177d36ea270
+Create Date: 2016-07-24 14:53:39.323105
 
 """
 
+from alembic import op  # noqa
+import sqlalchemy as sa  # noqa
+
+from rally.common.db import sa_types
+from rally import exceptions
+
 # revision identifiers, used by Alembic.
-revision = "32fada9b2fde"
-down_revision = "6ad4f426f005"
+revision = "54e844ebfbc3"
+down_revision = "3177d36ea270"
 branch_labels = None
 depends_on = None
-
-from alembic import op
-import sqlalchemy as sa
-
-from rally.common.db.sqlalchemy import types as sa_types
-from rally import exceptions
 
 
 deployments_helper = sa.Table(
@@ -46,6 +48,25 @@ deployments_helper = sa.Table(
 )
 
 
+def _check_user_entry(user):
+    """Fixes wrong format of users."""
+    if "tenant_name" in user:
+        keys = set(user.keys())
+        if keys == {"username", "password", "tenant_name",
+                    "project_domain_name", "user_domain_name"}:
+            if (user["user_domain_name"] == "" and
+                    user["project_domain_name"] == ""):
+                # it is credentials of keystone v2 and they were created
+                # --fromenv
+                del user["user_domain_name"]
+                del user["project_domain_name"]
+                return True
+            else:
+                # it looks like keystone v3 credentials
+                user["project_name"] = user.pop("tenant_name")
+                return True
+
+
 def upgrade():
     connection = op.get_bind()
     for deployment in connection.execute(deployments_helper.select()):
@@ -55,14 +76,16 @@ def upgrade():
 
         should_update = False
 
-        if "admin_domain_name" in conf["admin"]:
-            del conf["admin"]["admin_domain_name"]
+        if _check_user_entry(conf["admin"]):
             should_update = True
         if "users" in conf:
             for user in conf["users"]:
-                if "admin_domain_name" in user:
-                    del user["admin_domain_name"]
+                if _check_user_entry(user):
                     should_update = True
+
+        if conf.get("endpoint_type") == "public":
+            del conf["endpoint_type"]
+            should_update = True
 
         if should_update:
             connection.execute(

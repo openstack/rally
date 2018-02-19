@@ -70,6 +70,10 @@ class DBException(RallyException):
     msg_fmt = "DB Exception: '%(message)s'"
 
 
+class DBMigrationError(DBException):
+    msg_fmt = "DB Migration Error: '%(message)s'"
+
+
 class DBConflict(RallyException):
     error_code = 409
     msg_fmt = "DB Conflict. %(message)s"

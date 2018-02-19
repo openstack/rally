@@ -13,4 +13,5 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.common.db.api import *  # noqa
+from rally.common.db.api import *    # noqa
+from rally.common.db import schema   # noqa

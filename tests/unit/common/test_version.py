@@ -32,7 +32,7 @@ class ModuleTestCase(test.TestCase):
         mock_version_info.semantic_version.return_value = mock_sv
         self.assertEqual("foo_version", version.version_string())
 
-    @mock.patch("rally.common.db.api.schema_revision", return_value="foo")
+    @mock.patch("rally.common.db.schema.schema_revision", return_value="foo")
     def test_database_revision(self, mock_schema_revision):
         self.assertEqual("foo", version.database_revision())
         mock_schema_revision.assert_called_once_with(detailed=True)

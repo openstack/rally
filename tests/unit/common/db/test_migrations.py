@@ -28,14 +28,12 @@ import jsonschema
 import mock
 from oslo_db.sqlalchemy import test_migrations
 from oslo_db.sqlalchemy import utils as db_utils
-from oslo_utils import timeutils
 import six
 import sqlalchemy as sa
 
 import rally
 from rally.common import db
-from rally.common.db.sqlalchemy import api
-from rally.common.db.sqlalchemy import models
+from rally.common.db import models
 from rally import consts
 from tests.unit.common.db import test_migrations_base
 from tests.unit import test as rtest
@@ -110,18 +108,18 @@ class MigrationTestCase(rtest.DBTestCase,
     def setUp(self):
         # we change DB metadata in tests so we reload
         # models to refresh the metadata to it's original state
-        six.moves.reload_module(rally.common.db.sqlalchemy.models)
+        six.moves.reload_module(rally.common.db.models)
         super(MigrationTestCase, self).setUp()
-        self.alembic_config = api._alembic_config()
-        self.engine = api.get_engine()
+        self.alembic_config = db.schema._alembic_config()
+        self.engine = db.get_engine()
         # remove everything from DB and stamp it as 'base'
         # so that migration (i.e. upgrade up to 'head')
         # will actually take place
-        db.schema_cleanup()
-        db.schema_stamp("base")
+        db.schema.schema_cleanup()
+        db.schema.schema_stamp("base")
 
     def db_sync(self, engine):
-        db.schema_upgrade()
+        db.schema.schema_upgrade()
 
     def get_engine(self):
         return self.engine
@@ -160,10 +158,10 @@ class MigrationTestCase(rtest.DBTestCase,
 
         return diff
 
-    @mock.patch("rally.common.db.sqlalchemy.api.Connection.schema_stamp")
-    def test_models_sync(self, mock_connection_schema_stamp):
+    @mock.patch("rally.common.db.schema.schema_stamp")
+    def test_models_sync(self, mock_schema_stamp):
         # drop all tables after a test run
-        self.addCleanup(db.schema_cleanup)
+        self.addCleanup(db.schema.schema_cleanup)
 
         # run migration scripts
         self.db_sync(self.get_engine())
@@ -174,11 +172,11 @@ class MigrationTestCase(rtest.DBTestCase,
             self.fail(
                 "Models and migration scripts aren't in sync:\n%s" % msg)
 
-    @mock.patch("rally.common.db.sqlalchemy.api.Connection.schema_stamp")
+    @mock.patch("rally.common.db.schema.schema_stamp")
     def test_models_sync_negative__missing_table_in_script(
-            self, mock_connection_schema_stamp):
+            self, mock_schema_stamp):
         # drop all tables after a test run
-        self.addCleanup(db.schema_cleanup)
+        self.addCleanup(db.schema.schema_cleanup)
 
         self._create_fake_model("fake_model")
 
@@ -193,11 +191,11 @@ class MigrationTestCase(rtest.DBTestCase,
         self.assertIsInstance(object, sa.Table)
         self.assertEqual("fake_model", object.name)
 
-    @mock.patch("rally.common.db.sqlalchemy.api.Connection.schema_stamp")
+    @mock.patch("rally.common.db.schema.schema_stamp")
     def test_models_sync_negative__missing_model_in_metadata(
-            self, mock_connection_schema_stamp):
+            self, mock_schema_stamp):
         # drop all tables after a test run
-        self.addCleanup(db.schema_cleanup)
+        self.addCleanup(db.schema.schema_cleanup)
 
         table = self.get_metadata().tables["tags"]
         self.get_metadata().remove(table)
@@ -220,7 +218,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
 
     def setUp(self):
         super(MigrationWalkTestCase, self).setUp()
-        self.engine = api.get_engine()
+        self.engine = db.get_engine()
 
     def assertColumnExists(self, engine, table, column):
         t = db_utils.get_table(engine, table)
@@ -265,7 +263,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
 
     def _check_3177d36ea270(self, engine, data):
         self.assertEqual(
-            "3177d36ea270", api.get_backend().schema_revision(engine=engine))
+            "3177d36ea270", db.schema.schema_revision(engine=engine))
         self.assertColumnExists(engine, "deployments", "credentials")
         self.assertColumnNotExists(engine, "deployments", "admin")
         self.assertColumnNotExists(engine, "deployments", "users")
@@ -413,7 +411,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
 
     def _check_54e844ebfbc3(self, engine, data):
         self.assertEqual("54e844ebfbc3",
-                         api.get_backend().schema_revision(engine=engine))
+                         db.schema.schema_revision(engine=engine))
 
         original_deployments = self._54e844ebfbc3_deployments
 
@@ -503,7 +501,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
 
     def _check_08e1515a576c(self, engine, data):
         self.assertEqual("08e1515a576c",
-                         api.get_backend().schema_revision(engine=engine))
+                         db.schema.schema_revision(engine=engine))
 
         tasks = self._08e1515a576c_logs
 
@@ -552,8 +550,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 task_table.insert(),
                 [{
                     "uuid": self._e654a0648db0_task_uuid,
-                    "created_at": timeutils.utcnow(),
-                    "updated_at": timeutils.utcnow(),
+                    "created_at": dt.datetime.utcnow(),
+                    "updated_at": dt.datetime.utcnow(),
                     "status": consts.TaskStatus.FINISHED,
                     "verification_log": json.dumps({}),
                     "tag": "test_tag",
@@ -565,8 +563,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 taskresult_table.insert(), [
                     {
                         "task_uuid": self._e654a0648db0_task_uuid,
-                        "created_at": timeutils.utcnow(),
-                        "updated_at": timeutils.utcnow(),
+                        "created_at": dt.datetime.utcnow(),
+                        "updated_at": dt.datetime.utcnow(),
                         "key": json.dumps({
                             "name": "test_scenario",
                             "pos": 0,
@@ -593,7 +591,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
 
     def _check_e654a0648db0(self, engine, data):
         self.assertEqual(
-            "e654a0648db0", api.get_backend().schema_revision(engine=engine))
+            "e654a0648db0", db.schema.schema_revision(engine=engine))
 
         task_table = db_utils.get_table(engine, "tasks")
         subtask_table = db_utils.get_table(engine, "subtasks")
@@ -817,7 +815,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
 
     def _check_6ad4f426f005(self, engine, data):
         self.assertEqual("6ad4f426f005",
-                         api.get_backend().schema_revision(engine=engine))
+                         db.schema.schema_revision(engine=engine))
 
         deployment_table = db_utils.get_table(engine, "deployments")
         task_table = db_utils.get_table(engine, "tasks")
@@ -899,7 +897,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
 
     def _check_32fada9b2fde(self, engine, data):
         self.assertEqual("32fada9b2fde",
-                         api.get_backend().schema_revision(engine=engine))
+                         db.schema.schema_revision(engine=engine))
 
         original_deployments = self._32fada9b2fde_deployments
 
@@ -1018,7 +1016,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
 
     def _check_484cd9413e66(self, engine, data):
         self.assertEqual("484cd9413e66",
-                         api.get_backend().schema_revision(engine=engine))
+                         db.schema.schema_revision(engine=engine))
 
         verifications_table = db_utils.get_table(engine, "verifications")
 
@@ -1152,7 +1150,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
 
     def _check_37fdbb373e8d(self, engine, data):
         self.assertEqual("37fdbb373e8d",
-                         api.get_backend().schema_revision(engine=engine))
+                         db.schema.schema_revision(engine=engine))
 
         verifications_table = db_utils.get_table(engine, "verifications")
         with engine.connect() as conn:
@@ -1216,7 +1214,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
 
     def _check_a6f364988fc2(self, engine, data):
         self.assertEqual("a6f364988fc2",
-                         api.get_backend().schema_revision(engine=engine))
+                         db.schema.schema_revision(engine=engine))
 
         tags_table = db_utils.get_table(engine, "tags")
         with engine.connect() as conn:
@@ -1286,7 +1284,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
 
     def _check_f33f4610dcda(self, engine, data):
         self.assertEqual("f33f4610dcda",
-                         api.get_backend().schema_revision(engine=engine))
+                         db.schema.schema_revision(engine=engine))
 
         verifications_table = db_utils.get_table(engine, "verifications")
         with engine.connect() as conn:
@@ -1380,7 +1378,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
 
     def _check_4ef544102ba7(self, engine, data):
         self.assertEqual("4ef544102ba7",
-                         api.get_backend().schema_revision(engine=engine))
+                         db.schema.schema_revision(engine=engine))
 
         org_tasks = self.tasks
 
@@ -1521,8 +1519,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 task_table.insert(),
                 [{
                     "uuid": self._35fe16d4ab1c_task_uuid,
-                    "created_at": timeutils.utcnow(),
-                    "updated_at": timeutils.utcnow(),
+                    "created_at": dt.datetime.utcnow(),
+                    "updated_at": dt.datetime.utcnow(),
                     "status": consts.TaskStatus.FINISHED,
                     "validation_result": six.b(json.dumps({})),
                     "deployment_uuid": deployment_uuid
@@ -1534,8 +1532,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     subtask_table.insert(),
                     [{
                         "uuid": subtask_id,
-                        "created_at": timeutils.utcnow(),
-                        "updated_at": timeutils.utcnow(),
+                        "created_at": dt.datetime.utcnow(),
+                        "updated_at": dt.datetime.utcnow(),
                         "task_uuid": self._35fe16d4ab1c_task_uuid,
                         "context": six.b(json.dumps([])),
                         "sla": six.b(json.dumps([])),
@@ -1550,8 +1548,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                             "name": "foo",
                             "task_uuid": self._35fe16d4ab1c_task_uuid,
                             "subtask_uuid": subtask_id,
-                            "created_at": timeutils.utcnow(),
-                            "updated_at": timeutils.utcnow(),
+                            "created_at": dt.datetime.utcnow(),
+                            "updated_at": dt.datetime.utcnow(),
                             "position": 0,
                             "runner": "",
                             "runner_type": "",
@@ -1642,8 +1640,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 task_table.insert(),
                 [{
                     "uuid": self._7948b83229f6_task_uuid,
-                    "created_at": timeutils.utcnow(),
-                    "updated_at": timeutils.utcnow(),
+                    "created_at": dt.datetime.utcnow(),
+                    "updated_at": dt.datetime.utcnow(),
                     "status": consts.TaskStatus.FINISHED,
                     "validation_result": six.b(json.dumps({})),
                     "deployment_uuid": self._7948b83229f6_deployment_uuid
@@ -1654,8 +1652,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 subtask_table.insert(),
                 [{
                     "uuid": subtask_uuid,
-                    "created_at": timeutils.utcnow(),
-                    "updated_at": timeutils.utcnow(),
+                    "created_at": dt.datetime.utcnow(),
+                    "updated_at": dt.datetime.utcnow(),
                     "task_uuid": self._7948b83229f6_task_uuid,
                     "context": six.b(json.dumps([])),
                     "sla": six.b(json.dumps([])),
@@ -1671,8 +1669,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                         "name": "foo",
                         "task_uuid": self._7948b83229f6_task_uuid,
                         "subtask_uuid": subtask_uuid,
-                        "created_at": timeutils.utcnow(),
-                        "updated_at": timeutils.utcnow(),
+                        "created_at": dt.datetime.utcnow(),
+                        "updated_at": dt.datetime.utcnow(),
                         "position": 0,
                         "runner": "",
                         "runner_type": "",
@@ -1694,10 +1692,10 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                         wdata_table.insert(),
                         [{
                             "uuid": str(uuid.uuid4()),
-                            "created_at": timeutils.utcnow(),
-                            "updated_at": timeutils.utcnow(),
-                            "started_at": timeutils.utcnow(),
-                            "finished_at": timeutils.utcnow(),
+                            "created_at": dt.datetime.utcnow(),
+                            "updated_at": dt.datetime.utcnow(),
+                            "started_at": dt.datetime.utcnow(),
+                            "finished_at": dt.datetime.utcnow(),
                             "task_uuid": self._7948b83229f6_task_uuid,
                             "workload_uuid": w_uuid,
                             "chunk_order": 0,
@@ -1796,8 +1794,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 task_table.insert(),
                 [{
                     "uuid": self._046a38742e89_task_uuid,
-                    "created_at": timeutils.utcnow(),
-                    "updated_at": timeutils.utcnow(),
+                    "created_at": dt.datetime.utcnow(),
+                    "updated_at": dt.datetime.utcnow(),
                     "status": consts.TaskStatus.FINISHED,
                     "validation_result": six.b(json.dumps({})),
                     "deployment_uuid": self._046a38742e89_deployment_uuid
@@ -1808,8 +1806,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 subtask_table.insert(),
                 [{
                     "uuid": subtask_uuid,
-                    "created_at": timeutils.utcnow(),
-                    "updated_at": timeutils.utcnow(),
+                    "created_at": dt.datetime.utcnow(),
+                    "updated_at": dt.datetime.utcnow(),
                     "task_uuid": self._046a38742e89_task_uuid,
                     "context": six.b(json.dumps([])),
                     "sla": six.b(json.dumps([])),
@@ -1825,8 +1823,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                         "name": "foo",
                         "task_uuid": self._046a38742e89_task_uuid,
                         "subtask_uuid": subtask_uuid,
-                        "created_at": timeutils.utcnow(),
-                        "updated_at": timeutils.utcnow(),
+                        "created_at": dt.datetime.utcnow(),
+                        "updated_at": dt.datetime.utcnow(),
                         "position": 0,
                         "runner": json.dumps(workload["runner"]),
                         "runner_type": "",
@@ -2051,8 +2049,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 task_table.insert(),
                 [{
                     "uuid": task_uuid,
-                    "created_at": timeutils.utcnow(),
-                    "updated_at": timeutils.utcnow(),
+                    "created_at": dt.datetime.utcnow(),
+                    "updated_at": dt.datetime.utcnow(),
                     "status": consts.TaskStatus.FINISHED,
                     "validation_result": six.b(json.dumps({})),
                     "deployment_uuid": self._4394bdc32cfd_deployment_uuid
@@ -2063,8 +2061,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 subtask_table.insert(),
                 [{
                     "uuid": self._4394bdc32cfd_subtask,
-                    "created_at": timeutils.utcnow(),
-                    "updated_at": timeutils.utcnow(),
+                    "created_at": dt.datetime.utcnow(),
+                    "updated_at": dt.datetime.utcnow(),
                     "task_uuid": task_uuid,
                     "context": six.b(json.dumps([])),
                     "sla": six.b(json.dumps([])),
@@ -2080,8 +2078,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                         "name": "foo",
                         "task_uuid": task_uuid,
                         "subtask_uuid": self._4394bdc32cfd_subtask,
-                        "created_at": timeutils.utcnow(),
-                        "updated_at": timeutils.utcnow(),
+                        "created_at": dt.datetime.utcnow(),
+                        "updated_at": dt.datetime.utcnow(),
                         "position": 0,
                         "runner": "",
                         "runner_type": "",
@@ -2100,10 +2098,10 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     wdata_table.insert(),
                     [{
                         "uuid": str(uuid.uuid4()),
-                        "created_at": timeutils.utcnow(),
-                        "updated_at": timeutils.utcnow(),
-                        "started_at": timeutils.utcnow(),
-                        "finished_at": timeutils.utcnow(),
+                        "created_at": dt.datetime.utcnow(),
+                        "updated_at": dt.datetime.utcnow(),
+                        "started_at": dt.datetime.utcnow(),
+                        "finished_at": dt.datetime.utcnow(),
                         "task_uuid": task_uuid,
                         "workload_uuid": workload["uuid"],
                         "chunk_order": 0,
@@ -2185,7 +2183,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
         self._dc46687661df_workloads = {
             str(uuid.uuid4()): {
                 "start_time": None,
-                "created_at": timeutils.utcnow(),
+                "created_at": dt.datetime.utcnow(),
                 "context": {"users": {"tenants": 3}},
                 "full_duration": 5,
                 "load_duration": 3
@@ -2225,8 +2223,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 task_table.insert(),
                 [{
                     "uuid": self._dc46687661df_task_uuid,
-                    "created_at": timeutils.utcnow(),
-                    "updated_at": timeutils.utcnow(),
+                    "created_at": dt.datetime.utcnow(),
+                    "updated_at": dt.datetime.utcnow(),
                     "status": consts.TaskStatus.FINISHED,
                     "validation_result": six.b(json.dumps({})),
                     "deployment_uuid": self._046a38742e89_deployment_uuid
@@ -2237,8 +2235,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 subtask_table.insert(),
                 [{
                     "uuid": subtask_uuid,
-                    "created_at": timeutils.utcnow(),
-                    "updated_at": timeutils.utcnow(),
+                    "created_at": dt.datetime.utcnow(),
+                    "updated_at": dt.datetime.utcnow(),
                     "task_uuid": self._dc46687661df_task_uuid,
                     "context": six.b(json.dumps([])),
                     "sla": six.b(json.dumps([])),
@@ -2253,7 +2251,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "task_uuid": self._dc46687661df_task_uuid,
                     "subtask_uuid": subtask_uuid,
                     "created_at": w["created_at"],
-                    "updated_at": timeutils.utcnow(),
+                    "updated_at": dt.datetime.utcnow(),
                     "position": 0,
                     "runner": six.b(json.dumps([])),
                     "runner_type": "",
@@ -2403,8 +2401,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 task_table.insert(),
                 [{
                     "uuid": self._7287df262dbc_task_uuid,
-                    "created_at": timeutils.utcnow(),
-                    "updated_at": timeutils.utcnow(),
+                    "created_at": dt.datetime.utcnow(),
+                    "updated_at": dt.datetime.utcnow(),
                     "status": consts.TaskStatus.FINISHED,
                     "validation_result": six.b(json.dumps({})),
                     "deployment_uuid": self._7287df262dbc_deployments[0][0]
@@ -2417,8 +2415,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "uuid": self._7287df262dbc_verifier_uuid,
                     "name": str(uuid.uuid4()),
                     "type": str(uuid.uuid4()),
-                    "created_at": timeutils.utcnow(),
-                    "updated_at": timeutils.utcnow(),
+                    "created_at": dt.datetime.utcnow(),
+                    "updated_at": dt.datetime.utcnow(),
                     "status": consts.VerifierStatus.INIT
                 }]
             )
@@ -2430,8 +2428,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "deployment_uuid": self._7287df262dbc_deployments[0][0],
                     "verifier_uuid": self._7287df262dbc_verifier_uuid,
                     "status": consts.VerificationStatus.INIT,
-                    "created_at": timeutils.utcnow(),
-                    "updated_at": timeutils.utcnow(),
+                    "created_at": dt.datetime.utcnow(),
+                    "updated_at": dt.datetime.utcnow(),
                 }]
             )
 

@@ -60,13 +60,13 @@ create a new DB revision and a migration script with the following command.
 
 .. code-block:: shell
 
-  alembic --config rally/common/db/sqlalchemy/alembic.ini revision -m <Message>
+  alembic --config rally/common/db/alembic.ini revision -m <Message>
 
 or
 
 .. code-block:: shell
 
-  alembic --config rally/common/db/sqlalchemy/alembic.ini revision --autogenerate -m <Message>
+  alembic --config rally/common/db/alembic.ini revision --autogenerate -m <Message>
 
 It will generate migration script -- a file named `<UUID>_<Message>.py`
 located in `rally/common/db/sqlalchemy/migrations/versions`.

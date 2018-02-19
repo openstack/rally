@@ -19,20 +19,19 @@ Revises: e654a0648db0
 Create Date: 2016-11-04 17:04:24.614075
 
 """
+from alembic import op
+from oslo_utils import timeutils
+import sqlalchemy as sa
+
+from rally.common.db import models
+from rally.common.db import sa_types
+from rally import exceptions
 
 # revision identifiers, used by Alembic.
 revision = "484cd9413e66"
 down_revision = "e654a0648db0"
 branch_labels = None
 depends_on = None
-
-from alembic import op
-from oslo_utils import timeutils
-import sqlalchemy as sa
-
-from rally.common.db.sqlalchemy import models
-from rally.common.db.sqlalchemy import types as sa_types
-from rally import exceptions
 
 
 TASK_STATUSES = ["aborted", "aborting", "cleaning up", "failed", "finished",
