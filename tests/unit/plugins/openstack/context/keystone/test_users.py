@@ -292,11 +292,8 @@ class UserGeneratorForNewUsersTestCase(test.ScenarioTestCase):
 
     @mock.patch("rally.common.utils.iterate_per_tenants")
     @mock.patch("%s.network" % CTX)
-    @mock.patch("rally.task.utils.check_service_status",
-                return_value=False)
-    def test__remove_default_security_group(
-            self, mock_check_service_status, mock_network,
-            mock_iterate_per_tenants):
+    def test__remove_default_security_group(self, mock_network,
+                                            mock_iterate_per_tenants):
         net_wrapper = mock.Mock(SERVICE_IMPL=consts.Service.NEUTRON)
         net_wrapper.supports_extension.return_value = (True, None)
         mock_network.wrap.return_value = net_wrapper

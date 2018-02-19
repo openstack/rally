@@ -154,42 +154,6 @@ class TaskUtilsTestCase(test.TestCase):
         self.assertRaises(exceptions.GetResourceFailure,
                           get_from_manager, resource)
 
-    def test_check_service_status(self):
-        class service(object):
-            def __init__(self, name):
-                self.status = "enabled"
-                self.state = "up"
-                self.name = name
-
-            def __str__(self):
-                return self.name
-
-        client = mock.MagicMock()
-        client.services.list.return_value = [service("nova-compute"),
-                                             service("nova-network"),
-                                             service("glance-api")]
-        ret = utils.check_service_status(client, "nova-network")
-        self.assertTrue(ret)
-        self.assertTrue(client.services.list.called)
-
-    def test_check_service_status_fail(self):
-        class service(object):
-            def __init__(self, name):
-                self.status = "enabled"
-                self.state = "down"
-                self.name = name
-
-            def __str__(self):
-                return self.name
-
-        client = mock.MagicMock()
-        client.services.list.return_value = [service("nova-compute"),
-                                             service("nova-network"),
-                                             service("glance-api")]
-        ret = utils.check_service_status(client, "nova-network")
-        self.assertFalse(ret)
-        self.assertTrue(client.services.list.called)
-
 
 class WaitForTestCase(test.TestCase):
 

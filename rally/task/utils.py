@@ -19,7 +19,6 @@ import time
 import traceback
 
 import jsonschema
-from novaclient import exceptions as nova_exc
 import six
 
 from rally.common import logging
@@ -292,20 +291,6 @@ def format_exc(exc):
 def infinite_run_args_generator(args_func):
     for i in itertools.count():
         yield args_func(i)
-
-
-def check_service_status(client, service_name):
-    """Check if given openstack service is enabled and state is up."""
-    try:
-        for service in client.services.list():
-            if service_name in str(service):
-                if service.status == "enabled" and service.state == "up":
-                    return True
-    except nova_exc.NotFound:
-        LOG.warning("Unable to retrieve a list of available services from "
-                    "nova. Pre-Grizzly OpenStack deployment?")
-        return False
-    return False
 
 
 class ActionBuilder(object):
