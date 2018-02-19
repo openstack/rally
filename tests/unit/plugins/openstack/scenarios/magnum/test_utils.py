@@ -16,6 +16,7 @@ import os
 
 import mock
 
+from kubernetes import client as kubernetes_client
 from kubernetes.client import api_client
 from kubernetes.client.rest import ApiException
 from rally import exceptions
@@ -135,9 +136,18 @@ class MagnumScenarioTestCase(test.ScenarioTestCase):
 
     @mock.patch("kubernetes.client.api_client.ApiClient")
     @mock.patch("kubernetes.client.apis.core_v1_api.CoreV1Api")
-    @mock.patch("kubernetes.client.ConfigurationObject")
-    def test_get_k8s_api_client_using_tls(self, mock_configuration_object,
-                                          mock_core_v1_api, mock_api_client):
+    def test_get_k8s_api_client_using_tls(self, mock_core_v1_api,
+                                          mock_api_client):
+
+        if hasattr(kubernetes_client, "ConfigurationObject"):
+            # it is k8s-client < 4.0.0
+            m = mock.patch("kubernetes.client.ConfigurationObject")
+        else:
+            m = mock.patch("kubernetes.client.Configuration")
+
+        mock_configuration_object = m.start()
+        self.addCleanup(m.stop)
+
         self.context.update({
             "ca_certs_directory": "/home/stack",
             "tenant": {
@@ -169,9 +179,17 @@ class MagnumScenarioTestCase(test.ScenarioTestCase):
 
     @mock.patch("kubernetes.client.api_client.ApiClient")
     @mock.patch("kubernetes.client.apis.core_v1_api.CoreV1Api")
-    @mock.patch("kubernetes.client.ConfigurationObject")
-    def test_get_k8s_api_client(self, mock_configuration_object,
-                                mock_core_v1_api, mock_api_client):
+    def test_get_k8s_api_client(self, mock_core_v1_api, mock_api_client):
+
+        if hasattr(kubernetes_client, "ConfigurationObject"):
+            # it is k8s-client < 4.0.0
+            m = mock.patch("kubernetes.client.ConfigurationObject")
+        else:
+            m = mock.patch("kubernetes.client.Configuration")
+
+        mock_configuration_object = m.start()
+        self.addCleanup(m.stop)
+
         self.context.update({
             "tenant": {
                 "id": "rally_tenant_id",
@@ -227,16 +245,17 @@ class MagnumScenarioTestCase(test.ScenarioTestCase):
         almost_ready_status.phase = "almost_ready"
         almost_ready_pod.status = almost_ready_status
         ready_pod = api_client.models.V1Pod()
-        ready_condition = api_client.models.V1PodCondition()
-        ready_condition.status = "True"
-        ready_condition.type = "Ready"
+        ready_condition = api_client.models.V1PodCondition(status="True",
+                                                           type="Ready")
         ready_status = api_client.models.V1PodStatus()
         ready_status.phase = "Running"
         ready_status.conditions = [ready_condition]
         ready_pod_metadata = api_client.models.V1ObjectMeta()
         ready_pod_metadata.uid = "123456789"
-        ready_pod_spec = api_client.models.V1PodSpec()
-        ready_pod_spec.node_name = "host_abc"
+        ready_pod_spec = api_client.models.V1PodSpec(
+            node_name="host_abc",
+            containers=[]
+        )
         ready_pod.status = ready_status
         ready_pod.metadata = ready_pod_metadata
         ready_pod.spec = ready_pod_spec
@@ -309,12 +328,12 @@ class MagnumScenarioTestCase(test.ScenarioTestCase):
         k8s_api.create_namespaced_replication_controller.return_value = rc
         not_ready_rc = api_client.models.V1ReplicationController()
         not_ready_rc_status = (
-            api_client.models.V1ReplicationControllerStatus())
-        not_ready_rc_status.replicas = 0
+            api_client.models.V1ReplicationControllerStatus(replicas=0))
         not_ready_rc.status = not_ready_rc_status
         ready_rc = api_client.models.V1ReplicationController()
-        ready_rc_status = api_client.models.V1ReplicationControllerStatus()
-        ready_rc_status.replicas = manifest["spec"]["replicas"]
+        ready_rc_status = api_client.models.V1ReplicationControllerStatus(
+            replicas=manifest["spec"]["replicas"]
+        )
         ready_rc_metadata = api_client.models.V1ObjectMeta()
         ready_rc_metadata.uid = "123456789"
         ready_rc_metadata.name = rcname
@@ -352,8 +371,7 @@ class MagnumScenarioTestCase(test.ScenarioTestCase):
         k8s_api.create_namespaced_replication_controller.return_value = rc
         not_ready_rc = api_client.models.V1ReplicationController()
         not_ready_rc_status = (
-            api_client.models.V1ReplicationControllerStatus())
-        not_ready_rc_status.replicas = 0
+            api_client.models.V1ReplicationControllerStatus(replicas=0))
         not_ready_rc_metadata = api_client.models.V1ObjectMeta()
         not_ready_rc_metadata.uid = "123456789"
         not_ready_rc.status = not_ready_rc_status
