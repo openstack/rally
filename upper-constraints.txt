@@ -5,7 +5,7 @@ gnocchiclient===7.0.1
 Jinja2===2.10
 jsonschema===2.6.0
 keystoneauth1===3.4.0
-kubernetes===3.0.0
+kubernetes===4.0.0
 morph===0.1.2
 netaddr===0.7.19
 os-faults===0.1.17
