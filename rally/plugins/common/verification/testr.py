@@ -17,6 +17,7 @@ import re
 import shutil
 import subprocess
 
+
 from rally.common.io import subunit_v2
 from rally.common import logging
 from rally.common import utils as common_utils
@@ -40,16 +41,26 @@ class TestrContext(context.VerifierContext):
         self._tmp_files = []
 
     def setup(self):
-        self.context["testr_cmd"] = ["testr", "run", "--subunit"]
+        use_testr = getattr(self.verifier.manager, "_use_testr", True)
+
+        if use_testr:
+            base_cmd = "testr"
+        else:
+            base_cmd = "stestr"
+        self.context["testr_cmd"] = [base_cmd, "run", "--subunit"]
         run_args = self.verifier.manager.prepare_run_args(
             self.context.get("run_args", {}))
 
         concurrency = run_args.get("concurrency", 0)
         if concurrency == 0 or concurrency > 1:
-            self.context["testr_cmd"].append("--parallel")
+            if use_testr:
+                self.context["testr_cmd"].append("--parallel")
         if concurrency >= 1:
-            self.context["testr_cmd"].extend(
-                ["--concurrency", str(concurrency)])
+            if concurrency == 1 and not use_testr:
+                self.context["testr_cmd"].append("--serial")
+            else:
+                self.context["testr_cmd"].extend(
+                    ["--concurrency", str(concurrency)])
 
         load_list = run_args.get("load_list")
         skip_list = run_args.get("skip_list")
@@ -78,7 +89,11 @@ class TestrContext(context.VerifierContext):
 
 
 class TestrLauncher(manager.VerifierManager):
-    """Testr wrapper."""
+    """Testr/sTestr wrapper."""
+
+    def __init__(self, *args, **kwargs):
+        super(TestrLauncher, self).__init__(*args, **kwargs)
+        self._use_testr = os.path.exists(os.path.join(self.repo_dir, ".testr"))
 
     @property
     def run_environ(self):
@@ -91,8 +106,12 @@ class TestrLauncher(manager.VerifierManager):
         #   presents in clear repo?!
         if not os.path.isdir(test_repository_dir):
             LOG.debug("Initializing testr.")
+            if self._use_testr:
+                base_cmd = "testr"
+            else:
+                base_cmd = "stestr"
             try:
-                utils.check_output(["testr", "init"], cwd=self.repo_dir,
+                utils.check_output([base_cmd, "init"], cwd=self.repo_dir,
                                    env=self.environ)
             except (subprocess.CalledProcessError, OSError):
                 if os.path.exists(test_repository_dir):
@@ -105,7 +124,11 @@ class TestrLauncher(manager.VerifierManager):
 
     def list_tests(self, pattern=""):
         """List all tests."""
-        output = utils.check_output(["testr", "list-tests", pattern],
+        if self._use_testr:
+            cmd = ["testr", "list-tests", pattern]
+        else:
+            cmd = ["stestr", "list", pattern]
+        output = utils.check_output(cmd,
                                     cwd=self.repo_dir, env=self.environ,
                                     debug_output=False)
         return [t for t in output.split("\n") if TEST_NAME_RE.match(t)]

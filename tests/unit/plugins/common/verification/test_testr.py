@@ -32,8 +32,8 @@ class TestrContextTestCase(test.TestCase):
         self.prepare_run_args = self.verifier.manager.prepare_run_args
         self.prepare_run_args.side_effect = lambda x: x
 
-    def assertEqualCmd(self, expected, actual, msg=""):
-        cmd = ["testr", "run", "--subunit"]
+    def assertEqualCmd(self, expected, actual, msg="", stestr=False):
+        cmd = ["stestr" if stestr else "testr", "run", "--subunit"]
         cmd.extend(expected)
         self.assertEqual(cmd, actual, message=msg)
 
@@ -62,6 +62,33 @@ class TestrContextTestCase(test.TestCase):
         ctx.setup()
         self.assertEqualCmd(["--parallel", "--concurrency", "2"],
                             cfg["testr_cmd"])
+
+    def test_setup_with_concurrency_stestr(self):
+        self.verifier.manager._use_testr = False
+        # default behaviour
+        cfg = {"verifier": self.verifier}
+        ctx = testr.TestrContext(cfg)
+        ctx.setup()
+        self.assertEqualCmd([], cfg["testr_cmd"], stestr=True)
+        cfg = {"verifier": self.verifier, "run_args": {"concurrency": 0}}
+        ctx = testr.TestrContext(cfg)
+        ctx.setup()
+        self.assertEqualCmd([], cfg["testr_cmd"], stestr=True)
+
+        # serial mode
+        cfg = {"verifier": self.verifier,
+               "run_args": {"concurrency": 1}}
+        ctx = testr.TestrContext(cfg)
+        ctx.setup()
+        self.assertEqualCmd(["--serial"], cfg["testr_cmd"], stestr=True)
+
+        # parallel mode
+        cfg = {"verifier": self.verifier,
+               "run_args": {"concurrency": 2}}
+        ctx = testr.TestrContext(cfg)
+        ctx.setup()
+        self.assertEqualCmd(["--concurrency", "2"], cfg["testr_cmd"],
+                            stestr=True)
 
     @mock.patch("%s.common_utils.generate_random_path" % PATH)
     def test_setup_with_skip_and_load_lists(self, mock_generate_random_path):
@@ -168,7 +195,7 @@ class TestrLauncherTestCase(test.TestCase):
         self.assertEqual(env, FakeLauncher(mock.Mock()).run_environ)
 
     @mock.patch("%s.utils.check_output" % PATH)
-    def test_list_tests(self, mock_check_output):
+    def test_list_tests_via_stestr(self, mock_check_output):
         mock_check_output.return_value = (
             "logging message\n"  # should be ignored
             "one more useless data\n"  # should be ignored
@@ -180,6 +207,31 @@ class TestrLauncherTestCase(test.TestCase):
         verifier = mock.Mock()
 
         launcher = testr.TestrLauncher(verifier)
+        launcher._use_testr = False
+
+        self.assertEqual(["tests.FooTestCase.test_something",
+                          "tests.BarTestCase.test_another[id=123]",
+                          "tests.FooTestCase.test_another[id=a2-213,smoke]"],
+                         launcher.list_tests())
+
+        mock_check_output.assert_called_once_with(
+            ["stestr", "list", ""],
+            cwd=launcher.repo_dir, env=launcher.environ, debug_output=False)
+
+    @mock.patch("%s.utils.check_output" % PATH)
+    def test_list_tests_via_testr(self, mock_check_output):
+        mock_check_output.return_value = (
+            "logging message\n"  # should be ignored
+            "one more useless data\n"  # should be ignored
+            "tests.FooTestCase.test_something\n"  # valid
+            "tests.FooTestCase.test_another[\n"  # invalid
+            "tests.BarTestCase.test_another[id=123]\n"  # valid
+            "tests.FooTestCase.test_another[id=a2-213,smoke]\n"  # valid
+        )
+        verifier = mock.Mock()
+
+        launcher = testr.TestrLauncher(verifier)
+        launcher._use_testr = True
 
         self.assertEqual(["tests.FooTestCase.test_something",
                           "tests.BarTestCase.test_another[id=123]",
@@ -197,6 +249,9 @@ class TestrLauncherTestCase(test.TestCase):
     def test__init_testr(self, mock_isdir, mock_exists, mock_check_output,
                          mock_rmtree):
         launcher = testr.TestrLauncher(mock.Mock())
+        mock_exists.assert_called_once_with(
+            os.path.join(launcher.repo_dir, ".testr"))
+        mock_exists.reset_mock()
 
         # case #1: testr already initialized
         mock_isdir.return_value = True
@@ -218,7 +273,18 @@ class TestrLauncherTestCase(test.TestCase):
         self.assertFalse(mock_rmtree.called)
         mock_check_output.reset_mock()
 
-        # case #3: initializing testr with error
+        # case #3: initializing stestr without errors
+        launcher._use_testr = False
+
+        launcher._init_testr()
+
+        mock_check_output.assert_called_once_with(
+            ["stestr", "init"], cwd=launcher.repo_dir, env=launcher.environ)
+        self.assertFalse(mock_exists.called)
+        self.assertFalse(mock_rmtree.called)
+        mock_check_output.reset_mock()
+
+        # case #4: initializing testr with error
         mock_check_output.side_effect = OSError
         test_repository_dir = os.path.join(launcher.base_dir,
                                            ".testrepository")
@@ -226,7 +292,7 @@ class TestrLauncherTestCase(test.TestCase):
         self.assertRaises(exceptions.RallyException, launcher._init_testr)
 
         mock_check_output.assert_called_once_with(
-            ["testr", "init"], cwd=launcher.repo_dir, env=launcher.environ)
+            ["stestr", "init"], cwd=launcher.repo_dir, env=launcher.environ)
         mock_exists.assert_called_once_with(test_repository_dir)
         mock_rmtree.assert_called_once_with(test_repository_dir)
 
