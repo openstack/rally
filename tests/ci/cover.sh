@@ -15,7 +15,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-ALLOWED_EXTRA_MISSING=4
+ALLOWED_EXTRA_MISSING=6
 
 show_diff () {
     head -1 $1

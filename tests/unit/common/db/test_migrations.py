@@ -2349,13 +2349,94 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 deployment_table.delete().where(
                     deployment_table.c.uuid == deployment_uuid))
 
-    def _pre_upgrade_7287df262dbc(self, engine):
+    def _pre_upgrade_dc0fe6de6786(self, engine):
+        deployment_table = db_utils.get_table(engine, "deployments")
+
+        self._dc0fe6de6786_deployments = [
+            # empty config
+            (str(uuid.uuid4()), {"type": "ExistingCloud", "creds": {}}),
+            # new config with openstack
+            (str(uuid.uuid4()), {
+                "type": "ExistingCloud",
+                "creds": {
+                    "openstack": {
+                        "auth_url": "http://example.net:5000/v2.0/",
+                        "region_name": "RegionOne",
+                        "endpoint_type": "public",
+                        "admin": {
+                            "username": "admin",
+                            "password": "myadminpass",
+                            "tenant_name": "demo"
+                        },
+                        "https_insecure": False,
+                        "https_cacert": ""
+                    }
+                }
+            }),
+            # old config with openstack
+            (str(uuid.uuid4()), {
+                "type": "ExistingCloud",
+                "auth_url": "http://example.net:5000/v2.0/",
+                "region_name": "RegionOne",
+                "endpoint_type": "public",
+                "admin": {
+                    "username": "admin",
+                    "password": "myadminpass",
+                    "tenant_name": "demo"
+                },
+                "https_insecure": False,
+                "https_cacert": "",
+                "extra": {}
+            }),
+            # some custom unknown thing
+            (str(uuid.uuid4()), {"some_special_deployment": "foo"})
+        ]
+        with engine.connect() as conn:
+            conn.execute(
+                deployment_table.insert(),
+                [{
+                    "uuid": d_uuid,
+                    "name": str(uuid.uuid4()),
+                    "config": (
+                        json.dumps(d_cfg) if d_cfg
+                        else six.b(json.dumps(d_cfg))),
+                    "enum_deployments_status": consts.DeployStatus.DEPLOY_INIT,
+                    "credentials": six.b(json.dumps([]))
+                } for d_uuid, d_cfg in self._dc0fe6de6786_deployments]
+            )
+
+    def _check_dc0fe6de6786(self, engine, data):
+        deployment_table = db_utils.get_table(engine, "deployments")
+
+        with engine.connect() as conn:
+
+            for d_uuid, d_cfg in self._dc0fe6de6786_deployments:
+                deployment = conn.execute(deployment_table.select().where(
+                    deployment_table.c.uuid == d_uuid)).first()
+                config = json.loads(deployment.config)
+                if "type" in config:
+                    self.assertEqual(config["type"],
+                                     "ExistingCloud")
+                    self.assertIn("creds", config)
+                    if "creds" not in d_cfg:
+                        new_cfg = {"type": d_cfg.pop("type"),
+                                   "extra": d_cfg.pop("extra"),
+                                   "creds": {"openstack": d_cfg}}
+                        self.assertEqual(new_cfg, config)
+                    else:
+                        self.assertEqual(d_cfg, config)
+
+                conn.execute(
+                    deployment_table.delete().where(
+                        deployment_table.c.uuid == d_uuid))
+
+    def _pre_upgrade_bc908ac9a1fc(self, engine):
         deployment_table = db_utils.get_table(engine, "deployments")
         task_table = db_utils.get_table(engine, "tasks")
         verifier_table = db_utils.get_table(engine, "verifiers")
         verification_table = db_utils.get_table(engine, "verifications")
 
-        self._7287df262dbc_deployments = [
+        self._bc908ac9a1fc_deployments = [
             # empty config
             (str(uuid.uuid4()), {"type": "ExistingCloud", "creds": {}}),
             # OpenStack default config
@@ -2379,9 +2460,9 @@ class MigrationWalkTestCase(rtest.DBTestCase,
             # some custom unknown thing
             (str(uuid.uuid4()), {"some_special_deployment": "foo"})
         ]
-        self._7287df262dbc_task_uuid = str(uuid.uuid4())
-        self._7287df262dbc_verifier_uuid = str(uuid.uuid4())
-        self._7287df262dbc_verification_uuid = str(uuid.uuid4())
+        self._bc908ac9a1fc_task_uuid = str(uuid.uuid4())
+        self._bc908ac9a1fc_verifier_uuid = str(uuid.uuid4())
+        self._bc908ac9a1fc_verification_uuid = str(uuid.uuid4())
 
         with engine.connect() as conn:
             conn.execute(
@@ -2394,25 +2475,25 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                         else six.b(json.dumps(d_cfg))),
                     "enum_deployments_status": consts.DeployStatus.DEPLOY_INIT,
                     "credentials": six.b(json.dumps([]))
-                } for d_uuid, d_cfg in self._7287df262dbc_deployments]
+                } for d_uuid, d_cfg in self._bc908ac9a1fc_deployments]
             )
 
             conn.execute(
                 task_table.insert(),
                 [{
-                    "uuid": self._7287df262dbc_task_uuid,
+                    "uuid": self._bc908ac9a1fc_task_uuid,
                     "created_at": dt.datetime.utcnow(),
                     "updated_at": dt.datetime.utcnow(),
                     "status": consts.TaskStatus.FINISHED,
                     "validation_result": six.b(json.dumps({})),
-                    "deployment_uuid": self._7287df262dbc_deployments[0][0]
+                    "deployment_uuid": self._bc908ac9a1fc_deployments[0][0]
                 }]
             )
 
             conn.execute(
                 verifier_table.insert(),
                 [{
-                    "uuid": self._7287df262dbc_verifier_uuid,
+                    "uuid": self._bc908ac9a1fc_verifier_uuid,
                     "name": str(uuid.uuid4()),
                     "type": str(uuid.uuid4()),
                     "created_at": dt.datetime.utcnow(),
@@ -2424,16 +2505,16 @@ class MigrationWalkTestCase(rtest.DBTestCase,
             conn.execute(
                 verification_table.insert(),
                 [{
-                    "uuid": self._7287df262dbc_verification_uuid,
-                    "deployment_uuid": self._7287df262dbc_deployments[0][0],
-                    "verifier_uuid": self._7287df262dbc_verifier_uuid,
+                    "uuid": self._bc908ac9a1fc_verification_uuid,
+                    "deployment_uuid": self._bc908ac9a1fc_deployments[0][0],
+                    "verifier_uuid": self._bc908ac9a1fc_verifier_uuid,
                     "status": consts.VerificationStatus.INIT,
                     "created_at": dt.datetime.utcnow(),
                     "updated_at": dt.datetime.utcnow(),
                 }]
             )
 
-    def _check_7287df262dbc(self, engine, data):
+    def _check_bc908ac9a1fc(self, engine, data):
         env_table = db_utils.get_table(engine, "envs")
         platform_table = db_utils.get_table(engine, "platforms")
         task_table = db_utils.get_table(engine, "tasks")
@@ -2443,30 +2524,30 @@ class MigrationWalkTestCase(rtest.DBTestCase,
         with engine.connect() as conn:
 
             task = conn.execute(task_table.select().where(
-                task_table.c.uuid == self._7287df262dbc_task_uuid)).first()
+                task_table.c.uuid == self._bc908ac9a1fc_task_uuid)).first()
             self.assertNotIn("deployment_uuid", task)
             self.assertIn("env_uuid", task)
-            self.assertEqual(self._7287df262dbc_deployments[0][0],
+            self.assertEqual(self._bc908ac9a1fc_deployments[0][0],
                              task["env_uuid"])
             conn.execute(
                 task_table.delete().where(
-                    task_table.c.uuid == self._7287df262dbc_task_uuid))
+                    task_table.c.uuid == self._bc908ac9a1fc_task_uuid))
 
-            v_id = self._7287df262dbc_verification_uuid
+            v_id = self._bc908ac9a1fc_verification_uuid
             verification = conn.execute(verification_table.select().where(
                 verification_table.c.uuid == v_id)).first()
             self.assertNotIn("deployment_uuid", verification)
             self.assertIn("env_uuid", verification)
-            self.assertEqual(self._7287df262dbc_deployments[0][0],
+            self.assertEqual(self._bc908ac9a1fc_deployments[0][0],
                              verification["env_uuid"])
             conn.execute(
                 verification_table.delete().where(
                     verification_table.c.uuid == v_id))
             conn.execute(
                 verifier_table.delete().where(
-                    verifier_table.c.uuid == self._7287df262dbc_verifier_uuid))
+                    verifier_table.c.uuid == self._bc908ac9a1fc_verifier_uuid))
 
-            for d_uuid, d_cfg in self._7287df262dbc_deployments:
+            for d_uuid, d_cfg in self._bc908ac9a1fc_deployments:
                 env = conn.execute(env_table.select().where(
                     env_table.c.uuid == d_uuid)).first()
                 if d_cfg.get("creds", {}):
