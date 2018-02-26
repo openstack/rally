@@ -13,6 +13,13 @@
     timeout: 1800
 
 - job:
+    name: rally-database-migration
+    parent: base
+    nodeset: ubuntu-xenial
+    run: tests/ci/playbooks/rally-database-migration/run.yaml
+    timeout: 1800
+
+- job:
     name: rally-tox-self
     parent: tox
     description: |
@@ -25,12 +32,14 @@
 - project:
     check:
       jobs:
+        - rally-database-migration
         - rally-install-ubuntu-xenial
         - rally-install-centos-7
         - openstack-tox-functional
         - rally-tox-self
     gate:
       jobs:
+        - rally-database-migration
         - rally-install-ubuntu-xenial
         - rally-install-centos-7
         - openstack-tox-functional

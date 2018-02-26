@@ -1,0 +1,70 @@
+- hosts: all
+  name: Performs checks for database migration from the Rally 0.9.0 to the latest one
+  tasks:
+    - shell:
+        executable: /bin/sh
+        chdir: '{{ zuul.project.src_dir }}'
+        cmd: |
+          set -e
+
+          echo "Rollback to Rally 0.9"
+          git checkout stable/0.9
+
+          echo "Install Rally stable/0.9"
+          # NOTE(pabelanger): We run apt-get update to ensure we dont have a stale
+          # package cache in the gate.
+          sudo pip install pbr bindep
+
+          sudo apt-get update || true
+          sudo apt-get install "$(bindep -b | tr '\n' ' ')" || true
+
+          sudo pip install ./
+          rally --version
+
+          echo "Initialize database"
+          rally-manage db create
+          rally-manage db revision
+
+          echo "Add general OpenStack deployment from samples"
+          rally deployment list
+          rally deployment create --name openstack --filename ./samples/deployments/existing.json
+          rally deployment config
+          rally deployment list
+
+          echo "Update to Rally 0.10"
+          git checkout stable/0.10
+          sudo pip uninstall rally --yes
+          sudo pip install ./
+          rally --version
+
+          rally-manage db upgrade
+          rally-manage db revision
+
+          echo "Add several more deployments"
+          # it should be a new format
+          rally deployment create --name openstack-new --filename ./samples/deployments/existing.json
+          rally deployment config
+
+          # an empty deployment which allows us to run dummy workloads
+          rally deployment create --name empty
+          rally deployment config
+
+          rally deployment list
+
+          echo "Launching dummy workloads (like in 'tox -r self')"
+          rally --debug --plugin-paths=./rally-jobs/plugins task start ./rally-jobs/self-rally.yaml
+          # TODO(andreykurilin): save results in JSON to compare it after
+          #   performing migration to the next Rally release
+
+          # NOTE(andreykurilin): No update to Rally 0.11.0 since it contains
+          #   a broken migration
+          echo "Update to the master branch"
+          git checkout master
+          sudo pip uninstall rally --yes
+          sudo pip install --constraint ./upper-constraints.txt ./
+          rally --version
+
+          rally db upgrade
+          rally db revision
+
+          rally deployment list
