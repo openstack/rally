@@ -1100,3 +1100,21 @@ class CinderImageVolumeCacheTestCase(test.TestCase):
 
         self.assertEqual("volume-id", res.id())
         self.assertEqual("image-name", res.name())
+
+
+class GnocchiArchivePolicyRuleTestCase(test.TestCase):
+
+    def get_gnocchi(self):
+        gnocchi = resources.GnocchiArchivePolicyRule()
+        gnocchi._service = "gnocchi"
+        return gnocchi
+
+    def test_id(self):
+        gnocchi = self.get_gnocchi()
+        gnocchi.raw_resource = {"name": "test_name"}
+        self.assertEqual("test_name", gnocchi.id())
+
+    def test_name(self):
+        gnocchi = self.get_gnocchi()
+        gnocchi.raw_resource = {"name": "test_name"}
+        self.assertEqual("test_name", gnocchi.name())
