@@ -158,7 +158,7 @@ etc).
 * *NEW!!*
 
  `NovaServers.boot_server_attach_volume_and_list_attachments
- <https://rally.readthedocs.io/en/0.10.0/plugins/plugin_reference.html#novaservers-boot-server-attach-volume-and-list-attachments-scenario>`_
+ <https://rally.readthedocs.io/en/0.11.0/plugins/plugin_reference.html#novaservers-boot-server-attach-volume-and-list-attachments-scenario>`_
 
 
 * *UPDATED!!*
