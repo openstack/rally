@@ -140,6 +140,6 @@ unittest2===1.1.0
 urllib3===1.22
 warlock===1.2.0
 WebOb===1.7.4
-websocket-client===0.46.0
+websocket-client===0.40.0
 wrapt===1.10.11
 yaql===1.1.3
