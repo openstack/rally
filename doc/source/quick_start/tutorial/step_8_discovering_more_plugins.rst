@@ -22,7 +22,7 @@ Step 8. Discovering more plugins in Rally
    :local:
 
 Plugins in the Rally repository
----------------------------------
+-------------------------------
 
 Rally currently comes with a great collection of plugins that use the API of
 different OpenStack projects like **Keystone**, **Nova**, **Cinder**,

@@ -185,7 +185,7 @@ Bug fixes
 
 
 Other changes
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
 
 * Streaming algorithms that scale
 

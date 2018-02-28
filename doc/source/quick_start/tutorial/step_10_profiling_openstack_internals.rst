@@ -75,7 +75,7 @@ OSProfiler can be asked to generate the full trace using this trace id:
 
 
 Disabling the profiler
-------------------------
+----------------------
 
 Setting ``enable_profiler = False`` under the ``benchmark`` group in the
 configuration file will disabled the profiler.

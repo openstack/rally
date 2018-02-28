@@ -16,7 +16,7 @@
 .. _tutorial_step_9_verifying_cloud_via_tempest_verifier:
 
 Step 9. Verifying cloud via Tempest verifier
-=============================================
+============================================
 
 .. contents::
    :local:

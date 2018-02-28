@@ -39,7 +39,7 @@ New Features
 
 
 API Changes
-~~~~~~~~~~~~
+~~~~~~~~~~~
 
 **Rally CLI changes**
 

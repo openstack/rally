@@ -49,7 +49,7 @@ where *<config>*, as before, is a dictionary:
     }
 
 Multiple subtasks in a single task
-------------------------------------
+----------------------------------
 
 As an example, let's edit our configuration file from
 :ref:`step 1 <tutorial_step_1_setting_up_env_and_running_benchmark_from_samples>`
