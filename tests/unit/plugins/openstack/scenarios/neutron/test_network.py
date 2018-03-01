@@ -549,3 +549,50 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
             floating_network, **floating_ip_args)
         scenario._delete_floating_ip.assert_called_once_with(
             scenario._create_floatingip.return_value["floatingip"])
+
+    @mock.patch("%s.DeleteSubnets._delete_subnet" % BASE)
+    def test_delete_subnets(self, mock__delete_subnet):
+        # do not guess what user will be used
+        self.context["user_choice_method"] = "round_robin"
+        # if it is the 4th iteration, the second user from the second tenant
+        #   should be taken, which means that the second subnets from each
+        #   tenant network should be removed.
+        self.context["iteration"] = 4
+        # in case of `round_robin` the user will be selected from the list of
+        #   available users of particular tenant, not from the list of all
+        #   tenants (i.e random choice). BUT to trigger selecting user and
+        #   tenant `users` key should present in context dict
+        self.context["users"] = []
+
+        self.context["tenants"] = {
+            # this should not be used
+            "uuid-1": {
+                "id": "uuid-1",
+                "networks": [{"subnets": ["subnet-1"]}],
+                "users": [{"id": "user-1", "credential": mock.MagicMock()},
+                          {"id": "user-2", "credential": mock.MagicMock()}]
+            },
+            # this is expected user
+            "uuid-2": {
+                "id": "uuid-2",
+                "networks": [
+                    {"subnets": ["subnet-2", "subnet-3"]},
+                    {"subnets": ["subnet-4", "subnet-5"]}],
+                "users": [{"id": "user-3", "credential": mock.MagicMock()},
+                          {"id": "user-4", "credential": mock.MagicMock()}]
+            }
+        }
+
+        scenario = network.DeleteSubnets(self.context)
+        self.assertEqual("user-4", scenario.context["user"]["id"],
+                         "Unexpected user is taken. The wrong subnets can be "
+                         "affected(removed).")
+
+        scenario.run()
+
+        self.assertEqual(
+            [
+                mock.call({"subnet": {"id": "subnet-3"}}),
+                mock.call({"subnet": {"id": "subnet-5"}})
+            ],
+            mock__delete_subnet.call_args_list)

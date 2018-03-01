@@ -14,6 +14,7 @@
 #    under the License.
 
 import abc
+import itertools
 
 import netaddr
 import six
@@ -32,6 +33,7 @@ CONF = cfg.CONF
 
 
 cidr_incr = utils.RAMInt()
+ipv6_cidr_incr = utils.RAMInt()
 
 
 def generate_cidr(start_cidr="10.2.0.0/24"):
@@ -44,7 +46,10 @@ def generate_cidr(start_cidr="10.2.0.0/24"):
     :param start_cidr: start CIDR str
     :returns: next available CIDR str
     """
-    cidr = str(netaddr.IPNetwork(start_cidr).next(next(cidr_incr)))
+    if netaddr.IPNetwork(start_cidr).version == 4:
+        cidr = str(netaddr.IPNetwork(start_cidr).next(next(cidr_incr)))
+    else:
+        cidr = str(netaddr.IPNetwork(start_cidr).next(next(ipv6_cidr_incr)))
     LOG.debug("CIDR generated: %s" % cidr)
     return cidr
 
@@ -64,6 +69,7 @@ class NetworkWrapper(object):
     This allows to significantly re-use and simplify code.
     """
     START_CIDR = "10.2.0.0/24"
+    START_IPV6_CIDR = "dead:beaf::/64"
     SERVICE_IMPL = None
 
     def __init__(self, clients, owner, config=None):
@@ -75,9 +81,8 @@ class NetworkWrapper(object):
                       random names, so must implement
                       rally.common.utils.RandomNameGeneratorMixin
         :param config: The configuration of the network
-                       wrapper. Currently only one config option is
-                       recognized, 'start_cidr', and only for Nova
-                       network.
+                       wrapper. Currently only two config options are
+                       recognized, 'start_cidr' and 'start_ipv6_cidr'.
         :returns: NetworkWrapper subclass instance
         """
         if hasattr(clients, self.SERVICE_IMPL):
@@ -87,6 +92,8 @@ class NetworkWrapper(object):
         self.config = config or {}
         self.owner = owner
         self.start_cidr = self.config.get("start_cidr", self.START_CIDR)
+        self.start_ipv6_cidr = self.config.get(
+            "start_ipv6_cidr", self.START_IPV6_CIDR)
 
     @abc.abstractmethod
     def create_network(self):
@@ -116,6 +123,7 @@ class NetworkWrapper(object):
 class NeutronWrapper(NetworkWrapper):
     SERVICE_IMPL = consts.Service.NEUTRON
     SUBNET_IP_VERSION = 4
+    SUBNET_IPV6_VERSION = 6
     LB_METHOD = "ROUND_ROBIN"
     LB_PROTOCOL = "HTTP"
 
@@ -187,9 +195,11 @@ class NeutronWrapper(NetworkWrapper):
         }
         return self.client.create_pool(pool_args)
 
-    def _generate_cidr(self):
+    def _generate_cidr(self, ip_version=4):
         # TODO(amaretskiy): Generate CIDRs unique for network, not cluster
-        return generate_cidr(start_cidr=self.start_cidr)
+        return generate_cidr(
+            start_cidr=self.start_cidr if ip_version == 4
+            else self.start_ipv6_cidr)
 
     def create_network(self, tenant_id, **kwargs):
         """Create network.
@@ -200,6 +210,7 @@ class NeutronWrapper(NetworkWrapper):
                       Create an external router and add an interface to each
                       subnet created. Default: False
         * subnets_num: Number of subnets to create per network. Default: 0
+        * dualstack: Whether subnets should be of both IPv4 and IPv6
         * dns_nameservers: Nameservers for each subnet. Default:
                            8.8.8.8, 8.8.4.4
         * network_create_args: Additional network creation arguments.
@@ -225,19 +236,28 @@ class NeutronWrapper(NetworkWrapper):
             router_args["tenant_id"] = tenant_id
             router = self.create_router(**router_args)
 
+        dualstack = kwargs.get("dualstack", False)
+
         subnets = []
         subnets_num = kwargs.get("subnets_num", 0)
+        ip_versions = itertools.cycle(
+            [self.SUBNET_IP_VERSION, self.SUBNET_IPV6_VERSION]
+            if dualstack else [self.SUBNET_IP_VERSION])
         for i in range(subnets_num):
+            ip_version = next(ip_versions)
             subnet_args = {
                 "subnet": {
                     "tenant_id": tenant_id,
                     "network_id": network["id"],
                     "name": self.owner.generate_random_name(),
-                    "ip_version": self.SUBNET_IP_VERSION,
-                    "cidr": self._generate_cidr(),
+                    "ip_version": ip_version,
+                    "cidr": self._generate_cidr(ip_version),
                     "enable_dhcp": True,
-                    "dns_nameservers": kwargs.get("dns_nameservers",
-                                                  ["8.8.8.8", "8.8.4.4"])
+                    "dns_nameservers": (
+                        kwargs.get("dns_nameservers", ["8.8.8.8", "8.8.4.4"])
+                        if ip_version == 4
+                        else kwargs.get("dns_nameservers",
+                                        ["dead:beaf::1", "dead:beaf::2"]))
                 }
             }
             subnet = self.client.create_subnet(subnet_args)["subnet"]
@@ -297,8 +317,9 @@ class NeutronWrapper(NetworkWrapper):
                     # port is auto-removed
                     pass
 
-        for subnet_id in network["subnets"]:
-            self._delete_subnet(subnet_id)
+        for subnet in self.client.list_subnets(
+                network_id=network["id"])["subnets"]:
+            self._delete_subnet(subnet["id"])
 
         responce = self.client.delete_network(network["id"])
 

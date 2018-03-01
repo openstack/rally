@@ -60,6 +60,9 @@ class Network(context.Context):
                 "items": {"type": "string"},
                 "uniqueItems": True
             },
+            "dualstack": {
+                "type": "boolean",
+            },
             "router": {
                 "type": "object",
                 "properties": {
@@ -88,7 +91,8 @@ class Network(context.Context):
         "subnets_per_network": 1,
         "network_create_args": {},
         "dns_nameservers": None,
-        "router": {"external": True}
+        "router": {"external": True},
+        "dualstack": False
     }
 
     def setup(self):
@@ -106,11 +110,12 @@ class Network(context.Context):
                 self.context.get("users", []))):
             self.context["tenants"][tenant_id]["networks"] = []
             for i in range(self.config["networks_per_tenant"]):
-                # NOTE(amaretskiy): add_router and subnets_num take effect
-                #                   for Neutron only.
+                # NOTE(amaretskiy): router_create_args and subnets_num take
+                #                   effect for Neutron only.
                 network_create_args = self.config["network_create_args"].copy()
                 network = net_wrapper.create_network(
                     tenant_id,
+                    dualstack=self.config["dualstack"],
                     subnets_num=self.config["subnets_per_network"],
                     network_create_args=network_create_args,
                     router_create_args=self.config["router"],
