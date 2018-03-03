@@ -353,8 +353,11 @@ class ElasticSearchExporter(exporter.TaskExporter):
 
                 durations = workload["statistics"]["durations"]
                 success_rate = durations["total"]["data"]["success"]
-                # cut the % char and transfrom to the float value
-                success_rate = float(success_rate[:-1]) / 100.0
+                if success_rate == "n/a":
+                    success_rate = 0.0
+                else:
+                    # cut the % char and transform to the float value
+                    success_rate = float(success_rate[:-1]) / 100.0
 
                 started_at = workload["start_time"]
                 if started_at:
