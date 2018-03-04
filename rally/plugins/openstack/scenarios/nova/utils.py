@@ -914,19 +914,6 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         return self.admin_clients("nova").availability_zones.list(detailed)
 
-    @atomic.action_timer("nova.list_hosts")
-    def _list_hosts(self, zone=None, service=None):
-        """List nova hosts.
-
-        :param zone: List all hosts in the given nova availability-zone ID
-        :param service: Name of service type to filter
-        :returns: Nova host list
-        """
-        hosts = self.admin_clients("nova").hosts.list(zone)
-        if service:
-            hosts = [host for host in hosts if host.service == service]
-        return hosts
-
     @atomic.action_timer("nova.list_interfaces")
     def _list_interfaces(self, server):
         """List interfaces attached to a server.
@@ -935,15 +922,6 @@ class NovaScenario(scenario.OpenStackScenario):
         :returns: Server interface list
         """
         return self.clients("nova").servers.interface_list(server)
-
-    @atomic.action_timer("nova.get_host")
-    def _get_host(self, host_name):
-        """Describe a specific host.
-
-        :param host_name: host name to get.
-        :returns: host object
-        """
-        return self.admin_clients("nova").hosts.get(host_name)
 
     @atomic.action_timer("nova.list_services")
     def _list_services(self, host=None, binary=None):

@@ -168,9 +168,6 @@ class Nova(ResourceManager):
     def list_aggregates(self):
         return self.client.aggregates.list()
 
-    def list_hosts(self):
-        return self.client.hosts.list()
-
     def list_hypervisors(self):
         return self.client.hypervisors.list()
 
