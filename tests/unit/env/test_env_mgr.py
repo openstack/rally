@@ -14,6 +14,7 @@
 
 import copy
 import datetime as dt
+import os
 
 import mock
 
@@ -353,6 +354,83 @@ class EnvManagerTestCase(test.TestCase):
                 "some@platform": {}
             }
         )
+
+    @mock.patch.dict(os.environ, values={"KEY": "value"}, clear=True)
+    @mock.patch("rally.env.platform.Platform.get_all")
+    def test_create_spec_from_sys_environ(self, mock_platform_get_all):
+
+        # let's cover all positive and minor cases at once
+
+        class Foo1Platform(platform.Platform):
+            """This platform doesn't override original methods"""
+
+            @classmethod
+            def get_fullname(cls):
+                return cls.__name__
+
+        class Foo2Platform(Foo1Platform):
+            """This platform should try to modify sys environment"""
+
+            @classmethod
+            def create_spec_from_sys_environ(cls, sys_environ):
+                for key in list(sys_environ.keys()):
+                    sys_environ.pop(key)
+                return platform.Platform.create_spec_from_sys_environ({})
+
+        class Foo3Platform(Foo1Platform):
+            """This platform rely on one sys argument."""
+
+            @classmethod
+            def create_spec_from_sys_environ(cls, sys_environ):
+                self.assertIn("KEY", sys_environ)
+                return {"spec": {"KEY": sys_environ["KEY"]},
+                        "available": True}
+
+        class Foo4Platform(Foo1Platform):
+            """This platform raises an error!"""
+
+            @classmethod
+            def create_spec_from_sys_environ(cls, sys_environ):
+                raise KeyError("Ooopes")
+
+        class Foo5Platform(Foo1Platform):
+            """This platform returns invalid data."""
+
+            @classmethod
+            def create_spec_from_sys_environ(cls, sys_environ):
+                return {"foo": "bar"}
+
+        mock_platform_get_all.return_value = [
+            Foo1Platform, Foo2Platform, Foo3Platform, Foo4Platform,
+            Foo5Platform]
+
+        result = env_mgr.EnvManager.create_spec_from_sys_environ()
+        self.assertEqual({"Foo3Platform": {"KEY": "value"}}, result["spec"])
+        self.assertEqual(
+            {"Foo1Platform", "Foo2Platform", "Foo3Platform", "Foo4Platform",
+             "Foo5Platform"},
+            set(result["discovery_details"].keys()))
+        result = result["discovery_details"]
+        default_msg = "Skipped. No credentials found."
+
+        self.assertFalse(result["Foo1Platform"]["available"])
+        self.assertEqual(default_msg, result["Foo1Platform"]["message"])
+
+        self.assertFalse(result["Foo2Platform"]["available"])
+        self.assertEqual(default_msg, result["Foo2Platform"]["message"])
+
+        self.assertTrue(result["Foo3Platform"]["available"])
+        self.assertEqual("Available", result["Foo3Platform"]["message"])
+
+        self.assertFalse(result["Foo4Platform"]["available"])
+        self.assertIn("method is broken", result["Foo4Platform"]["message"])
+        self.assertIn("traceback", result["Foo4Platform"])
+
+        self.assertFalse(result["Foo5Platform"]["available"])
+        self.assertIn("method is broken", result["Foo5Platform"]["message"])
+        self.assertNotIn("traceback", result["Foo5Platform"])
+
+        mock_platform_get_all.assert_called_once_with()
 
     @mock.patch("rally.common.db.env_rename")
     def test_rename(self, mock_env_rename):

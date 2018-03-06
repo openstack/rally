@@ -115,3 +115,9 @@ class Platform(plugin.Plugin, validation.ValidatablePluginMixin):
     def get_validation_context(self):
         """Return a validation context for a platform."""
         return {}
+
+    @classmethod
+    def create_spec_from_sys_environ(cls, sys_environ):
+        """Check system env for credentials and return a spec if present."""
+        return {"available": False,
+                "message": "Skipped. No credentials found."}

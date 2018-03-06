@@ -195,3 +195,58 @@ class OpenStack(platform.Platform):
 
     def _get_validation_context(self):
         return {"users@openstack": {}}
+
+    @classmethod
+    def create_spec_from_sys_environ(cls, sys_environ):
+
+        from oslo_utils import strutils
+
+        required_env_vars = ["OS_AUTH_URL", "OS_USERNAME", "OS_PASSWORD"]
+        missing_env_vars = [v for v in required_env_vars if
+                            v not in sys_environ]
+        if missing_env_vars:
+            return {"available": False,
+                    "message": "The following variable(s) are missed: %s" %
+                               missing_env_vars}
+        tenant_name = sys_environ.get("OS_PROJECT_NAME",
+                                      sys_environ.get("OS_TENANT_NAME"))
+        if tenant_name is None:
+            return {"available": False,
+                    "message": "One of OS_PROJECT_NAME or OS_TENANT_NAME "
+                               "should be specified."}
+
+        endpoint_type = sys_environ.get("OS_ENDPOINT_TYPE",
+                                        sys_environ.get("OS_INTERFACE"))
+        if endpoint_type and "URL" in endpoint_type:
+            endpoint_type = endpoint_type.replace("URL", "")
+
+        spec = {
+            "auth_url": sys_environ["OS_AUTH_URL"],
+            "admin": {
+                "username": sys_environ["OS_USERNAME"],
+                "password": sys_environ["OS_PASSWORD"],
+                "tenant_name": tenant_name
+            },
+            "endpoint_type": endpoint_type,
+            "region_name": sys_environ.get("OS_REGION_NAME", ""),
+            "https_cacert": sys_environ.get("OS_CACERT", ""),
+            "https_insecure": strutils.bool_from_string(
+                sys_environ.get("OS_INSECURE")),
+            "profiler_hmac_key": sys_environ.get("OSPROFILER_HMAC_KEY"),
+            "profiler_conn_str": sys_environ.get("OSPROFILER_CONN_STR")
+        }
+
+        user_domain_name = sys_environ.get("OS_USER_DOMAIN_NAME")
+        project_domain_name = sys_environ.get("OS_PROJECT_DOMAIN_NAME")
+        identity_api_version = sys_environ.get(
+            "OS_IDENTITY_API_VERSION", sys_environ.get("IDENTITY_API_VERSION"))
+        if (identity_api_version == "3" or
+                (identity_api_version is None and
+                 (user_domain_name or project_domain_name))):
+            # it is Keystone v3 and it has another config scheme
+            spec["admin"]["project_name"] = spec["admin"].pop("tenant_name")
+            spec["admin"]["user_domain_name"] = user_domain_name or "Default"
+            project_domain_name = project_domain_name or "Default"
+            spec["admin"]["project_domain_name"] = project_domain_name
+
+        return {"spec": spec, "available": True, "message": "Available"}

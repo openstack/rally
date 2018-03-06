@@ -127,6 +127,77 @@ class ExistingPlatformTestCase(test_platform.PlatformBaseTestCase):
             ),
             existing.OpenStack(spec).create())
 
+    def test_create_spec_from_sys_environ(self):
+        # keystone v2
+        sys_env = {
+            "OS_AUTH_URL": "https://example.com",
+            "OS_USERNAME": "user",
+            "OS_PASSWORD": "pass",
+            "OS_TENANT_NAME": "projectX",
+            "OS_INTERFACE": "publicURL",
+            "OS_REGION_NAME": "Region1",
+            "OS_CACERT": "Cacert",
+            "OS_INSECURE": True,
+            "OSPROFILER_HMAC_KEY": "key",
+            "OSPROFILER_CONN_STR": "https://example2.com",
+        }
+
+        result = existing.OpenStack.create_spec_from_sys_environ(sys_env)
+        self.assertTrue(result["available"])
+        self.assertEqual(
+            {
+                "admin": {
+                    "username": "user",
+                    "tenant_name": "projectX",
+                    "password": "pass"
+                },
+                "auth_url": "https://example.com",
+                "endpoint_type": "public",
+                "region_name": "Region1",
+                "https_cacert": "Cacert",
+                "https_insecure": True,
+                "profiler_hmac_key": "key",
+                "profiler_conn_str": "https://example2.com"
+            }, result["spec"])
+
+        # keystone v3
+        sys_env["OS_IDENTITY_API_VERSION"] = "3"
+
+        result = existing.OpenStack.create_spec_from_sys_environ(sys_env)
+        print(json.dumps(result["spec"], indent=4))
+        self.assertEqual(
+            {
+                "admin": {
+                    "username": "user",
+                    "project_name": "projectX",
+                    "user_domain_name": "Default",
+                    "password": "pass",
+                    "project_domain_name": "Default"
+                },
+                "endpoint_type": "public",
+                "auth_url": "https://example.com",
+                "region_name": "Region1",
+                "https_cacert": "Cacert",
+                "https_insecure": True,
+                "profiler_hmac_key": "key",
+                "profiler_conn_str": "https://example2.com"
+            }, result["spec"])
+
+    def test_create_spec_from_sys_environ_fails_with_missing_vars(self):
+        sys_env = {"OS_AUTH_URL": "https://example.com"}
+        result = existing.OpenStack.create_spec_from_sys_environ(sys_env)
+        self.assertFalse(result["available"])
+        self.assertIn("OS_USERNAME", result["message"])
+        self.assertIn("OS_PASSWORD", result["message"])
+        self.assertNotIn("OS_AUTH_URL", result["message"])
+
+        sys_env = {"OS_AUTH_URL": "https://example.com",
+                   "OS_USERNAME": "user",
+                   "OS_PASSWORD": "pass"}
+        result = existing.OpenStack.create_spec_from_sys_environ(sys_env)
+        self.assertFalse(result["available"])
+        self.assertIn("OS_PROJECT_NAME or OS_TENANT_NAME", result["message"])
+
     def test_destroy(self):
         self.assertIsNone(existing.OpenStack({}).destroy())
 
