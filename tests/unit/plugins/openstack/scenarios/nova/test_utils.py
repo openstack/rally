@@ -38,12 +38,8 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self.floating_ip = mock.Mock()
         self.image = mock.Mock()
         self.context.update(
-            {"user": {"id": "fake_user_id", "credential": mock.MagicMock()}})
-
-    def _context_with_networks(self, networks):
-        retval = {"tenant": {"networks": networks}}
-        retval.update(self.context)
-        return retval
+            {"user": {"id": "fake_user_id", "credential": mock.MagicMock()},
+             "tenant": {"id": "fake_tenant"}})
 
     def _context_with_secgroup(self, secgroup):
         retval = {"user": {"secgroup": secgroup,
@@ -140,9 +136,12 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                                        "nova.boot_server")
 
     def test__boot_server_with_network_exception(self):
+        self.context.update({"tenant": {"networks": None}})
+
         self.clients("nova").servers.create.return_value = self.server
+
         nova_scenario = utils.NovaScenario(
-            context=self._context_with_networks(None))
+            context=self.context)
         self.assertRaises(TypeError, nova_scenario._boot_server,
                           "image_id", "flavor_id",
                           auto_assign_nic=True)
@@ -506,31 +505,120 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
 
     def test__associate_floating_ip(self):
         nova_scenario = utils.NovaScenario(context=self.context)
-        nova_scenario._associate_floating_ip(self.server, self.floating_ip)
-        self.server.add_floating_ip.assert_called_once_with(self.floating_ip,
-                                                            fixed_address=None)
+        neutronclient = nova_scenario.clients("neutron")
+        neutronclient.list_ports.return_value = {"ports": [{"id": "p1"},
+                                                           {"id": "p2"}]}
+
+        fip_ip = "172.168.0.1"
+        fip_id = "some"
+        # case #1- an object from neutronclient
+        floating_ip = {"floating_ip_address": fip_ip, "id": fip_id}
+
+        nova_scenario._associate_floating_ip(self.server, floating_ip)
+
+        neutronclient.update_floatingip.assert_called_once_with(
+            fip_id, {"floatingip": {"port_id": "p1"}}
+        )
+        # case #2 - an object from network wrapper
+        neutronclient.update_floatingip.reset_mock()
+        floating_ip = {"ip": fip_ip, "id": fip_id}
+
+        nova_scenario._associate_floating_ip(self.server, floating_ip)
+
+        neutronclient.update_floatingip.assert_called_once_with(
+            fip_id, {"floatingip": {"port_id": "p1"}}
+        )
+
+        # these should not be called in both cases
+        self.assertFalse(neutronclient.list_floatingips.called)
+        # it is an old behavior. let's check that it was not called
+        self.assertFalse(self.server.add_floating_ip.called)
+
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.associate_floating_ip", count=2)
+
+    def test__associate_floating_ip_deprecated_behavior(self):
+        nova_scenario = utils.NovaScenario(context=self.context)
+        neutronclient = nova_scenario.clients("neutron")
+        neutronclient.list_ports.return_value = {"ports": [{"id": "p1"},
+                                                           {"id": "p2"}]}
+
+        fip_id = "fip1"
+        fip_ip = "172.168.0.1"
+        neutronclient.list_floatingips.return_value = {
+            "floatingips": [
+                {"id": fip_id, "floating_ip_address": fip_ip},
+                {"id": "fip2", "floating_ip_address": "127.0.0.1"}]}
+
+        nova_scenario._associate_floating_ip(self.server, fip_ip)
+
+        neutronclient.update_floatingip.assert_called_once_with(
+            fip_id, {"floatingip": {"port_id": "p1"}}
+        )
+
+        neutronclient.list_floatingips.assert_called_once_with(
+            tenant_id="fake_tenant")
+
+        # it is an old behavior. let's check that it was not called
+        self.assertFalse(self.server.add_floating_ip.called)
+
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.associate_floating_ip")
 
-    def test__associate_floating_ip_with_no_atomic_action(self):
-        nova_scenario = utils.NovaScenario(context=self.context)
-        nova_scenario._associate_floating_ip(self.server, self.floating_ip)
-        self.server.add_floating_ip.assert_called_once_with(self.floating_ip,
-                                                            fixed_address=None)
-
     def test__dissociate_floating_ip(self):
         nova_scenario = utils.NovaScenario(context=self.context)
-        nova_scenario._dissociate_floating_ip(self.server, self.floating_ip)
-        self.server.remove_floating_ip.assert_called_once_with(
-            self.floating_ip)
+        neutronclient = nova_scenario.clients("neutron")
+
+        fip_ip = "172.168.0.1"
+        fip_id = "some"
+        # case #1- an object from neutronclient
+        floating_ip = {"floating_ip_address": fip_ip, "id": fip_id}
+
+        nova_scenario._dissociate_floating_ip(self.server, floating_ip)
+
+        neutronclient.update_floatingip.assert_called_once_with(
+            fip_id, {"floatingip": {"port_id": None}}
+        )
+        # case #2 - an object from network wrapper
+        neutronclient.update_floatingip.reset_mock()
+        floating_ip = {"ip": fip_ip, "id": fip_id}
+
+        nova_scenario._dissociate_floating_ip(self.server, floating_ip)
+
+        neutronclient.update_floatingip.assert_called_once_with(
+            fip_id, {"floatingip": {"port_id": None}}
+        )
+
+        # these should not be called in both cases
+        self.assertFalse(neutronclient.list_floatingips.called)
+        # it is an old behavior. let's check that it was not called
+        self.assertFalse(self.server.add_floating_ip.called)
+
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.dissociate_floating_ip", count=2)
+
+    def test__disassociate_floating_ip_deprecated_behavior(self):
+        nova_scenario = utils.NovaScenario(context=self.context)
+        neutronclient = nova_scenario.clients("neutron")
+
+        fip_id = "fip1"
+        fip_ip = "172.168.0.1"
+        neutronclient.list_floatingips.return_value = {
+            "floatingips": [
+                {"id": fip_id, "floating_ip_address": fip_ip},
+                {"id": "fip2", "floating_ip_address": "127.0.0.1"}]}
+
+        nova_scenario._dissociate_floating_ip(self.server, fip_ip)
+
+        neutronclient.update_floatingip.assert_called_once_with(
+            fip_id, {"floatingip": {"port_id": None}}
+        )
+
+        neutronclient.list_floatingips.assert_called_once_with(
+            tenant_id="fake_tenant")
+
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.dissociate_floating_ip")
-
-    def test__dissociate_floating_ip_with_no_atomic_action(self):
-        nova_scenario = utils.NovaScenario(context=self.context)
-        nova_scenario._dissociate_floating_ip(self.server, self.floating_ip)
-        self.server.remove_floating_ip.assert_called_once_with(
-            self.floating_ip)
 
     def test__check_ip_address(self):
         nova_scenario = utils.NovaScenario(context=self.context)

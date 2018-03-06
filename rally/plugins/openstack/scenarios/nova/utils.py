@@ -606,13 +606,42 @@ class NovaScenario(scenario.OpenStackScenario):
         """Add floating IP to an instance
 
         :param server: The :class:`Server` to add an IP to.
-        :param address: The ip address or FloatingIP to add to the instance
+        :param address: The dict-like representation of FloatingIP to add
+            to the instance
         :param fixed_address: The fixedIP address the FloatingIP is to be
                associated with (optional)
         """
-        server.add_floating_ip(address, fixed_address=fixed_address)
+        with atomic.ActionTimer(self, "neutron.list_ports"):
+            ports = self.clients("neutron").list_ports(device_id=server.id)
+            port = ports["ports"][0]
+
+        fip = address
+        if not isinstance(address, dict):
+            LOG.warning(
+                "The argument 'address' of "
+                "NovaScenario._associate_floating_ip method accepts a "
+                "dict-like representation of floating ip. Transmitting a "
+                "string with just an IP is deprecated.")
+            with atomic.ActionTimer(self, "neutron.list_floating_ips"):
+                all_fips = self.clients("neutron").list_floatingips(
+                    tenant_id=self.context["tenant"]["id"])
+            filtered_fip = [f for f in all_fips["floatingips"]
+                            if f["floating_ip_address"] == address]
+            if not filtered_fip:
+                raise exceptions.NotFoundException(
+                    "There is no floating ip with '%s' address." % address)
+            fip = filtered_fip[0]
+        # the first case: fip object is returned from network wrapper
+        # the second case: from neutronclient directly
+        fip_ip = fip.get("ip", fip.get("floating_ip_address", None))
+        fip_update_dict = {"port_id": port["id"]}
+        if fixed_address:
+            fip_update_dict["fixed_ip_address"] = fixed_address
+        self.clients("neutron").update_floatingip(
+            fip["id"], {"floatingip": fip_update_dict}
+        )
         utils.wait_for(server,
-                       is_ready=self.check_ip_address(address),
+                       is_ready=self.check_ip_address(fip_ip),
                        update_resource=utils.get_from_manager())
         # Update server data
         server.addresses = server.manager.get(server.id).addresses
@@ -622,12 +651,34 @@ class NovaScenario(scenario.OpenStackScenario):
         """Remove floating IP from an instance
 
         :param server: The :class:`Server` to add an IP to.
-        :param address: The ip address or FloatingIP to remove
+        :param address: The dict-like representation of FloatingIP to remove
         """
-        server.remove_floating_ip(address)
+        fip = address
+        if not isinstance(fip, dict):
+            LOG.warning(
+                "The argument 'address' of "
+                "NovaScenario._dissociate_floating_ip method accepts a "
+                "dict-like representation of floating ip. Transmitting a "
+                "string with just an IP is deprecated.")
+            with atomic.ActionTimer(self, "neutron.list_floating_ips"):
+                all_fips = self.clients("neutron").list_floatingips(
+                    tenant_id=self.context["tenant"]["id"]
+                )
+            filtered_fip = [f for f in all_fips["floatingips"]
+                            if f["floating_ip_address"] == address]
+            if not filtered_fip:
+                raise exceptions.NotFoundException(
+                    "There is no floating ip with '%s' address." % address)
+            fip = filtered_fip[0]
+        self.clients("neutron").update_floatingip(
+            fip["id"], {"floatingip": {"port_id": None}}
+        )
+        # the first case: fip object is returned from network wrapper
+        # the second case: from neutronclient directly
+        fip_ip = fip.get("ip", fip.get("floating_ip_address", None))
         utils.wait_for(
             server,
-            is_ready=self.check_ip_address(address, must_exist=False),
+            is_ready=self.check_ip_address(fip_ip, must_exist=False),
             update_resource=utils.get_from_manager()
         )
         # Update server data
@@ -640,8 +691,8 @@ class NovaScenario(scenario.OpenStackScenario):
         def _check_addr(resource):
             for network, addr_list in resource.addresses.items():
                 for addr in addr_list:
-                        if ip_to_check == addr["addr"]:
-                            return must_exist
+                    if ip_to_check == addr["addr"]:
+                        return must_exist
             return not must_exist
         return _check_addr
 

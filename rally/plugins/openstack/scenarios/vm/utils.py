@@ -170,7 +170,7 @@ class VMScenario(nova_utils.NovaScenario):
                 ext_network=floating_network,
                 tenant_id=server.tenant_id, fixed_ip=fixed_ip)
 
-        self._associate_floating_ip(server, fip["ip"], fixed_address=fixed_ip)
+        self._associate_floating_ip(server, fip, fixed_address=fixed_ip)
 
         return fip
 
@@ -179,7 +179,7 @@ class VMScenario(nova_utils.NovaScenario):
         with logging.ExceptionLogger(
                 LOG, "Unable to delete IP: %s" % fip["ip"]):
             if self.check_ip_address(fip["ip"])(server):
-                self._dissociate_floating_ip(server, fip["ip"])
+                self._dissociate_floating_ip(server, fip)
                 with atomic.ActionTimer(self, "neutron.delete_floating_ip"):
                     network_wrapper.wrap(self.clients,
                                          self).delete_floating_ip(

@@ -288,6 +288,40 @@
           tenants: 2
           users_per_tenant: 1
     -
+      title: NovaServers.boot_and_associate_floating_ip tests
+      scenario:
+        NovaServers.boot_and_associate_floating_ip:
+          flavor:
+            name: {{flavor_name}}
+          image:
+            name: {{image_name}}
+      runner:
+        constant:
+          times: 2
+          concurrency: 2
+      contexts:
+        users:
+          tenants: 2
+          users_per_tenant: 1
+        network: {}
+    -
+      title: NovaServers.boot_server_associate_and_dissociate_floating_ip tests
+      scenario:
+        NovaServers.boot_server_associate_and_dissociate_floating_ip:
+          flavor:
+            name: {{flavor_name}}
+          image:
+            name: {{image_name}}
+      runner:
+        constant:
+          times: 2
+          concurrency: 2
+      contexts:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+        network: {}
+    -
       title: NovaServers.list_servers tests
       scenario:
         NovaServers.list_servers:

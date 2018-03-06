@@ -209,8 +209,8 @@ class VMScenarioTestCase(test.ScenarioTestCase):
         scenario, server = self.get_scenario()
 
         netwrap = mock_wrap.return_value
-        netwrap.create_floating_ip.return_value = {
-            "id": "foo_id", "ip": "foo_ip"}
+        fip = {"id": "foo_id", "ip": "foo_ip"}
+        netwrap.create_floating_ip.return_value = fip
 
         scenario._attach_floating_ip(
             server, floating_network="bar_network")
@@ -221,7 +221,7 @@ class VMScenarioTestCase(test.ScenarioTestCase):
             tenant_id="foo_tenant", fixed_ip="foo_ip")
 
         scenario._associate_floating_ip.assert_called_once_with(
-            server, "foo_ip", fixed_address="foo_ip")
+            server, fip, fixed_address="foo_ip")
 
     @mock.patch(VMTASKS_UTILS + ".network_wrapper.wrap")
     def test__delete_floating_ip(self, mock_wrap):
@@ -231,14 +231,14 @@ class VMScenarioTestCase(test.ScenarioTestCase):
         scenario.check_ip_address = mock.Mock(return_value=_check_addr)
         scenario._dissociate_floating_ip = mock.Mock()
 
-        scenario._delete_floating_ip(
-            server, fip={"id": "foo_id", "ip": "foo_ip"})
+        fip = {"id": "foo_id", "ip": "foo_ip"}
+        scenario._delete_floating_ip(server, fip=fip)
 
         scenario.check_ip_address.assert_called_once_with(
             "foo_ip")
         _check_addr.assert_called_once_with(server)
         scenario._dissociate_floating_ip.assert_called_once_with(
-            server, "foo_ip")
+            server, fip)
         mock_wrap.assert_called_once_with(scenario.clients, scenario)
         mock_wrap.return_value.delete_floating_ip.assert_called_once_with(
             "foo_id", wait=True)
