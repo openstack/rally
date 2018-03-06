@@ -43,23 +43,19 @@ class RallyBase(six.Iterator):
     updated_at = sa.Column(sa.DateTime, default=dt.datetime.utcnow,
                            onupdate=dt.datetime.utcnow)
 
-    def save(self, session):
-        """Save this object."""
+    def as_dict(self):
+        result = {}
+        res = sa.inspect(self)
 
-        # NOTE(boris-42): This part of code should be look like:
-        #                       session.add(self)
-        #                       session.flush()
-        #                 But there is a bug in sqlalchemy and eventlet that
-        #                 raises NoneType exception if there is no running
-        #                 transaction and rollback is called. As long as
-        #                 sqlalchemy has this bug we have to create transaction
-        #                 explicitly.
-        with session.begin(subtransactions=True):
-            session.add(self)
-            session.flush()
+        for c in self.__table__.columns:
+            if c.key not in res.unloaded:
+                result[c.name] = getattr(self, c.name)
 
-    def __getitem__(self, key):
-        return getattr(self, key)
+        for r in self.__mapper__.relationships:
+            if r.key not in res.unloaded:
+                result[r.key] = getattr(self, r.key)
+
+        return result
 
     def get(self, key, default=None):
         return getattr(self, key, default)
@@ -245,8 +241,8 @@ class Workload(BASE, RallyBase):
 
     start_time = sa.Column(sa_types.TimeStamp)
 
-    load_duration = sa.Column(sa.Float, default=0)
-    full_duration = sa.Column(sa.Float, default=0)
+    load_duration = sa.Column(sa.Float, default=0.0)
+    full_duration = sa.Column(sa.Float, default=0.0)
     min_duration = sa.Column(sa.Float)
     max_duration = sa.Column(sa.Float)
     total_iteration_count = sa.Column(sa.Integer, default=0)
