@@ -84,4 +84,4 @@ downgrade.
 
 .. references:
 
-.. _link: https://alembic.readthedocs.org
+.. _link: http://alembic.zzzcomputing.com/en/latest/

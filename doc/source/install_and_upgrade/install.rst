@@ -179,4 +179,4 @@ More about docker: https://www.docker.com/
 .. references:
 
 .. _installation script: https://raw.githubusercontent.com/openstack/rally/master/install_rally.sh
-.. _installation instructions for various OSes: https://docs.docker.com/engine/installation/
+.. _installation instructions for various OSes: https://docs.docker.com/install/

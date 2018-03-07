@@ -65,10 +65,10 @@ Rally Plugin
 ------------
 
 Most parts of Rally
-`are pluggable <https://rally.readthedocs.io/en/latest/plugins.html>`_.
+`are pluggable <https://rally.readthedocs.io/en/latest/plugins/index.html>`_.
 Scenarios, runners, contexts and even charts for HTML report are plugins.
 It is easy to create your own plugin and use it. Read more at
-`plugin reference <https://rally.readthedocs.io/en/latest/plugin/plugin_reference.html>`_.
+`plugin reference <https://rally.readthedocs.io/en/latest/plugins/plugin_reference.html>`_.
 
 Deployment
 ==========

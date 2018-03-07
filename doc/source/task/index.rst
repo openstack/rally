@@ -297,7 +297,7 @@ Trends Report
 -------------
 
 If same workload is run several times, some results of these runs can be
-compared. Compared metrics are ssuccess rate (percent of successful iterations)
+compared. Compared metrics are success rate (percent of successful iterations)
 and statistics for durations.
 
 How to generate trends report
