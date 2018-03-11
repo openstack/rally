@@ -15,10 +15,8 @@
 
 """Tests for db.api layer."""
 
-import collections
 import datetime as dt
 
-import ddt
 import mock
 from six import moves
 
@@ -28,66 +26,6 @@ from rally import exceptions
 from tests.unit import test
 
 NOW = dt.datetime.now()
-
-
-class FakeSerializable(db.models.RallyBase):
-
-    def __init__(self, **kwargs):
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-
-
-@ddt.ddt
-class SerializeTestCase(test.DBTestCase):
-
-    @ddt.data(
-        {"data": 1, "serialized": 1},
-        {"data": 1.1, "serialized": 1.1},
-        {"data": "a string", "serialized": "a string"},
-        {"data": NOW, "serialized": NOW},
-        {"data": {"k1": 1, "k2": 2}, "serialized": {"k1": 1, "k2": 2}},
-        {"data": [1, "foo"], "serialized": [1, "foo"]},
-        {"data": ["foo", 1, {"a": "b"}], "serialized": ["foo", 1, {"a": "b"}]},
-        {"data": FakeSerializable(a=1), "serialized": {"a": 1}},
-        {"data": [FakeSerializable(a=1),
-                  FakeSerializable(b=FakeSerializable(c=1))],
-         "serialized": [{"a": 1}, {"b": {"c": 1}}]},
-    )
-    @ddt.unpack
-    def test_serialize(self, data, serialized):
-        @db.serialize
-        def fake_method():
-            return data
-
-        results = fake_method()
-        self.assertEqual(serialized, results)
-
-    def test_serialize_ordered_dict(self):
-        data = collections.OrderedDict([(1, 2), ("foo", "bar"), (2, 3)])
-        serialized = db.serialize_data(data)
-        self.assertIsInstance(serialized, collections.OrderedDict)
-        self.assertEqual([1, "foo", 2], list(serialized.keys()))
-        self.assertEqual([2, "bar", 3], list(serialized.values()))
-
-    def test_serialize_value_error(self):
-        @db.serialize
-        def fake_method():
-            class Fake(object):
-                pass
-
-            return Fake()
-
-        self.assertRaises(exceptions.DBException, fake_method)
-
-
-class ModelQueryTestCase(test.DBTestCase):
-
-    def test_model_query_wrong_model(self):
-
-        class Foo(object):
-            pass
-
-        self.assertRaises(exceptions.DBException, db.model_query, Foo)
 
 
 class ConnectionTestCase(test.DBTestCase):
@@ -494,7 +432,8 @@ class WorkloadTestCase(test.DBTestCase):
         workload.pop("updated_at")
 
         self.assertEqual(
-            {"statistics": {},
+            {"_profiling_data": "",
+             "statistics": {},
              "subtask_uuid": self.subtask_uuid,
              "task_uuid": self.task_uuid,
              "name": w_name, "description": w_description,
