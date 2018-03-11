@@ -29,6 +29,14 @@
     vars:
       tox_envlist: self
 
+- job:
+    name: rally-tox-samples
+    parent: tox
+    description: |
+      Validates rally/samples
+    vars:
+      tox_envlist: samples
+
 - project:
     check:
       jobs:
@@ -36,6 +44,7 @@
         - rally-install-ubuntu-xenial
         - rally-install-centos-7
         - openstack-tox-functional
+        - rally-tox-samples
         - rally-tox-self
     gate:
       jobs:
@@ -43,4 +52,6 @@
         - rally-install-ubuntu-xenial
         - rally-install-centos-7
         - openstack-tox-functional
+        - rally-tox-samples
         - rally-tox-self
+
