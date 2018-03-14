@@ -55,7 +55,7 @@ def generate_cidr(start_cidr="10.2.0.0/24"):
 
 
 class NetworkWrapperException(exceptions.RallyException):
-    error_code = 532
+    error_code = 217
     msg_fmt = "%(message)s"
 
 

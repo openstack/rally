@@ -30,7 +30,7 @@ class RallyException(Exception):
 
     """
     msg_fmt = "%(message)s"
-    error_code = 500
+    error_code = 100
 
     def __init__(self, message=None, **kwargs):
         self.kwargs = kwargs
@@ -65,175 +65,176 @@ def make_exception(exc):
     return RallyException(str(exc))
 
 
-class DBException(RallyException):
-    error_code = 500
-    msg_fmt = "DB Exception: '%(message)s'"
-
-
-class DBMigrationError(DBException):
-    msg_fmt = "DB Migration Error: '%(message)s'"
-
-
-class DBConflict(RallyException):
-    error_code = 409
-    msg_fmt = "DB Conflict. %(message)s"
-
-
-class DBRecordNotFound(RallyException):
-    error_code = 404
-    msg_fmt = "Record for %(criteria)s not found in table %(table)s"
-
-
-class DBRecordExists(DBException):
-    error_code = 409
-    msg_fmt = "Record with %(field)s = %(value)s already exists in %(table)s"
-
-
-class ManagerException(RallyException):
-    error_code = 500
-    msg_fmt = "Internal error: %(message)s"
-
-
-class ManagerInvalidSpec(ManagerException):
-    error_code = 409
-    msg_fmt = "%(mgr)s manager got invalid spec: \n%(errors)s"
-
-
-class ManagerInvalidState(ManagerException):
-    error_code = 500
-    msg_fmt = ("%(mgr)s manager in invalid state "
-               "expected `%(expected)s' actual `%(actual)s' ")
+class ValidationError(RallyException):
+    error_code = 110
+    msg_fmt = "Validation error: %(message)s"
 
 
 class InvalidArgumentsException(RallyException):
-    error_code = 455
+    error_code = 111
     msg_fmt = "Invalid arguments: '%(message)s'"
 
 
 class InvalidConfigException(RallyException):
-    error_code = 456
+    error_code = 112
     msg_fmt = "This config has invalid schema: `%(message)s`"
 
 
 class InvalidTaskException(InvalidConfigException):
-    error_code = 457
+    error_code = 113
     msg_fmt = "Task config is invalid: `%(message)s`"
 
 
 class InvalidTaskConfig(InvalidTaskException):
-    error_code = 458
+    error_code = 114
     msg_fmt = ("Input task is invalid!\n\n"
                "Subtask %(name)s[%(pos)s] has wrong configuration"
                "\nSubtask configuration:\n%(config)s\n"
                "\nReason(s):\n %(reason)s")
 
 
+class InvalidScenarioArgument(RallyException):
+    error_code = 115
+    msg_fmt = "Invalid scenario argument: '%(message)s'"
+
+
+class InvalidConnectionString(RallyException):
+    error_code = 116
+    msg_fmt = "Invalid connection string: %(message)s."
+
+
+class DBException(RallyException):
+    error_code = 200
+    msg_fmt = "DB Exception: '%(message)s'"
+
+
+class DBMigrationError(DBException):
+    error_code = 201
+    msg_fmt = "DB Migration Error: '%(message)s'"
+
+
+class DBConflict(RallyException):
+    error_code = 202
+    msg_fmt = "DB Conflict. %(message)s"
+
+
+class DBRecordNotFound(RallyException):
+    error_code = 203
+    msg_fmt = "Record for %(criteria)s not found in table %(table)s"
+
+
+class DBRecordExists(DBException):
+    error_code = 204
+    msg_fmt = "Record with %(field)s = %(value)s already exists in %(table)s"
+
+
+class DowngradeNotSupported(RallyException):
+    error_code = 205
+    msg_fmt = "Database schema downgrade is not supported."
+
+
 class NotFoundException(RallyException):
-    error_code = 404
+    error_code = 210
     msg_fmt = "The resource can not be found: %(message)s"
 
 
-class ThreadTimeoutException(RallyException):
-    error_code = 515
-    msg_fmt = "Iteration interrupted due to timeout."
-
-
 class PluginNotFound(NotFoundException):
-    error_code = 459
+    error_code = 211
     msg_fmt = "There is no plugin `%(name)s` in %(platform)s platform."
 
 
 class PluginWithSuchNameExists(RallyException):
-    error_code = 516
+    error_code = 212
     msg_fmt = (
         "Plugin with such name: %(name)s already exists in %(platform)s "
         "platform. It's module allocates at %(existing_path)s. You are trying "
         "to add plugin whose module allocates at %(new_path)s.")
 
 
+class MultiplePluginsFound(RallyException):
+    error_code = 213
+
+    msg_fmt = ("Multiple plugins found: %(plugins)s for name %(name)s. "
+               "Use full name with platform to fix issue.")
+
+
+class GetResourceFailure(RallyException):
+    error_code = 214
+    msg_fmt = "Failed to get the resource %(resource)s: %(err)s"
+
+
+class GetResourceNotFound(GetResourceFailure):
+    error_code = 215
+    msg_fmt = "Resource %(resource)s is not found."
+
+
+class GetResourceErrorStatus(GetResourceFailure):
+    error_code = 216
+    msg_fmt = "Resource %(resource)s has %(status)s status.\n Fault: %(fault)s"
+
+
+class AuthenticationFailed(InvalidArgumentsException):
+    error_code = 220
+    msg_fmt = ("Failed to authenticate to %(url)s for user '%(username)s'"
+               " in project '%(project)s': %(etype)s: %(error)s")
+
+
+class InvalidAdminException(InvalidArgumentsException):
+    error_code = 221
+    msg_fmt = "user '%(username)s' doesn't have 'admin' role"
+
+
 class DeploymentNotFinishedStatus(RallyException):
-    error_code = 463
+    error_code = 222
     msg_fmt = "Deployment '%(name)s' (UUID=%(uuid)s) is '%(status)s'."
+
+
+class ContextSetupFailure(RallyException):
+    error_code = 223
+    msg_fmt = "Unable to setup context '%(ctx_name)s': '%(msg)s'"
+
+
+class ManagerException(RallyException):
+    error_code = 230
+    msg_fmt = "Internal error: %(message)s"
+
+
+class ManagerInvalidSpec(ManagerException):
+    error_code = 231
+    msg_fmt = "%(mgr)s manager got invalid spec: \n%(errors)s"
+
+
+class ManagerInvalidState(ManagerException):
+    error_code = 232
+    msg_fmt = ("%(mgr)s manager in invalid state "
+               "expected `%(expected)s' actual `%(actual)s' ")
+
+
+class TimeoutException(RallyException):
+    error_code = 240
+    msg_fmt = ("Rally tired waiting %(timeout).2f seconds for "
+               "%(resource_type)s %(resource_name)s:%(resource_id)s to "
+               "become %(desired_status)s current status %(resource_status)s")
+
+
+class ThreadTimeoutException(RallyException):
+    error_code = 241
+    msg_fmt = "Iteration interrupted due to timeout."
+
+
+class SSHTimeout(RallyException):
+    error_code = 242
+    pass
+
+
+class SSHError(RallyException):
+    error_code = 243
+    pass
 
 
 class RallyAssertionError(RallyException):
     msg_fmt = "Assertion error: %(message)s"
 
 
-class TimeoutException(RallyException):
-    error_code = 517
-    msg_fmt = ("Rally tired waiting %(timeout).2f seconds for "
-               "%(resource_type)s %(resource_name)s:%(resource_id)s to "
-               "become %(desired_status)s current status %(resource_status)s")
-
-
-class GetResourceFailure(RallyException):
-    error_code = 518
-    msg_fmt = "Failed to get the resource %(resource)s: %(err)s"
-
-
-class GetResourceNotFound(GetResourceFailure):
-    error_code = 519
-    msg_fmt = "Resource %(resource)s is not found."
-
-
-class GetResourceErrorStatus(GetResourceFailure):
-    error_code = 520
-    msg_fmt = "Resource %(resource)s has %(status)s status.\n Fault: %(fault)s"
-
-
 class ScriptError(RallyException):
     msg_fmt = "Script execution failed: %(message)s"
-
-
-class InvalidAdminException(InvalidArgumentsException):
-    error_code = 521
-    msg_fmt = "user '%(username)s' doesn't have 'admin' role"
-
-
-class AuthenticationFailed(InvalidArgumentsException):
-    error_code = 401
-    msg_fmt = ("Failed to authenticate to %(url)s for user '%(username)s'"
-               " in project '%(project)s': %(etype)s: %(error)s")
-
-
-class InvalidScenarioArgument(RallyException):
-    error_code = 467
-    msg_fmt = "Invalid scenario argument: '%(message)s'"
-
-
-class ContextSetupFailure(RallyException):
-    error_code = 524
-    msg_fmt = "Unable to setup context '%(ctx_name)s': '%(msg)s'"
-
-
-class ValidationError(RallyException):
-    error_code = 468
-    msg_fmt = "Validation error: %(message)s"
-
-
-class MultiplePluginsFound(RallyException):
-    error_code = 470
-
-    msg_fmt = ("Multiple plugins found: %(plugins)s for name %(name)s. "
-               "Use full name with platform to fix issue.")
-
-
-class SSHTimeout(RallyException):
-    error_code = 526
-    pass
-
-
-class SSHError(RallyException):
-    error_code = 527
-    pass
-
-
-class InvalidConnectionString(RallyException):
-    error_code = 471
-    msg_fmt = "Invalid connection string: %(message)s."
-
-
-class DowngradeNotSupported(RallyException):
-    error_code = 528
-    msg_fmt = "Database schema downgrade is not supported."

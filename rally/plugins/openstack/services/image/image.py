@@ -26,14 +26,14 @@ class VisibilityException(exceptions.RallyException):
     """Wrong visibility value exception.
 
     """
-    error_code = 531
+    error_code = 250
 
 
 class RemovePropsException(exceptions.RallyException):
     """Remove Props it not supported exception.
 
     """
-    error_code = 560
+    error_code = 251
 
 
 class Image(service.UnifiedService):
