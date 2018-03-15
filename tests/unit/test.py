@@ -14,16 +14,28 @@
 #    under the License.
 
 import fixtures
+from fixtures._fixtures.tempdir import TempDir
 import os
 import uuid
 
 import mock
-from oslotest import base
+import testtools
 
 from rally.common import cfg
 from rally.common import db
 from rally import plugins
 from tests.unit import fakes
+
+
+class TempHomeDir(TempDir):
+    """Create a temporary directory and set it as $HOME
+
+    :ivar path: the path of the temporary directory.
+    """
+
+    def _setUp(self):
+        super(TempHomeDir, self)._setUp()
+        self.useFixture(fixtures.EnvironmentVariable("HOME", self.path))
 
 
 class DatabaseFixture(cfg.fixture.Config):
@@ -37,13 +49,23 @@ class DatabaseFixture(cfg.fixture.Config):
         db.schema.schema_create()
 
 
-class TestCase(base.BaseTestCase):
+class TestCase(testtools.TestCase):
     """Test case base class for all unit tests."""
+
+    def __init__(self, *args, **kwargs):
+        super(TestCase, self).__init__(*args, **kwargs)
+
+        # This is the number of characters shown when two objects do not
+        # match for assertDictEqual, assertMultiLineEqual, and
+        # assertSequenceEqual. The default is 640 which is too
+        # low for comparing most dicts
+        self.maxDiff = 10000
 
     def setUp(self):
         super(TestCase, self).setUp()
         self.addCleanup(mock.patch.stopall)
         plugins.load()
+        self.useFixture(TempHomeDir())
 
     def _test_atomic_action_timer(self, atomic_actions, name, count=1,
                                   parent=[]):

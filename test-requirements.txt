@@ -12,7 +12,6 @@ pytest-html>=1.10.0                                    # Mozilla Public License 
 # py.test xdist plugin for distributed testing and loop-on-failing modes
 pytest-xdist                                           # MIT
 
-coverage>=4.0,!=4.4                                    # Apache License, Version 2.0
 ddt>=1.0.1                                             # UNKNOWN
 mock>=2.0.0                                            # UNKNOWN
 python-dateutil>=2.4.2                                 # Simplified BSD
@@ -20,7 +19,5 @@ testtools>=2.2.0                                       # UNKNOWN
 
 sphinx>=1.6.2,!=1.6.6                                  # BSD
 oslosphinx>=4.7.0                                      # Apache Software License
-oslotest>=3.2.0                                        # Apache Software License
 
 testresources>=2.0.0                                   # UNKNOWN
-testscenarios>=0.4                                     # UNKNOWN

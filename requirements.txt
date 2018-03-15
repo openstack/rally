@@ -10,6 +10,7 @@ jsonschema>=2.6.0,<3.0.0                               # MIT
 morph                                                  # GPLv3+
 netaddr>=0.7.18                                        # BSD
 oslo.config>=5.1.0                                     # Apache Software License
+# do not forget to remove `testresources` from test-requirements. it is a dependency of oslo.db for tests
 oslo.db>=4.27.0                                        # Apache Software License
 oslo.log>=3.36.0                                       # Apache Software License
 paramiko>=2.0.0                                        # LGPL
