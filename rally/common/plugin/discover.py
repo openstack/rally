@@ -20,7 +20,6 @@ import pkg_resources
 import pkgutil
 import sys
 
-from oslo_utils import importutils
 import six
 
 import rally
@@ -63,8 +62,7 @@ def import_modules_from_package(package):
             new_package = ".".join(root.split(os.sep)).split("....")[1]
             module_name = "%s.%s" % (new_package, filename[:-3])
             if module_name not in sys.modules:
-                sys.modules[module_name] = importutils.import_module(
-                    module_name)
+                sys.modules[module_name] = importlib.import_module(module_name)
 
 
 def import_modules_by_entry_point():
