@@ -13,8 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import uuid
+
 import mock
-from oslo_utils import uuidutils
 from saharaclient.api import base as sahara_base
 
 from rally.common import cfg
@@ -166,7 +167,7 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
             }
         }
 
-        floating_ip_pool_uuid = uuidutils.generate_uuid()
+        floating_ip_pool_uuid = str(uuid.uuid4())
         node_groups = [
             {
                 "name": "master-ng",
@@ -274,7 +275,7 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
             }
         }
 
-        floating_ip_pool_uuid = uuidutils.generate_uuid()
+        floating_ip_pool_uuid = str(uuid.uuid4())
         node_groups = [
             {
                 "name": "master-ng",

@@ -24,7 +24,6 @@ import jsonschema
 from rally.common import cfg
 from rally.common import logging
 from rally.common import objects
-from rally.common import utils
 from rally import consts
 from rally import exceptions
 from rally.task import context
@@ -32,6 +31,7 @@ from rally.task import hook
 from rally.task import runner
 from rally.task import scenario
 from rally.task import sla
+from rally.utils import strutils
 
 
 LOG = logging.getLogger(__name__)
@@ -155,11 +155,11 @@ class ResultConsumer(object):
 
         load_duration = max(self.load_finished_at - self.load_started_at, 0)
 
-        LOG.info("Load duration is: %s" % utils.format_float_to_str(
+        LOG.info("Load duration is: %s" % strutils.format_float_to_str(
             load_duration))
         LOG.info("Full runner duration is: %s" %
-                 utils.format_float_to_str(self.runner.run_duration))
-        LOG.info("Full duration is: %s" % utils.format_float_to_str(
+                 strutils.format_float_to_str(self.runner.run_duration))
+        LOG.info("Full duration is: %s" % strutils.format_float_to_str(
             self.finish - self.start))
 
         results = {}

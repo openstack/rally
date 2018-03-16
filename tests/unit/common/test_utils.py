@@ -559,45 +559,6 @@ class LockedDictTestCase(test.TestCase):
         self.assertEqual({"memo": "foo_memo"}, kw)
 
 
-@ddt.ddt
-class FloatFormatterTestCase(test.TestCase):
-
-    @ddt.data(
-        {
-            "num_float": 0,
-            "num_str": "0.0"
-        },
-        {
-            "num_float": 37,
-            "num_str": "37.0"
-        },
-        {
-            "num_float": 0.0000001,
-            "num_str": "0.0"
-        },
-        {
-            "num_float": 0.000000,
-            "num_str": "0.0"
-        },
-        {
-            "num_float": 1.0000001,
-            "num_str": "1.0"
-        },
-        {
-            "num_float": 1.0000011,
-            "num_str": "1.000001"
-        },
-        {
-            "num_float": 1.0000019,
-            "num_str": "1.000002"
-        }
-
-    )
-    @ddt.unpack
-    def test_format_float_to_str(self, num_float, num_str):
-        self.assertEqual(num_str, utils.format_float_to_str(num_float))
-
-
 class DequeAsQueueTestCase(test.TestCase):
 
     def setUp(self):

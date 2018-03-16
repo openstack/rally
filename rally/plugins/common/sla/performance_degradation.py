@@ -22,9 +22,9 @@ with contracted values such as maximum error rate or minimum response time.
 from __future__ import division
 
 from rally.common import streaming_algorithms
-from rally.common import utils
 from rally import consts
 from rally.task import sla
+from rally.utils import strutils
 
 
 @sla.configure(name="performance_degradation")
@@ -68,6 +68,5 @@ class PerformanceDegradation(sla.SLA):
         return self.success
 
     def details(self):
-        return ("Current degradation: %s%% - %s" %
-                (utils.format_float_to_str(self.degradation.result() or 0.0),
-                 self.status()))
+        res = strutils.format_float_to_str(self.degradation.result() or 0.0)
+        return "Current degradation: %s%% - %s" % (res, self.status())

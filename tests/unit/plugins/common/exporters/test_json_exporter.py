@@ -16,7 +16,6 @@ import collections
 import datetime as dt
 
 import mock
-from oslo_utils import timeutils
 
 from rally.common import version as rally_version
 from rally.plugins.common.exporters import json_exporter
@@ -83,9 +82,9 @@ class JSONExporterTestCase(test.TestCase):
             ])], reporter._generate_tasks())
 
     @mock.patch("%s.json.dumps" % PATH, return_value="json")
-    @mock.patch("%s.timeutils.utcnow" % PATH,
-                return_value=timeutils.utcnow())
-    def test_generate(self, mock_utcnow, mock_json_dumps):
+    @mock.patch("%s.dt" % PATH)
+    def test_generate(self, mock_dt, mock_json_dumps):
+        mock_dt.datetime.utcnow.return_value = dt.datetime.utcnow()
         tasks_results = test_html.get_tasks_results()
 
         # print
@@ -94,12 +93,13 @@ class JSONExporterTestCase(test.TestCase):
         self.assertEqual({"print": "json"}, reporter.generate())
         results = {
             "info": {"rally_version": rally_version.version_string(),
-                     "generated_at": dt.datetime.strftime(
-                         mock_utcnow.return_value,
-                         json_exporter.TIMEFORMAT),
+                     "generated_at": mock_dt.datetime.strftime.return_value,
                      "format_version": "1.1"},
             "tasks": reporter._generate_tasks.return_value
         }
+        mock_dt.datetime.strftime.assert_called_once_with(
+            mock_dt.datetime.utcnow.return_value,
+            json_exporter.TIMEFORMAT)
         reporter._generate_tasks.assert_called_once_with()
         mock_json_dumps.assert_called_once_with(results,
                                                 sort_keys=False,

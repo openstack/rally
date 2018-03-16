@@ -12,7 +12,6 @@ netaddr>=0.7.18                                        # BSD
 oslo.config>=5.1.0                                     # Apache Software License
 oslo.db>=4.27.0                                        # Apache Software License
 oslo.log>=3.36.0                                       # Apache Software License
-oslo.utils>=3.33.0                                     # Apache Software License
 paramiko>=2.0.0                                        # LGPL
 pbr>=2.0.0,!=2.1.0                                     # Apache Software License
 PrettyTable>=0.7.1,<0.8                                # BSD

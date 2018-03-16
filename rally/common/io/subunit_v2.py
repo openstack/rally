@@ -14,10 +14,10 @@
 #    under the License.
 #
 
-from oslo_utils import encodeutils
 from subunit import v2
 
 from rally.common import logging
+from rally.utils import encodeutils
 
 
 def prepare_input_args(func):

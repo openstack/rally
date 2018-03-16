@@ -25,10 +25,10 @@ Create Date: 2018-02-22 21:37:21.258560
 """
 
 import copy
+import datetime as dt
 import uuid
 
 from alembic import op
-from oslo_utils import timeutils
 import sqlalchemy as sa
 from sqlalchemy.engine import reflection
 
@@ -178,7 +178,7 @@ def upgrade():
                 "spec": spec,
                 "extras": extras,
                 "created_at": deployment.created_at,
-                "updated_at": timeutils.utcnow()
+                "updated_at": dt.datetime.utcnow()
             }]
         )
         if platform_data:
@@ -193,8 +193,8 @@ def upgrade():
                     "plugin_data": {},
                     "platform_name": "openstack",
                     "platform_data": platform_data,
-                    "created_at": timeutils.utcnow(),
-                    "updated_at": timeutils.utcnow()
+                    "created_at": dt.datetime.utcnow(),
+                    "updated_at": dt.datetime.utcnow()
                 }]
             )
 

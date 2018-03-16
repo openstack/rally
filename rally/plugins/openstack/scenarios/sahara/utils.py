@@ -15,7 +15,6 @@
 
 import random
 
-from oslo_utils import uuidutils
 from saharaclient.api import base as sahara_base
 
 from rally.common import cfg
@@ -27,6 +26,7 @@ from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.sahara import consts as sahara_consts
 from rally.task import atomic
 from rally.task import utils
+from rally.utils import strutils
 
 
 LOG = logging.getLogger(__name__)
@@ -115,7 +115,7 @@ class SaharaScenario(scenario.OpenStackScenario):
 
     def _setup_neutron_floating_ip_pool(self, name_or_id):
         if name_or_id:
-            if uuidutils.is_uuid_like(name_or_id):
+            if strutils.is_uuid_like(name_or_id):
                 # Looks like an id is provided Return as is.
                 return name_or_id
             else:

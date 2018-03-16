@@ -22,9 +22,9 @@ import shutil
 import subprocess
 import tempfile
 
-
-from oslo_utils import encodeutils
 from six.moves import configparser
+
+from rally.utils import encodeutils
 
 
 class RallyCliError(Exception):

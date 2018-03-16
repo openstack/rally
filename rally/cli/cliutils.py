@@ -25,7 +25,6 @@ import warnings
 
 import decorator
 import jsonschema
-from oslo_utils import encodeutils
 import prettytable
 import six
 import sqlalchemy.exc
@@ -35,6 +34,7 @@ from rally.common import cfg
 from rally.common import logging
 from rally.common.plugin import info
 from rally import exceptions
+from rally.utils import encodeutils
 
 
 CONF = cfg.CONF

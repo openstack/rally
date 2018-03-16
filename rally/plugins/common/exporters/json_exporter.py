@@ -16,8 +16,6 @@ import collections
 import datetime as dt
 import json
 
-from oslo_utils import timeutils
-
 from rally.common import version as rally_version
 from rally.task import exporter
 
@@ -108,7 +106,7 @@ class JSONExporter(exporter.TaskExporter):
     def generate(self):
         results = {"info": {"rally_version": rally_version.version_string(),
                             "generated_at": dt.datetime.strftime(
-                                timeutils.utcnow(), TIMEFORMAT),
+                                dt.datetime.utcnow(), TIMEFORMAT),
                             "format_version": self.REVISION},
                    "tasks": self._generate_tasks()}
 

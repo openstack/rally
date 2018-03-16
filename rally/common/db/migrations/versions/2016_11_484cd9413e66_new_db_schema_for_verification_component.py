@@ -19,8 +19,10 @@ Revises: e654a0648db0
 Create Date: 2016-11-04 17:04:24.614075
 
 """
+
+import datetime as dt
+
 from alembic import op
-from oslo_utils import timeutils
 import sqlalchemy as sa
 
 from rally.common.db import models
@@ -151,8 +153,8 @@ def upgrade():
                     "version": "n/a",
                     "system_wide": False,
                     "status": "init",
-                    "created_at": timeutils.utcnow(),
-                    "updated_at": timeutils.utcnow()
+                    "created_at": dt.datetime.utcnow(),
+                    "updated_at": dt.datetime.utcnow()
                 }]
             )
             default_verifier = connection.execute(

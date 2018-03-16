@@ -15,11 +15,11 @@
 import os
 import subprocess
 
-from oslo_utils import encodeutils
 import six
 from six.moves import configparser
 
 from rally.common import logging
+from rally.utils import encodeutils
 
 
 LOG = logging.getLogger(__name__)

@@ -16,10 +16,10 @@
 import os
 
 import decorator
-from oslo_utils import strutils
 
 from rally.common import fileutils
 from rally import exceptions
+from rally.utils import strutils
 
 PATH_GLOBALS = "~/.rally/globals"
 ENV_ENV = "RALLY_ENV"

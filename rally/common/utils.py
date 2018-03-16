@@ -34,6 +34,7 @@ from six import moves
 
 from rally.common import logging
 from rally import exceptions
+from rally.utils import strutils
 
 LOG = logging.getLogger(__name__)
 
@@ -685,26 +686,11 @@ class LockedDict(dict):
         return super(LockedDict, self).clear(*args, **kwargs)
 
 
+@logging.log_deprecated(message="Its not used elsewhere in Rally already.",
+                        rally_version="0.11.2")
 def format_float_to_str(num):
-    """Format number into human-readable float format.
-
-     More precise it convert float into the string and remove redundant
-     zeros from the floating part.
-     It will format the number by the following examples:
-     0.0000001 -> 0.0
-     0.000000 -> 0.0
-     37 -> 37.0
-     1.0000001 -> 1.0
-     1.0000011 -> 1.000001
-     1.0000019 -> 1.000002
-
-    :param num: Number to be formatted
-    :return: string representation of the number
-    """
-
-    num_str = "%f" % num
-    float_part = num_str.split(".")[1].rstrip("0") or "0"
-    return num_str.split(".")[0] + "." + float_part
+    """DEPRECATED. Use rally.utils.strutils.format_float_to_str instead."""
+    return strutils.format_float_to_str(num)
 
 
 class DequeAsQueue(object):
