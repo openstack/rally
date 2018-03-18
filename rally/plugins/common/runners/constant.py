@@ -329,21 +329,22 @@ class ConstantForDurationScenarioRunner(runner.ScenarioRunner):
         iter_result = pool.imap(_run_scenario_once_with_unpack_args, run_args)
 
         start = time.time()
-        while True:
-            try:
-                result = iter_result.next(timeout)
-            except multiprocessing.TimeoutError as e:
-                result = runner.format_result_on_timeout(e, timeout)
-            except StopIteration:
-                break
+        try:
+            while True:
+                try:
+                    result = iter_result.next(timeout)
+                except multiprocessing.TimeoutError as e:
+                    result = runner.format_result_on_timeout(e, timeout)
+                except StopIteration:
+                    break
 
-            self._send_result(result)
+                self._send_result(result)
 
-            if time.time() - start > duration:
-                break
-
-        stop_event_listener.set()
-        event_listener_thread.join()
-        pool.terminate()
-        pool.join()
-        self._flush_results()
+                if time.time() - start > duration:
+                    break
+        finally:
+            stop_event_listener.set()
+            event_listener_thread.join()
+            pool.terminate()
+            pool.join()
+            self._flush_results()
