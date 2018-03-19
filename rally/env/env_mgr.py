@@ -13,6 +13,7 @@
 #    under the License.
 
 import copy
+import os
 import traceback
 
 import jsonschema
@@ -357,6 +358,7 @@ class EnvManager(object):
         :param extras: User specified dict with extra options
         :param spec: Specification that contains info about all
                      platform plugins and their arguments.
+        :param config: Reserved for the new feature. Not applicable as for now
         :returns: EnvManager instance corresponding to created Env
         """
         # NOTE(boris-42): this allows to avoid validation copy paste. If spec
@@ -372,6 +374,60 @@ class EnvManager(object):
         self = cls._validate_and_create_env(name, spec)
         self._create_platforms()
         return self
+
+    _FROM_SYS_ENV_FORMAT = {
+        "type": "object",
+        "properties": {
+            "available": {"type": "boolean"},
+            "message": {"type": "string"},
+            "traceback": {"type": "string"},
+            "spec": {"type": "object",
+                     "additionalProperties": True}
+        },
+        "required": ["available"],
+        "additionalProperties": False
+    }
+
+    @classmethod
+    @plugins.ensure_plugins_are_loaded
+    def create_spec_from_sys_environ(cls, description=None, extras=None,
+                                     config=None):
+        """Compose an environment spec based on system environment.
+
+        Iterates over all available platform-representation plugins which
+        checks system environment for credentials.
+
+        :param description: User specified description to include in the spec
+        :param extras: User specified dict with extra options to include in
+            the spec
+        :param config: Reserved for the new feature. Not applicable as for now
+        :returns: A dict with an environment specification and detailed
+            information about discovery
+        """
+
+        details = {}
+        for p in platform.Platform.get_all():
+            try:
+                res = p.create_spec_from_sys_environ(copy.deepcopy(os.environ))
+                jsonschema.validate(res, cls._FROM_SYS_ENV_FORMAT)
+                res.setdefault("message", "Available")
+            except Exception as e:
+                msg = ("Plugin %s.create_from_sys_environ() method is broken"
+                       % p.get_fullname())
+                LOG.exception(msg)
+                res = {"message": msg, "available": False}
+                if not isinstance(e, jsonschema.ValidationError):
+                    res["traceback"] = traceback.format_exc()
+            details[p.get_fullname()] = res
+        spec = dict((k, v.get("spec", {}))
+                    for k, v in details.items() if v["available"])
+        if description is not None:
+            spec["!description"] = description
+        if extras is not None:
+            spec["!extras"] = extras
+        if config is not None:
+            spec["!config"] = config
+        return {"spec": spec, "discovery_details": details}
 
     def rename(self, new_name):
         """Renames env record.

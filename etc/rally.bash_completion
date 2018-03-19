@@ -33,7 +33,7 @@ _rally()
     OPTS["deployment_show"]="--deployment"
     OPTS["deployment_use"]="--deployment"
     OPTS["env_check"]="--env --json --detailed"
-    OPTS["env_create"]="--name --description --extras --spec --json --no-use"
+    OPTS["env_create"]="--name --description --extras --from-sysenv --spec --json --no-use"
     OPTS["env_delete"]="--env --force"
     OPTS["env_destroy"]="--env --skip-cleanup --json --detailed"
     OPTS["env_info"]="--env --json"

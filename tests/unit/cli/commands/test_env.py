@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import datetime as dt
 import json
 import uuid
@@ -96,6 +97,50 @@ class EnvCommandsTestCase(test.TestCase):
             mock.call("[]"),
             mock.call(mock.ANY)
         ])
+
+    @mock.patch("rally.cli.commands.env.EnvCommands._show")
+    @mock.patch("rally.env.env_mgr.EnvManager.create_spec_from_sys_environ")
+    @mock.patch("rally.env.env_mgr.EnvManager.create")
+    @mock.patch("rally.cli.commands.env.open", create=True)
+    @mock.patch("rally.cli.commands.env.print")
+    def test_create_from_sys_env(
+            self, mock_print, mock_open, mock_env_manager_create,
+            mock_env_manager_create_spec_from_sys_environ,
+            mock_env_commands__show):
+        result = {
+            "spec": {"foo": mock.Mock()},
+            "discovery_details": collections.OrderedDict([
+                ("foo", {"available": True, "message": "available"}),
+                ("bar", {"available": False, "message": "not available",
+                         "traceback": "trace"})
+            ])
+        }
+        mock_env_manager_create_spec_from_sys_environ.return_value = result
+
+        self.assertEqual(
+            0, self.env.create(self.api, "n", "d", spec=None,
+                               from_sysenv=True, do_use=False))
+        self.assertEqual(
+            [
+                # check that the number of listed platforms is right
+                mock.call("Your system environment includes specifications of"
+                          " 1 platform(s)."),
+                mock.call("Discovery information:"),
+                mock.call("\t - foo : available."),
+                mock.call("\t - bar : not available."),
+                mock.call("trace")
+            ], mock_print.call_args_list)
+
+        mock_env_manager_create_spec_from_sys_environ.assert_called_once_with()
+        mock_env_manager_create.assert_called_once_with(
+            "n", result["spec"], description="d", extras=None)
+        self.assertFalse(mock_open.called)
+
+    @mock.patch("rally.cli.commands.env.print")
+    def test_create_with_incompatible_arguments(self, mock_print):
+        self.assertEqual(
+            1, self.env.create(self.api, "n", "d", spec="asd",
+                               from_sysenv=True))
 
     @mock.patch("rally.env.env_mgr.EnvManager.create")
     @mock.patch("rally.cli.commands.env.print")

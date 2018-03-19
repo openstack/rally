@@ -46,21 +46,42 @@ class EnvCommands(object):
                    help="Env description")
     @cliutils.args("--extras", "-e", type=str, required=False,
                    help="JSON or YAML dict with custom non validate info.")
+    @cliutils.args("--from-sysenv", action="store_true", dest="from_sysenv",
+                   help="Iterate over all available platforms and check system"
+                        " environment for credentials.")
     @cliutils.args("--spec", "-s", type=str, required=False,
                    metavar="<path>", help="Path to env spec.")
     @cliutils.args("--json", action="store_true", dest="to_json",
                    help="Format output as JSON.")
     @cliutils.args("--no-use", action="store_false", dest="do_use",
                    help="Don't set new env as default for future operations.")
-    def create(self, api, name, description=None,
-               extras=None, spec=None, to_json=False, do_use=True):
+    def create(self, api, name, description=None, extras=None,
+               spec=None, from_sysenv=False, to_json=False, do_use=True):
         """Create new environment."""
+
+        if spec is not None and from_sysenv:
+            print("Arguments '--spec' and '--from-sysenv' cannot be used "
+                  "together, use only one of them.")
+            return 1
         spec = spec or {}
         if spec:
             with open(os.path.expanduser(spec), "rb") as f:
                 spec = yaml.safe_load(f.read())
         if extras:
             extras = yaml.safe_load(extras)
+
+        if from_sysenv:
+            result = env_mgr.EnvManager.create_spec_from_sys_environ()
+            spec = result["spec"]
+            _print("Your system environment includes specifications of "
+                   "%s platform(s)." % len(spec), to_json)
+            _print("Discovery information:", to_json)
+            for p_name, p_result in result["discovery_details"].items():
+                _print("\t - %s : %s." % (p_name, p_result["message"]),
+                       to_json)
+
+                if "traceback" in p_result:
+                    _print("".join(p_result["traceback"]), to_json)
         try:
             env = env_mgr.EnvManager.create(
                 name, spec, description=description, extras=extras)
