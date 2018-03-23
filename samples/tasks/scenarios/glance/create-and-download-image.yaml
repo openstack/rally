@@ -1,8 +1,9 @@
+{% set image_location = image_location or "http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img" %}
 ---
   GlanceImages.create_and_download_image:
     -
       args:
-        image_location: "http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img"
+        image_location: "{{ image_location }}"
         container_format: "bare"
         disk_format: "qcow2"
       runner:

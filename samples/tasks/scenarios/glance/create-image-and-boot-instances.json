@@ -1,13 +1,14 @@
 {% set flavor_name = flavor_name or "m1.tiny" %}
+{% set image_location = image_location or "http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img" %}
 {
     "GlanceImages.create_image_and_boot_instances": [
         {
             "args": {
-                "image_location": "http://download.cirros-cloud.net/0.3.5/cirros-0.3.5-x86_64-disk.img",
+                "image_location": "{{ image_location }}",
                 "container_format": "bare",
                 "disk_format": "qcow2",
                 "flavor": {
-                    "name": "{{flavor_name}}"
+                    "name": "{{ flavor_name }}"
                 },
                 "number_instances": 2
             },
