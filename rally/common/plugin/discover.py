@@ -117,7 +117,7 @@ def load_plugins(dir_or_file):
                     LOG.exception(msg)
                 else:
                     LOG.warning("%(msg)s: %(e)s" % {"msg": msg, "e": e})
-    elif os.path.isfile(dir_or_file):
+    elif os.path.isfile(dir_or_file) and dir_or_file.endswith(".py"):
         plugin_file = dir_or_file
         LOG.info("Loading plugins from file %s" % plugin_file)
         if plugin_file not in sys.path:
