@@ -7,6 +7,11 @@ set -o xtrace
 DIR=$(dirname ${BASH_SOURCE[0]})
 source $DIR/lib/rally
 
+MESSAGE="'rally git://git.openstack.org/openstack/rally' devstack plugin is
+ deprecated and will be removed soon! Use 'rally-openstack
+ git://git.openstack.org/openstack/rally-openstack' instead."
+deprecated "$MESSAGE"
+
 if [[ "$1" == "stack" && "$2" == "install" ]]; then
     echo_summary "Installing Rally"
     install_rally
