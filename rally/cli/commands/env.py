@@ -98,7 +98,7 @@ class EnvCommands(object):
 
         if do_use:
             self._use(env.uuid, to_json)
-        self._show(env.data, to_json)
+        self._show(env.data, to_json=to_json, only_spec=False)
         return 0
 
     @cliutils.args("--env", dest="env", type=str,
@@ -167,8 +167,10 @@ class EnvCommands(object):
             table.align = "l"
             print(table.get_string())
 
-    def _show(self, env_data, to_json):
-        if to_json:
+    def _show(self, env_data, to_json, only_spec):
+        if only_spec:
+            print(json.dumps(env_data["spec"], indent=2))
+        elif to_json:
             print(json.dumps(env_data, indent=2))
         else:
             table = prettytable.PrettyTable()
@@ -189,11 +191,13 @@ class EnvCommands(object):
                    help="UUID or name of the env.")
     @cliutils.args("--json", action="store_true", dest="to_json",
                    help="Format output as JSON.")
+    @cliutils.args("--only-spec", action="store_true", dest="only_spec",
+                   help="Print only a spec for the environment.")
     @cliutils.suppress_warnings
     @envutils.with_default_env()
-    def show(self, api, env=None, to_json=False):
+    def show(self, api, env=None, to_json=False, only_spec=False):
         env_data = env_mgr.EnvManager.get(env).data
-        self._show(env_data, to_json)
+        self._show(env_data, to_json=to_json, only_spec=only_spec)
 
     @cliutils.args("--env", dest="env", type=str,
                    metavar="<uuid>", required=False,

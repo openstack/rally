@@ -68,7 +68,8 @@ class EnvCommandsTestCase(test.TestCase):
         mock_env_manager_create.assert_called_once_with(
             "test_name", {}, description="test_description", extras=None)
         mock_env_commands__show.assert_called_once_with(
-            mock_env_manager_create.return_value.data, False)
+            mock_env_manager_create.return_value.data,
+            to_json=False, only_spec=False)
 
     @mock.patch("rally.env.env_mgr.EnvManager.create")
     @mock.patch("rally.cli.commands.env.open", create=True)
@@ -245,7 +246,7 @@ class EnvCommandsTestCase(test.TestCase):
             name="my best env",
             description="description")
         env_data["platforms"] = {}
-        self.env._show(env_data, False)
+        self.env._show(env_data, False, False)
         mock_print.assert_called_once_with(
             "+-------------+--------------------------------------+\n"
             "| uuid        | a77004a6-7fe5-4b75-a278-009c3c5f6b20 |\n"
@@ -259,7 +260,12 @@ class EnvCommandsTestCase(test.TestCase):
 
     @mock.patch("rally.cli.commands.env.print")
     def test__show_to_json(self, mock_print):
-        self.env._show("data", True)
+        self.env._show("data", to_json=True, only_spec=False)
+        mock_print.assert_called_once_with("\"data\"")
+
+    @mock.patch("rally.cli.commands.env.print")
+    def test__show_only_spec(self, mock_print):
+        self.env._show({"spec": "data"}, to_json=False, only_spec=True)
         mock_print.assert_called_once_with("\"data\"")
 
     @mock.patch("rally.env.env_mgr.EnvManager.get")
@@ -269,11 +275,13 @@ class EnvCommandsTestCase(test.TestCase):
         self.env.show(self.api, env_)
         mock_env_manager_get.assert_called_once_with(env_)
         mock__show.assert_called_once_with(
-            mock_env_manager_get.return_value.data, False)
+            mock_env_manager_get.return_value.data, to_json=False,
+            only_spec=False)
         mock__show.reset_mock()
         self.env.show(self.api, env_, to_json=True)
         mock__show.assert_called_once_with(
-            mock_env_manager_get.return_value.data, True)
+            mock_env_manager_get.return_value.data, to_json=True,
+            only_spec=False)
 
     @mock.patch("rally.env.env_mgr.EnvManager.get")
     @mock.patch("rally.cli.commands.env.print")
