@@ -1,0 +1,55 @@
+=============
+Rally v0.11.2
+=============
+
++------------------+-----------------------+
+| Release date     |     **03/29/2018**    |
++------------------+-----------------------+
+
+* OpenStack plugins moved to the separate
+  `repo <https://github.com/openstack/rally-openstack>`_ and
+  `package <https://pypi.python.org/pypi/rally-openstack>`_ .
+  In-tree OpenStack plugins are deprecated now and will be removed soon. All
+  further development should be done in the new repository.
+
+* Environment manager and Platform plugins are extended with a new feature -
+  creating a spec based on system environment variables.
+  We had similar feature in Deployment component like below, but it handles
+  only OpenStack platform.
+
+  .. code-block:: console
+
+    $ rally deployment create --name "my-deployment" --fromenv
+
+  The new feature is not limited by one platform and each platform plugin can
+  implement it.
+  The usage of the feature is still pretty simple:
+
+  .. code-block:: console
+
+    $ rally env create --name "my-env" --from-sysenv
+
+* There is a new argument for `rally env show` command: **--only-spec**. It is
+  a trigger for showing only a specification of the environment
+
+* Methods for association and dissociation floating ips  were deprecated in
+  novaclient a year ago and latest major release (python-novaclient 10)
+  `doesn't include them
+  <https://github.com/openstack/python-novaclient/blob/10.0.0/releasenotes/notes/remove-virt-interfaces-add-rm-fixed-floating-398c905d9c91cca8.yaml>`_.
+  These actions should be performed via neutronclient now. It is not as simple
+  as it was via Nova-API and you can find more neutron-related atomic actions
+  in results of scenarios.
+
+* *os-hosts* CLIs and python API bindings had been deprecated in
+  python-novaclient 9.0.0 and became removed in `10.0.0 release
+  <https://github.com/openstack/python-novaclient/blob/10.0.0/releasenotes/notes/remove-hosts-d08855550c40b9c6.yaml>`_.
+  This decision affected 2 scenarios `NovaHosts.list_hosts
+  <https://rally.readthedocs.io/en/0.11.1/plugins/plugin_reference.html#novahosts-list-hosts-scenario>`_
+  and `NovaHosts.list_and_get_hosts
+  <https://rally.readthedocs.io/en/0.11.1/plugins/plugin_reference.html#novahosts-list-and-get-hosts-scenario>`_
+  which become redundant and we cannot leave them (python-novaclient doesn't
+  have proper interfaces any more).
+
+* Improvements of elasticsearch task exporter to cover the case when success
+  rate of workload is not in range of 0-100. For example, it can happen when
+  context fails.
