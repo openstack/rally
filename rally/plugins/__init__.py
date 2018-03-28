@@ -37,7 +37,11 @@ def load():
         try:
             import rally_openstack  # noqa
         except ImportError:
-            # print warnings when rally_openstack will be released
+            discover.LOG.warning(
+                "OpenStack plugins moved to the separate package "
+                "(see https://pypi.python.org/pypi/rally-openstack). In-tree "
+                "OpenStack plugins will be removed from the Rally main package"
+                " soon.")
             discover.import_modules_from_package("rally.plugins.openstack")
             discover.import_modules_from_package("rally.plugins.workload")
 
