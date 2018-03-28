@@ -38,7 +38,7 @@ _rally()
     OPTS["env_destroy"]="--env --skip-cleanup --json --detailed"
     OPTS["env_info"]="--env --json"
     OPTS["env_list"]="--json"
-    OPTS["env_show"]="--env --json"
+    OPTS["env_show"]="--env --json --only-spec"
     OPTS["env_use"]="--env --json"
     OPTS["plugin_list"]="--name --platform --plugin-base"
     OPTS["plugin_show"]="--name --platform"
