@@ -74,9 +74,10 @@ def with_default_env():
     # NOTE(boris-42): This allows smooth transition from deployment to env
     #                 set ENV_ENV from ENV_DEPLOYMENT if ENV is not presented
     #                 This should be removed with rally env command
-    if not os.environ.get(ENV_ENV):
-        if os.environ.get(ENV_DEPLOYMENT):
-            os.environ[ENV_ENV] = ENV_DEPLOYMENT
+    if not get_global(ENV_ENV):
+        deployment = get_global(ENV_DEPLOYMENT)
+        if deployment:
+            os.environ[ENV_ENV] = deployment
 
     return default_from_global(
         "env", ENV_ENV, "env",
@@ -89,9 +90,10 @@ def with_default_deployment(cli_arg_name="uuid"):
     # NOTE(boris-42): This allows smooth transition from deployment to env
     #                 set ENV_ENV from ENV_DEPLOYMENT and use ENV_ENV
     #                 This should be removed with rally env command
-    if not os.environ.get(ENV_ENV):
-        if os.environ.get(ENV_DEPLOYMENT):
-            os.environ[ENV_ENV] = ENV_DEPLOYMENT
+    if not get_global(ENV_ENV):
+        deployment = get_global(ENV_DEPLOYMENT)
+        if deployment:
+            os.environ[ENV_ENV] = deployment
 
     return default_from_global(
         "deployment", ENV_ENV, cli_arg_name,
