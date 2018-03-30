@@ -228,33 +228,33 @@ class RPSScenarioRunnerTestCase(test.TestCase):
             "config": {
                 "type": "rps",
                 "rps": {
-                    "start": 1,
-                    "end": 10,
-                    "step": 1,
+                    "start": 20,
+                    "end": 40,
+                    "step": 10,
                 },
-                "times": 55
+                "times": 40
             }
         },
         {
             "config": {
                 "type": "rps",
                 "rps": {
-                    "start": 1,
-                    "end": 10,
-                    "step": 1,
+                    "start": 10,
+                    "end": 20,
+                    "step": 2,
                 },
-                "times": 50
+                "times": 40
             }
         },
         {
             "config": {
                 "type": "rps",
                 "rps": {
-                    "start": 1,
-                    "end": 10,
+                    "start": 10,
+                    "end": 15,
                     "step": 1,
                 },
-                "times": 75
+                "times": 20
             }
         },
     )
