@@ -23,7 +23,6 @@ import sys
 import textwrap
 import warnings
 
-import decorator
 import jsonschema
 import prettytable
 import six
@@ -314,23 +313,6 @@ def make_header(text, size=80, symbol="-"):
 def suppress_warnings(f):
     f._suppress_warnings = True
     return f
-
-
-@decorator.decorator
-def process_keystone_exc(f, *args, **kwargs):
-    from keystoneclient import exceptions as keystone_exc
-
-    try:
-        return f(*args, **kwargs)
-    except keystone_exc.Unauthorized as e:
-        print("User credentials are wrong! \n%s" % e)
-        return 1
-    except keystone_exc.AuthorizationFailure as e:
-        print("Failed to authorize! \n%s" % e)
-        return 1
-    except keystone_exc.ConnectionRefused as e:
-        print("Rally can't reach the Keystone service! \n%s" % e)
-        return 1
 
 
 class CategoryParser(argparse.ArgumentParser):

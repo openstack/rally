@@ -14,7 +14,6 @@
 #    under the License.
 
 import ddt
-from keystoneclient import exceptions as keystone_exc
 import mock
 import six
 import sqlalchemy.exc
@@ -200,26 +199,6 @@ class CliUtilsTestCase(test.TestCase):
             self.assertRaises(expected, formatter, obj)
         else:
             self.assertEqual(expected, formatter(obj))
-
-    def test_process_keyestone_exc(self):
-
-        @cliutils.process_keystone_exc
-        def a(a):
-            if a == 1:
-                raise keystone_exc.Unauthorized()
-
-            if a == 2:
-                raise keystone_exc.AuthorizationFailure()
-
-            if a == 3:
-                raise keystone_exc.ConnectionRefused()
-
-            return a
-
-        self.assertEqual(1, a(1))
-        self.assertEqual(1, a(2))
-        self.assertEqual(1, a(3))
-        self.assertEqual(4, a(4))
 
     def test__methods_of_with_class(self):
         class fake_class(object):
