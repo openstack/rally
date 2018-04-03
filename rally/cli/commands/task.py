@@ -831,7 +831,7 @@ class TaskCommands(object):
         else:
             print(result)
 
-    @cliutils.deprecated_args("--tasks", dest="task_id", nargs="+",
+    @cliutils.deprecated_args("--tasks", dest="tasks", nargs="+",
                               release="0.10.0", alternative="--uuid")
     @cliutils.args("--out", metavar="<path>",
                    type=str, dest="out", required=False,
