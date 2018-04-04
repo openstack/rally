@@ -405,16 +405,19 @@ def deprecated_args(*args, **kwargs):
         if "release" not in kwargs:
             raise ValueError("'release' is required keyword argument of "
                              "'deprecated_args' decorator.")
-        func.__dict__.setdefault("args", []).insert(0, (args, kwargs))
-        func.__dict__.setdefault("deprecated_args", [])
-        func.deprecated_args.append(args[0])
+        release = kwargs.pop("release")
+        alternative = kwargs.pop("alternative", None)
 
-        help_msg = "[Deprecated since Rally %s] " % kwargs.pop("release")
-        if "alternative" in kwargs:
-            help_msg += "Use '%s' instead. " % kwargs.pop("alternative")
+        help_msg = "[Deprecated since Rally %s] " % release
+        if alternative:
+            help_msg += "Use '%s' instead. " % alternative
         if "help" in kwargs:
             help_msg += kwargs["help"]
         kwargs["help"] = help_msg
+
+        func.__dict__.setdefault("args", []).insert(0, (args, kwargs))
+        func.__dict__.setdefault("deprecated_args", {})
+        func.deprecated_args[args[0]] = (release, alternative)
         return func
     return _decorator
 
@@ -555,10 +558,13 @@ def validate_deprecated_args(argv, fn):
     if (len(argv) > 3
        and (argv[2] == fn.__name__)
        and getattr(fn, "deprecated_args", None)):
-        for item in fn.deprecated_args:
+        for item, details in fn.deprecated_args.items():
             if item in argv[3:]:
-                LOG.warning("Deprecated argument %s for %s." % (item,
-                                                                fn.__name__))
+                msg = ("The argument `%s` is deprecated since Rally %s." %
+                       (item, details[0]))
+                if details[1]:
+                    msg += " Use `%s` instead." % details[1]
+                LOG.warning(msg)
 
 
 def run(argv, categories):
