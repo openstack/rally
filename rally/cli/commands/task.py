@@ -667,7 +667,7 @@ class TaskCommands(object):
         """Load the json file which is created by `rally task results`"""
 
         with open(os.path.expanduser(task_id)) as inp_js:
-            tasks_results = yaml.safe_load(inp_js)
+            tasks_results = json.loads(inp_js.read())
 
         if isinstance(tasks_results, list):
             # it is an old format:

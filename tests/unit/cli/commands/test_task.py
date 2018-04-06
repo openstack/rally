@@ -1076,10 +1076,10 @@ class TaskCommandsTestCase(test.TestCase):
         ], any_order=False)
 
     @mock.patch("rally.cli.commands.task.open", create=True)
-    @mock.patch("rally.cli.commands.task.yaml.safe_load")
+    @mock.patch("rally.cli.commands.task.json.loads")
     @mock.patch("rally.cli.commands.task.jsonschema.validate",
                 return_value=None)
-    def test__load_task_results_file(self, mock_validate, mock_safe_load,
+    def test__load_task_results_file(self, mock_validate, mock_loads,
                                      mock_open):
         task_file = "/tmp/task.json"
         workload = {
@@ -1142,7 +1142,7 @@ class TaskCommandsTestCase(test.TestCase):
              "load_duration": workload["load_duration"],
              "created_at": "2017-01-07T07:03:01"}
         ]
-        mock_safe_load.return_value = results
+        mock_loads.return_value = results
         ret = self.task._load_task_results_file(self.fake_api, task_file)
         self.assertEqual([{
             "version": 2,
@@ -1156,10 +1156,10 @@ class TaskCommandsTestCase(test.TestCase):
                 "workloads": [workload]}]}], ret)
 
     @mock.patch("rally.cli.commands.task.open", create=True)
-    @mock.patch("rally.cli.commands.task.yaml.safe_load")
+    @mock.patch("rally.cli.commands.task.json.loads")
     @mock.patch("rally.cli.commands.task.jsonschema.validate")
     def test__load_task_new_results_file(self, mock_validate,
-                                         mock_safe_load, mock_open):
+                                         mock_loads, mock_open):
         task_file = "/tmp/task.json"
         results = {
             "tasks": [{
@@ -1176,7 +1176,7 @@ class TaskCommandsTestCase(test.TestCase):
             }]
         }
 
-        mock_safe_load.return_value = results
+        mock_loads.return_value = results
         ret = self.task._load_task_results_file(self.fake_api, task_file)
         self.assertEqual([{
             "subtasks": [{
@@ -1195,17 +1195,15 @@ class TaskCommandsTestCase(test.TestCase):
         }], ret)
 
     @mock.patch("rally.cli.commands.task.open", create=True)
-    @mock.patch("rally.cli.commands.task.yaml.safe_load")
-    def test__load_task_results_file_wrong_format(self,
-                                                  mock_safe_load,
-                                                  mock_open):
+    @mock.patch("rally.cli.commands.task.json.loads")
+    def test__load_task_results_file_wrong_format(self, mock_loads, mock_open):
         task_id = "/tmp/task.json"
-        mock_safe_load.return_value = "results"
+        mock_loads.return_value = "results"
         self.assertRaises(task.FailedToLoadResults,
                           self.task._load_task_results_file,
                           api=self.real_api, task_id=task_id)
 
-        mock_safe_load.return_value = ["results"]
+        mock_loads.return_value = ["results"]
         self.assertRaises(task.FailedToLoadResults,
                           self.task._load_task_results_file,
                           api=self.real_api, task_id=task_id)
