@@ -311,7 +311,7 @@ class EnvManager(object):
                     db.platform_set_status(p.uuid, platform.STATUS.INIT,
                                            platform.STATUS.FAILED_TO_CREATE)
                 except Exception:
-                    LOG.Exception(
+                    LOG.exception(
                         "Failed to set platform %(uuid)s status %(status)s"
                         % {"uuid": p.uuid,
                            "status": platform.STATUS.FAILED_TO_CREATE})
