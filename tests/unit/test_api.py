@@ -732,7 +732,7 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
 
     @mock.patch("rally.api.objects.Deployment")
     def test_create_with_old_cfg(self, mock_deployment):
-        mock_deployment.return_value.spec = ""
+        mock_deployment.return_value.env_obj.spec = ""
 
         config = {"type": "ExistingCloud",
                   "creds": self.deployment_config}
