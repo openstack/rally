@@ -67,7 +67,7 @@ class TaskAPITestCase(test.TestCase):
         mock_api.endpoint_url = None
         self.task_inst = api._Task(mock_api)
 
-    @mock.patch("rally.task.engine.TaskConfig")
+    @mock.patch("rally.api.task_cfg.TaskConfig")
     @mock.patch("rally.api.objects.Task")
     @mock.patch("rally.api.objects.Deployment.get")
     @mock.patch("rally.api.engine.TaskEngine")
@@ -261,7 +261,7 @@ class TaskAPITestCase(test.TestCase):
                           self.task_inst.create, deployment=deployment_id,
                           tags=["a"])
 
-    @mock.patch("rally.task.engine.TaskConfig")
+    @mock.patch("rally.api.task_cfg.TaskConfig")
     @mock.patch("rally.api.objects.Task")
     @mock.patch("rally.api.objects.Deployment.get")
     @mock.patch("rally.api.engine.TaskEngine")
@@ -337,7 +337,7 @@ class TaskAPITestCase(test.TestCase):
                           config="config",
                           task=fake_task["uuid"])
 
-    @mock.patch("rally.task.engine.TaskConfig")
+    @mock.patch("rally.api.task_cfg.TaskConfig")
     @mock.patch("rally.api.objects.Task")
     @mock.patch("rally.api.objects.Deployment.get")
     @mock.patch("rally.api.engine.TaskEngine")

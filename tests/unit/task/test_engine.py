@@ -26,6 +26,7 @@ from rally import exceptions
 from rally.task import context
 from rally.task import engine
 from rally.task import scenario
+from rally.task import task_cfg
 from tests.unit import test
 
 
@@ -73,8 +74,7 @@ class TaskEngineTestCase(test.TestCase):
         mock_validate.platforms.assert_called_once_with(config)
         mock_validate.semantic.assert_called_once_with(config)
 
-    @mock.patch("rally.task.engine.TaskConfig")
-    def test_validate__wrong_syntax(self, mock_task_config):
+    def test_validate__wrong_syntax(self):
         task = mock.MagicMock()
         eng = engine.TaskEngine(mock.MagicMock(), task, mock.Mock())
         eng._validate_config_syntax = mock.MagicMock(
@@ -87,8 +87,7 @@ class TaskEngineTestCase(test.TestCase):
         # the next validation step should not be processed
         self.assertFalse(eng._validate_config_platforms.called)
 
-    @mock.patch("rally.task.engine.TaskConfig")
-    def test_validate__wrong_semantic(self, mock_task_config):
+    def test_validate__wrong_semantic(self):
         task = mock.MagicMock()
         eng = engine.TaskEngine(mock.MagicMock(), task, mock.Mock())
         eng._validate_config_syntax = mock.MagicMock()
@@ -108,13 +107,11 @@ class TaskEngineTestCase(test.TestCase):
     @mock.patch("rally.task.sla.SLA.validate")
     @mock.patch("rally.task.hook.HookTrigger.validate")
     @mock.patch("rally.task.hook.HookAction.validate")
-    @mock.patch("rally.task.engine.TaskConfig")
     @mock.patch("rally.task.engine.runner.ScenarioRunner.validate")
     @mock.patch("rally.task.engine.context.Context.validate")
     def test__validate_workload(
             self, mock_context_validate,
             mock_scenario_runner_validate,
-            mock_task_config,
             mock_hook_action_validate,
             mock_hook_trigger_validate,
             mock_sla_validate,
@@ -173,10 +170,9 @@ class TaskEngineTestCase(test.TestCase):
 
     @mock.patch("rally.task.engine.json.dumps")
     @mock.patch("rally.task.engine.scenario.Scenario.get")
-    @mock.patch("rally.task.engine.TaskConfig")
     @mock.patch("rally.task.engine.runner.ScenarioRunner.validate")
     def test___validate_workload__wrong_runner(
-            self, mock_scenario_runner_validate, mock_task_config,
+            self, mock_scenario_runner_validate,
             mock_scenario_get, mock_dumps):
         mock_dumps.return_value = "<JSON>"
         mock_scenario_runner_validate.return_value = [
@@ -196,10 +192,9 @@ class TaskEngineTestCase(test.TestCase):
 
     @mock.patch("rally.task.engine.json.dumps")
     @mock.patch("rally.task.engine.scenario.Scenario.get")
-    @mock.patch("rally.task.engine.TaskConfig")
     @mock.patch("rally.task.engine.context.Context.validate")
     def test__validate_config_syntax__wrong_context(
-            self, mock_context_validate, mock_task_config, mock_scenario_get,
+            self, mock_context_validate, mock_scenario_get,
             mock_dumps):
         mock_dumps.return_value = "<JSON>"
         mock_context_validate.return_value = ["context_error"]
@@ -223,10 +218,8 @@ class TaskEngineTestCase(test.TestCase):
     @mock.patch("rally.task.engine.json.dumps")
     @mock.patch("rally.task.engine.scenario.Scenario.get")
     @mock.patch("rally.task.sla.SLA.validate")
-    @mock.patch("rally.task.engine.TaskConfig")
     def test__validate_config_syntax__wrong_sla(
-            self, mock_task_config, mock_sla_validate, mock_scenario_get,
-            mock_dumps):
+            self, mock_sla_validate, mock_scenario_get, mock_dumps):
         mock_dumps.return_value = "<JSON>"
         mock_sla_validate.return_value = ["sla_error"]
         scenario_cls = mock_scenario_get.return_value
@@ -250,9 +243,8 @@ class TaskEngineTestCase(test.TestCase):
     @mock.patch("rally.task.engine.scenario.Scenario.get")
     @mock.patch("rally.task.hook.HookAction.validate")
     @mock.patch("rally.task.hook.HookTrigger.validate")
-    @mock.patch("rally.task.engine.TaskConfig")
     def test__validate_config_syntax__wrong_hook(
-            self, mock_task_config, mock_hook_trigger_validate,
+            self, mock_hook_trigger_validate,
             mock_hook_action_validate,
             mock_scenario_get, mock_dumps):
         mock_dumps.return_value = "<JSON>"
@@ -283,9 +275,8 @@ class TaskEngineTestCase(test.TestCase):
     @mock.patch("rally.task.engine.scenario.Scenario.get")
     @mock.patch("rally.task.hook.HookTrigger.validate")
     @mock.patch("rally.task.hook.HookAction.validate")
-    @mock.patch("rally.task.engine.TaskConfig")
     def test__validate_config_syntax__wrong_trigger(
-            self, mock_task_config, mock_hook_action_validate,
+            self, mock_hook_action_validate,
             mock_hook_trigger_validate,
             mock_scenario_get, mock_dumps):
         mock_dumps.return_value = "<JSON>"
@@ -314,9 +305,7 @@ class TaskEngineTestCase(test.TestCase):
 
     @mock.patch("rally.task.engine.context.ContextManager.cleanup")
     @mock.patch("rally.task.engine.context.ContextManager.setup")
-    @mock.patch("rally.task.engine.TaskConfig")
-    def test__validate_config_semantic(self, mock_task_config,
-                                       mock_context_manager_setup,
+    def test__validate_config_semantic(self, mock_context_manager_setup,
                                        mock_context_manager_cleanup):
         env = mock.MagicMock(uuid="env_uuid")
         env.check_health.return_value = {
@@ -354,10 +343,9 @@ class TaskEngineTestCase(test.TestCase):
                           eng._validate_config_semantic,
                           mock_task_instance)
 
-    @mock.patch("rally.task.engine.TaskConfig")
     @mock.patch("rally.task.engine.TaskEngine._validate_workload")
     def test__validate_config_platforms(
-            self, mock__validate_workload, mock_task_config):
+            self, mock__validate_workload):
 
         foo_cred = {"admin": "admin", "users": ["user1"]}
         env = mock.MagicMock(data={
@@ -385,7 +373,6 @@ class TaskEngineTestCase(test.TestCase):
             mock__validate_workload.call_args_list)
 
     @mock.patch("rally.common.objects.Task.get_status")
-    @mock.patch("rally.task.engine.TaskConfig")
     @mock.patch("rally.task.engine.ResultConsumer")
     @mock.patch("rally.task.engine.context.ContextManager.cleanup")
     @mock.patch("rally.task.engine.context.ContextManager.setup")
@@ -394,7 +381,7 @@ class TaskEngineTestCase(test.TestCase):
     def test_run__update_status(
             self, mock_scenario_runner, mock_scenario,
             mock_context_manager_setup, mock_context_manager_cleanup,
-            mock_result_consumer, mock_task_config, mock_task_get_status):
+            mock_result_consumer, mock_task_get_status):
 
         task = mock.MagicMock()
         mock_task_get_status.return_value = consts.TaskStatus.ABORTING
@@ -461,7 +448,7 @@ class TaskEngineTestCase(test.TestCase):
         mock_result_consumer.is_task_in_aborting_status.side_effect = [False,
                                                                        False,
                                                                        True]
-        config = engine.TaskConfig({
+        config = task_cfg.TaskConfig({
             "a.task": [{"runner": {"type": "a", "b": 1},
                         "description": "foo"}],
             "b.task": [{"runner": {"type": "a", "b": 1},
@@ -498,7 +485,7 @@ class TaskEngineTestCase(test.TestCase):
             mock_context_manager_setup, mock_context_manager_cleanup,
             mock_result_consumer, mock_task_get_status):
         task = mock.MagicMock(spec=objects.Task)
-        config = engine.TaskConfig({
+        config = task_cfg.TaskConfig({
             "a.task": [{"runner": {"type": "a", "b": 1}}],
             "b.task": [{"runner": {"type": "a", "b": 1}}],
             "c.task": [{"runner": {"type": "a", "b": 1}}]
@@ -530,7 +517,7 @@ class TaskEngineTestCase(test.TestCase):
         subtask_obj = task.add_subtask.return_value
         subtask_obj.add_workload.side_effect = MyException()
         mock_result_consumer.is_task_in_aborting_status.return_value = False
-        config = engine.TaskConfig({
+        config = task_cfg.TaskConfig({
             "a.task": [{"runner": {"type": "a", "b": 1}}],
             "b.task": [{"runner": {"type": "a", "b": 1}}],
             "c.task": [{"runner": {"type": "a", "b": 1}}]
@@ -549,8 +536,7 @@ class TaskEngineTestCase(test.TestCase):
         subtask_obj.update_status.assert_called_once_with(
             consts.SubtaskStatus.CRASHED)
 
-    @mock.patch("rally.task.engine.TaskConfig")
-    def test__prepare_context(self, mock_task_config):
+    def test__prepare_context(self):
 
         @context.configure("test1", 1, platform="testing")
         class TestContext1(context.Context):
@@ -972,126 +958,3 @@ class ResultConsumerTestCase(test.TestCase):
         self.assertFalse(runner.abort.called)
         # test task.get_status is checked until is_done is not set
         self.assertEqual(4, mock_task_get_status.call_count)
-
-
-class TaskConfigTestCase(test.TestCase):
-
-    def test_init_empty_config(self):
-        config = None
-        exception = self.assertRaises(Exception,  # noqa
-                                      engine.TaskConfig, config)
-        self.assertIn("Input task is empty", str(exception))
-
-    @mock.patch("jsonschema.validate")
-    def test_validate_json(self, mock_validate):
-        config = {}
-        engine.TaskConfig(config)
-        mock_validate.assert_has_calls([
-            mock.call(config, engine.TaskConfig.CONFIG_SCHEMA_V1)])
-
-    @mock.patch("jsonschema.validate")
-    def test_validate_json_v2(self, mock_validate):
-        config = {"version": 2, "subtasks": []}
-        engine.TaskConfig(config)
-        mock_validate.assert_has_calls([
-            mock.call(config, engine.TaskConfig.CONFIG_SCHEMA_V2)])
-
-    @mock.patch("rally.task.engine.TaskConfig._get_version")
-    @mock.patch("rally.task.engine.TaskConfig._validate_json")
-    def test_validate_version(self, mock_task_config__validate_json,
-                              mock_task_config__get_version):
-        mock_task_config__get_version.return_value = 1
-        engine.TaskConfig(mock.MagicMock())
-
-    @mock.patch("rally.task.engine.TaskConfig._get_version")
-    @mock.patch("rally.task.engine.TaskConfig._validate_json")
-    def test_validate_version_wrong_version(
-            self, mock_task_config__validate_json,
-            mock_task_config__get_version):
-
-        mock_task_config__get_version.return_value = "wrong"
-        self.assertRaises(exceptions.InvalidTaskException, engine.TaskConfig,
-                          mock.MagicMock)
-
-    def test__adopt_task_format_v1(self):
-
-        # mock all redundant checks :)
-        class TaskConfig(engine.TaskConfig):
-            def __init__(self):
-                pass
-
-        config = collections.OrderedDict()
-        config["a.task"] = [{"s": 1, "context": {"foo": "bar"}}, {"s": 2}]
-        config["b.task"] = [{"s": 3, "sla": {"key": "value"}}]
-        config["c.task"] = [{"s": 5,
-                             "hooks": [{"name": "foo",
-                                        "args": "bar",
-                                        "description": "DESCR!!!",
-                                        "trigger": {
-                                            "name": "mega-trigger",
-                                            "args": {"some": "thing"}
-                                        }}]
-                             }]
-        self.assertEqual(
-            {"title": "Task (adopted from task format v1)",
-             "subtasks": [
-                 {
-                     "title": "a.task",
-                     "scenario": {"a.task": {}},
-                     "s": 1,
-                     "contexts": {"foo": "bar"}
-                 },
-                 {
-                     "title": "a.task",
-                     "s": 2,
-                     "scenario": {"a.task": {}},
-                     "contexts": {}
-                 },
-                 {
-                     "title": "b.task",
-                     "s": 3,
-                     "scenario": {"b.task": {}},
-                     "sla": {"key": "value"},
-                     "contexts": {}
-                 },
-                 {
-                     "title": "c.task",
-                     "s": 5,
-                     "scenario": {"c.task": {}},
-                     "contexts": {},
-                     "hooks": [
-                         {"description": "DESCR!!!",
-                          "action": {"foo": "bar"},
-                          "trigger": {"mega-trigger": {"some": "thing"}}}
-                     ]
-                 }]},
-            TaskConfig._adopt_task_format_v1(config))
-
-    def test_hook_config_compatibility(self):
-        cfg = {
-            "title": "foo",
-            "version": 2,
-            "subtasks": [
-                {
-                    "title": "foo",
-                    "scenario": {"xxx": {}},
-                    "runner": {"yyy": {}},
-                    "hooks": [
-                        {"description": "descr",
-                         "name": "hook_action",
-                         "args": {"k1": "v1"},
-                         "trigger": {
-                             "name": "hook_trigger",
-                             "args": {"k2": "v2"}
-                         }}
-                    ]
-                }
-            ]
-        }
-        task = engine.TaskConfig(cfg)
-        workload = task.subtasks[0]["workloads"][0]
-        self.assertEqual(
-            {"description": "descr",
-             "action": ("hook_action", {"k1": "v1"}),
-             "trigger": ("hook_trigger", {"k2": "v2"})},
-            workload["hooks"][0])

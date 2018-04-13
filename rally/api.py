@@ -36,6 +36,7 @@ from rally import consts
 from rally import exceptions
 from rally.task import engine
 from rally.task import exporter as texporter
+from rally.task import task_cfg
 from rally.verification import context as vcontext
 from rally.verification import manager as vmanager
 from rally.verification import reporter as vreporter
@@ -350,7 +351,7 @@ class _Task(APIGroup):
         deployment = objects.Deployment.get(deployment)
 
         try:
-            config = engine.TaskConfig(config)
+            config = task_cfg.TaskConfig(config)
         except Exception as e:
             if logging.is_debug():
                 LOG.exception("Invalid Task")
@@ -394,7 +395,7 @@ class _Task(APIGroup):
                 status=deployment["status"])
 
         try:
-            config = engine.TaskConfig(config)
+            config = task_cfg.TaskConfig(config)
         except Exception as e:
             if logging.is_debug():
                 LOG.exception("Invalid Task")
