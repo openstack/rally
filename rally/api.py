@@ -352,6 +352,9 @@ class _Task(APIGroup):
 
         try:
             config = task_cfg.TaskConfig(config)
+        except exceptions.InvalidTaskException:
+            # it is a proper formed exception, nothing to do
+            raise
         except Exception as e:
             if logging.is_debug():
                 LOG.exception("Invalid Task")
@@ -396,6 +399,9 @@ class _Task(APIGroup):
 
         try:
             config = task_cfg.TaskConfig(config)
+        except exceptions.InvalidTaskException:
+            # it is a proper formed exception, nothing to do
+            raise
         except Exception as e:
             if logging.is_debug():
                 LOG.exception("Invalid Task")

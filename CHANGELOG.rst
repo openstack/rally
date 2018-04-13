@@ -17,6 +17,14 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
+unreleased
+----------
+
+Changed
+~~~~~~~
+
+* Improved validation errors for task config.
+
 [1.1.0] - 2018-08-07
 --------------------
 
