@@ -219,33 +219,23 @@ class VerifierManagerTestCase(test.TestCase):
             self.check_output.call_args_list)
         mock_rmtree.assert_called_once_with(vmanager.venv_dir)
 
-    def test_check_system_wide(self):
+    @mock.patch("rally.verification.manager.open")
+    def test_check_system_wide(self, mock_open):
+        r_file = mock_open.return_value.__enter__.return_value
+        r_file.read.return_value = "\n#comment\nrequests>1.2   # Licence\n"
+
         vmanager = FakeVerifier(mock.Mock())
-        pip_module = mock.Mock()
-        pip_module_gid = pip_module.get_installed_distributions
 
-        packages = []
-        for name in ("SQLAlchemy", "NumPy"):
-            packages.append(mock.Mock())
-            packages[-1].name = name
-        pip_module.req.parse_requirements.return_value = packages
+        vmanager.check_system_wide()
+        mock_open.assert_called_once_with(
+            "%s/requirements.txt" % vmanager.repo_dir)
+        mock_open.reset_mock()
 
-        with mock.patch.dict("sys.modules", {"pip": pip_module}):
-            pip_module_gid.return_value = [mock.Mock(key="sqlalchemy"),
-                                           mock.Mock(key="numpy")]
-
-            vmanager.check_system_wide()
-            pip_module.req.parse_requirements.assert_called_once_with(
-                "%s/requirements.txt" % vmanager.repo_dir, session=False)
-            pip_module_gid.assert_called_once_with()
-
-            # failure
-            pip_module_gid.reset_mock()
-            missed_package = pip_module_gid.return_value.pop()
-            e = self.assertRaises(manager.VerifierSetupFailure,
-                                  vmanager.check_system_wide)
-            self.assertIn("Please install '%s'." % missed_package.key,
-                          "%s" % e)
+        # failure
+        r_file.read.return_value = "\n#comment\nNumPy>1.2   # Licence\n"
+        e = self.assertRaises(manager.VerifierSetupFailure,
+                              vmanager.check_system_wide)
+        self.assertIn("NumPy>1.2", "%s" % e)
 
     def test_checkout(self):
         vmanager = FakeVerifier(mock.Mock())
