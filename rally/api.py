@@ -93,8 +93,7 @@ class _Deployment(APIGroup):
             raise
 
         if print_warning:
-            # credentials are stored in the list, but it contains one item.
-            new_conf = deployment.spec
+            new_conf = deployment.env_obj.spec
             LOG.warning(
                 "The used config schema is deprecated since Rally 0.10.0. "
                 "The new one is much simpler, try it now:\n%s"
