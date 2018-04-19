@@ -22,7 +22,6 @@ import six
 
 from rally.common.plugin import plugin
 from rally import exceptions
-from rally.plugins.openstack import osclients
 from rally.task import scenario
 
 
@@ -86,6 +85,8 @@ def preprocess(name, context, args):
                              and resource configuration
 
     """
+    from rally.plugins.openstack import osclients
+
     preprocessors = scenario.Scenario.get(name)._meta_get("preprocessors",
                                                           default={})
 
