@@ -14,7 +14,6 @@
 #    under the License.
 
 from rally.common import logging
-from rally.plugins.openstack import osclients
 
 LOG = logging.getLogger(__file__)
 
@@ -87,6 +86,8 @@ class OpenStackCredential(dict):
     # this method is mostly used by validation step. let's refactor it and
     # deprecated this
     def clients(self, api_info=None):
+        from rally.plugins.openstack import osclients
+
         return osclients.Clients(self, api_info=api_info,
                                  cache=self._clients_cache)
 

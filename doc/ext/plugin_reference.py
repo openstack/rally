@@ -306,7 +306,15 @@ class PluginsReferenceDirective(rst.Directive):
                 section_obj.extend(utils.parse_text(section))
 
         filename = info["module"].replace(".", "/")
-        ref = "https://github.com/openstack/rally/blob/master/%s.py" % filename
+        if filename.startswith("rally/"):
+            project = "rally"
+        elif filename.startswith("rally_openstack/"):
+            project = "rally-openstack"
+        else:
+            # WTF is it?!
+            return None
+        ref = ("https://github.com/openstack/%s/blob/master/%s.py"
+               % (project, filename))
         section_obj.extend(utils.parse_text("**Module**:\n`%s`__\n\n__ %s"
                            % (info["module"], ref)))
         return section_obj
@@ -336,6 +344,7 @@ class PluginsReferenceDirective(rst.Directive):
                 name += word
         return name
 
+    @plugins.ensure_plugins_are_loaded
     def _get_all_plugins_bases(self):
         """Return grouped and sorted all plugins bases."""
         bases = []
@@ -357,7 +366,6 @@ class PluginsReferenceDirective(rst.Directive):
         return sorted(bases)
 
     def run(self):
-        plugins.load()
         bases = self._get_all_plugins_bases()
         if "base_cls" in self.options:
             for _category_name, base_name, base_cls in bases:
