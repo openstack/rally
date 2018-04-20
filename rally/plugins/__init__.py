@@ -39,7 +39,7 @@ def load():
         except ImportError:
             discover.LOG.warning(
                 "OpenStack plugins moved to the separate package "
-                "(see https://pypi.python.org/pypi/rally-openstack). In-tree "
+                "(see https://pypi.org/project/rally-openstack). In-tree "
                 "OpenStack plugins will be removed from the Rally main package"
                 " soon.")
             discover.import_modules_from_package("rally.plugins.openstack")

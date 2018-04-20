@@ -375,4 +375,4 @@ shared with others.
 
 .. references:
 
-.. _Jinja2: https://pypi.python.org/pypi/Jinja2
+.. _Jinja2: https://pypi.org/project/Jinja2

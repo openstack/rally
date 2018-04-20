@@ -84,7 +84,7 @@ class PYPIPackage(object):
             if self.package_name in _PYPI_CACHE:
                 self._pypi_info = _PYPI_CACHE[self.package_name]
             else:
-                resp = requests.get("https://pypi.python.org/pypi/%s/json" %
+                resp = requests.get("https://pypi.org/pypi/%s/json" %
                                     self.package_name)
                 if resp.status_code != 200:
                     print("An error occurred while checking '%s' package at "
