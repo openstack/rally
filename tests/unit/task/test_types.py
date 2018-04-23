@@ -15,6 +15,7 @@
 
 import mock
 
+from rally.common.plugin import plugin
 from rally.task import scenario
 from rally.task import types
 from tests.unit import test
@@ -99,6 +100,7 @@ class PreprocessTestCase(test.TestCase):
     def test_preprocess(self, mock_osclients, mock_scenario_get):
 
         name = "some_plugin"
+        type_name = "%s_type" % self.id()
 
         context = {
             "a": 1,
@@ -107,6 +109,7 @@ class PreprocessTestCase(test.TestCase):
         }
         args = {"a": 10, "b": 20}
 
+        @plugin.configure(type_name)
         class Preprocessor(types.ResourceType):
 
             @classmethod
@@ -114,7 +117,7 @@ class PreprocessTestCase(test.TestCase):
                 return resource_config * 2
 
         mock_scenario_get.return_value._meta_get.return_value = {
-            "a": Preprocessor
+            "a": type_name
         }
 
         result = types.preprocess(name, context, args)
