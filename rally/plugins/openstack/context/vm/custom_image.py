@@ -148,10 +148,10 @@ class BaseCustomImageGenerator(context.Context):
 
         clients = osclients.Clients(user["credential"])
 
-        image_id = types.GlanceImage.transform(
-            clients=clients, resource_config=self.config["image"])
-        flavor_id = types.Flavor.transform(
-            clients=clients, resource_config=self.config["flavor"])
+        image_id = types.GlanceImage(self.context).pre_process(
+            resource_spec=self.config["image"], config={})
+        flavor_id = types.Flavor(self.context).pre_process(
+            resource_spec=self.config["flavor"], config={})
 
         vm_scenario = vmtasks.BootRuncommandDelete(self.context,
                                                    clients=clients)

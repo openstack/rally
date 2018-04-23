@@ -61,12 +61,14 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
         })
 
     @mock.patch("%s.osclients.Clients" % BASE)
-    @mock.patch("%s.types.GlanceImage.transform" % BASE, return_value="image")
-    @mock.patch("%s.types.Flavor.transform" % BASE, return_value="flavor")
+    @mock.patch("%s.types.GlanceImage" % BASE)
+    @mock.patch("%s.types.Flavor" % BASE)
     @mock.patch("%s.vmtasks.BootRuncommandDelete" % BASE)
     def test_create_one_image(
-            self, mock_boot_runcommand_delete, mock_flavor_transform,
-            mock_glance_image_transform, mock_clients):
+            self, mock_boot_runcommand_delete, mock_flavor,
+            mock_glance_image, mock_clients):
+        mock_flavor.return_value.pre_process.return_value = "flavor"
+        mock_glance_image.return_value.pre_process.return_value = "image"
         ip = {"ip": "foo_ip", "id": "foo_id", "is_floating": True}
         fake_server = mock.Mock()
 
@@ -90,12 +92,12 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
                                                       foo_arg="foo_value")
         self.assertEqual({"id": "image"}, custom_image)
 
-        mock_flavor_transform.assert_called_once_with(
-            clients=mock_clients.return_value,
-            resource_config={"name": "flavor"})
-        mock_glance_image_transform.assert_called_once_with(
-            clients=mock_clients.return_value,
-            resource_config={"name": "image"})
+        mock_flavor.assert_called_once_with(self.context)
+        mock_flavor.return_value.pre_process.assert_called_once_with(
+            resource_spec={"name": "flavor"}, config={})
+        mock_glance_image.assert_called_once_with(self.context)
+        mock_glance_image.return_value.pre_process.assert_called_once_with(
+            resource_spec={"name": "image"}, config={})
         mock_boot_runcommand_delete.assert_called_once_with(
             self.context, clients=mock_clients.return_value)
 

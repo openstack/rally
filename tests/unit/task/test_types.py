@@ -62,42 +62,58 @@ class ConvertTestCase(test.TestCase):
 
     @mock.patch("rally.task.types.ResourceType.get", create=True)
     def test_convert(self, mock_resource_type_get):
-        mock_transform = mock_resource_type_get.return_value.transform
+        ctx = mock.MagicMock()
         args = types.preprocess("FakeConvertPlugin.one_arg",
-                                mock.MagicMock(),
+                                ctx,
                                 {"bar": "bar_config"})
         mock_resource_type_get.assert_called_once_with("test_bar")
-        mock_transform.assert_called_once_with(clients=mock.ANY,
-                                               resource_config="bar_config")
-        self.assertDictEqual(args, {"bar": mock_transform.return_value})
+        resourcetype_cls = mock_resource_type_get.return_value
+        resourcetype_cls.assert_called_once_with(ctx, {})
+        resourcetype_obj = resourcetype_cls.return_value
+        resourcetype_obj.pre_process.assert_called_once_with(
+            resource_spec="bar_config", config={"type": "test_bar"})
+        self.assertDictEqual(
+            args, {"bar": resourcetype_obj.pre_process.return_value})
 
     @mock.patch("rally.task.types.ResourceType.get", create=True)
     def test_convert_multiple(self, mock_resource_type_get):
-        loaders = {"test_bar": mock.Mock(), "test_baz": mock.Mock()}
-        mock_resource_type_get.side_effect = lambda p: loaders[p]
+        resourcetype_classes = {"bar": mock.Mock(), "baz": mock.Mock()}
 
-        args = types.preprocess("FakeConvertPlugin.two_args",
-                                mock.MagicMock(),
-                                {"bar": "bar_config",
-                                 "baz": "baz_config"})
+        def _get_resource_type(name):
+            # cut "test_" prefix
+            name = name[5:]
+            if name in resourcetype_classes:
+                return resourcetype_classes[name]
+            self.fail("The unexpected resource class tried to be used.")
+
+        mock_resource_type_get.side_effect = _get_resource_type
+
+        ctx = mock.MagicMock()
+        scenario_args = {"bar": "bar_config", "baz": "baz_config"}
+        processed_args = types.preprocess(
+            "FakeConvertPlugin.two_args", ctx, scenario_args)
+
         mock_resource_type_get.assert_has_calls([mock.call("test_bar"),
                                                  mock.call("test_baz")],
                                                 any_order=True)
-        loaders["test_bar"].transform.assert_called_once_with(
-            clients=mock.ANY, resource_config="bar_config")
-        loaders["test_baz"].transform.assert_called_once_with(
-            clients=mock.ANY, resource_config="baz_config")
-        self.assertDictEqual(
-            args,
-            {"bar": loaders["test_bar"].transform.return_value,
-             "baz": loaders["test_baz"].transform.return_value})
+
+        expected_dict = {}
+        for resourcetype_n, resourcetype_cls in resourcetype_classes.items():
+            resourcetype_cls.assert_called_once_with(ctx, {})
+            resourcetype_obj = resourcetype_cls.return_value
+            resourcetype_obj.pre_process.assert_called_once_with(
+                resource_spec=scenario_args[resourcetype_n],
+                config={"type": "test_%s" % resourcetype_n})
+            return_value = resourcetype_obj.pre_process.return_value
+            expected_dict[resourcetype_n] = return_value
+
+        self.assertDictEqual(expected_dict, processed_args)
 
 
 class PreprocessTestCase(test.TestCase):
 
     @mock.patch("rally.task.types.scenario.Scenario.get")
-    @mock.patch("rally.plugins.openstack.osclients")
-    def test_preprocess(self, mock_osclients, mock_scenario_get):
+    def test_preprocess(self, mock_scenario_get):
 
         name = "some_plugin"
         type_name = "%s_type" % self.id()
@@ -105,25 +121,121 @@ class PreprocessTestCase(test.TestCase):
         context = {
             "a": 1,
             "b": 2,
-            "admin": {"credential": mock.MagicMock()}
         }
         args = {"a": 10, "b": 20}
 
         @plugin.configure(type_name)
-        class Preprocessor(types.ResourceType):
+        class SomeType(types.ResourceType):
 
-            @classmethod
-            def transform(cls, clients, resource_config):
-                return resource_config * 2
+            def pre_process(self, resource_spec, config):
+                return resource_spec * 2
 
         mock_scenario_get.return_value._meta_get.return_value = {
-            "a": type_name
+            "a": {"type": type_name}
         }
 
         result = types.preprocess(name, context, args)
         mock_scenario_get.assert_called_once_with(name)
         mock_scenario_get.return_value._meta_get.assert_called_once_with(
             "preprocessors", default={})
-        mock_osclients.Clients.assert_called_once_with(
-            context["admin"]["credential"])
         self.assertEqual({"a": 20, "b": 20}, result)
+
+
+class DeprecatedBehaviourMixinTestCase(test.TestCase):
+    def test_transform(self):
+        call_args_list = []
+        expected_return_value = mock.Mock()
+
+        @types.plugin.configure(self.id())
+        class OldResource(types.ResourceType,
+                          types.DeprecatedBehaviourMixin):
+            def pre_process(s, resource_spec, config):
+                call_args_list.append((resource_spec, config))
+                return expected_return_value
+
+        clients = mock.Mock()
+        resource_config = {"foo": "bar"}
+
+        self.assertEqual(expected_return_value,
+                         OldResource.transform(clients, resource_config))
+        self.assertEqual(expected_return_value,
+                         OldResource.transform(None, resource_config))
+        self.assertEqual([(resource_config, {}),
+                          (resource_config, {})], call_args_list)
+
+
+class ResourceTypeCompatTestCase(test.TestCase):
+    """Check how compatibility with an old interface works."""
+
+    def test_applying_preprocess_method(self):
+
+        setattr(types._pre_process_method, "key", self.id())
+
+        @plugin.configure("1-%s" % self.id())
+        class OldResourceType(types.ResourceType):
+            @classmethod
+            def transform(cls, clients, resource_config):
+                pass
+
+        self.assertEqual(
+            self.id(),
+            getattr(OldResourceType({}, {}).pre_process, "key", None))
+
+        @plugin.configure("2-%s" % self.id())
+        class ResourceTypeWithInnerCompatLayer(types.ResourceType):
+            @classmethod
+            def transform(cls, clients, resource_config):
+                pass
+
+            def pre_process(self, resource_spec, config):
+                pass
+
+        self.assertNotEqual(
+            self.id(),
+            getattr(ResourceTypeWithInnerCompatLayer.pre_process, "key", None))
+
+        @plugin.configure("3-%s" % self.id())
+        class CurrentResourceType(types.ResourceType):
+            def pre_process(self, resource_spec, config):
+                pass
+
+        self.assertFalse(hasattr(CurrentResourceType, "transform"))
+        self.assertNotEqual(
+            self.id(),
+            getattr(CurrentResourceType.pre_process, "key", None))
+
+    def test__pre_process_method(self):
+        cred1 = mock.Mock()
+        cred2 = mock.Mock()
+
+        self_obj = mock.Mock()
+        self_obj.__class__ = mock.Mock()
+        self_obj._context = {"admin": {"credential": cred1},
+                             "users": [{"credential": cred2}]}
+
+        # case #1: in case of None resource_spec, None should be returned
+        self.assertIsNone(types._pre_process_method(self_obj, None, None))
+        self.assertFalse(self_obj.__class__.transform.called)
+
+        # case #2: admin creds should be used
+        resource_spec = {"foo": "bar"}
+        res = types._pre_process_method(self_obj, resource_spec, None)
+        self.assertEqual(self_obj.__class__.transform.return_value, res)
+        self.assertTrue(self_obj.__class__.transform.called)
+        c_args, c_kwargs = self_obj.__class__.transform.call_args_list[0]
+        self.assertFalse(c_args)
+        self.assertEqual({"resource_config", "clients"}, set(c_kwargs.keys()))
+        self.assertEqual(resource_spec, c_kwargs["resource_config"])
+        self.assertEqual(cred1, c_kwargs["clients"].credential)
+
+        # case #3: user creds should be used
+        self_obj.__class__.transform.reset_mock()
+        self_obj._context.pop("admin", None)
+        res = types._pre_process_method(self_obj, resource_spec, None)
+        self.assertEqual(self_obj.__class__.transform.return_value, res)
+        self.assertTrue(self_obj.__class__.transform.called)
+        c_args, c_kwargs = self_obj.__class__.transform.call_args_list[0]
+        self.assertFalse(c_args)
+        self.assertEqual({"resource_config", "clients"}, set(c_kwargs.keys()))
+        self.assertEqual(resource_spec, c_kwargs["resource_config"])
+        self.assertEqual(cred2, c_kwargs["clients"].credential)

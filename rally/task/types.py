@@ -17,12 +17,17 @@ import abc
 import copy
 import operator
 import re
+import traceback
 
 import six
 
+from rally.common import logging
 from rally.common.plugin import plugin
 from rally import exceptions
 from rally.task import scenario
+
+
+LOG = logging.getLogger(__name__)
 
 
 def convert(**kwargs):
@@ -39,11 +44,17 @@ def convert(**kwargs):
     plugin. Currently ``type`` is the only recognized key, but others
     may be added in the future.
     """
-    preprocessors = dict([(k, v["type"]) for k, v in kwargs.items()])
 
     def wrapper(cls):
+        for k, v in kwargs.items():
+            if "type" not in v:
+                LOG.warning(
+                    "The configuration for preprocessing '%s' argument of"
+                    " %s Scenario plugin is wrong. Check documentation "
+                    "for more details." % (k, cls.get_name()))
+
         cls._meta_setdefault("preprocessors", {})
-        cls._meta_get("preprocessors").update(preprocessors)
+        cls._meta_get("preprocessors").update(kwargs)
         return cls
     return wrapper
 
@@ -51,54 +62,112 @@ def convert(**kwargs):
 def preprocess(name, context, args):
     """Run preprocessor on scenario arguments.
 
-    :param name: Plugin name
+    :param name: Scenario plugin name
     :param context: dict with contexts data
-    :param args: args section of input task file
+    :param args: Scenario arguments for the workload
 
     :returns processed_args: dictionary object with additional client
                              and resource configuration
 
     """
-    from rally.plugins.openstack import osclients
-
-    preprocessors = scenario.Scenario.get(name)._meta_get("preprocessors",
-                                                          default={})
-
-    clients = None
-    if context.get("admin"):
-        clients = osclients.Clients(context["admin"]["credential"])
-    elif context.get("users"):
-        clients = osclients.Clients(context["users"][0]["credential"])
+    preprocessors = scenario.Scenario.get(name)._meta_get(
+        "preprocessors", default={})
 
     processed_args = copy.deepcopy(args)
 
-    for src, type_name in preprocessors.items():
-        preprocessor = ResourceType.get(type_name)
-        resource_cfg = processed_args.get(src)
-        if resource_cfg:
-            processed_args[src] = preprocessor.transform(
-                clients=clients, resource_config=resource_cfg)
+    cache = {}
+    resource_types = {}
+    for src, type_cfg in preprocessors.items():
+        if type_cfg["type"] not in resource_types:
+            resource_cls = ResourceType.get(type_cfg["type"])
+            resource_types[type_cfg["type"]] = resource_cls(context, cache)
+
+        preprocessor = resource_types[type_cfg["type"]]
+        if src in processed_args:
+            res = preprocessor.pre_process(
+                resource_spec=processed_args[src], config=type_cfg)
+            if res is not None:
+                processed_args[src] = res
     return processed_args
 
 
+def _pre_process_method(self, resource_spec, config):
+    """pre_process to transform adapter.
+
+    Adopts a call for a new style pre_process instance method if ResourceType
+    to old style(deprecated way) call to classmethod transform.
+    """
+    if resource_spec is None:
+        # previously, such arguments were skipped
+        return
+
+    from rally.plugins.openstack import osclients
+
+    clients = None
+    if self._context.get("admin"):
+        clients = osclients.Clients(self._context["admin"]["credential"])
+    elif self._context.get("users"):
+        clients = osclients.Clients(self._context["users"][0]["credential"])
+
+    return self.__class__.transform(clients=clients,
+                                    resource_config=resource_spec)
+
+
+class _OldTypesCompatMeta(type):
+
+    def __new__(mcs, name, parents, dct):
+        # check for old-style ResourceTypes
+        if "transform" in dct:
+            # check the case when plugin supports both old and new styles
+            if ("pre_process" not in dct
+                    or dct["pre_process"] == ResourceType.pre_process):
+                dct["pre_process"] = _pre_process_method
+
+                LOG.warning("ResourceType class %s implements an old "
+                            "interface which is deprecated since Rally 0.12 "
+                            "and which will be removed soon." % name)
+
+        return super(_OldTypesCompatMeta, mcs).__new__(mcs, name, parents, dct)
+
+
+_CombinedMeta = type("CombineMeta", (abc.ABCMeta, _OldTypesCompatMeta), {})
+
+
 @plugin.base()
-@six.add_metaclass(abc.ABCMeta)
+@six.add_metaclass(_CombinedMeta)
 class ResourceType(plugin.Plugin):
 
-    @classmethod
+    def __init__(self, context, cache=None):
+        self._context = context
+        self._global_cache = cache if cache is not None else {}
+        self._global_cache.setdefault(self.get_name(), {})
+        self._cache = self._global_cache[self.get_name()]
+
     @abc.abstractmethod
-    def transform(cls, clients, resource_config):
-        """Transform the resource.
+    def pre_process(self, resource_spec, config):
+        """Pre-process resource.
 
-        :param clients: openstack admin client handles
-        :param resource_config: scenario config of resource
-
-        :returns: transformed value of resource
+        :param resource_spec: A specification of the resource from the task
+        :param config: A configuration for preprocessing taken from the plugin
         """
 
+
+class DeprecatedBehaviourMixin(object):
+    """A Mixin class which returns deprecated `transform` method."""
+
     @classmethod
-    def _get_doc(cls):
-        return cls.transform.__doc__
+    def transform(cls, clients, resource_config):
+        caller = traceback.format_stack(limit=2)[0]
+        LOG.warning("Calling method `transform` of %s is deprecated:\n%s" %
+                    (cls.__name__, caller))
+        if clients:
+            # it doesn't matter "permission" of the user. it will pick the
+            # first one
+            context = {"admin": {"credential": clients.credential}}
+        else:
+            context = {}
+        self = cls(context, cache={})
+        return self.pre_process(resource_spec=resource_config, config={})
 
 
 def obj_from_name(resource_config, resources, typename):

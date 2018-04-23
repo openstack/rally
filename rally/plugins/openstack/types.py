@@ -14,230 +14,183 @@
 
 import copy
 
+from rally.common import logging
 from rally.common.plugin import plugin
 from rally import exceptions
+from rally.plugins.openstack import osclients
 from rally.plugins.openstack.services.image import image
+from rally.plugins.openstack.services.storage import block
 from rally.task import types
 
 
+LOG = logging.getLogger(__name__)
+
+
+class OpenStackResourceType(types.ResourceType):
+    """A base class for OpenStack ResourceTypes plugins with help-methods"""
+    def __init__(self, context, cache=None):
+        super(OpenStackResourceType, self).__init__(context, cache)
+        self._clients = None
+        if self._context.get("admin"):
+            self._clients = osclients.Clients(
+                self._context["admin"]["credential"])
+        elif self._context.get("users"):
+            self._clients = osclients.Clients(
+                self._context["users"][0]["credential"])
+
+
 @plugin.configure(name="nova_flavor")
-class Flavor(types.ResourceType):
+class Flavor(OpenStackResourceType, types.DeprecatedBehaviourMixin):
+    """Find Nova's flavor ID by name or regexp."""
 
-    @classmethod
-    def transform(cls, clients, resource_config):
-        """Transform the resource config to id.
-
-        :param clients: openstack admin client handles
-        :param resource_config: scenario config with `id`, `name` or `regex`
-
-        :returns: id matching resource
-        """
-        resource_id = resource_config.get("id")
+    def pre_process(self, resource_spec, config):
+        resource_id = resource_spec.get("id")
         if not resource_id:
-            novaclient = clients.nova()
+            novaclient = self._clients.nova()
             resource_id = types._id_from_name(
-                resource_config=resource_config,
+                resource_config=resource_spec,
                 resources=novaclient.flavors.list(),
                 typename="flavor")
         return resource_id
 
 
 @plugin.configure(name="ec2_flavor")
-class EC2Flavor(types.ResourceType):
+class EC2Flavor(OpenStackResourceType, types.DeprecatedBehaviourMixin):
+    """Find Nova's flavor Name by it's ID or regexp."""
 
-    @classmethod
-    def transform(cls, clients, resource_config):
-        """Transform the resource config to name.
-
-        In the case of using EC2 API, flavor name is used for launching
-        servers.
-
-        :param clients: openstack admin client handles
-        :param resource_config: scenario config with `id`, `name` or `regex`
-
-        :returns: name matching resource
-        """
-        resource_name = resource_config.get("name")
+    def pre_process(self, resource_spec, config):
+        resource_name = resource_spec.get("name")
         if not resource_name:
             # NOTE(wtakase): gets resource name from OpenStack id
-            novaclient = clients.nova()
+            novaclient = self._clients.nova()
             resource_name = types._name_from_id(
-                resource_config=resource_config,
+                resource_config=resource_spec,
                 resources=novaclient.flavors.list(),
                 typename="flavor")
         return resource_name
 
 
 @plugin.configure(name="glance_image")
-class GlanceImage(types.ResourceType):
+class GlanceImage(OpenStackResourceType, types.DeprecatedBehaviourMixin):
+    """Find Glance's image ID by name or regexp."""
 
-    @classmethod
-    def transform(cls, clients, resource_config):
-        """Transform the resource config to id.
+    def pre_process(self, resource_spec, config):
+        resource_id = resource_spec.get("id")
+        list_kwargs = resource_spec.get("list_kwargs", {})
 
-        :param clients: openstack admin client handles
-        :param resource_config: scenario config with `id`, `name` or `regex`
-
-        :returns: id matching resource
-        """
-        resource_id = resource_config.get("id")
-        list_kwargs = resource_config.get("list_kwargs", {})
         if not resource_id:
-            images = list(image.Image(clients).list_images(**list_kwargs))
+            cache_id = hash(frozenset(list_kwargs.items()))
+            if cache_id not in self._cache:
+                glance = image.Image(self._clients)
+                self._cache[cache_id] = glance.list_images(**list_kwargs)
+            images = self._cache[cache_id]
             resource_id = types._id_from_name(
-                resource_config=resource_config,
+                resource_config=resource_spec,
                 resources=images,
                 typename="image")
         return resource_id
 
 
 @plugin.configure(name="glance_image_args")
-class GlanceImageArguments(types.ResourceType):
-
-    @classmethod
-    def transform(cls, clients, resource_config):
-        """Transform the resource config to id.
-
-        :param clients: openstack admin client handles
-        :param resource_config: scenario config with `id`, `name` or `regex`
-
-        :returns: id matching resource
-        """
-        resource_config = copy.deepcopy(resource_config)
-        if "is_public" in resource_config:
-            if "visibility" in resource_config:
-                resource_config.pop("is_public")
+class GlanceImageArguments(OpenStackResourceType,
+                           types.DeprecatedBehaviourMixin):
+    """Process Glance image create options to look similar in case of V1/V2."""
+    def pre_process(self, resource_spec, config):
+        resource_spec = copy.deepcopy(resource_spec)
+        if "is_public" in resource_spec:
+            if "visibility" in resource_spec:
+                resource_spec.pop("is_public")
             else:
-                visibility = ("public" if resource_config.pop("is_public")
+                visibility = ("public" if resource_spec.pop("is_public")
                               else "private")
-                resource_config["visibility"] = visibility
-        return resource_config
+                resource_spec["visibility"] = visibility
+        return resource_spec
 
 
 @plugin.configure(name="ec2_image")
-class EC2Image(types.ResourceType):
+class EC2Image(OpenStackResourceType, types.DeprecatedBehaviourMixin):
+    """Find EC2 image ID."""
 
-    @classmethod
-    def transform(cls, clients, resource_config):
-        """Transform the resource config to EC2 id.
-
-        If OpenStack resource id is given, this function gets resource name
-        from the id and then gets EC2 resource id from the name.
-
-        :param clients: openstack admin client handles
-        :param resource_config: scenario config with `id`, `name` or `regex`
-
-        :returns: EC2 id matching resource
-        """
-        if "name" not in resource_config and "regex" not in resource_config:
+    def pre_process(self, resource_spec, config):
+        if "name" not in resource_spec and "regex" not in resource_spec:
             # NOTE(wtakase): gets resource name from OpenStack id
-            glanceclient = clients.glance()
+            glanceclient = self._clients.glance()
             resource_name = types._name_from_id(
-                resource_config=resource_config,
+                resource_config=resource_spec,
                 resources=list(glanceclient.images.list()),
                 typename="image")
-            resource_config["name"] = resource_name
+            resource_spec["name"] = resource_name
 
         # NOTE(wtakase): gets EC2 resource id from name or regex
-        ec2client = clients.ec2()
+        ec2client = self._clients.ec2()
         resource_ec2_id = types._id_from_name(
-            resource_config=resource_config,
+            resource_config=resource_spec,
             resources=list(ec2client.get_all_images()),
             typename="ec2_image")
         return resource_ec2_id
 
 
 @plugin.configure(name="cinder_volume_type")
-class VolumeType(types.ResourceType):
+class VolumeType(OpenStackResourceType, types.DeprecatedBehaviourMixin):
+    """Find Cinder volume type ID by name or regexp."""
 
-    @classmethod
-    def transform(cls, clients, resource_config):
-        """Transform the resource config to id.
-
-        :param clients: openstack admin client handles
-        :param resource_config: scenario config with `id`, `name` or `regex`
-
-        :returns: id matching resource
-        """
-        resource_id = resource_config.get("id")
+    def pre_process(self, resource_spec, config):
+        resource_id = resource_spec.get("id")
         if not resource_id:
-            cinderclient = clients.cinder()
-            resource_id = types._id_from_name(resource_config=resource_config,
-                                              resources=cinderclient.
-                                              volume_types.list(),
-                                              typename="volume_type")
+            cinder = block.BlockStorage(self._clients)
+            resource_id = types._id_from_name(
+                resource_config=resource_spec,
+                resources=cinder.list_types(),
+                typename="volume_type")
         return resource_id
 
 
 @plugin.configure(name="neutron_network")
-class NeutronNetwork(types.ResourceType):
-
-    @classmethod
-    def transform(cls, clients, resource_config):
-        """Transform the resource config to id.
-
-        :param clients: openstack admin client handles
-        :param resource_config: scenario config with `id`, `name` or `regex`
-
-        :returns: id matching resource
-        """
-        resource_id = resource_config.get("id")
+class NeutronNetwork(OpenStackResourceType, types.DeprecatedBehaviourMixin):
+    """Find Neutron network ID by it's name."""
+    def pre_process(self, resource_spec, config):
+        resource_id = resource_spec.get("id")
         if resource_id:
             return resource_id
         else:
-            neutronclient = clients.neutron()
+            neutronclient = self._clients.neutron()
             for net in neutronclient.list_networks()["networks"]:
-                if net["name"] == resource_config.get("name"):
+                if net["name"] == resource_spec.get("name"):
                     return net["id"]
 
         raise exceptions.InvalidScenarioArgument(
             "Neutron network with name '{name}' not found".format(
-                name=resource_config.get("name")))
+                name=resource_spec.get("name")))
 
 
 @plugin.configure(name="watcher_strategy")
-class WatcherStrategy(types.ResourceType):
+class WatcherStrategy(OpenStackResourceType, types.DeprecatedBehaviourMixin):
+    """Find Watcher strategy ID by it's name."""
 
-    @classmethod
-    def transform(cls, clients, resource_config):
-        """Transform the resource config to id.
-
-        :param clients: openstack admin client handles
-        :param resource_config: scenario config with `id`, `name` or `regex`
-
-        :returns: id matching resource
-        """
-        resource_id = resource_config.get("id")
+    def pre_process(self, resource_spec, config):
+        resource_id = resource_spec.get("id")
         if not resource_id:
-            watcherclient = clients.watcher()
+            watcherclient = self._clients.watcher()
             resource_id = types._id_from_name(
-                resource_config=resource_config,
+                resource_config=resource_spec,
                 resources=[watcherclient.strategy.get(
-                    resource_config.get("name"))],
+                    resource_spec.get("name"))],
                 typename="strategy",
                 id_attr="uuid")
         return resource_id
 
 
 @plugin.configure(name="watcher_goal")
-class WatcherGoal(types.ResourceType):
+class WatcherGoal(OpenStackResourceType, types.DeprecatedBehaviourMixin):
+    """Find Watcher goal ID by it's name."""
 
-    @classmethod
-    def transform(cls, clients, resource_config):
-        """Transform the resource config to id.
-
-        :param clients: openstack admin client handles
-        :param resource_config: scenario config with `id`, `name` or `regex`
-
-        :returns: id matching resource
-        """
-        resource_id = resource_config.get("id")
+    def pre_process(self, resource_spec, config):
+        resource_id = resource_spec.get("id")
         if not resource_id:
-            watcherclient = clients.watcher()
+            watcherclient = self._clients.watcher()
             resource_id = types._id_from_name(
-                resource_config=resource_config,
-                resources=[watcherclient.goal.get(
-                    resource_config.get("name"))],
+                resource_config=resource_spec,
+                resources=[watcherclient.goal.get(resource_spec.get("name"))],
                 typename="goal",
                 id_attr="uuid")
         return resource_id
