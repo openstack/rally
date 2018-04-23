@@ -25,31 +25,6 @@ from rally import exceptions
 from rally.task import scenario
 
 
-def _get_preprocessor_loader(plugin_name):
-    """Get a class that loads a preprocessor class.
-
-    This returns a class with a single class method, ``transform``,
-    which, when called, finds a plugin and defers to its ``transform``
-    class method. This is necessary because ``convert()`` is called as
-    a decorator at import time, but we cannot be confident that the
-    ResourceType plugins may not be loaded yet. (In fact, since
-    ``convert()`` is used to decorate plugins, we can be confident
-    that not all plugins are loaded when it is called.)
-
-    This permits us to defer plugin searching until the moment when
-    ``preprocess()`` calls the various preprocessors, at which point
-    we can be certain that all plugins have been loaded and finding
-    them by name will work.
-    """
-    def transform(cls, *args, **kwargs):
-        plug = ResourceType.get(plugin_name)
-        return plug.transform(*args, **kwargs)
-
-    return type("PluginLoader_%s" % plugin_name,
-                (object,),
-                {"transform": classmethod(transform)})
-
-
 def convert(**kwargs):
     """Decorator to define resource transformation(s) on scenario parameters.
 
@@ -64,13 +39,12 @@ def convert(**kwargs):
     plugin. Currently ``type`` is the only recognized key, but others
     may be added in the future.
     """
-    preprocessors = dict([(k, _get_preprocessor_loader(v["type"]))
-                          for k, v in kwargs.items()])
+    preprocessors = dict([(k, v["type"]) for k, v in kwargs.items()])
 
-    def wrapper(func):
-        func._meta_setdefault("preprocessors", {})
-        func._meta_get("preprocessors").update(preprocessors)
-        return func
+    def wrapper(cls):
+        cls._meta_setdefault("preprocessors", {})
+        cls._meta_get("preprocessors").update(preprocessors)
+        return cls
     return wrapper
 
 
@@ -98,7 +72,8 @@ def preprocess(name, context, args):
 
     processed_args = copy.deepcopy(args)
 
-    for src, preprocessor in preprocessors.items():
+    for src, type_name in preprocessors.items():
+        preprocessor = ResourceType.get(type_name)
         resource_cfg = processed_args.get(src)
         if resource_cfg:
             processed_args[src] = preprocessor.transform(
