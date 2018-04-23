@@ -97,17 +97,17 @@ class VerifierManager(plugin.Plugin):
                     run_args.setdefault(k, v)
 
         doc = cls.__doc__ or ""
-        doc += "\n**Running arguments**:\n%s" % "\n".join(
-            sorted(["  * *%s*: %s" % (k, v) for k, v in run_args.items()]))
+        doc += "\n**Running arguments**:\n\n%s" % "\n".join(
+            sorted(["* *%s*: %s" % (k, v) for k, v in run_args.items()]))
 
-        doc += "\n**Installation arguments**:\n"
-        doc += ("  * *system_wide*: Whether or not to use the system-wide "
+        doc += "\n\n**Installation arguments**:\n\n"
+        doc += ("* *system_wide*: Whether or not to use the system-wide "
                 "environment for verifier instead of a virtual environment. "
                 "Defaults to False.\n"
-                "  * *source*: Path or URL to the repo to clone verifier from."
+                "* *source*: Path or URL to the repo to clone verifier from."
                 " Defaults to %(default_source)s\n"
-                "  * *version*: Branch, tag or commit ID to checkout before "
-                "verifier installation. Defaults to '%(default_version)s'."
+                "* *version*: Branch, tag or commit ID to checkout before "
+                "verifier installation. Defaults to '%(default_version)s'.\n"
                 % {"default_source": cls._meta_get("default_repo"),
                    "default_version": cls._meta_get(
                        "default_version") or "master"})

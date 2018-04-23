@@ -138,8 +138,8 @@ class CreateVolumeTypeAndEncryptionType(cinder_utils.CinderBasic):
             is_public=True):
         """Create encryption type
 
-          This scenario first creates a volume type, then creates an encryption
-          type for the volume type.
+        This scenario first creates a volume type, then creates an encryption
+        type for the volume type.
 
         :param create_specs: The encryption type specifications to add.
                              DEPRECATED, specify arguments explicitly.
@@ -185,9 +185,9 @@ class CreateAndListEncryptionType(cinder_utils.CinderBasic):
             key_size=None, control_location="front-end", search_opts=None):
         """Create and list encryption type
 
-          This scenario firstly creates a volume type, secondly creates an
-          encryption type for the volume type, thirdly lists all encryption
-          types.
+        This scenario firstly creates a volume type, secondly creates an
+        encryption type for the volume type, thirdly lists all encryption
+        types.
 
         :param create_specs: The encryption type specifications to add.
                              DEPRECATED, specify arguments explicitly.
@@ -253,10 +253,10 @@ class CreateGetAndDeleteEncryptionType(cinder_utils.CinderBasic):
             key_size=None, control_location="front-end"):
         """Create get and delete an encryption type
 
-          This scenario firstly creates an encryption type for a volome
-          type created in the context, then gets detailed information of
-          the created encryption type, finally deletes the created
-          encryption type.
+        This scenario firstly creates an encryption type for a volome
+        type created in the context, then gets detailed information of
+        the created encryption type, finally deletes the created
+        encryption type.
 
         :param provider: The class that provides encryption support. For
                          example, LuksEncryptor.
@@ -294,8 +294,8 @@ class CreateAndDeleteEncryptionType(cinder_utils.CinderBasic):
             key_size=None, control_location="front-end"):
         """Create and delete encryption type
 
-          This scenario firstly creates an encryption type for a given
-          volume type, then deletes the created encryption type.
+        This scenario firstly creates an encryption type for a given
+        volume type, then deletes the created encryption type.
 
         :param create_specs: the encryption type specifications to add
         :param provider: The class that provides encryption support. For
@@ -339,9 +339,9 @@ class CreateAndUpdateEncryptionType(cinder_utils.CinderBasic):
             update_key_size=None, update_control_location=None):
         """Create and update encryption type
 
-          This scenario firstly creates a volume type, secondly creates an
-          encryption type for the volume type, thirdly updates the encryption
-          type.
+        This scenario firstly creates a volume type, secondly creates an
+        encryption type for the volume type, thirdly updates the encryption
+        type.
 
         :param create_provider: The class that provides encryption support. For
                                 example, LuksEncryptor.
@@ -390,8 +390,8 @@ class CreateVolumeTypeAddAndListTypeAccess(scenario.OpenStackScenario):
     def run(self, description=None, is_public=False):
         """Add and list volume type access for the given project.
 
-          This scenario first creates a private volume type, then add project
-          access and list project access to it.
+        This scenario first creates a private volume type, then add project
+        access and list project access to it.
 
         :param description: Description of the volume type
         :param is_public: Volume type visibility
