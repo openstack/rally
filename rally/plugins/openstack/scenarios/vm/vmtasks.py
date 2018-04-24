@@ -45,7 +45,7 @@ class ValidCommandValidator(validators.FileExistsValidator):
         """Checks that parameter is a proper command-specifying dictionary.
 
         Ensure that the command dictionary is a proper command-specifying
-        dictionary described in `vmtasks.VMTasks.boot_runcommand_delete'
+        dictionary described in 'vmtasks.VMTasks.boot_runcommand_delete'
         docstring.
 
         :param param_name: Name of parameter to validate
@@ -499,7 +499,7 @@ class DDLoadTest(BootRuncommandDelete):
             max_log_length=None, **kwargs):
         """Boot a server from a custom image and performs dd load test.
 
-        NOTE: dd load test is prepared script by Rally team. It checks
+        .. note:: dd load test is prepared script by Rally team. It checks
             writing and reading metrics from the VM.
 
         :param image: glance image name to use for the vm. Optional

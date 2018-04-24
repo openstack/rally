@@ -26,8 +26,9 @@ class FaultInjectionHook(hook.Hook):
     """Performs fault injection using os-faults library.
 
     Configuration:
-        action - string that represents an action (more info in [1])
-        verify - whether to verify connection to cloud nodes or not
+
+    * action - string that represents an action (more info in [1])
+    * verify - whether to verify connection to cloud nodes or not
 
     This plugin discovers extra config of ExistingCloud
     and looks for "cloud_config" field. If cloud_config is present then

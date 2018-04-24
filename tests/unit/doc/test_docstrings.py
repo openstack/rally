@@ -13,12 +13,25 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.common.plugin import info
+from docutils import frontend
+from docutils import nodes
+from docutils.parsers import rst
+from docutils import utils
+
 from rally.common.plugin import plugin
 from rally.common import validation
 from rally import plugins
 from rally.task import scenario
 from tests.unit import test
+
+
+def _parse_rst(text):
+    parser = rst.Parser()
+    settings = frontend.OptionParser(
+        components=(rst.Parser,)).get_default_values()
+    document = utils.new_document(text, settings)
+    parser.parse(text, document)
+    return document.children
 
 
 class DocstringsTestCase(test.TestCase):
@@ -47,20 +60,48 @@ class DocstringsTestCase(test.TestCase):
                     result.append(msg)
         return result
 
+    # the list with plugins names which use rst definitions in their docstrings
+    _HAS_VALID_DEFINITIONS = []
+
+    def _validate_rst(self, plugin_name, text, msg_buffer):
+        parsed_docstring = _parse_rst(text)
+        for item in parsed_docstring:
+            if (isinstance(item, nodes.definition_list)
+                    and plugin_name not in self._HAS_VALID_DEFINITIONS):
+                msg_buffer.append("Plugin %s has a docstring with invalid "
+                                  "format. Re-check intend and required empty "
+                                  "lines between the list title and list "
+                                  "items." % plugin_name)
+            elif isinstance(item, nodes.system_message):
+                msg_buffer.append(
+                    "A warning is caught while parsing docstring of '%s' "
+                    "plugin: %s" % (plugin_name, item.astext()))
+
     def _check_docstrings(self, msg_buffer):
         for plg_cls in plugin.Plugin.get_all():
-            if plg_cls.__module__.startswith("rally."):
-                doc = info.parse_docstring(plg_cls.__doc__)
-                short_description = doc["short_description"]
-                if short_description.startswith("Test"):
-                    msg_buffer.append("One-line description for %s"
-                                      " should be declarative and not"
-                                      " start with 'Test(s) ...'"
-                                      % plg_cls.__name__)
-                if not plg_cls.get_info()["title"]:
-                    msg = "Class '{}.{}' should have a docstring."
-                    msg_buffer.append(msg.format(plg_cls.__module__,
-                                                 plg_cls.__name__))
+            if not plg_cls.__module__.startswith("rally."):
+                continue
+            name = "%s (%s.%s)" % (plg_cls.get_name(),
+                                   plg_cls.__module__,
+                                   plg_cls.__name__)
+            doc_info = plg_cls.get_info()
+            if not doc_info["title"]:
+                msg_buffer.append("Plugin '%s' should have a docstring."
+                                  % name)
+            if doc_info["title"].startswith("Test"):
+                msg_buffer.append("One-line description for %s"
+                                  " should be declarative and not"
+                                  " start with 'Test(s) ...'"
+                                  % name)
+
+            # NOTE(andreykurilin): I never saw any real usage of
+            #   reStructuredText definitions in our docstrings. In most cases,
+            #   "definitions" means that there is an issue with intends or
+            #   missed empty line before the list title and list items.
+            if doc_info["description"]:
+                self._validate_rst(plg_cls.get_name(),
+                                   doc_info["description"],
+                                   msg_buffer)
 
     def _check_described_params(self, msg_buffer):
         for plg_cls in plugin.Plugin.get_all():
@@ -81,4 +122,4 @@ class DocstringsTestCase(test.TestCase):
 
         self._check_described_params(msg_buffer)
         if msg_buffer:
-            self.fail("\n%s" % "\n".join(msg_buffer))
+            self.fail("\n%s" % "\n===============\n".join(msg_buffer))

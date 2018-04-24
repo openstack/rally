@@ -170,10 +170,12 @@ class CreateAlarmAndGetHistory(ceiloutils.CeilometerScenario):
     def run(self, meter_name, threshold, state, timeout=60, **kwargs):
         """Create an alarm, get and set the state and get the alarm history.
 
-         This scenario makes following queries:
-            GET /v2/alarms/{alarm_id}/history
-            GET /v2/alarms/{alarm_id}/state
-            PUT /v2/alarms/{alarm_id}/state
+        This scenario makes following queries:
+
+          *  GET /v2/alarms/{alarm_id}/history
+          *  GET /v2/alarms/{alarm_id}/state
+          *  PUT /v2/alarms/{alarm_id}/state
+
         Initially alarm is created and then get the state of the created alarm
         using its alarm_id. Then get the history of the alarm. And finally the
         state of the alarm is updated using given state. meter_name and

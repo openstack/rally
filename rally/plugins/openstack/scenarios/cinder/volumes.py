@@ -755,8 +755,9 @@ class CreateVolumeAndClone(cinder_utils.CinderBasic):
     def run(self, size, image=None, nested_level=1, **kwargs):
         """Create a volume, then clone it to another volume.
 
-          This creates a volume, then clone it to anothor volume,
-          and then clone the new volume to next volume...
+        This creates a volume, then clone it to anothor volume,
+        and then clone the new volume to next volume...
+
            1. create source volume (from image)
            2. clone source volume to volume1
            3. clone volume1 to volume2

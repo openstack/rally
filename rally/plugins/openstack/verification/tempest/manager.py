@@ -48,15 +48,15 @@ class TempestManager(testr.TestrLauncher):
 
     Rally supports features listed below:
 
-      * *cloning Tempest*: repository and version can be specified
-      * *installation*: system-wide with checking existence of required
-        packages or in virtual environment
-      * *configuration*: options are discovered via OpenStack API, but you can
-        override them if you need
-      * *running*: pre-creating all required resources(i.e images, tenants,
-        etc), prepare arguments, launching Tempest, live-progress output
-      * *results*: all verifications are stored in db, you can built reports,
-        compare verification at whatever you want time.
+    * *cloning Tempest*: repository and version can be specified
+    * *installation*: system-wide with checking existence of required
+      packages or in virtual environment
+    * *configuration*: options are discovered via OpenStack API, but you can
+      override them if you need
+    * *running*: pre-creating all required resources(i.e images, tenants,
+      etc), prepare arguments, launching Tempest, live-progress output
+    * *results*: all verifications are stored in db, you can built reports,
+      compare verification at whatever you want time.
 
     Appeared in Rally 0.8.0 *(actually, it appeared long time ago with first
     revision of Verification Component, but 0.8.0 is mentioned since it is

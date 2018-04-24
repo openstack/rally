@@ -76,7 +76,7 @@ def parse_docstring(docstring):
     params = []
 
     if docstring:
-        docstring = trim(docstring)
+        docstring = trim(docstring.lstrip("\n"))
 
         lines = docstring.split("\n", 1)
         short_description = lines[0]
@@ -127,7 +127,6 @@ class InfoMixin(object):
 
         return {
             "name": cls.get_name(),
-            "platform": cls.get_platform(),
             "platform": cls.get_platform(),
             "module": cls.__module__,
             "title": doc["short_description"],

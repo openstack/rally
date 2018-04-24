@@ -38,16 +38,19 @@ class HeatDataplane(context.Context):
 
     This context will create stacks by given template for each tenant and
     add details to context. Following details will be added:
-        id of stack;
-        template file contents;
-        files dictionary;
-        stack parameters;
+
+    * id of stack;
+    * template file contents;
+    * files dictionary;
+    * stack parameters;
+
     Heat template should define a "gate" node which will interact with Rally
     by ssh and workload nodes by any protocol. To make this possible heat
     template should accept the following parameters:
-        network_id: id of public network
-        router_id: id of external router to connect "gate" node
-        key_name: name of nova ssh keypair to use for "gate" node
+
+    * network_id: id of public network
+    * router_id: id of external router to connect "gate" node
+    * key_name: name of nova ssh keypair to use for "gate" node
     """
     FILE_SCHEMA = {
         "description": "",

@@ -84,10 +84,11 @@ class BootAndDeleteServerWithKeypair(utils.NovaScenario):
         """Boot and delete server with keypair.
 
         Plan of this scenario:
-         - create a keypair
-         - boot a VM with created keypair
-         - delete server
-         - delete keypair
+
+        - create a keypair
+        - boot a VM with created keypair
+        - delete server
+        - delete keypair
 
         :param image: ID of the image to be used for server creation
         :param flavor: ID of the flavor to be used for server creation
