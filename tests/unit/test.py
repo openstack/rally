@@ -98,6 +98,16 @@ class TestCase(testtools.TestCase):
     def assertSequenceEqual(self, iterable_1, iterable_2, msg=None):
         self.assertEqual(tuple(iterable_1), tuple(iterable_2), msg)
 
+    _IS_EMPTY_MSG = "Iterable is not empty"
+
+    def assertIsEmpty(self, iterable, msg=None):
+        if len(iterable):
+            if msg:
+                msg = "%s : %s" % (self._IS_EMPTY_MSG, msg)
+            else:
+                msg = self._IS_EMPTY_MSG
+            raise self.failureException(msg)
+
 
 class DBTestCase(TestCase):
     """Base class for tests which use DB."""

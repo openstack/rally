@@ -67,8 +67,18 @@ def import_modules_from_package(package):
 
 def import_modules_by_entry_point():
     """Import plugins by entry-point 'rally_plugins'."""
-    for ep in pkg_resources.iter_entry_points("rally_plugins"):
-        if ep.name == "path":
+    loaded_packages = []
+
+    for package in pkg_resources.working_set:
+        entry_map = package.get_entry_map("rally_plugins")
+        if not entry_map:
+            # this package doesn't have rally_plugins entry-point
+            continue
+
+        package_info = {}
+
+        if "path" in entry_map:
+            ep = entry_map["path"]
             try:
                 m = ep.load()
                 if hasattr(m, "__path__"):
@@ -83,12 +93,27 @@ def import_modules_by_entry_point():
                 msg = ("\t Failed to load plugins from module '%(module)s' "
                        "(package: '%(package)s')" %
                        {"module": ep.module_name,
-                        "package": "%s %s" % (ep.dist.project_name,
-                                              ep.dist.version)})
+                        "package": "%s %s" % (package.project_name,
+                                              package.version)})
                 if logging.is_debug():
                     LOG.exception(msg)
                 else:
                     LOG.warning(msg + (": %s" % six.text_type(e)))
+            else:
+                package_info["plugins_path"] = ep.module_name
+        if "options" in entry_map:
+            ep = entry_map["options"]
+            package_info["options"] = "%s:%s" % (
+                ep.module_name,
+                ep.attrs[0] if ep.attrs else "list_opts",
+            )
+
+        if package_info:
+            package_info.update(
+                name=package.project_name,
+                version=package.version)
+            loaded_packages.append(package_info)
+    return loaded_packages
 
 
 def load_plugins(dir_or_file):
