@@ -62,11 +62,8 @@ class EC2ServerGeneratorTestCase(test.TestCase):
 
     @mock.patch("%s.ec2.utils.EC2Scenario._boot_servers" % SCN,
                 return_value=[fakes.FakeServer(id=str(i)) for i in range(5)])
-    @mock.patch("%s.EC2Image.transform" % TYP, return_value=mock.MagicMock())
-    @mock.patch("%s.servers.osclients" % CTX, return_value=fakes.FakeClients())
-    def test_setup(self, mock_osclients,
-                   mock_ec2_image_transform,
-                   mock_ec2_scenario__boot_servers):
+    @mock.patch("%s.EC2Image" % TYP)
+    def test_setup(self, mock_ec2_image, mock_ec2_scenario__boot_servers):
 
         tenants_count = 2
         users_per_tenant = 5
@@ -87,9 +84,8 @@ class EC2ServerGeneratorTestCase(test.TestCase):
         servers_ctx.setup()
         self.assertEqual(new_context, servers_ctx.context)
 
-    @mock.patch("%s.servers.osclients" % CTX)
     @mock.patch("%s.servers.resource_manager.cleanup" % CTX)
-    def test_cleanup(self, mock_cleanup, mock_osclients):
+    def test_cleanup(self, mock_cleanup):
 
         tenants_count = 2
         users_per_tenant = 5

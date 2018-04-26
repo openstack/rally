@@ -16,7 +16,6 @@ import mock
 
 from rally.plugins.openstack.context.watcher import audit_templates
 from rally.plugins.openstack.scenarios.watcher import utils as watcher_utils
-from tests.unit import fakes
 from tests.unit import test
 
 
@@ -29,14 +28,9 @@ class AuditTemplateTestCase(test.ScenarioTestCase):
 
     @mock.patch("%s.utils.WatcherScenario._create_audit_template" % SCN,
                 return_value=mock.MagicMock())
-    @mock.patch("%s.WatcherStrategy.transform" % TYP,
-                return_value=mock.MagicMock())
-    @mock.patch("%s.WatcherGoal.transform" % TYP,
-                return_value=mock.MagicMock())
-    @mock.patch("%s.audit_templates.osclients" % CTX,
-                return_value=fakes.FakeClients())
-    def test_setup(self, mock_osclients, mock_watcher_goal_transform,
-                   mock_watcher_strategy_transform,
+    @mock.patch("%s.WatcherStrategy" % TYP,)
+    @mock.patch("%s.WatcherGoal" % TYP)
+    def test_setup(self, mock_watcher_goal, mock_watcher_strategy,
                    mock_watcher_scenario__create_audit_template):
 
         users = [{"id": 1, "tenant_id": 1, "credential": mock.MagicMock()}]
@@ -72,8 +66,9 @@ class AuditTemplateTestCase(test.ScenarioTestCase):
         })
         audit_template = audit_templates.AuditTemplateGenerator(self.context)
         audit_template.setup()
-        goal_id = mock_watcher_goal_transform.return_value
-        strategy_id = mock_watcher_strategy_transform.return_value
+        goal_id = mock_watcher_goal.return_value.pre_process.return_value
+        strategy_id = (
+            mock_watcher_strategy.return_value.pre_process.return_value)
         mock_calls = [mock.call(goal_id, strategy_id)]
         mock_watcher_scenario__create_audit_template.assert_has_calls(
             mock_calls)

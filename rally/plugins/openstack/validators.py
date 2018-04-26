@@ -96,10 +96,10 @@ class ImageExistsValidator(validation.Validator):
                 return
         try:
             for user in context["users"]:
-                clients = user["credential"].clients()
-                image_id = openstack_types.GlanceImage.transform(
-                    clients=clients, resource_config=image_args)
-                clients.glance().images.get(image_id)
+                image_processor = openstack_types.GlanceImage(
+                    context={"admin": {"credential": user["credential"]}})
+                image_id = image_processor.pre_process(image_args, config={})
+                user["credential"].clients().glance().images.get(image_id)
         except (glance_exc.HTTPNotFound, exceptions.InvalidScenarioArgument):
             self.fail("Image '%s' not found" % image_args)
 
@@ -205,8 +205,9 @@ class FlavorExistsValidator(validation.Validator):
         if not flavor_value:
             self.fail("Parameter %s is not specified." % param_name)
         try:
-            flavor_id = openstack_types.Flavor.transform(
-                clients=clients, resource_config=flavor_value)
+            flavor_processor = openstack_types.Flavor(
+                context={"admin": {"credential": clients.credential}})
+            flavor_id = flavor_processor.pre_process(flavor_value, config={})
             flavor = clients.nova().flavors.get(flavor=flavor_id)
             return flavor
         except (nova_exc.NotFound, exceptions.InvalidScenarioArgument):
@@ -273,8 +274,9 @@ class ImageValidOnFlavorValidator(FlavorExistsValidator):
                 }
                 return image
         try:
-            image_id = openstack_types.GlanceImage.transform(
-                clients=clients, resource_config=image_args)
+            image_processor = openstack_types.GlanceImage(
+                context={"admin": {"credential": clients.credential}})
+            image_id = image_processor.pre_process(image_args, config={})
             image = clients.glance().images.get(image_id)
             if hasattr(image, "to_dict"):
                 # NOTE(stpierre): Glance v1 images are objects that can be

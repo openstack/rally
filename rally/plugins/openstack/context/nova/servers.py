@@ -16,7 +16,6 @@ from rally.common import logging
 from rally.common import utils as rutils
 from rally.common import validation
 from rally.plugins.openstack.cleanup import manager as resource_manager
-from rally.plugins.openstack import osclients
 from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 from rally.plugins.openstack import types
 from rally.task import context
@@ -100,11 +99,10 @@ class ServerGenerator(context.Context):
                 kwargs["nics"] = [{"net-id": nic}
                                   for nic in self.config["nics"]]
 
-        clients = osclients.Clients(self.context["users"][0]["credential"])
-        image_id = types.GlanceImage.transform(clients=clients,
-                                               resource_config=image)
-        flavor_id = types.Flavor.transform(clients=clients,
-                                           resource_config=flavor)
+        image_id = types.GlanceImage(self.context).pre_process(
+            resource_spec=image, config={})
+        flavor_id = types.Flavor(self.context).pre_process(
+            resource_spec=flavor, config={})
 
         for iter_, (user, tenant_id) in enumerate(rutils.iterate_per_tenants(
                 self.context["users"])):
