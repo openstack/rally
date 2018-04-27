@@ -15,8 +15,6 @@
 
 from pbr import version as pbr_version
 
-from rally.common.db import schema
-
 RALLY_VENDOR = "OpenStack Foundation"
 RALLY_PRODUCT = "OpenStack Rally"
 RALLY_PACKAGE = None  # OS distro package version suffix
@@ -30,4 +28,6 @@ def version_string():
 
 
 def database_revision():
+    from rally.common.db import schema
+
     return schema.schema_revision(detailed=True)
