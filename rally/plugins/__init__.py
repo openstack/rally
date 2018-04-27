@@ -31,8 +31,6 @@ def load():
 
         opts.register()
 
-        discover.import_modules_from_package("rally.deployment.engines")
-        discover.import_modules_from_package("rally.deployment.serverprovider")
         discover.import_modules_from_package("rally.plugins.common")
         try:
             import rally_openstack  # noqa
@@ -45,7 +43,10 @@ def load():
             discover.import_modules_from_package("rally.plugins.openstack")
             discover.import_modules_from_package("rally.plugins.workload")
 
-        discover.import_modules_by_entry_point()
+        packages = discover.import_modules_by_entry_point()
+        for package in packages:
+            if "options" in package:
+                opts.register_options_from_path(package["options"])
 
         discover.load_plugins("/opt/rally/plugins/")
         discover.load_plugins(os.path.expanduser("~/.rally/plugins/"))

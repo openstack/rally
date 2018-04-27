@@ -138,6 +138,19 @@ class LoadExtraModulesTestCase(test.TestCase):
                                            mock_walk_packages, mock_importlib):
 
         class Package(object):
+            def __init__(self, name, version, entry_map):
+                self.get_entry_map_called = False
+                self.project_name = name
+                self.version = version
+                self.entry_map = entry_map
+
+            def get_entry_map(self, group):
+                if self.get_entry_map_called is not False:
+                    raise Exception("`get_entry_map` should be called once.")
+                self.get_entry_map_called = group
+                return self.entry_map.get(group, {})
+
+        class LoadedPackage(object):
             def __init__(self, name, path=None, file=None):
                 self.__name__ = name
                 if path is not None:
@@ -146,46 +159,67 @@ class LoadExtraModulesTestCase(test.TestCase):
                     self.__file__ = file
 
         class FakeEntryPoint(object):
-            def __init__(self, ep_name, package_name, package_path=None,
-                         package_file=None):
-                self.name = ep_name
-                self.module_name = self.name
-                self.dist = mock.Mock()
-                self.load = mock.Mock(return_value=Package(package_name,
-                                                           package_path,
-                                                           package_file))
+            def __init__(self, package_name=None, package_path=None,
+                         package_file=None, module_name=None, attrs=None):
+                self.load = mock.Mock(return_value=LoadedPackage(
+                    package_name, package_path, package_file))
+                self.module_name = module_name or str(uuid.uuid4())
+                self.attrs = attrs or tuple()
 
-        entry_points = [FakeEntryPoint("path", "plugin1", "/foo"),
-                        FakeEntryPoint("path", "plugin2", None, "/bar"),
-                        FakeEntryPoint("path", "plugin3", "/xxx", "/yyy"),
-                        FakeEntryPoint("foo", None),
-                        FakeEntryPoint("rally", None),
-                        FakeEntryPoint("path", "error", None)]
-        mock_pkg_resources.iter_entry_points.return_value = entry_points
+        mock_pkg_resources.working_set = [
+            Package("foo", "0.1", entry_map={}),
+            Package("plugin1", "0.2",
+                    entry_map={"rally_plugins": {
+                        "path": FakeEntryPoint("plugin1", package_path="/foo"),
+                        "foo": FakeEntryPoint("plugin1", package_path="/foo"),
+                        "options": FakeEntryPoint(module_name="foo.bar",
+                                                  attrs=("list_opts",))
+                    }}),
+            Package("plugin2", "0.2.1",
+                    entry_map={"rally_plugins": {
+                        "path": FakeEntryPoint("plugin2",
+                                               package_path=None,
+                                               package_file="/bar")
+                    }}),
+            Package("plugin3", "0.3",
+                    entry_map={"rally_plugins": {
+                        "path": FakeEntryPoint("plugin3",
+                                               package_path="/xxx",
+                                               package_file="/yyy")
+                    }}),
+            Package("error", "6.6.6",
+                    entry_map={"rally_plugins": {
+                        "path": FakeEntryPoint("error")
+                    }})
+        ]
 
-        def mock_import_module(name):
-            if name == "error":
-                raise KeyError()
-            else:
-                return mock.Mock()
-
-        mock_importlib.import_module.side_effect = mock_import_module
         # use random uuid to not have conflicts in sys.modules
         packages = [[(mock.Mock(), str(uuid.uuid4()), None)] for i in range(3)]
         mock_walk_packages.side_effect = packages
 
-        discover.import_modules_by_entry_point()
+        data = dict((p["name"], p)
+                    for p in discover.import_modules_by_entry_point())
+        for package in mock_pkg_resources.working_set:
+            self.assertEqual("rally_plugins", package.get_entry_map_called)
+            entry_map = package.entry_map.get("rally_plugins", {})
+            for ep_name, ep in entry_map.items():
+                if ep_name == "path":
+                    ep.load.assert_called_once_with()
+                    if package.project_name == "error":
+                        self.assertNotIn(package.project_name, data)
+                    else:
+                        self.assertIn(package.project_name, data)
+                        self.assertEqual(package.version,
+                                         data[package.project_name]["version"])
+                else:
+                    self.assertFalse(ep.load.called)
+                    if ep_name == "options":
+                        self.assertIn(package.project_name, data)
+                        self.assertEqual(
+                            "%s:%s" % (ep.module_name, ep.attrs[0]),
+                            data[package.project_name]["options"])
 
-        mock_pkg_resources.iter_entry_points.assert_called_once_with(
-            "rally_plugins")
-        entry_points[0].load.assert_called_once_with()
-        entry_points[1].load.assert_called_once_with()
-        entry_points[2].load.assert_called_once_with()
-        self.assertFalse(entry_points[3].load.called)
-        self.assertFalse(entry_points[4].load.called)
         self.assertEqual([mock.call("/foo", prefix="plugin1."),
                           mock.call(["/bar"], prefix="plugin2."),
                           mock.call("/xxx", prefix="plugin3.")],
                          mock_walk_packages.call_args_list)
-        self.assertEqual([mock.call(n[0][1]) for n in packages],
-                         mock_importlib.import_module.call_args_list)

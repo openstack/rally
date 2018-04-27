@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import importlib
+
 from rally.common import cfg
 from rally.common import logging
 from rally.plugins.openstack.cfg import opts as openstack_opts
@@ -41,6 +43,26 @@ def update_opt_defaults():
 
 
 _registered = False
+_registered_paths = []
+
+
+def register_options_from_path(path):
+    global _registered_paths
+    if path not in _registered_paths:
+        if ":" not in path:
+            return
+        module_name, function_name = path.split(":", 1)
+        try:
+            module = importlib.import_module(module_name)
+        except ImportError:
+            return
+        list_func = getattr(module, function_name, None)
+        if list_func is None:
+            return
+
+        options = list_func()
+        register_opts(options.items())
+        _registered_paths.append(path)
 
 
 def register_opts(opts):
