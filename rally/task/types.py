@@ -17,7 +17,6 @@ import abc
 import copy
 import operator
 import re
-import traceback
 
 import six
 
@@ -91,50 +90,8 @@ def preprocess(name, context, args):
     return processed_args
 
 
-def _pre_process_method(self, resource_spec, config):
-    """pre_process to transform adapter.
-
-    Adopts a call for a new style pre_process instance method if ResourceType
-    to old style(deprecated way) call to classmethod transform.
-    """
-    if resource_spec is None:
-        # previously, such arguments were skipped
-        return
-
-    from rally.plugins.openstack import osclients
-
-    clients = None
-    if self._context.get("admin"):
-        clients = osclients.Clients(self._context["admin"]["credential"])
-    elif self._context.get("users"):
-        clients = osclients.Clients(self._context["users"][0]["credential"])
-
-    return self.__class__.transform(clients=clients,
-                                    resource_config=resource_spec)
-
-
-class _OldTypesCompatMeta(type):
-
-    def __new__(mcs, name, parents, dct):
-        # check for old-style ResourceTypes
-        if "transform" in dct:
-            # check the case when plugin supports both old and new styles
-            if ("pre_process" not in dct
-                    or dct["pre_process"] == ResourceType.pre_process):
-                dct["pre_process"] = _pre_process_method
-
-                LOG.warning("ResourceType class %s implements an old "
-                            "interface which is deprecated since Rally 0.12 "
-                            "and which will be removed soon." % name)
-
-        return super(_OldTypesCompatMeta, mcs).__new__(mcs, name, parents, dct)
-
-
-_CombinedMeta = type("CombineMeta", (abc.ABCMeta, _OldTypesCompatMeta), {})
-
-
 @plugin.base()
-@six.add_metaclass(_CombinedMeta)
+@six.add_metaclass(abc.ABCMeta)
 class ResourceType(plugin.Plugin):
 
     def __init__(self, context, cache=None):
@@ -150,24 +107,6 @@ class ResourceType(plugin.Plugin):
         :param resource_spec: A specification of the resource from the task
         :param config: A configuration for preprocessing taken from the plugin
         """
-
-
-class DeprecatedBehaviourMixin(object):
-    """A Mixin class which returns deprecated `transform` method."""
-
-    @classmethod
-    def transform(cls, clients, resource_config):
-        caller = traceback.format_stack(limit=2)[0]
-        LOG.warning("Calling method `transform` of %s is deprecated:\n%s" %
-                    (cls.__name__, caller))
-        if clients:
-            # it doesn't matter "permission" of the user. it will pick the
-            # first one
-            context = {"admin": {"credential": clients.credential}}
-        else:
-            context = {}
-        self = cls(context, cache={})
-        return self.pre_process(resource_spec=resource_config, config={})
 
 
 def obj_from_name(resource_config, resources, typename):

@@ -161,7 +161,7 @@ class TaskCommandsTestCase(test.TestCase):
     def test_load_task_including_other_template(self):
         other_template_path = os.path.join(
             os.path.dirname(rally.__file__), os.pardir,
-            "samples/tasks/scenarios/nova/boot.json")
+            "samples/tasks/scenarios/dummy/dummy.json")
         input_task = "{%% include \"%s\" %%}" % os.path.basename(
             other_template_path)
         expect = self.task._load_and_validate_task(self.real_api,

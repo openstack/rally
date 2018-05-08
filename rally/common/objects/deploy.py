@@ -94,12 +94,6 @@ class Deployment(object):
         return self._env
 
     def __getitem__(self, key):
-        # TODO(astudenov): remove this in future releases
-        if key == "admin" or key == "users":
-            LOG.warning("deployment.%s is deprecated in Rally 0.9.0. "
-                        "Use deployment.get_credentials_for('openstack')"
-                        "['%s'] to get credentials." % (key, key))
-            return self.get_credentials_for("openstack")[key]
         if key == "status":
             status = self._env.status
             return _STATUS_NEW_TO_OLD.get(status, status)
@@ -160,16 +154,20 @@ class Deployment(object):
         all_credentials = {}
         for platform, credentials in self._all_credentials.items():
             if platform == "openstack":
-                from rally.plugins.openstack import credential
-
-                admin = credentials[0]["admin"]
-                if admin:
-                    admin = credential.OpenStackCredential(
-                        permission=consts.EndpointPermission.ADMIN, **admin)
-                all_credentials[platform] = [{
-                    "admin": admin,
-                    "users": [credential.OpenStackCredential(**user)
-                              for user in credentials[0]["users"]]}]
+                try:
+                    from rally_openstack import credential
+                except ImportError:
+                    all_credentials[platform] = credentials
+                else:
+                    admin = credentials[0]["admin"]
+                    if admin:
+                        admin = credential.OpenStackCredential(
+                            permission=consts.EndpointPermission.ADMIN,
+                            **admin)
+                    all_credentials[platform] = [{
+                        "admin": admin,
+                        "users": [credential.OpenStackCredential(**user)
+                                  for user in credentials[0]["users"]]}]
             else:
                 all_credentials[platform] = credentials
         return all_credentials

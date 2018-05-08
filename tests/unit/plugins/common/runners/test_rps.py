@@ -291,7 +291,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
 
         runner_obj.abort()
         runner_obj._run_scenario(fakes.FakeScenario, "do_it",
-                                 fakes.FakeUser().context, {})
+                                 {}, {})
 
         self.assertEqual(0, len(runner_obj.result_queue))
 
@@ -381,8 +381,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
 
             runner_obj = rps.RPSScenarioRunner(self.task, sample["input"])
 
-            runner_obj._run_scenario(fakes.FakeScenario, "do_it",
-                                     fakes.FakeUser().context, {})
+            runner_obj._run_scenario(fakes.FakeScenario, "do_it", {}, {})
 
             mock_cpu_count.assert_called_once_with()
             mock__log_debug_info.assert_called_once_with(

@@ -331,8 +331,7 @@ class TaskEngineTestCase(test.TestCase):
                 pass
 
         mock_task_instance = mock.MagicMock()
-        wconf1 = self._make_workload(name="SomeScen.scenario",
-                                     contexts={"users": {}})
+        wconf1 = self._make_workload(name="SomeScen.scenario")
         wconf2 = self._make_workload(name="SomeScen.scenario",
                                      position=1)
         subtask1 = {"workloads": [wconf1, wconf2]}

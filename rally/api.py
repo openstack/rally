@@ -137,16 +137,6 @@ class _Deployment(APIGroup):
     def get(self, deployment):
         return self._get(deployment).to_dict()
 
-    def service_list(self, deployment):
-        """Get the services list.
-
-        :param deployment: Deployment object
-        :returns: Service list
-        """
-        # TODO(astudenov): make this method platform independent
-        admin = deployment.get_credentials_for("openstack")["admin"]
-        return admin.list_services()
-
     def list(self, status=None, parent_uuid=None, name=None):
         """Get the deployments list.
 

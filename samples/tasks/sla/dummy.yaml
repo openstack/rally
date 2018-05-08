@@ -1,0 +1,18 @@
+---
+  Dummy.dummy:
+    -
+      args:
+        sleep: 5
+      runner:
+        type: "constant"
+        times: 20
+        concurrency: 5
+      sla:
+        max_seconds_per_iteration: 4.0
+        failure_rate:
+          max: 1
+        max_avg_duration: 3.0
+        outliers:
+          max: 1
+          min_iterations: 10
+          sigmas: 10

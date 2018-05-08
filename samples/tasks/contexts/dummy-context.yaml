@@ -1,5 +1,5 @@
 ---
-  Dummy.openstack:
+  Dummy.dummy:
     -
       args:
         sleep: 0.1
@@ -8,9 +8,6 @@
         times: 4
         concurrency: 2
       context:
-        users:
-          tenants: 1
-          users_per_tenant: 2
         dummy_context:
           fail_setup: false
           fail_cleanup: false

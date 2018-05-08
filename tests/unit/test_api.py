@@ -206,7 +206,7 @@ class TaskAPITestCase(test.TestCase):
     def test_render_template_include_other_template(self):
         other_template_path = os.path.join(
             os.path.dirname(__file__),
-            "..", "..", "samples/tasks/scenarios/nova/boot.json")
+            "..", "..", "samples/tasks/scenarios/dummy/dummy.json")
         template = "{%% include \"%s\" %%}" % os.path.basename(
             other_template_path)
         with open(other_template_path) as f:
@@ -884,14 +884,6 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
         env.check_health.assert_called_once_with()
         self.assertFalse(env.get_info.called)
 
-    def test_service_list(self):
-        fake_credential = fakes.fake_credential()
-        deployment = mock.Mock(spec=objects.Deployment)
-        deployment.get_credentials_for.return_value = {
-            "admin": fake_credential, "users": []}
-        result = self.deployment_inst.service_list(deployment=deployment)
-        self.assertEqual(fake_credential.list_services.return_value, result)
-
 
 class APITestCase(test.TestCase):
 
@@ -1404,12 +1396,9 @@ class VerifierAPITestCase(test.TestCase):
 
     @mock.patch("rally.cli.commands.verify.logging.is_debug",
                 return_value=False)
-    @mock.patch("rally.plugins.openstack.verification.tempest.manager."
-                "os.path.exists")
     @mock.patch("rally.api._Verifier._get")
     def test_configure_when_it_is_already_configured(self,
                                                      mock___verifier__get,
-                                                     mock_exists,
                                                      mock_is_debug):
         verifier_obj = mock___verifier__get.return_value
         verifier_id = "uuiiiidd"
@@ -1457,11 +1446,9 @@ class VerifierAPITestCase(test.TestCase):
 
     @mock.patch("rally.cli.commands.verify.logging.is_debug",
                 return_value=True)
-    @mock.patch("rally.plugins.openstack.verification.tempest.manager."
-                "os.path.exists")
     @mock.patch("rally.api._Verifier._get")
     def test_configure_when_it_is_already_configured_with_logging(
-            self, mock___verifier__get, mock_exists, mock_is_debug):
+            self, mock___verifier__get, mock_is_debug):
         verifier_obj = mock___verifier__get.return_value
         verifier_id = "uuiiiidd"
         deployment_id = "deployment"
@@ -1525,11 +1512,9 @@ class VerifierAPITestCase(test.TestCase):
                 self.assertIn("because verifier %s is in '%s' status"
                               % (verifier_obj, status), "%s" % e)
 
-    @mock.patch("rally.plugins.openstack.verification.tempest.manager."
-                "os.path.exists")
     @mock.patch("rally.api._Verifier._get")
     def test_override_config_when_it_is_already_configured(
-            self, mock___verifier__get, mock_exists):
+            self, mock___verifier__get):
         verifier_obj = mock___verifier__get.return_value
         verifier_id = "uuiiiidd"
         deployment_id = "deployment"

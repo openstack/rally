@@ -35,8 +35,23 @@ import rally
 from rally.common import db
 from rally.common.db import models
 from rally import consts
+from rally.task import context
 from tests.unit.common.db import test_migrations_base
 from tests.unit import test as rtest
+
+
+@context.configure(name="users", platform="testing", order=2)
+class UsersContext(context.Context):
+    def setup(self):
+        pass
+
+    def cleanup(self):
+        pass
+
+
+@context.configure(name="volumes", platform="testing", order=3)
+class UsersContext(UsersContext):
+    pass
 
 
 class MigrationTestCase(rtest.DBTestCase,
@@ -2167,6 +2182,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     deployment_table.c.uuid == deployment_uuid))
 
     def _pre_upgrade_dc46687661df(self, engine):
+
         deployment_table = db_utils.get_table(engine, "deployments")
         task_table = db_utils.get_table(engine, "tasks")
         subtask_table = db_utils.get_table(engine, "subtasks")
@@ -2310,10 +2326,10 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                             "description": mock.ANY,
                             "order_of_execution": {
                                 "note": mock.ANY,
-                                "order": ["users@openstack.setup",
-                                          "volumes@openstack.setup",
-                                          "volumes@openstack.cleanup",
-                                          "users@openstack.cleanup"]}},
+                                "order": ["users@testing.setup",
+                                          "volumes@testing.setup",
+                                          "volumes@testing.cleanup",
+                                          "users@testing.cleanup"]}},
                         "setup": {"started_at": 1483221600.0,
                                   "finished_at": 1483221601.99,
                                   "atomic_actions": [],

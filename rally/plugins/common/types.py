@@ -22,7 +22,7 @@ from rally.task import types
 
 
 @plugin.configure(name="path_or_url")
-class PathOrUrl(types.ResourceType, types.DeprecatedBehaviourMixin):
+class PathOrUrl(types.ResourceType):
     """Check whether file exists or url available."""
 
     def pre_process(self, resource_spec, config):
@@ -41,7 +41,7 @@ class PathOrUrl(types.ResourceType, types.DeprecatedBehaviourMixin):
 
 
 @plugin.configure(name="file")
-class FileType(types.ResourceType, types.DeprecatedBehaviourMixin):
+class FileType(types.ResourceType):
     """Return content of the file by its path."""
 
     def pre_process(self, resource_spec, config):
@@ -50,7 +50,7 @@ class FileType(types.ResourceType, types.DeprecatedBehaviourMixin):
 
 
 @plugin.configure(name="expand_user_path")
-class ExpandUserPath(types.ResourceType, types.DeprecatedBehaviourMixin):
+class ExpandUserPath(types.ResourceType):
     """Expands user path."""
 
     def pre_process(self, resource_spec, config):
@@ -58,7 +58,7 @@ class ExpandUserPath(types.ResourceType, types.DeprecatedBehaviourMixin):
 
 
 @plugin.configure(name="file_dict")
-class FileTypeDict(types.ResourceType, types.DeprecatedBehaviourMixin):
+class FileTypeDict(types.ResourceType):
     """Return the dictionary of items with file path and file content."""
 
     def pre_process(self, resource_spec, config):

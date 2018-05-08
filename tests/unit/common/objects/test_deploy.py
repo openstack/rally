@@ -95,79 +95,6 @@ class DeploymentTestCase(test.TestCase):
 
         self.assertEqual({"openstack", "foo"}, set(deploy.get_platforms()))
 
-    @mock.patch("rally.common.objects.Deployment.get_all_credentials")
-    def test_get_credentials_for(self, mock_get_all_credentials):
-        mock_get_all_credentials.return_value = {
-            "foo": ["bar"]
-        }
-
-        deploy = objects.Deployment(deployment=self.env)
-
-        self.assertEqual("bar", deploy.get_credentials_for("foo"))
-
-    def test_get_credentials_for_default(self):
-        deploy = objects.Deployment(deployment=self.env)
-        creds = deploy.get_credentials_for("default")
-        self.assertEqual({"admin": None, "users": []}, creds)
-
-    @mock.patch("rally.plugins.openstack.credential.OpenStackCredential")
-    def test_get_all_credentials(self, mock_open_stack_credential):
-        openstack_cred = mock_open_stack_credential
-        openstack_admin = {"openstack": "admin"}
-        openstack_user_1 = {"openstack": "user1"}
-        openstack_user_2 = {"openstack": "user2"}
-
-        deploy = objects.Deployment(deployment=self.env)
-        deploy._all_credentials = {
-            "openstack": [{"admin": openstack_admin,
-                           "users": [openstack_user_1, openstack_user_2]}],
-            "foo": ["something"]
-        }
-
-        self.assertEqual(
-            {
-                "openstack": [
-                    {"admin": openstack_cred.return_value,
-                     "users": [openstack_cred.return_value,
-                               openstack_cred.return_value]}],
-                "foo": ["something"]},
-            deploy.get_all_credentials())
-
-        self.assertEqual([mock.call(permission=consts.EndpointPermission.ADMIN,
-                                    **openstack_admin),
-                          mock.call(**openstack_user_1),
-                          mock.call(**openstack_user_2)],
-                         openstack_cred.call_args_list)
-
-        deploy._all_credentials = {
-            "openstack": [{"admin": None,
-                           "users": [openstack_user_1, openstack_user_2]}]}
-
-        self.assertEqual(
-            {
-                "openstack": [
-                    {"admin": None,
-                     "users": [openstack_cred.return_value,
-                               openstack_cred.return_value]}]},
-            deploy.get_all_credentials())
-
-    @mock.patch("rally.plugins.openstack.credential.OpenStackCredential")
-    def test_get_deprecated(self, mock_open_stack_credential):
-        credential_inst = mock_open_stack_credential.return_value
-
-        deploy = objects.Deployment(deployment=self.env)
-        deploy._all_credentials = {
-            "openstack": [{"admin": {"fake_admin": True},
-                           "users": [{"fake_user": True}]}]}
-
-        self.assertEqual(credential_inst, deploy["admin"])
-        self.assertEqual([credential_inst], deploy["users"])
-
-    def test_get_credentials_error(self):
-        deploy = objects.Deployment(deployment=self.env)
-        self.assertRaises(exceptions.RallyException,
-                          deploy.get_credentials_for, "bar")
-
     def test_to_dict(self):
         env = mock.Mock(
             status=env_mgr.STATUS.READY,
@@ -267,3 +194,23 @@ class DeploymentTestCase(test.TestCase):
                     "https_insecure": False,
                     "region_name": "FooRegionOne"}},
             deploy["config"])
+
+    @mock.patch("rally.common.objects.Deployment.get_all_credentials")
+    def test_get_credentials_for(self, mock_get_all_credentials):
+        mock_get_all_credentials.return_value = {
+            "foo": ["bar"]
+        }
+
+        deploy = objects.Deployment(deployment=self.env)
+
+        self.assertEqual("bar", deploy.get_credentials_for("foo"))
+
+    def test_get_credentials_for_default(self):
+        deploy = objects.Deployment(deployment=self.env)
+        creds = deploy.get_credentials_for("default")
+        self.assertEqual({"admin": None, "users": []}, creds)
+
+    def test_get_credentials_error(self):
+        deploy = objects.Deployment(deployment=self.env)
+        self.assertRaises(exceptions.RallyException,
+                          deploy.get_credentials_for, "bar")

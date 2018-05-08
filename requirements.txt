@@ -23,31 +23,3 @@ requests>=2.14.2                                       # Apache License, Version
 SQLAlchemy>=1.0.10,!=1.1.5,!=1.1.6,!=1.1.7,!=1.1.8     # MIT
 six>=1.10.0                                            # MIT
 virtualenv>=14.0.6                                     # MIT
-
-# OpenStack related
-boto>=2.32.1                                           # MIT
-gnocchiclient>=3.3.1                                   # Apache Software License
-keystoneauth1>=3.3.0                                   # Apache Software License
-os-faults>=0.1.15                                      # Apache Software License
-osprofiler>=1.4.0                                      # Apache Software License
-python-ceilometerclient>=2.5.0                         # Apache Software License
-python-cinderclient>=3.3.0                             # Apache Software License
-python-designateclient>=2.7.0                          # Apache License, Version 2.0
-python-heatclient>=1.10.0                              # Apache Software License
-python-glanceclient>=2.8.0                             # Apache License, Version 2.0
-python-ironicclient>=2.2.0                             # Apache Software License
-python-keystoneclient>=3.8.0                           # Apache Software License
-python-magnumclient>=2.1.0                             # Apache Software License
-python-manilaclient>=1.16.0                            # Apache Software License
-python-mistralclient>=3.1.0                            # Apache Software License
-python-muranoclient>=0.8.2                             # Apache License, Version 2.0
-python-monascaclient>=1.7.0                            # Apache Software License
-python-neutronclient>=6.3.0                            # Apache Software License
-python-novaclient>=9.1.0                               # Apache License, Version 2.0
-python-saharaclient>=1.4.0                             # Apache License, Version 2.0
-python-senlinclient>=1.1.0                             # Apache Software License
-python-swiftclient>=3.2.0                              # Apache Software License
-python-troveclient>=2.2.0                              # Apache Software License
-python-watcherclient>=1.1.0                            # Apache Software License
-python-zaqarclient>=1.0.0                              # Apache Software License
-kubernetes>1.0.0                                       # Apache License Version 2.0

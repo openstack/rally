@@ -1,8 +1,0 @@
-  Authenticate.keystone:
-    -
-      context:
-        {{ user_context(tenants_amount, users_amount, use_existing_users) }}
-      runner:
-        {{ rps_runner(rps=15*controllers_amount, times=20000*controllers_amount, is_smoke=smoke) }}
-      sla:
-        {{ no_failures_sla() }}

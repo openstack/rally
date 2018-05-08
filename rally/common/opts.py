@@ -16,7 +16,6 @@ import importlib
 
 from rally.common import cfg
 from rally.common import logging
-from rally.plugins.openstack.cfg import opts as openstack_opts
 from rally.task import engine
 
 CONF = cfg.CONF
@@ -25,10 +24,6 @@ CONF = cfg.CONF
 def list_opts():
 
     merged_opts = {"DEFAULT": []}
-    for category, options in openstack_opts.list_opts().items():
-        merged_opts.setdefault(category, [])
-        merged_opts[category].extend(options)
-
     merged_opts["DEFAULT"].extend(logging.DEBUG_OPTS)
     merged_opts["DEFAULT"].extend(engine.TASK_ENGINE_OPTS)
 

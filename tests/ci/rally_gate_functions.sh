@@ -7,6 +7,8 @@ RALLY_EXTRA_DIR=~/.rally/extra
 function setUp () {
     set -x
 
+    sudo pip install rally_openstack
+
     JOB_DIR=$1
 
     mkdir -p $RALLY_PLUGINS_DIR
@@ -117,8 +119,6 @@ function run () {
         PYTHON=python
     fi
 
-    $PYTHON $RALLY_DIR/tests/ci/osresources.py --dump-list resources_at_start.txt
-
     set +e
     rally --rally-debug task start --task $TASK $TASK_ARGS
     retval=$?
@@ -154,16 +154,6 @@ function run () {
     rally task sla-check | tee rally-plot/sla.txt
     retval=$?
     set -e
-
-    cp resources_at_start.txt rally-plot/
-    if [ "$ZUUL_PROJECT" == "openstack/rally" ];then
-        $PYTHON $RALLY_DIR/tests/ci/osresources.py\
-            --compare-with-list resources_at_start.txt
-    else
-        $PYTHON $RALLY_DIR/tests/ci/osresources.py\
-            --compare-with-list resources_at_start.txt\
-                | gzip > rally-plot/resources_diff.txt.gz
-    fi
 
     exit $retval
 }
