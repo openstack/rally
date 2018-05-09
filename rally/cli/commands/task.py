@@ -123,12 +123,12 @@ OLD_TASK_RESULT_SCHEMA = {
 
 
 class FailedToLoadTask(exceptions.RallyException):
-    error_code = 472
+    error_code = 117
     msg_fmt = "Invalid %(source)s passed:\n\n\t %(msg)s"
 
 
 class FailedToLoadResults(exceptions.RallyException):
-    error_code = 529
+    error_code = 225
     msg_fmt = "ERROR: Invalid task result format in %(source)s\n\n\t%(msg)s"
 
 

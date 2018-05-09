@@ -269,7 +269,7 @@ class CliUtilsTestCase(test.TestCase):
         ret = cliutils.run(["rally", "task", "status", "%s" % FAKE_TASK_UUID],
                            self.categories)
         self.assertTrue(mock_task_get.called)
-        self.assertEqual(404, ret)
+        self.assertEqual(203, ret)
 
     @mock.patch("rally.api.API.check_db_revision")
     @mock.patch("rally.cli.cliutils.validate_args",
