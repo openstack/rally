@@ -8,7 +8,7 @@ Rally v0.11.2
 
 * OpenStack plugins moved to the separate
   `repo <https://github.com/openstack/rally-openstack>`_ and
-  `package <https://pypi.python.org/pypi/rally-openstack>`_ .
+  `package <https://pypi.org/project/rally-openstack>`_ .
   In-tree OpenStack plugins are deprecated now and will be removed soon. All
   further development should be done in the new repository.
 
