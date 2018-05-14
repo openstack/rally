@@ -65,8 +65,8 @@ def import_modules_from_package(package):
                 sys.modules[module_name] = importlib.import_module(module_name)
 
 
-def import_modules_by_entry_point():
-    """Import plugins by entry-point 'rally_plugins'."""
+def find_packages_by_entry_point():
+    """Find all packages with rally_plugins entry-point"""
     loaded_packages = []
 
     for package in pkg_resources.working_set:
@@ -79,6 +79,30 @@ def import_modules_by_entry_point():
 
         if "path" in entry_map:
             ep = entry_map["path"]
+            package_info["plugins_path"] = ep.module_name
+        if "options" in entry_map:
+            ep = entry_map["options"]
+            package_info["options"] = "%s:%s" % (
+                ep.module_name,
+                ep.attrs[0] if ep.attrs else "list_opts",
+            )
+
+        if package_info:
+            package_info.update(
+                name=package.project_name,
+                version=package.version)
+            loaded_packages.append(package_info)
+    return loaded_packages
+
+
+def import_modules_by_entry_point(_packages=None):
+    """Import plugins by entry-point 'rally_plugins'."""
+    loaded_packages = _packages or find_packages_by_entry_point()
+
+    for package in loaded_packages:
+        if "plugins_path" in package:
+            em = pkg_resources.get_entry_map(package["name"])
+            ep = em["rally_plugins"]["path"]
             try:
                 m = ep.load()
                 if hasattr(m, "__path__"):
@@ -93,26 +117,12 @@ def import_modules_by_entry_point():
                 msg = ("\t Failed to load plugins from module '%(module)s' "
                        "(package: '%(package)s')" %
                        {"module": ep.module_name,
-                        "package": "%s %s" % (package.project_name,
-                                              package.version)})
+                        "package": "%s %s" % (package["name"],
+                                              package["version"])})
                 if logging.is_debug():
                     LOG.exception(msg)
                 else:
                     LOG.warning(msg + (": %s" % six.text_type(e)))
-            else:
-                package_info["plugins_path"] = ep.module_name
-        if "options" in entry_map:
-            ep = entry_map["options"]
-            package_info["options"] = "%s:%s" % (
-                ep.module_name,
-                ep.attrs[0] if ep.attrs else "list_opts",
-            )
-
-        if package_info:
-            package_info.update(
-                name=package.project_name,
-                version=package.version)
-            loaded_packages.append(package_info)
     return loaded_packages
 
 

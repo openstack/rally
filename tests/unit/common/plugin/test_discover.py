@@ -193,6 +193,14 @@ class LoadExtraModulesTestCase(test.TestCase):
                     }})
         ]
 
+        def mock_get_entry_map(name, group=None):
+            self.assertIsNone(group)
+            for p in mock_pkg_resources.working_set:
+                if p.project_name == name:
+                    return p.entry_map
+
+        mock_pkg_resources.get_entry_map.side_effect = mock_get_entry_map
+
         # use random uuid to not have conflicts in sys.modules
         packages = [[(mock.Mock(), str(uuid.uuid4()), None)] for i in range(3)]
         mock_walk_packages.side_effect = packages
@@ -205,12 +213,9 @@ class LoadExtraModulesTestCase(test.TestCase):
             for ep_name, ep in entry_map.items():
                 if ep_name == "path":
                     ep.load.assert_called_once_with()
-                    if package.project_name == "error":
-                        self.assertNotIn(package.project_name, data)
-                    else:
-                        self.assertIn(package.project_name, data)
-                        self.assertEqual(package.version,
-                                         data[package.project_name]["version"])
+                    self.assertIn(package.project_name, data)
+                    self.assertEqual(package.version,
+                                     data[package.project_name]["version"])
                 else:
                     self.assertFalse(ep.load.called)
                     if ep_name == "options":

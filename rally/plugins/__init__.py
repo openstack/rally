@@ -43,10 +43,11 @@ def load():
             discover.import_modules_from_package("rally.plugins.openstack")
             discover.import_modules_from_package("rally.plugins.workload")
 
-        packages = discover.import_modules_by_entry_point()
+        packages = discover.find_packages_by_entry_point()
         for package in packages:
             if "options" in package:
                 opts.register_options_from_path(package["options"])
+        discover.import_modules_by_entry_point(_packages=packages)
 
         discover.load_plugins("/opt/rally/plugins/")
         discover.load_plugins(os.path.expanduser("~/.rally/plugins/"))
