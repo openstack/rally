@@ -35,8 +35,8 @@ PYTHON=${PYTHON2:-$PYTHON3}
 VIRTUALENV_VERSION="15.1.0"
 VIRTUALENV_URL="https://raw.github.com/pypa/virtualenv/$VIRTUALENV_VERSION/virtualenv.py"
 
-RALLY_GIT_URL="https://git.openstack.org/openstack/rally"
-RALLY_GIT_BRANCH="master"
+RALLY_GIT_URL="https://github.com/noironetworks/rally"
+RALLY_GIT_BRANCH="noiro-master"
 RALLY_CONFIGURATION_DIR=/etc/rally
 RALLY_DATABASE_DIR=/var/lib/rally/database
 DBTYPE=sqlite
