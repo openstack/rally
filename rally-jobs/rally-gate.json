@@ -1,0 +1,545 @@
+{
+  "version": 2, 
+  "title": "", 
+  "description": "", 
+  "subtasks": [
+    {
+      "title": "NeutronNetworks.create_and_list_networks", 
+      "description": "", 
+      "workloads": [
+        {
+          "scenario": {
+            "NeutronNetworks.create_and_list_networks": {}
+          }, 
+          "description": "Create a network and then list all networks.", 
+          "contexts": {
+            "users": {
+              "users_per_tenant": 1, 
+              "tenants": 1
+            }, 
+            "quotas": {
+              "neutron": {
+                "network": 119
+              }
+            }
+          }, 
+          "runner": {
+            "constant": {
+              "concurrency": 20, 
+              "times": 100
+            }
+          }, 
+          "hooks": [], 
+          "sla": {
+            "max_avg_duration_per_atomic": {
+              "neutron.list_networks": 15
+            }, 
+            "failure_rate": {
+              "max": 0
+            }
+          }
+        }
+      ]
+    }, 
+    {
+      "title": "NeutronNetworks.create_and_list_subnets", 
+      "description": "", 
+      "workloads": [
+        {
+          "scenario": {
+            "NeutronNetworks.create_and_list_subnets": {
+              "subnets_per_network": 2
+            }
+          }, 
+          "description": "Create and a given number of subnets and list all subnets.", 
+          "contexts": {
+            "users": {
+              "users_per_tenant": 1, 
+              "tenants": 1
+            }, 
+            "quotas": {
+              "neutron": {
+                "subnet": -1, 
+                "network": -1
+              }
+            }
+          }, 
+          "runner": {
+            "constant": {
+              "concurrency": 20, 
+              "times": 40
+            }
+          }, 
+          "hooks": [], 
+          "sla": {
+            "failure_rate": {
+              "max": 0
+            }
+          }
+        }
+      ]
+    }, 
+    {
+      "title": "NeutronNetworks.create_and_list_routers", 
+      "description": "", 
+      "workloads": [
+        {
+          "scenario": {
+            "NeutronNetworks.create_and_list_routers": {
+              "network_create_args": null, 
+              "subnet_cidr_start": "1.1.0.0/30", 
+              "subnets_per_network": 1, 
+              "subnet_create_args": null, 
+              "router_create_args": null
+            }
+          }, 
+          "description": "Create and a given number of routers and list all routers.", 
+          "contexts": {
+            "users": {
+              "users_per_tenant": 1, 
+              "tenants": 1
+            }, 
+            "quotas": {
+              "neutron": {
+                "subnet": -1, 
+                "network": -1, 
+                "router": -1
+              }
+            }
+          }, 
+          "runner": {
+            "constant": {
+              "concurrency": 20, 
+              "times": 40
+            }
+          }, 
+          "hooks": [], 
+          "sla": {
+            "failure_rate": {
+              "max": 0
+            }
+          }
+        }
+      ]
+    }, 
+    {
+      "title": "NeutronNetworks.create_and_list_ports", 
+      "description": "", 
+      "workloads": [
+        {
+          "scenario": {
+            "NeutronNetworks.create_and_list_ports": {
+              "network_create_args": null, 
+              "ports_per_network": 50, 
+              "port_create_args": null
+            }
+          }, 
+          "description": "Create and a given number of ports and list all ports.", 
+          "contexts": {
+            "users": {
+              "users_per_tenant": 1, 
+              "tenants": 1
+            }, 
+            "quotas": {
+              "neutron": {
+                "port": 811, 
+                "subnet": -1, 
+                "network": -1, 
+                "router": -1
+              }
+            }
+          }, 
+          "runner": {
+            "constant": {
+              "concurrency": 4, 
+              "times": 8
+            }
+          }, 
+          "hooks": [], 
+          "sla": {
+            "max_avg_duration_per_atomic": {
+              "neutron.list_ports": 15
+            }, 
+            "failure_rate": {
+              "max": 0
+            }
+          }
+        }
+      ]
+    }, 
+    {
+      "title": "NeutronNetworks.create_and_update_networks", 
+      "description": "", 
+      "workloads": [
+        {
+          "scenario": {
+            "NeutronNetworks.create_and_update_networks": {
+              "network_create_args": {}, 
+              "network_update_args": {
+                "name": "_updated", 
+                "admin_state_up": false
+              }
+            }
+          }, 
+          "description": "Create and update a network.", 
+          "contexts": {
+            "users": {
+              "users_per_tenant": 1, 
+              "tenants": 1
+            }, 
+            "quotas": {
+              "neutron": {
+                "network": -1
+              }
+            }
+          }, 
+          "runner": {
+            "constant": {
+              "concurrency": 20, 
+              "times": 40
+            }
+          }, 
+          "hooks": [], 
+          "sla": {
+            "failure_rate": {
+              "max": 0
+            }
+          }
+        }
+      ]
+    }, 
+    {
+      "title": "NeutronNetworks.create_and_update_subnets", 
+      "description": "", 
+      "workloads": [
+        {
+          "scenario": {
+            "NeutronNetworks.create_and_update_subnets": {
+              "network_create_args": {}, 
+              "subnet_cidr_start": "1.4.0.0/16", 
+              "subnets_per_network": 2, 
+              "subnet_create_args": {}, 
+              "subnet_update_args": {
+                "name": "_subnet_updated", 
+                "enable_dhcp": true
+              }
+            }
+          }, 
+          "description": "Create and update a subnet.", 
+          "contexts": {
+            "users": {
+              "users_per_tenant": 5, 
+              "tenants": 1
+            }, 
+            "quotas": {
+              "neutron": {
+                "subnet": -1, 
+                "network": -1, 
+                "port": -1
+              }
+            }
+          }, 
+          "runner": {
+            "constant": {
+              "concurrency": 20, 
+              "times": 100
+            }
+          }, 
+          "hooks": [], 
+          "sla": {
+            "failure_rate": {
+              "max": 0
+            }
+          }
+        }
+      ]
+    }, 
+    {
+      "title": "NeutronNetworks.create_and_update_routers", 
+      "description": "", 
+      "workloads": [
+        {
+          "scenario": {
+            "NeutronNetworks.create_and_update_routers": {
+              "subnets_per_network": 1, 
+              "subnet_cidr_start": "1.1.0.0/30", 
+              "network_create_args": {}, 
+              "subnet_create_args": {}, 
+              "router_update_args": {
+                "name": "_router_updated", 
+                "admin_state_up": false
+              }, 
+              "router_create_args": {}
+            }
+          }, 
+          "description": "Create and update a given number of routers.", 
+          "contexts": {
+            "users": {
+              "users_per_tenant": 1, 
+              "tenants": 1
+            }, 
+            "quotas": {
+              "neutron": {
+                "subnet": -1, 
+                "network": -1, 
+                "router": -1
+              }
+            }
+          }, 
+          "runner": {
+            "constant": {
+              "concurrency": 20, 
+              "times": 40
+            }
+          }, 
+          "hooks": [], 
+          "sla": {
+            "failure_rate": {
+              "max": 0
+            }
+          }
+        }
+      ]
+    }, 
+    {
+      "title": "NeutronNetworks.create_and_update_ports", 
+      "description": "", 
+      "workloads": [
+        {
+          "scenario": {
+            "NeutronNetworks.create_and_update_ports": {
+              "network_create_args": {}, 
+              "ports_per_network": 5, 
+              "port_create_args": {}, 
+              "port_update_args": {
+                "device_owner": "dummy_owner", 
+                "device_id": "dummy_id", 
+                "name": "_port_updated", 
+                "admin_state_up": false
+              }
+            }
+          }, 
+          "description": "Create and update a given number of ports.", 
+          "contexts": {
+            "users": {
+              "users_per_tenant": 1, 
+              "tenants": 1
+            }, 
+            "quotas": {
+              "neutron": {
+                "network": -1, 
+                "port": -1
+              }
+            }
+          }, 
+          "runner": {
+            "constant": {
+              "concurrency": 20, 
+              "times": 40
+            }
+          }, 
+          "hooks": [], 
+          "sla": {
+            "failure_rate": {
+              "max": 0
+            }
+          }
+        }
+      ]
+    }, 
+    {
+      "title": "NeutronNetworks.create_and_delete_networks", 
+      "description": "", 
+      "workloads": [
+        {
+          "scenario": {
+            "NeutronNetworks.create_and_delete_networks": {
+              "network_create_args": {}
+            }
+          }, 
+          "description": "Create and delete a network.", 
+          "contexts": {
+            "users": {
+              "users_per_tenant": 1, 
+              "tenants": 1
+            }, 
+            "quotas": {
+              "neutron": {
+                "subnet": -1, 
+                "network": -1
+              }
+            }
+          }, 
+          "runner": {
+            "constant": {
+              "concurrency": 20, 
+              "times": 40
+            }
+          }, 
+          "hooks": [], 
+          "sla": {
+            "failure_rate": {
+              "max": 0
+            }
+          }
+        }
+      ]
+    }, 
+    {
+      "title": "NeutronNetworks.create_and_delete_subnets", 
+      "description": "", 
+      "workloads": [
+        {
+          "scenario": {
+            "NeutronNetworks.create_and_delete_subnets": {
+              "network_create_args": {}, 
+              "subnet_cidr_start": "1.1.0.0/30", 
+              "subnets_per_network": 2, 
+              "subnet_create_args": {}
+            }
+          }, 
+          "description": "Create and delete a given number of subnets.", 
+          "contexts": {
+            "users": {
+              "users_per_tenant": 1, 
+              "tenants": 1
+            }, 
+            "quotas": {
+              "neutron": {
+                "subnet": -1, 
+                "network": -1
+              }
+            }
+          }, 
+          "runner": {
+            "constant": {
+              "concurrency": 20, 
+              "times": 40
+            }
+          }, 
+          "hooks": [], 
+          "sla": {
+            "failure_rate": {
+              "max": 0
+            }
+          }
+        }
+      ]
+    }, 
+    {
+      "title": "NeutronNetworks.create_and_delete_routers", 
+      "description": "", 
+      "workloads": [
+        {
+          "scenario": {
+            "NeutronNetworks.create_and_delete_routers": {
+              "network_create_args": {}, 
+              "subnet_cidr_start": "1.1.0.0/30", 
+              "subnets_per_network": 1, 
+              "subnet_create_args": {}, 
+              "router_create_args": {}
+            }
+          }, 
+          "description": "Create and delete a given number of routers.", 
+          "contexts": {
+            "users": {
+              "users_per_tenant": 1, 
+              "tenants": 1
+            }, 
+            "quotas": {
+              "neutron": {
+                "subnet": -1, 
+                "network": -1, 
+                "router": -1
+              }
+            }
+          }, 
+          "runner": {
+            "constant": {
+              "concurrency": 20, 
+              "times": 40
+            }
+          }, 
+          "hooks": [], 
+          "sla": {
+            "failure_rate": {
+              "max": 0
+            }
+          }
+        }
+      ]
+    }, 
+    {
+      "title": "NeutronNetworks.create_and_delete_ports", 
+      "description": "", 
+      "workloads": [
+        {
+          "scenario": {
+            "NeutronNetworks.create_and_delete_ports": {
+              "network_create_args": {}, 
+              "ports_per_network": 5, 
+              "port_create_args": {}
+            }
+          }, 
+          "description": "Create and delete a port.", 
+          "contexts": {
+            "users": {
+              "users_per_tenant": 1, 
+              "tenants": 1
+            }, 
+            "quotas": {
+              "neutron": {
+                "network": -1, 
+                "port": -1
+              }
+            }
+          }, 
+          "runner": {
+            "constant": {
+              "concurrency": 20, 
+              "times": 40
+            }
+          }, 
+          "hooks": [], 
+          "sla": {
+            "failure_rate": {
+              "max": 0
+            }
+          }
+        }
+      ]
+    }, 
+    {
+      "title": "Quotas.neutron_update", 
+      "description": "", 
+      "workloads": [
+        {
+          "scenario": {
+            "Quotas.neutron_update": {
+              "max_quota": 1024
+            }
+          }, 
+          "description": "Update quotas for neutron.", 
+          "contexts": {
+            "users": {
+              "users_per_tenant": 1, 
+              "tenants": 20
+            }
+          }, 
+          "runner": {
+            "constant": {
+              "concurrency": 20, 
+              "times": 40
+            }
+          }, 
+          "hooks": [], 
+          "sla": {
+            "failure_rate": {
+              "max": 0
+            }
+          }
+        }
+      ]
+    } 
+  ]
+}
