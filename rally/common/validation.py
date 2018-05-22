@@ -73,48 +73,64 @@ class Validator(plugin.Plugin):
         return doc
 
 
-# TODO(andreykurilin): Get rid of hardcode to "admin"/"users" properties as
-#   soon as we finish "Platforms" work.
 @configure(name="required_platform")
 class RequiredPlatformValidator(Validator):
 
-    def __init__(self, platform, admin=False, users=False):
-        """Validates credentials for specified platform.
-
-        This allows us to create 4 kind of tests cases:
-        1) platform independent (validator is not specified)
-        2) requires platform with admin
-        3) requires platform with admin + users
-        4) requires platform with users
+    def __init__(self, platform, **kwargs):
+        """Validates specification of specified platform for the workload.
 
         :param platform: name of the platform
-        :param admin: requires admin credential
-        :param users: requires user credentials
         """
         super(RequiredPlatformValidator, self).__init__()
         self.platform = platform
-        self.admin = admin
-        self.users = users
+        self._kwargs = kwargs
 
     def validate(self, context, config, plugin_cls, plugin_cfg):
-        if not (self.admin or self.users):
-            self.fail("You should specify admin=True or users=True or both.")
+        try:
+            pvalidator_cls = RequiredPlatformValidator.get(
+                "required_platform",
+                platform=self.platform,
+                allow_hidden=True)
+        except exceptions.PluginNotFound:
+            # There is no specific validation for this platform
 
-        if context is None:
-            context = {"platforms": {}}
-        context = context["platforms"].get(self.platform, {})
+            if self.platform not in context["platforms"]:
+                self.fail("There is no specification for %s platform in "
+                          "selected environment." % self.platform)
 
-        if self.admin and context.get("admin") is None:
-            self.fail("No admin credential for %s" % self.platform)
-        if self.users and len(context.get("users", ())) == 0:
-            if context.get("admin") is None:
-                self.fail("No user credentials for %s" % self.platform)
-            else:
-                # NOTE(andreykurilin): It is a case when the plugin requires
-                #   'users' for launching, but there are no specified users in
-                #   deployment. Let's assume that 'users' context can create
-                #   them via admin user and do not fail."
-                pass
+            if self.platform == "openstack":
+                # NOTE(andreykurilin): We had in-tree openstack plugins for a
+                #   long time. It will be a hard task to remove this logic
+                #   easily, since even rally-openstack project (the new
+                #   location for openstack plugins) use common
+                #   "required_platform" validator.
+                admin = self._kwargs.get("admin", False)
+                users = self._kwargs.get("users", False)
+                if not (admin or users):
+                    self.fail(
+                        "You should specify admin=True or users=True or both "
+                        "for validating openstack platform.")
+
+                context = context["platforms"].get(self.platform, {})
+
+                if admin and context.get("admin") is None:
+                    self.fail("No admin credential for %s" % self.platform)
+                if users and len(context.get("users", ())) == 0:
+                    if context.get("admin") is None:
+                        self.fail("No user credentials for %s" % self.platform)
+                    else:
+                        # NOTE(andreykurilin): It is a case when the plugin
+                        #   requires 'users' for launching, but there are no
+                        #   specified users in deployment. Let's assume that
+                        #   'users' context can create them via admin user
+                        #   and do not fail."
+                        pass
+        else:
+            pvalidator = pvalidator_cls(**self._kwargs)
+            pvalidator.validate(context=context,
+                                config=config,
+                                plugin_cls=plugin_cls,
+                                plugin_cfg=plugin_cfg)
 
 
 def add(name, **kwargs):
