@@ -100,13 +100,15 @@ class ValidatorTestCase(test.TestCase):
 class RequiredPlatformValidatorTestCase(test.TestCase):
 
     @ddt.data(
-        {"kwargs": {"platform": "foo", "admin": True},
-         "context": {"platforms": {"foo": {"admin": "fake_admin"}}}},
-        {"kwargs": {"platform": "foo", "admin": True, "users": True},
-         "context": {"platforms": {"foo": {"admin": "fake_admin"}}}},
-        {"kwargs": {"platform": "foo", "admin": True, "users": True},
-         "context": {"platforms": {"foo": {"admin": "fake_admin",
-                                           "users": ["fake_user"]}}}}
+        {"kwargs": {"platform": "foo"},
+         "context": {"platforms": {"foo": {}}}},
+        {"kwargs": {"platform": "openstack", "admin": True},
+         "context": {"platforms": {"openstack": {"admin": "fake_admin"}}}},
+        {"kwargs": {"platform": "openstack", "admin": True, "users": True},
+         "context": {"platforms": {"openstack": {"admin": "fake_admin"}}}},
+        {"kwargs": {"platform": "openstack", "admin": True, "users": True},
+         "context": {"platforms": {"openstack": {"admin": "fake_admin",
+                                                 "users": ["fake_user"]}}}}
     )
     @ddt.unpack
     def test_validator(self, kwargs, context):
@@ -114,21 +116,23 @@ class RequiredPlatformValidatorTestCase(test.TestCase):
         validator.validate(context, None, None, None)
 
     @ddt.data(
+        {"kwargs": {"platform": "openstack", "admin": True},
+         "context": {"platforms": {"openstack": {}}},
+         "error_msg": "No admin credential for openstack"},
+        {"kwargs": {"platform": "openstack", "users": True},
+         "context": {"platforms": {"openstack": {}}},
+         "error_msg": "No user credentials for openstack"},
+        {"kwargs": {"platform": "openstack"},
+         "context": {"platforms": {"openstack": {}}},
+         "error_msg": "You should specify admin=True or users=True or both "
+                      "for validating openstack platform."},
         {"kwargs": {"platform": "foo"},
-         "context": {},
-         "error_msg": "You should specify admin=True or users=True or both."},
-        {"kwargs": {"platform": "foo", "admin": True},
          "context": {"platforms": {}},
-         "error_msg": "No admin credential for foo"},
-        {"kwargs": {"platform": "foo", "admin": True, "users": True},
-         "context": {"platforms": {"foo": {"users": ["fake_user"]}}},
-         "error_msg": "No admin credential for foo"},
-        {"kwargs": {"platform": "foo", "users": True},
-         "context": {"platforms": {"foo": {}}},
-         "error_msg": "No user credentials for foo"}
+         "error_msg": "There is no specification for foo platform in "
+                      "selected environment."}
     )
     @ddt.unpack
-    def test_validator_failed(self, kwargs, context, error_msg=False):
+    def test_validator_failed(self, kwargs, context, error_msg):
         validator = validation.RequiredPlatformValidator(**kwargs)
         e = self.assertRaises(
             validation.ValidationError,
