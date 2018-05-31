@@ -242,7 +242,7 @@ class EnvManager(object):
         description = spec.pop("!description", "")
 
         existing_platforms = {}
-        for p_name, p_spec in spec.items():
+        for p_name, p_spec in list(spec.items()):
             if "@" not in p_name:
                 spec["existing@%s" % p_name] = p_spec
                 spec.pop(p_name)
