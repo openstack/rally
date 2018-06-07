@@ -321,12 +321,12 @@ class NeutronWrapper(NetworkWrapper):
                 network_id=network["id"])["subnets"]:
             self._delete_subnet(subnet["id"])
 
-        responce = self.client.delete_network(network["id"])
+        response = self.client.delete_network(network["id"])
 
         if network["router_id"]:
             self.client.delete_router(network["router_id"])
 
-        return responce
+        return response
 
     def _delete_subnet(self, subnet_id):
         self.client.delete_subnet(subnet_id)
