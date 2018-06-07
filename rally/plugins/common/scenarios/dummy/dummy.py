@@ -215,7 +215,7 @@ class DummyRandomFailInAtomic(scenario.Scenario):
         :param exception_probability: Probability with which atomic actions
                                       fail in this dummy scenario (0 <= p <= 1)
         """
-        # devide probability on the number of possible places to fail
+        # divide probability on the number of possible places to fail
         if exception_probability != 1:
             exception_probability = exception_probability / 4.0
         with atomic.ActionTimer(self, "dummy_fail_test"):
