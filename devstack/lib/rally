@@ -84,6 +84,7 @@ fi
 # install_rally() - Collect source and prepare
 function install_rally() {
     setup_develop $RALLY_DIR
+    sudo pip install rally_openstack>=1.1.0
 }
 
 # configure_rally() - Set config files, create data dirs, etc
