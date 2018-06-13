@@ -119,6 +119,21 @@ class PluginModuleTestCase(test.TestCase):
         self.assertRaises(exceptions.MultiplePluginsFound, plugin.Plugin.get,
                           name, name)
 
+    def test_get_multiple_chooses_but_default(self):
+        @plugin.configure(self.id())
+        class A(plugin.Plugin):
+            pass
+
+        self.addCleanup(A.unregister)
+
+        @plugin.configure(self.id(), platform=self.id())
+        class B(plugin.Plugin):
+            pass
+
+        self.addCleanup(B.unregister)
+
+        self.assertEqual(A, plugin.Plugin.get(self.id()))
+
     def test_default_meta_for_base(self):
 
         @plugin.base()

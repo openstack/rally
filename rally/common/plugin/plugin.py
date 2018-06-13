@@ -162,6 +162,12 @@ class Plugin(meta.MetaMixin, info.InfoMixin):
         if len(results) == 1:
             return results[0]
 
+        if platform is None:
+            # try to use default platform
+            default = [p for p in results if p.get_platform() == "default"]
+            if default:
+                return default[0]
+
         raise exceptions.MultiplePluginsFound(
             name=name,
             plugins=", ".join(p.get_fullname() for p in results))
