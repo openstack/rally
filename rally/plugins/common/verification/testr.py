@@ -93,7 +93,8 @@ class TestrLauncher(manager.VerifierManager):
 
     def __init__(self, *args, **kwargs):
         super(TestrLauncher, self).__init__(*args, **kwargs)
-        self._use_testr = os.path.exists(os.path.join(self.repo_dir, ".testr"))
+        self._use_testr = os.path.exists(os.path.join(
+            self.repo_dir, ".testr.conf"))
 
     @property
     def run_environ(self):
