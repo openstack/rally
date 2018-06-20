@@ -508,6 +508,7 @@ def main():
     parser.add_argument("--ctx-create-resources", action="store_true",
                         help="Make Tempest context create needed resources "
                              "for the tests.")
+    return
 
     args = parser.parse_args()
 
@@ -522,6 +523,7 @@ def main():
             if step.result["status"] == Status.PASS]) == len(steps):
         return 0
     return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())

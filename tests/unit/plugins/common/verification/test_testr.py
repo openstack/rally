@@ -250,7 +250,7 @@ class TestrLauncherTestCase(test.TestCase):
                          mock_rmtree):
         launcher = testr.TestrLauncher(mock.Mock())
         mock_exists.assert_called_once_with(
-            os.path.join(launcher.repo_dir, ".testr"))
+            os.path.join(launcher.repo_dir, ".testr.conf"))
         mock_exists.reset_mock()
 
         # case #1: testr already initialized
