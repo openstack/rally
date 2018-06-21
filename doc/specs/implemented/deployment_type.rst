@@ -15,8 +15,8 @@ unbound it from OpenStack.
 Problem description
 ===================
 
-Rally is able to examine only system that use Keystone as a authentication
-services, which limits sphere where Rally is suitable.
+Rally is able to examine only system that use Keystone as an
+authentication service, which limits sphere where Rally is suitable.
 
 At the moment to run Rally Task or Rally Verify you must specify OpenStack
 deployment which contains credentials of it. These credentials are used in

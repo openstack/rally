@@ -133,7 +133,7 @@ Alternatives
   the tenants, regardless of resource naming, so we only need to keep track of
   Rally tenants (naming could be a solution here) and resources in admin
   tenant. In this case, we need to think about a case where Rally needs to
-  cleanup some resources from a existing tenant while leaving the rest
+  cleanup some resources from an existing tenant while leaving the rest
   available.
 
 * Use/enhance Tempest cleanup command (tempest/cmd/cleanup.py). Compare
