@@ -17,6 +17,16 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
+[Unreleased]
+------------
+
+Removed
+~~~~~~~
+
+* Disturbing warning message about removing in-tree OpenStack plugins. This
+  message became redundant after Rally 1.0.0 when such plugins were removed.
+
+
 [1.0.0] - 2018-06-20
 --------------------
 
