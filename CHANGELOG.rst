@@ -17,28 +17,52 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
-[1.3.0] - 2018-11-30
+[1.3.0] - 2018-12-01
 --------------------
 
 Added
 ~~~~~
 
-Add the --deployment option to commands ``rally task report`` and
-``rally task export`` that allows to report/export all tasks from defined
-deployment.
+* Add the --deployment option to commands ``rally task report`` and
+  ``rally task export`` that allows to report/export all tasks from defined
+  deployment.
+
+* Briefly: the new base image is published at `Docker Hub
+  <https://hub.docker.com/r/xrally/xrally>`_
+  Detailed story: Long time ago Rally team introduced first docker images which
+    were hosted by `rallyforge account at Docker Hub
+    <https://hub.docker.com/r/rallyforge/rally/>`_. Due to various
+    circumstances we lost access to that account and Docker support restored
+    access to it in a strange way (we lost all repositories and could not
+    recreate them). That is why Rally team started publishing docker images
+    from scratch. The new organization was created -`xRally
+    <https://hub.docker.com/r/xrally>`_ . Since we already had plans to move
+    OpenStack plugins to the separate repository, we started publishing images
+    with in-tree OpenStack plugins to `xrally/xrally-openstack repository
+    <https://hub.docker.com/r/xrally/xrally-openstack/>`_. As soon as, a
+    separate package for OpenStack plugins was introduced, we switched the
+    source of `xrally/xrally-openstack Docker Hub repository
+    <https://hub.docker.com/r/xrally/xrally-openstack/>`_ to `rally-openstack
+    git repository <http://github.com/openstack/rally-openstack>`_.
+    As for Rally 1.0.0 we finally have pure framework without heavy
+    dependencies and can start publishing separate images for Rally framework
+    itself which can be used as a base image for all plugins.
+    New images will be located at `xrally/xrally Docker Hub repository
+    <https://hub.docker.com/r/xrally/xrally>`_.
 
 Changed
 ~~~~~~~
 
-``rally --version`` prints version of Rally framework with versions of
-installed plugins instead of printing just version of Rally framework.
+* ``rally --version`` prints version of Rally framework with versions of
+  installed plugins instead of printing just version of Rally framework.
+* Dockerfile moved from the root directory to ./etc/docker/
 
 Fixed
 ~~~~~
 
 A floating bug with ``constant_for_duration`` runner.
 
-`Lauchpad-bug #1800447 <https://launchpad.net/bugs/1800447>`_
+`Launchpad-bug #1800447 <https://launchpad.net/bugs/1800447>`_
 
 [1.2.1] - 2018-09-27
 --------------------
@@ -98,7 +122,6 @@ Changed
   <https://github.com/openstack/rally/blob/1.1.0/upper-constraints.txt>`_ files
   are updated.
 
-
 Removed
 ~~~~~~~
 
@@ -112,7 +135,7 @@ Fixed
 ~~~~~
 
 * Building HTML reports for verifications at python 3 environment.
-  `Lauchpad-bug #1785549 <https://launchpad.net/bugs/1785549>`_
+  `Launchpad-bug #1785549 <https://launchpad.net/bugs/1785549>`_
 
 Deprecated
 ~~~~~~~~~~

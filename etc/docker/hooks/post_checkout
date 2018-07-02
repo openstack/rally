@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# NOTE(andreykurilin): We have automated builds for new docker images at
+#   Docker Cloud. To publish a custom, docker specific README file, we need
+#   to apply a workaround: change the context directory for building images
+#   from the root repo dir '/' to '/etc/docker/' where we store our Dockerfile.
+#   In this case, Docker Cloud will use local README, i.e /etc/docker/README.md
+#   To make source code available from Dockerfile we need to apply
+#   post_checkout docker cloud hook (see [*] for more details). Our custom hook
+#   copies rally framework code under the directory which is available from
+#   docker build context, i.e from /etc/docker
+#
+#   [*] - https://docs.docker.com/docker-cloud/builds/advanced/#custom-build-phase-hooks
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+
+mkdir ${DIR}/../src/
+rsync -av --progress ${DIR}/../../../ ${DIR}/../src/ --exclude etc/docker
