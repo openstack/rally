@@ -25,7 +25,7 @@ Removed
 
 * Disturbing warning message about removing in-tree OpenStack plugins. This
   message became redundant after Rally 1.0.0 when such plugins were removed.
-
+* OpenStack related configuration options for sample file.
 
 [1.0.0] - 2018-06-20
 --------------------
