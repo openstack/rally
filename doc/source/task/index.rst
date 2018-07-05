@@ -366,7 +366,7 @@ CLI References
 ==============
 
 For more information regarding Rally Task Component CLI please proceed
-to `CLI reference <../cli/cli_reference.html#category-task>`_
+to `CLI reference <../cli_reference.html#category-task>`_
 
 .. references:
 

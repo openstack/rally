@@ -48,7 +48,8 @@ for:
   failed tests from it and so on. Btw, all verification runs arguments are
   stored in the database.
 * **Processing results**. Rally DataBase stores all `verifications
-  <link-to-glossary>`_ and you can obtain unified (across different verifiers)
+  <../overview/glossary.html#verification>`_
+  and you can obtain unified (across different verifiers)
   results at any time. You can find a verification run summary there, run
   arguments which were used, error messages and etc. Comparison mechanism for
   several verifications is available too. Verification reports can be generated
