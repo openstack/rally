@@ -67,7 +67,7 @@ class RallyBase(six.Iterator):
 
 
 class Env(BASE, RallyBase):
-    """Represent a environment."""
+    """Represent an environment."""
     __tablename__ = "envs"
     __table_args__ = (
         sa.Index("env_uuid", "uuid", unique=True),

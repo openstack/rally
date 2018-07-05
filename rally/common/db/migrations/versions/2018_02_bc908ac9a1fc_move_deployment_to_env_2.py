@@ -14,9 +14,9 @@
 
 """move_deployment_to_env_2
 
-Migration 7287df262dbc did not handle the case of a old deployment format which
-led to failures. Migration `dc0fe6de6786` ports the old format the new one and
-we can perform the migration to the env again.
+Migration 7287df262dbc did not handle the case of an old deployment format
+which led to failures. Migration `dc0fe6de6786` ports the old format the new
+one and we can perform the migration to the env again.
 
 Revision ID: bc908ac9a1fc
 Revises: dc0fe6de6786
