@@ -169,7 +169,7 @@ and textual information.
             max: 0
 
 
-hook_example_script.sh generates dummy output in JSON format. Grafical
+hook_example_script.sh generates dummy output in JSON format. Graphical
 information format is the same as for workloads and the same types of
 charts are supported for the hooks.
 
