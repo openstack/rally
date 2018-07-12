@@ -30,7 +30,9 @@ class JSONExporter(exporter.TaskExporter):
     #    1.0 - the json report v1
     #    1.1 - add `contexts_results` key with contexts execution results of
     #          workloads.
-    REVISION = "1.1"
+    #    1.2 - add `env_uuid` and `env_uuid` which represent environment name
+    #          and UUID where task was executed
+    REVISION = "1.2"
 
     def _generate_tasks(self):
         tasks = []
@@ -95,6 +97,8 @@ class JSONExporter(exporter.TaskExporter):
                      ("description", task["description"]),
                      ("status", task["status"]),
                      ("tags", task["tags"]),
+                     ("env_uuid", task.get("env_uuid", "n\a")),
+                     ("env_name", task.get("env_name", "n\a")),
                      ("created_at", task["created_at"]),
                      ("updated_at", task["updated_at"]),
                      ("pass_sla", task["pass_sla"]),

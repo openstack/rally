@@ -1114,33 +1114,32 @@ class TaskCommandsTestCase(test.TestCase):
             "statistics": {"durations": mock.ANY}
         }
 
-        results = [
-            {"hooks": [{"config": {
-                "name": "foo",
-                "args": {"arg1": "v1"},
-                "description": "descr",
-                "trigger": {"name": "t",
-                            "args": {"a2", "v2"}}}}],
-             "key": {"name": workload["name"],
-                     "description": workload["description"],
-                     "pos": workload["position"],
-                     "kw": {
-                         "args": workload["args"],
-                         "runner": {"type": "constant", "time": 3},
-                         "hooks": [{"name": "foo",
-                                    "args": {"arg1": "v1"},
-                                    "description": "descr",
-                                    "trigger": {
-                                        "name": "t",
-                                        "args": {"a2", "v2"}
-                                    }}],
-                         "sla": workload["sla"],
-                         "context": workload["contexts"]}},
-             "sla": workload["sla_results"]["sla"],
-             "result": workload["data"],
-             "full_duration": workload["full_duration"],
-             "load_duration": workload["load_duration"],
-             "created_at": "2017-01-07T07:03:01"}
+        results = [{
+            "hooks": [{
+                "config": {
+                    "name": "foo",
+                    "args": {"arg1": "v1"},
+                    "description": "descr",
+                    "trigger": {"name": "t", "args": {"a2", "v2"}}}}],
+            "key": {
+                "name": workload["name"],
+                "description": workload["description"],
+                "pos": workload["position"],
+                "kw": {
+                    "args": workload["args"],
+                    "runner": {"type": "constant", "time": 3},
+                    "hooks": [{
+                        "name": "foo",
+                        "args": {"arg1": "v1"},
+                        "description": "descr",
+                        "trigger": {"name": "t", "args": {"a2", "v2"}}}],
+                    "sla": workload["sla"],
+                    "context": workload["contexts"]}},
+            "sla": workload["sla_results"]["sla"],
+            "result": workload["data"],
+            "full_duration": workload["full_duration"],
+            "load_duration": workload["load_duration"],
+            "created_at": "2017-01-07T07:03:01"}
         ]
         mock_loads.return_value = results
         ret = self.task._load_task_results_file(self.fake_api, task_file)
@@ -1149,6 +1148,9 @@ class TaskCommandsTestCase(test.TestCase):
             "title": "Task loaded from a file.",
             "description": "Auto-ported from task format V1.",
             "uuid": "n/a",
+            "env_uuid": "n/a",
+            "env_name": "n/a",
+            "status": "finished",
             "tags": [],
             "subtasks": [{
                 "title": "A SubTask",
@@ -1163,6 +1165,8 @@ class TaskCommandsTestCase(test.TestCase):
         task_file = "/tmp/task.json"
         results = {
             "tasks": [{
+                "env_uuid": "env-uuid-1",
+                "env_name": "env-name-1",
                 "subtasks": [{
                     "workloads": [{
                         "contexts": "contexts",
@@ -1179,6 +1183,8 @@ class TaskCommandsTestCase(test.TestCase):
         mock_loads.return_value = results
         ret = self.task._load_task_results_file(self.fake_api, task_file)
         self.assertEqual([{
+            "env_uuid": "env-uuid-1",
+            "env_name": "env-name-1",
             "subtasks": [{
                 "workloads": [{
                     "args": {},

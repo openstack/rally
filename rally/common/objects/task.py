@@ -39,6 +39,8 @@ TASK_SCHEMA = {
         "version": {"type": "number"},
         "status": {"type": "string"},
         "tags": {"type": "array"},
+        "env_name": {"type": "string"},
+        "env_uuid": {"type": "string"},
         "created_at": {"type": "string"},
         "updated_at": {"type": "string"},
         "pass_sla": {"type": "boolean"},
@@ -322,9 +324,10 @@ class Task(object):
 
     def to_dict(self):
         db_task = self.task
-        deployment_name = db.env_get(self.task["env_uuid"])["name"]
+        env_name = db.env_get(self.task["env_uuid"])["name"]
+        db_task["env_name"] = env_name
+        db_task["deployment_name"] = env_name
         db_task["deployment_uuid"] = db_task["env_uuid"]
-        db_task["deployment_name"] = deployment_name
         self._serialize_dt(db_task)
         for subtask in db_task.get("subtasks", []):
             self._serialize_dt(subtask)
