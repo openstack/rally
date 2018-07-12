@@ -20,6 +20,11 @@ Changelog
 [Unreleased]
 ------------
 
+Added
+~~~~~
+
+* Introducing ``rally env cleanup`` command for performing disaster cleanup.
+
 Changed
 ~~~~~~~
 
@@ -30,10 +35,11 @@ Changed
   allows us to show only those workloads which we are interested in (see the
   examples below).
   Examples:
-    1. show only failed workloads
-       ``rally task detailed --filter-by sla-failures``
-    2. show only those workloads which include the next scenario plugin(s)
-       ``rally task detailed --filter-by scenarios=scenario1[,scenarios2...]``
+
+  1. show only failed workloads
+     ``rally task detailed --filter-by sla-failures``
+  2. show only those workloads which include the next scenario plugin(s)
+     ``rally task detailed --filter-by scenarios=scenario1[,scenarios2...]``
 
 Removed
 ~~~~~~~

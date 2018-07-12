@@ -101,6 +101,48 @@ class EnvCommands(object):
         self._show(env.data, to_json=to_json, only_spec=False)
         return 0
 
+    @cliutils.args("--json", action="store_true", dest="to_json",
+                   help="Format output as JSON.")
+    @cliutils.args("--env", dest="env", type=str,
+                   metavar="<uuid>", required=False,
+                   help="UUID or name of the env.")
+    @envutils.with_default_env()
+    def cleanup(self, api, env=None, to_json=False):
+        """Perform disaster cleanup for specified environment.
+
+        Cases when Rally can leave undeleted resources after performing
+        workload:
+
+        - Rally execution was interrupted and cleanup was not performed
+        - The environment or a particular platform became unreachable which
+          fail Rally execution of cleanup
+        """
+        env = env_mgr.EnvManager.get(env)
+        _print("Cleaning up resources for %s" % env, to_json)
+        result = env.cleanup()
+
+        if to_json:
+            print(json.dumps(result, indent=2))
+            return int(any([p["errors"] for p in result.values()]))
+
+        print("Cleaning is finished. See the results bellow.")
+
+        return_code = 0
+        for platform in sorted(result):
+            cleanup_info = result[platform]
+            print("\nInformation for %s platform." % platform)
+            print("=" * 80)
+            print("Status: %s" % cleanup_info["message"])
+            for key in ("discovered", "deleted", "failed"):
+                print("Total %s: %s" % (key, cleanup_info[key]))
+            if cleanup_info["errors"]:
+                return_code = 1
+                errors = "\t- ".join(e["message"]
+                                     for e in cleanup_info["errors"])
+                print("Errors:\n\t- %s" % errors)
+
+        return return_code
+
     @cliutils.args("--env", dest="env", type=str,
                    metavar="<uuid>", required=False,
                    help="UUID or name of the env.")
@@ -124,6 +166,7 @@ class EnvCommands(object):
                    % (NO, env, result["destroy_info"]["message"]), to_json)
         else:
             _print("%s Successfully destroyed env %s" % (YES, env), to_json)
+
         if detailed or to_json:
             print(json.dumps(result, indent=2))
 
@@ -136,7 +179,7 @@ class EnvCommands(object):
                    help="Delete DB records even if env is not destroyed.")
     @envutils.with_default_env()
     def delete(self, api, env=None, force=False):
-        """Deletes all records related to Env from db."""
+        """Deletes all records related to the environment from db."""
         env_mgr.EnvManager.get(env).delete(force=force)
         # TODO(boris-42): clear env variables if default one is deleted
 
@@ -196,6 +239,7 @@ class EnvCommands(object):
     @cliutils.suppress_warnings
     @envutils.with_default_env()
     def show(self, api, env=None, to_json=False, only_spec=False):
+        """Show base information about the environment record."""
         env_data = env_mgr.EnvManager.get(env).data
         self._show(env_data, to_json=to_json, only_spec=only_spec)
 
@@ -206,7 +250,7 @@ class EnvCommands(object):
                    help="Format output as JSON.")
     @envutils.with_default_env()
     def info(self, api, env=None, to_json=False):
-        """Show environment information."""
+        """Retrieve and show environment information."""
         env = env_mgr.EnvManager.get(env)
         env_info = env.get_info()
         return_code = int(any(v.get("error") for v in env_info.values()))
