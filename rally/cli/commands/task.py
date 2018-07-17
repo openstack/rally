@@ -676,7 +676,10 @@ class TaskCommands(object):
                     "title": "Task loaded from a file.",
                     "description": "Auto-ported from task format V1.",
                     "uuid": "n/a",
+                    "env_name": "n/a",
+                    "env_uuid": "n/a",
                     "tags": [],
+                    "status": consts.TaskStatus.FINISHED,
                     "subtasks": []}
 
             start_time = None
@@ -776,6 +779,8 @@ class TaskCommands(object):
                     msg = six.text_type(e)
                     raise exceptions.RallyException(
                         "ERROR: Invalid task result format\n\n\t%s" % msg)
+                task_result.setdefault("env_name", "n/a")
+                task_result.setdefault("env_uuid", "n/a")
                 for subtask in task_result["subtasks"]:
                     for workload in subtask["workloads"]:
                         workload.setdefault("contexts_results", [])

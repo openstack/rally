@@ -20,6 +20,13 @@ Changelog
 [Unreleased]
 ------------
 
+Changed
+~~~~~~~
+
+* The output of json task result exporter (``rally task report --json``) is
+  extended with information about environment where task was executed (new
+  ``env_name`` and ``env_uuid`` properties)
+
 Removed
 ~~~~~~~
 

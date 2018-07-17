@@ -183,16 +183,15 @@ class ElasticSearchExporter(exporter.TaskExporter):
                                       properties=self.INDEX_SCHEMAS[index])
 
     @staticmethod
-    def _make_action_report(deployment_uuid, deployment_name, name,
-                            workload_id, workload, duration,
+    def _make_action_report(name, workload_id, workload, duration,
                             started_at, finished_at, parent, error):
         # NOTE(andreykurilin): actually, this method just creates a dict object
         #   but we need to have the same format at two places, so the template
         #   transformed into a method.
         parent = parent[0] if parent else None
         return {
-            "deployment_uuid": deployment_uuid,
-            "deployment_name": deployment_name,
+            "deployment_uuid": workload["deployment_uuid"],
+            "deployment_name": workload["deployment_name"],
             "action_name": name,
             "workload_uuid": workload_id,
             "scenario_cfg": workload["scenario_cfg"],
@@ -207,8 +206,7 @@ class ElasticSearchExporter(exporter.TaskExporter):
             "error": error
         }
 
-    def _process_atomic_actions(self, deployment_uuid, deployment_name,
-                                itr, workload, workload_id,
+    def _process_atomic_actions(self, itr, workload, workload_id,
                                 atomic_actions=None, _parent=None, _depth=0,
                                 _cache=None):
         """Process atomic actions of an iteration
@@ -247,8 +245,6 @@ class ElasticSearchExporter(exporter.TaskExporter):
             finished_at = finished_at.strftime(consts.TimeFormat.ISO8601)
 
             action_report = self._make_action_report(
-                deployment_uuid=deployment_uuid,
-                deployment_name=deployment_name,
                 name=action["name"],
                 workload_id=workload_id,
                 workload=workload,
@@ -263,8 +259,6 @@ class ElasticSearchExporter(exporter.TaskExporter):
                             doc_id=act_id)
 
             self._process_atomic_actions(
-                deployment_uuid=deployment_uuid,
-                deployment_name=deployment_name,
                 atomic_actions=action["children"],
                 itr=itr,
                 workload=workload,
@@ -298,8 +292,6 @@ class ElasticSearchExporter(exporter.TaskExporter):
             timestamp = dt.datetime.utcfromtimestamp(timestamp)
             timestamp = timestamp.strftime(consts.TimeFormat.ISO8601)
             action_report = self._make_action_report(
-                deployment_uuid=deployment_uuid,
-                deployment_name=deployment_name,
                 name="no-name-action",
                 workload_id=workload_id,
                 workload=workload,
@@ -315,13 +307,6 @@ class ElasticSearchExporter(exporter.TaskExporter):
         if self._remote:
             self._ensure_indices()
 
-        deployment_names = {}
-        for task in self.tasks_results:
-            deployment = task["deployment_uuid"]
-            if deployment not in deployment_names:
-                deployment_names[deployment] = (
-                    self.api.deployment.get(deployment)["name"])
-
         for task in self.tasks_results:
             if self._remote:
                 if self._client.check_document(self.TASK_INDEX, task["uuid"]):
@@ -330,13 +315,10 @@ class ElasticSearchExporter(exporter.TaskExporter):
                         "cluster. The document with such UUID already exists" %
                         task["uuid"])
 
-            deployment_uuid = task["deployment_uuid"]
-            deployment_name = deployment_names[deployment_uuid]
-
             task_report = {
                 "task_uuid": task["uuid"],
-                "deployment_uuid": deployment_uuid,
-                "deployment_name": deployment_name,
+                "deployment_uuid": task["env_uuid"],
+                "deployment_name": task["env_name"],
                 "title": task["title"],
                 "description": task["description"],
                 "status": task["status"],
@@ -366,8 +348,8 @@ class ElasticSearchExporter(exporter.TaskExporter):
                 workload_report = {
                     "task_uuid": workload["task_uuid"],
                     "subtask_uuid": workload["subtask_uuid"],
-                    "deployment_uuid": deployment_uuid,
-                    "deployment_name": deployment_name,
+                    "deployment_uuid": task["env_uuid"],
+                    "deployment_name": task["env_name"],
                     "scenario_name": workload["name"],
                     "scenario_cfg": self._pack(workload["args"]),
                     "description": workload["description"],
@@ -394,8 +376,6 @@ class ElasticSearchExporter(exporter.TaskExporter):
                         "num": str(idx)}
 
                     self._process_atomic_actions(
-                        deployment_uuid=deployment_uuid,
-                        deployment_name=deployment_name,
                         itr=itr,
                         workload=workload_report,
                         workload_id=workload["uuid"])

@@ -55,6 +55,8 @@ def get_tasks_results():
         "title": "task",
         "description": "description",
         "status": "finished",
+        "env_uuid": "env-uuid",
+        "env_name": "env-name",
         "tags": [],
         "created_at": "2017-06-04T05:14:44",
         "updated_at": "2017-06-04T05:15:14",

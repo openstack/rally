@@ -38,6 +38,8 @@ class JSONExporterTestCase(test.TestCase):
                 ("description", "description"),
                 ("status", "finished"),
                 ("tags", []),
+                ("env_uuid", "env-uuid"),
+                ("env_name", "env-name"),
                 ("created_at", "2017-06-04T05:14:44"),
                 ("updated_at", "2017-06-04T05:15:14"),
                 ("pass_sla", True),
@@ -94,7 +96,7 @@ class JSONExporterTestCase(test.TestCase):
         results = {
             "info": {"rally_version": rally_version.version_string(),
                      "generated_at": mock_dt.datetime.strftime.return_value,
-                     "format_version": "1.1"},
+                     "format_version": "1.2"},
             "tasks": reporter._generate_tasks.return_value
         }
         mock_dt.datetime.strftime.assert_called_once_with(
