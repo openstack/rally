@@ -33,6 +33,8 @@ Removed
 * Disturbing warning message about removing in-tree OpenStack plugins. This
   message became redundant after Rally 1.0.0 when such plugins were removed.
 * OpenStack related configuration options for sample file.
+* Deprecated in Rally 0.10 ``rally.task.exporter.Exporter`` class in favor of
+  ``rally.task.exporter.TaskExporter``.
 
 [1.0.0] - 2018-06-20
 --------------------

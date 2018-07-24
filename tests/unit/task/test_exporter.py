@@ -19,30 +19,6 @@ from rally.task import exporter
 from tests.unit import test
 
 
-class ExporterTestCase(test.TestCase):
-
-    def setUp(self):
-        super(ExporterTestCase, self).setUp()
-
-        @exporter.configure(name="test-exporter")
-        class FakeExporter(exporter.Exporter):
-
-            def validate(self):
-                pass
-
-            def export(self, task, connection_string):
-                pass
-
-        self.FakeExporter = FakeExporter
-        self.addCleanup(FakeExporter.unregister)
-
-    def test_task_export(self):
-        self.assertRaises(TypeError, exporter.Exporter, "fake_connection")
-
-    def test_task_export_instantiate(self):
-        self.FakeExporter("fake_connection")
-
-
 class TaskExporterTestCase(test.TestCase):
 
     def test_make(self):

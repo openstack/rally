@@ -57,29 +57,19 @@ REPORT_RESPONSE_SCHEMA = {
 
 @plugin.base()
 @six.add_metaclass(abc.ABCMeta)
-class Exporter(plugin.Plugin):
-
-    def __init__(self, connection_string):
-        LOG.warning("Sorry, we have not support old Exporter plugin since"
-                    "Rally 0.10.0, please use TaskExporter instead.")
-        self.connection_string = connection_string
-
-    @abc.abstractmethod
-    def export(self, task_uuid):
-        """Export results of the task to the task storage.
-
-        :param task_uuid: uuid of task results
-        """
-
-    @abc.abstractmethod
-    def validate(self):
-        """Used to validate connection string."""
-
-
-@plugin.base()
-@six.add_metaclass(abc.ABCMeta)
 class TaskExporter(plugin.Plugin, validation.ValidatablePluginMixin):
-    """Base class for all exporters for Tasks."""
+    """Plugin base for exporting tasks results to different systems&formats.
+
+    This type of plugins is designed to provide the way to present results in
+    different formats and send them to the different systems.
+
+    To discover available plugins, call
+      ``rally plugin list --plugin-base TaskExporter``.
+
+    To export results of a task, call
+      ``rally task export --uuid <task-uuid> --type <plugin-name> --to <dest>``
+
+    """
 
     def __init__(self, tasks_results, output_destination, api=None):
         """Init reporter
