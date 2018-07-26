@@ -348,12 +348,27 @@ class TaskCommands(object):
     @cliutils.args("--iterations-data", dest="iterations_data",
                    action="store_true",
                    help="Print detailed results for each iteration.")
+    @cliutils.args("--filter-by", dest="filters", nargs="+", type=str,
+                   help="Filter the displayed workloads."
+                        "<sla-failures>: only display the failed workloads.\n"
+                        "<scenarios>: filter the workloads by scenarios.,"
+                        "scenarios=scenario_name1[,scenario_name2]...")
     @envutils.with_default_task_id
-    def detailed(self, api, task_id=None, iterations_data=False):
-        self._detailed(api, task_id, iterations_data)
+    def detailed(self, api, task_id=None, iterations_data=False,
+                 filters=None):
+        self._detailed(api, task_id, iterations_data, filters)
 
-    def _detailed(self, api, task_id=None, iterations_data=False):
+    def _detailed(self, api, task_id=None, iterations_data=False,
+                  filters=None):
         """Print detailed information about given task."""
+        scenarios_filter = []
+        only_sla_failures = False
+        for filter in filters or []:
+            if filter.startswith("scenario="):
+                filter_value = filter.split("=")[1]
+                scenarios_filter = filter_value.split(",")
+            if filter == "sla-failures":
+                only_sla_failures = True
 
         task = api.task.get(task_id=task_id, detailed=True)
 
@@ -384,6 +399,11 @@ class TaskCommands(object):
 
         for workload in itertools.chain(
                 *[s["workloads"] for s in task["subtasks"]]):
+            if scenarios_filter and workload["name"] not in scenarios_filter:
+                continue
+            if only_sla_failures and workload["pass_sla"]:
+                continue
+
             print("-" * 80)
             print()
             print("test scenario %s" % workload["name"])
