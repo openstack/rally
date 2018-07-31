@@ -324,10 +324,9 @@ class TaskTestCase(unittest.TestCase):
         files = []
         for i in range(3):
             rally("task start --task %s" % config.filename)
-            path = "/tmp/task_%d.json" % i
+            path = rally.gen_report_path(suffix="_results_%s" % i)
+            self.addCleanup(os.remove, path)
             files.append(path)
-            if os.path.exists(path):
-                os.remove(path)
             rally("task results", report_path=path, raw=True, no_logs=True)
 
         html_report = rally.gen_report_path(extension="html")
@@ -341,14 +340,12 @@ class TaskTestCase(unittest.TestCase):
         cfg = self._get_sample_task_config()
         config = utils.TaskConfig(cfg)
         rally("task start --task %s" % config.filename)
-        task_result_file = "/tmp/report_42.json"
-        if os.path.exists(task_result_file):
-            os.remove(task_result_file)
+        task_result_file = rally.gen_report_path(suffix="results")
+        self.addCleanup(os.remove, task_result_file)
         rally("task results", report_path=task_result_file,
               raw=True, no_logs=True)
 
-        task_run_output = rally(
-            "task start --task %s" % config.filename)
+        task_run_output = rally("task start --task %s" % config.filename)
         task_uuid = self._get_task_uuid(task_run_output)
 
         html_report = rally.gen_report_path(extension="html")
@@ -365,11 +362,9 @@ class TaskTestCase(unittest.TestCase):
         cfg = self._get_sample_task_config()
         config = utils.TaskConfig(cfg)
         rally("task start --task %s" % config.filename)
-        task_result_file = "/tmp/report_42.json"
-        if os.path.exists(task_result_file):
-            os.remove(task_result_file)
-        rally("task results", report_path=task_result_file,
-              raw=True)
+        task_result_file = rally.gen_report_path(suffix="results")
+        self.addCleanup(os.remove, task_result_file)
+        rally("task results", report_path=task_result_file, raw=True)
 
         html_report = rally.gen_report_path(extension="html")
         rally("task report --html-static %s --out %s"
