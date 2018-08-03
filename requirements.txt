@@ -23,3 +23,4 @@ requests>=2.14.2                                       # Apache License, Version
 SQLAlchemy>=1.0.10,!=1.1.5,!=1.1.6,!=1.1.7,!=1.1.8     # MIT
 six>=1.10.0                                            # MIT
 virtualenv>=14.0.6                                     # MIT
+rally-openstack                                        # Apache License, Version 2.0
