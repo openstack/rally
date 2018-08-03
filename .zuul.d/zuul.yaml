@@ -33,10 +33,11 @@
         - rally-install-ubuntu-xenial
         - rally-install-ubuntu-bionic
         - rally-install-centos-7
+        - rally-tox-cover
+        - rally-tox-functional
         - rally-tox-py34
         - rally-tox-py36
         - rally-tox-py37
-        - rally-tox-functional
         - rally-tox-self
     gate:
       jobs:
@@ -44,9 +45,10 @@
         - rally-install-ubuntu-xenial
         - rally-install-ubuntu-bionic
         - rally-install-centos-7
+        - rally-tox-cover
+        - rally-tox-functional
         - rally-tox-py34
         - rally-tox-py36
         - rally-tox-py37
-        - rally-tox-functional
         - rally-tox-self
 
