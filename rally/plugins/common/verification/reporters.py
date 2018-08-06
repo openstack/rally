@@ -299,7 +299,7 @@ class HTMLReporter(JSONReporter):
                 show_comparison_note = True
 
         template = ui_utils.get_template("verification/report.html")
-        context = {"uuids": uuids,
+        context = {"uuids": list(uuids),
                    "verifications": report["verifications"],
                    "tests": report["tests"],
                    "show_comparison_note": show_comparison_note}

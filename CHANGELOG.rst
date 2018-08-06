@@ -44,6 +44,12 @@ Removed
 * Deprecated in Rally 0.10 ``rally.task.exporter.Exporter`` class in favor of
   ``rally.task.exporter.TaskExporter``.
 
+Fixed
+~~~~~
+
+* Building HTML reports for verifications at python 3 environment. 
+  `Lauchpad-bug #1785549 <https://launchpad.net/bugs/1785549>`_
+
 [1.0.0] - 2018-06-20
 --------------------
 

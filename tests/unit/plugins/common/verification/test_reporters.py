@@ -380,6 +380,11 @@ class HTMLReporterTestCase(test.TestCase):
                     "status": "uxsuccess"}}}},
             ctx["tests"])
 
+    def test_generate_raw_html_report(self):
+        reporter = reporters.HTMLReporter(get_verifications(), None)
+        report = reporter.generate()
+        self.assertTrue(report["print"])
+
 
 class JUnitXMLReporterTestCase(test.TestCase):
     @mock.patch("%s.dt" % PATH)
