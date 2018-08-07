@@ -17,8 +17,8 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
-[Unreleased]
-------------
+[1.1.0] - 2018-08-07
+--------------------
 
 Added
 ~~~~~
@@ -62,7 +62,7 @@ Removed
 Fixed
 ~~~~~
 
-* Building HTML reports for verifications at python 3 environment. 
+* Building HTML reports for verifications at python 3 environment.
   `Lauchpad-bug #1785549 <https://launchpad.net/bugs/1785549>`_
 
 Deprecated
