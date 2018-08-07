@@ -33,12 +33,9 @@
         - rally-install-ubuntu-xenial
         - rally-install-ubuntu-bionic
         - rally-install-centos-7
-        - rally-tox-py34:
-            voting: false
-        - rally-tox-py36:
-            voting: false
-        - rally-tox-py37:
-            voting: false
+        - rally-tox-py34
+        - rally-tox-py36
+        - rally-tox-py37
         - rally-tox-functional
         - rally-tox-self
     gate:
@@ -47,6 +44,9 @@
         - rally-install-ubuntu-xenial
         - rally-install-ubuntu-bionic
         - rally-install-centos-7
+        - rally-tox-py34
+        - rally-tox-py36
+        - rally-tox-py37
         - rally-tox-functional
         - rally-tox-self
 

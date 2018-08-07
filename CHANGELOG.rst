@@ -24,6 +24,7 @@ Added
 ~~~~~
 
 * Introducing ``rally env cleanup`` command for performing disaster cleanup.
+* New CI jobs for checking compatibility with Python 3.4, 3.6, 3.7 .
 
 Changed
 ~~~~~~~
