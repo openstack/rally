@@ -31,6 +31,7 @@ Changed
 * The output of json task result exporter (``rally task report --json``) is
   extended with information about environment where task was executed (new
   ``env_name`` and ``env_uuid`` properties)
+
 * Add the --filter-by option to the command ``rally task detailed``, which
   allows us to show only those workloads which we are interested in (see the
   examples below).
@@ -40,6 +41,13 @@ Changed
      ``rally task detailed --filter-by sla-failures``
   2. show only those workloads which include the next scenario plugin(s)
      ``rally task detailed --filter-by scenarios=scenario1[,scenarios2...]``
+
+* `requirements
+  <https://github.com/openstack/rally/blob/1.1.0/requirements.txt>`_ and
+  `constraints (suggested versions)
+  <https://github.com/openstack/rally/blob/1.1.0/upper-constraints.txt>`_ files
+  are updated.
+
 
 Removed
 ~~~~~~~

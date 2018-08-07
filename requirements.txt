@@ -3,23 +3,24 @@
 # process, which may cause wedges in the gate later.
 
 # Rally core dependencies
-alembic>=0.8.10                                        # MIT
-decorator>=3.4.0                                       # new BSD License
-Jinja2>=2.8,!=2.9.0,!=2.9.1,!=2.9.2,!=2.9.3,!=2.9.4    # BSD
-jsonschema>=2.6.0,<3.0.0                               # MIT
+alembic                                                # MIT
+decorator                                              # new BSD License
+Jinja2                                                 # BSD
+jsonschema<3.0.0                                       # MIT
 morph                                                  # GPLv3+
-netaddr>=0.7.18                                        # BSD
-oslo.config>=5.1.0                                     # Apache Software License
-# do not forget to remove `testresources` from test-requirements. it is a dependency of oslo.db for tests
-oslo.db>=4.27.0                                        # Apache Software License
-oslo.log>=3.36.0                                       # Apache Software License
-paramiko>=2.0.0                                        # LGPL
-pbr>=2.0.0,!=2.1.0                                     # Apache Software License
-PrettyTable>=0.7.1,<0.8                                # BSD
-pyOpenSSL>=16.2.0                                      # Apache License, Version 2.0
-PyYAML>=3.10                                           # MIT
-python-subunit>=1.0.0                                  # UNKNOWN
-requests>=2.14.2                                       # Apache License, Version 2.0
-SQLAlchemy>=1.0.10,!=1.1.5,!=1.1.6,!=1.1.7,!=1.1.8     # MIT
-six>=1.10.0                                            # MIT
-virtualenv>=14.0.6                                     # MIT
+netaddr                                                # BSD
+oslo.config!=4.3.0,!=4.4.0                             # Apache Software License
+# do not forget to remove `testresources` from test-requirements. it is a
+# dependency of oslo.db for tests
+oslo.db                                                # Apache Software License
+oslo.log                                               # Apache Software License
+paramiko                                               # LGPL
+pbr!=2.1.0                                             # Apache Software License
+PrettyTable<0.8                                        # BSD
+pyOpenSSL                                              # Apache License, Version 2.0
+PyYAML                                                 # MIT
+python-subunit
+requests                                               # Apache License, Version 2.0
+SQLAlchemy!=1.1.5,!=1.1.6,!=1.1.7,!=1.1.8              # MIT
+six                                                    # MIT
+virtualenv                                             # MIT
