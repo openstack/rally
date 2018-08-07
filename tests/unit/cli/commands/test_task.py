@@ -326,7 +326,7 @@ class TaskCommandsTestCase(test.TestCase):
         test_uuid = "17860c43-2274-498d-8669-448eff7b073f"
         self.task.abort(self.fake_api, test_uuid)
         self.fake_api.task.abort.assert_called_once_with(
-            task_uuid=test_uuid, soft=False, async=False)
+            task_uuid=test_uuid, soft=False, wait=True)
 
     @mock.patch("rally.cli.commands.task.envutils.get_global")
     def test_abort_no_task_id(self, mock_get_global):

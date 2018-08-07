@@ -64,6 +64,12 @@ Fixed
 * Building HTML reports for verifications at python 3 environment. 
   `Lauchpad-bug #1785549 <https://launchpad.net/bugs/1785549>`_
 
+Deprecated
+~~~~~~~~~~
+
+* 'async' argument of API method task.abort in favor of 'wait' argument which
+  doesn't conflict with a reserved keyword in python 3.7
+
 [1.0.0] - 2018-06-20
 --------------------
 

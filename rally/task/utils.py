@@ -290,7 +290,10 @@ def format_exc(exc):
 
 def infinite_run_args_generator(args_func):
     for i in itertools.count():
-        yield args_func(i)
+        try:
+            yield args_func(i)
+        except StopIteration:
+            return
 
 
 class ActionBuilder(object):

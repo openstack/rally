@@ -367,7 +367,7 @@ class TaskAPITestCase(test.TestCase):
     @ddt.data(True, False)
     @mock.patch("rally.api.time")
     @mock.patch("rally.api.objects.Task")
-    def test_abort_sync(self, soft, mock_task, mock_time):
+    def test_abort_with_waiting(self, soft, mock_task, mock_time):
         mock_task.get_status.side_effect = (
             consts.TaskStatus.INIT,
             consts.TaskStatus.VALIDATING,
@@ -378,7 +378,7 @@ class TaskAPITestCase(test.TestCase):
 
         some_uuid = "ca441749-0eb9-4fcc-b2f6-76d314c55404"
 
-        self.task_inst.abort(task_uuid=some_uuid, soft=soft, async=False)
+        self.task_inst.abort(task_uuid=some_uuid, soft=soft, wait=True)
 
         mock_task.get.assert_called_once_with(some_uuid)
         mock_task.get.return_value.abort.assert_called_once_with(soft=soft)
@@ -389,15 +389,25 @@ class TaskAPITestCase(test.TestCase):
     @ddt.data(True, False)
     @mock.patch("rally.api.time")
     @mock.patch("rally.api.objects.Task")
-    def test_abort_async(self, soft, mock_task, mock_time):
+    def test_abort_without_waiting(self, soft, mock_task, mock_time):
         some_uuid = "133695fb-400d-4988-859c-30bfaa0488ce"
 
-        self.task_inst.abort(task_uuid=some_uuid, soft=soft, async=True)
+        self.task_inst.abort(task_uuid=some_uuid, soft=soft, wait=False)
 
         mock_task.get.assert_called_once_with(some_uuid)
         mock_task.get.return_value.abort.assert_called_once_with(soft=soft)
         self.assertFalse(mock_task.get_status.called)
         self.assertFalse(mock_time.sleep.called)
+
+    @mock.patch("rally.api.LOG")
+    @mock.patch("rally.api.time")
+    @mock.patch("rally.api.objects.Task")
+    def test_abort_using_deprecated_async_argument(self, mock_task, mock_time,
+                                                   mock_log):
+        kwargs = {"async": True}
+        self.task_inst.abort(task_uuid="133695fb-400d-4988-859c-30bfaa0488ce",
+                             **kwargs)
+        self.assertTrue(mock_log.warning.called)
 
     @ddt.data({"task_status": "strange value",
                "expected_status": consts.TaskStatus.FINISHED},

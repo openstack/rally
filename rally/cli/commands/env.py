@@ -307,6 +307,7 @@ class EnvCommands(object):
 
         table.align = "l"
         table.align["available"] = "c"
+        table.sortby = "Platform"
         print("%s %s" % (env, available and YES or NO))
         print(table.get_string())
         if not available and detailed:
