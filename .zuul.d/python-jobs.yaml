@@ -1,0 +1,56 @@
+- job:
+    name: rally-tox-functional
+    parent: tox
+    description: |
+      Run test for rally project.
+
+      Uses tox with the ``self`` environment.
+    vars:
+      tox_envlist: functional
+
+- job:
+    name: rally-tox-self
+    parent: tox
+    description: |
+      Run test for rally project.
+
+      Uses tox with the ``self`` environment.
+    vars:
+      tox_envlist: self
+
+- job:
+    name: rally-tox-py34
+    parent: tox
+    nodeset: ubuntu-bionic
+    pre-run: tests/ci/playbooks/pre-run-tox.yaml
+    description: |
+      Run unit test for rally project.
+
+      Uses tox with the ``py34`` environment.
+    vars:
+      tox_envlist: py34
+      python_version: 3.4
+
+- job:
+    name: rally-tox-py36
+    parent: tox
+    nodeset: ubuntu-bionic
+    description: |
+      Run unit test for rally project.
+
+      Uses tox with the ``py36`` environment.
+    vars:
+      tox_envlist: py36
+
+- job:
+    name: rally-tox-py37
+    parent: tox
+    nodeset: ubuntu-bionic
+    pre-run: tests/ci/playbooks/pre-run-tox.yaml
+    description: |
+      Run unit test for rally project.
+
+      Uses tox with the ``py37`` environment.
+    vars:
+      tox_envlist: py37
+      python_version: 3.7

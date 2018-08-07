@@ -6,6 +6,13 @@
     timeout: 1800
 
 - job:
+    name: rally-install-ubuntu-bionic
+    parent: base
+    nodeset: ubuntu-bionic
+    run: tests/ci/playbooks/rally-install/run.yaml
+    timeout: 1800
+
+- job:
     name: rally-install-centos-7
     parent: base
     nodeset: centos-7
@@ -19,29 +26,27 @@
     run: tests/ci/playbooks/rally-database-migration/run.yaml
     timeout: 1800
 
-- job:
-    name: rally-tox-self
-    parent: tox
-    description: |
-      Run test for rally project.
-
-      Uses tox with the ``self`` environment.
-    vars:
-      tox_envlist: self
-
 - project:
     check:
       jobs:
         - rally-database-migration
         - rally-install-ubuntu-xenial
+        - rally-install-ubuntu-bionic
         - rally-install-centos-7
-        - openstack-tox-functional
+        - rally-tox-py34:
+            voting: false
+        - rally-tox-py36:
+            voting: false
+        - rally-tox-py37:
+            voting: false
+        - rally-tox-functional
         - rally-tox-self
     gate:
       jobs:
         - rally-database-migration
         - rally-install-ubuntu-xenial
+        - rally-install-ubuntu-bionic
         - rally-install-centos-7
-        - openstack-tox-functional
+        - rally-tox-functional
         - rally-tox-self
 

@@ -1,0 +1,15 @@
+
+- hosts: all
+  name: Installs all required packages
+  tasks:
+    - name: Install the proper python version
+      become: True
+      become_user: root
+      shell:
+        executable: /bin/sh
+        cmd: |
+          set -e
+
+          add-apt-repository ppa:deadsnakes/ppa --yes
+          apt-get update
+          apt-get install python{{python_version}}-dev --yes
