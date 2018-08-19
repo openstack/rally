@@ -194,8 +194,7 @@ class TaskEngineTestCase(test.TestCase):
     @mock.patch("rally.task.engine.scenario.Scenario.get")
     @mock.patch("rally.task.engine.context.Context.validate")
     def test__validate_config_syntax__wrong_context(
-            self, mock_context_validate, mock_scenario_get,
-            mock_dumps):
+            self, mock_context_validate, mock_scenario_get, mock_dumps):
         mock_dumps.return_value = "<JSON>"
         mock_context_validate.return_value = ["context_error"]
         scenario_cls = mock_scenario_get.return_value
@@ -344,8 +343,7 @@ class TaskEngineTestCase(test.TestCase):
                           mock_task_instance)
 
     @mock.patch("rally.task.engine.TaskEngine._validate_workload")
-    def test__validate_config_platforms(
-            self, mock__validate_workload):
+    def test__validate_config_platforms(self, mock__validate_workload):
 
         foo_cred = {"admin": "admin", "users": ["user1"]}
         env = mock.MagicMock(data={

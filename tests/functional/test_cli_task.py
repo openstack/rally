@@ -213,7 +213,8 @@ class TaskTestCase(unittest.TestCase):
         config = utils.TaskConfig(None)
         with self.assertRaises(utils.RallyCliError) as err:
             rally("task start --task %s" % config.filename)
-        self.assertIn("Input task is empty", err.exception.output)
+        self.assertIn("Task config is invalid: `It is empty`",
+                      err.exception.output)
 
     def test_results(self):
         rally = utils.Rally()
