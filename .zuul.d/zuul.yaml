@@ -27,6 +27,10 @@
     timeout: 1800
 
 - project:
+    templates:
+      - openstack-python-jobs
+      - openstack-python35-jobs
+      - publish-openstack-sphinx-docs
     check:
       jobs:
         - rally-database-migration
