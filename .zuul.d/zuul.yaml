@@ -30,7 +30,7 @@
     templates:
       - openstack-python-jobs
       - openstack-python35-jobs
-      - publish-openstack-sphinx-docs
+      - publish-openstack-docs-pti
     check:
       jobs:
         - rally-database-migration
