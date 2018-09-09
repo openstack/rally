@@ -17,8 +17,13 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
-unreleased
-----------
+[1.2.0] - unreleased
+--------------------
+
+Added
+~~~~~
+
+* New validator ``map_keys`` for checking keys of specific argument.
 
 Changed
 ~~~~~~~
