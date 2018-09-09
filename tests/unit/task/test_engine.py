@@ -77,11 +77,14 @@ class TaskEngineTestCase(test.TestCase):
     def test_validate__wrong_syntax(self):
         task = mock.MagicMock()
         eng = engine.TaskEngine(mock.MagicMock(), task, mock.Mock())
-        eng._validate_config_syntax = mock.MagicMock(
-            side_effect=exceptions.InvalidTaskConfig)
+        e = exceptions.InvalidTaskConfig(name="foo", pos=0, config="",
+                                         reason="foo")
+        eng._validate_config_syntax = mock.MagicMock(side_effect=e)
         eng._validate_config_platforms = mock.Mock()
 
-        self.assertRaises(exceptions.InvalidTaskException, eng.validate)
+        actual_e = self.assertRaises(exceptions.InvalidTaskException,
+                                     eng.validate)
+        self.assertEqual(e, actual_e)
 
         self.assertTrue(task.set_failed.called)
         # the next validation step should not be processed
@@ -90,12 +93,15 @@ class TaskEngineTestCase(test.TestCase):
     def test_validate__wrong_semantic(self):
         task = mock.MagicMock()
         eng = engine.TaskEngine(mock.MagicMock(), task, mock.Mock())
+        e = exceptions.InvalidTaskConfig(name="foo", pos=0, config="",
+                                         reason="foo")
         eng._validate_config_syntax = mock.MagicMock()
         eng._validate_config_platforms = mock.MagicMock()
-        eng._validate_config_semantic = mock.MagicMock(
-            side_effect=exceptions.InvalidTaskConfig)
+        eng._validate_config_semantic = mock.MagicMock(side_effect=e)
 
-        self.assertRaises(exceptions.InvalidTaskException, eng.validate)
+        actual_e = self.assertRaises(exceptions.InvalidTaskException,
+                                     eng.validate)
+        self.assertEqual(e, actual_e)
         self.assertTrue(task.set_failed.called)
         # all steps of validation are called, which means that the last one is
         # failed

@@ -396,10 +396,18 @@ class TaskEngine(object):
             exception_info = json.dumps(traceback.format_exc(), indent=2,
                                         separators=(",", ": "))
             self.task.set_failed(type(e).__name__, str(e), exception_info)
-            if (logging.is_debug() and
-                    not isinstance(e, exceptions.InvalidTaskConfig)):
-                LOG.exception("Invalid Task")
-            raise exceptions.InvalidTaskException(str(e))
+            expected_errors = (
+                # this error is a wrapper for all error messages from
+                # validators.
+                exceptions.InvalidTaskConfig,
+                # rally.task.task_cfg raises it
+                # _validate_config_semantic raises this error in case of
+                # failed platform check{s}
+                exceptions.ValidationError)
+            if logging.is_debug() and not isinstance(e, expected_errors):
+                LOG.exception("Unexpected error had happened while validating "
+                              "task.")
+            raise
 
     def _prepare_context(self, ctx, scenario_name, owner_id):
         context_config = {}

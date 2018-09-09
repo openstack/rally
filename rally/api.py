@@ -360,7 +360,7 @@ class _Task(APIGroup):
             raise
         except Exception as e:
             if logging.is_debug():
-                LOG.exception("Invalid Task")
+                LOG.exception("Unexpected error had happened")
             raise exceptions.InvalidTaskException(str(e))
 
         engine.TaskEngine(config, task, deployment.env_obj).validate()
@@ -407,7 +407,7 @@ class _Task(APIGroup):
             raise
         except Exception as e:
             if logging.is_debug():
-                LOG.exception("Invalid Task")
+                LOG.exception("Unexpected error had happened")
             raise exceptions.InvalidTaskException(str(e))
 
         if task is None:
