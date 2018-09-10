@@ -271,10 +271,15 @@ class ValidatablePluginMixin(object):
                     # Unexpected error is returned. save traceback as well
                     result = traceback.format_exc()
                 if result:
-                    LOG.debug("Result of validator '%s' is not successful for "
-                              "plugin %s." % (validator_cls.get_name(), name))
-                    results.append(result)
-
+                    results.append(
+                        "%(base)s plugin '%(pname)s' doesn't pass %(vname)s "
+                        "validation. Details: %(error)s" % {
+                            "base": cls.__name__,
+                            "pname": name,
+                            "vname": validator_cls.get_fullname(),
+                            "error": result
+                        }
+                    )
             if results:
                 break
 

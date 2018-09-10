@@ -43,17 +43,27 @@ class ValidationHelpersTestCase(test.TestCase):
 @plugin.configure(name="dummy_validator")
 class DummyValidator(validation.Validator):
 
-    def __init__(self, foo):
+    def __init__(self, foo, exc=False):
         """Dummy validator
 
         :param foo: additional parameter for Dummy validator
+        :param exc: whether to raise expected on unexpected error
         """
         super(DummyValidator, self).__init__()
         self.foo = foo
+        self.exc = exc
 
     def validate(self, context, config, plugin_cls, plugin_cfg):
         if self.foo not in config:
-            raise Exception("foo")
+            if self.exc:
+                raise Exception("foo")
+            self.fail("oops")
+
+
+@plugin.base()
+class DummyPluginBase(plugin.Plugin,
+                      validation.ValidatablePluginMixin):
+    pass
 
 
 class ValidatorTestCase(test.TestCase):
@@ -64,7 +74,7 @@ class ValidatorTestCase(test.TestCase):
                               validation.ValidatablePluginMixin):
             pass
 
-        @validation.add(name="dummy_validator", foo="bar")
+        @validation.add(name="dummy_validator", foo="bar", exc=True)
         @validation.add(name="required_platform", platform="foo", users=True)
         @plugin.configure(name="dummy_plugin")
         class DummyPlugin(DummyPluginBase):
@@ -84,16 +94,27 @@ class ValidatorTestCase(test.TestCase):
 
         DummyPlugin.unregister()
 
-    def test_failures(self):
-        @plugin.base()
-        class DummyPluginBase(plugin.Plugin,
-                              validation.ValidatablePluginMixin):
-            pass
+    def test_simple_failure(self):
 
         result = DummyPluginBase.validate("dummy_plugin", None, None, None)
         self.assertEqual(1, len(result))
         self.assertIn("There is no DummyPluginBase plugin "
                       "with name: 'dummy_plugin'", result[0])
+
+    def test_failure_includes_detailed_info(self):
+
+        @validation.add("dummy_validator", foo="bar")
+        @plugin.configure(name=self.id())
+        class Foo(DummyPluginBase):
+            pass
+
+        result = DummyPluginBase.validate(self.id(), {}, {}, None,
+                                          vtype="semantic")
+        self.assertEqual(1, len(result))
+        self.assertEqual(
+            "DummyPluginBase plugin '%s' doesn't pass dummy_validator@default "
+            "validation. Details: oops" % self.id(),
+            result[0])
 
 
 @ddt.ddt

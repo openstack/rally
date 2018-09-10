@@ -28,7 +28,7 @@ Added
 Changed
 ~~~~~~~
 
-* Improved validation errors for task config.
+* Improved validation errors for task component.
 
 [1.1.0] - 2018-08-07
 --------------------
