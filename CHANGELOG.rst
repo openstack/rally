@@ -29,6 +29,13 @@ Changed
 ~~~~~~~
 
 * Improved validation errors for task component.
+* [ElasticSearch exporter] Do not send 'no-name-action' index when the item
+  fails after some atomic actions completed and there is a root atomic.
+  For example, there is 'wait-for-some-resource-ready' action. It consists of
+  a bunch of get requests to update the current status. After specified timeout
+  this action can fail if the resource is not in the right state. In such case,
+  there is no reason to use 'no-name-action' for saving the error, the parent
+  index (i.e 'wait-for-some-resource-ready') will already store it.
 
 [1.1.0] - 2018-08-07
 --------------------

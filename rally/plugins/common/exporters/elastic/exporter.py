@@ -274,10 +274,6 @@ class ElasticSearchExporter(exporter.TaskExporter):
                 # the case when it is a top level of the scenario and and
                 # the item fails after some atomic actions completed
                 (not _parent and atomic_actions and
-                    not atomic_actions[-1].get("failed", False)) or
-                # the case when the item fails after some atomic actions
-                # completed and there is a root atomic
-                (_parent and atomic_actions and not _parent[1]["success"] and
                     not atomic_actions[-1].get("failed", False))):
             act_id = act_id_tmpl % {
                 "itr_id": itr["id"],
