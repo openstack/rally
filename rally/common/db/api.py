@@ -43,6 +43,7 @@ these objects be simple dictionaries.
 import datetime as dt
 import functools
 import six
+import tempfile
 import time
 
 from oslo_db import exception as db_exc
@@ -59,7 +60,9 @@ from rally.task.processing import charts
 
 
 CONF = cfg.CONF
-db_options.set_defaults(CONF, connection="sqlite:////tmp/rally.sqlite")
+
+db_options.set_defaults(
+    CONF, connection="sqlite:///%s/rally.sqlite" % tempfile.gettempdir())
 
 _FACADE = None
 _SESSION_MAKER = None
