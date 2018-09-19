@@ -14,7 +14,6 @@
 
 import copy
 
-import json
 import requests
 import six
 
@@ -25,7 +24,7 @@ LOG = logging.getLogger(__name__)
 
 
 class ElasticSearchClient(object):
-    """The helper class for communication with ElasticSearch 2.* and 5.*"""
+    """The helper class for communication with ElasticSearch 2.*, 5.*, 6.*"""
 
     # a number of documents to push to the cluster at once.
     CHUNK_LENGTH = 10000
@@ -99,7 +98,10 @@ class ElasticSearchClient(object):
         for pos in six.moves.range(0, len(documents), self.CHUNK_LENGTH):
             data = "\n".join(documents[pos:pos + self.CHUNK_LENGTH]) + "\n"
 
-            raw_resp = requests.post(self._url + "/_bulk", data=data)
+            raw_resp = requests.post(
+                self._url + "/_bulk", data=data,
+                headers={"Content-Type": "application/x-ndjson"}
+            )
             self._check_response(raw_resp, action="push documents to")
 
             LOG.debug("Successfully pushed %s documents." %
@@ -133,9 +135,9 @@ class ElasticSearchClient(object):
                     spec["type"] = "string"
                     spec["index"] = "not_analyzed"
 
-        data = json.dumps({"mappings": {doc_type: {"properties": properties}}})
-
-        resp = requests.put(self._url + "/%s" % name, data=data)
+        resp = requests.put(
+            self._url + "/%s" % name,
+            json={"mappings": {doc_type: {"properties": properties}}})
         self._check_response(resp, "create index at")
 
     def check_document(self, index, doc_id, doc_type="data"):

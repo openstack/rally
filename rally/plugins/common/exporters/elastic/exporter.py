@@ -47,14 +47,16 @@ class Validator(validation.Validator):
         except exceptions.RallyException as e:
             # re-raise a proper exception to hide redundant traceback
             self.fail(e.format_message())
-        if not (version.startswith("2.") or version.startswith("5.")):
+        if not (version.startswith("2.")
+                or version.startswith("5.")
+                or version.startswith("6.")):
             self.fail("The unsupported version detected %s." % version)
 
 
 @validation.add("es_exporter_destination")
 @exporter.configure("elastic")
 class ElasticSearchExporter(exporter.TaskExporter):
-    """Exports task results to the ElasticSearch 2.x or 5.x clusters.
+    """Exports task results to the ElasticSearch 2.x, 5.x or 6.x clusters.
 
     The exported data includes:
 

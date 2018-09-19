@@ -151,11 +151,13 @@ class ElasticSearchClientTestCase(test.TestCase):
 
         es.push_documents(documents)
 
+        headers = {"Content-Type": "application/x-ndjson"}
+
         self.assertEqual(
             [mock.call("http://localhost:9200/_bulk",
-                       data="doc1\ndoc2\n"),
+                       data="doc1\ndoc2\n", headers=headers),
              mock.call("http://localhost:9200/_bulk",
-                       data="doc3\n")],
+                       data="doc3\n", headers=headers)],
             mock_requests_post.call_args_list
         )
 
@@ -172,13 +174,11 @@ class ElasticSearchClientTestCase(test.TestCase):
         mock__check_response.assert_called_once_with(
             mock_requests_get.return_value, mock.ANY)
 
-    @mock.patch("%s.json.dumps" % PATH)
     @mock.patch("%s.ElasticSearchClient._check_response" % PATH)
     @mock.patch("%s.requests.put" % PATH)
-    def test_create_index_es_3(self, mock_requests_put, mock__check_response,
-                               mock_json_dumps):
+    def test_create_index_es_5(self, mock_requests_put, mock__check_response):
         es = client.ElasticSearchClient(None)
-        es._version = "3"
+        es._version = "5"
         i_name = "foo"
         i_type = "data"
         o_properties = {"prop1": {"type": "text"},
@@ -189,17 +189,13 @@ class ElasticSearchClientTestCase(test.TestCase):
 
         mock_requests_put.assert_called_once_with(
             "http://localhost:9200/%s" % i_name,
-            data=mock_json_dumps.return_value)
-        mock_json_dumps.assert_called_once_with(
-            {"mappings": {i_type: {"properties": o_properties}}})
+            json={"mappings": {i_type: {"properties": o_properties}}})
         mock__check_response.assert_called_once_with(
             mock_requests_put.return_value, mock.ANY)
 
-    @mock.patch("%s.json.dumps" % PATH)
     @mock.patch("%s.ElasticSearchClient._check_response" % PATH)
     @mock.patch("%s.requests.put" % PATH)
-    def test_create_index_es_2(self, mock_requests_put, mock__check_response,
-                               mock_json_dumps):
+    def test_create_index_es_2(self, mock_requests_put, mock__check_response):
         es = client.ElasticSearchClient(None)
         es._version = "2.4.3"
         i_name = "foo"
@@ -211,13 +207,12 @@ class ElasticSearchClientTestCase(test.TestCase):
 
         es.create_index(i_name, i_type, properties)
 
-        mock_requests_put.assert_called_once_with(
-            "http://localhost:9200/%s" % i_name,
-            data=mock_json_dumps.return_value)
         e_properties = {"prop1": {"type": "string"},
                         "prop2": {"type": "string",
                                   "index": "not_analyzed"}}
-        mock_json_dumps.assert_called_once_with(
-            {"mappings": {i_type: {"properties": e_properties}}})
+
+        mock_requests_put.assert_called_once_with(
+            "http://localhost:9200/%s" % i_name,
+            json={"mappings": {i_type: {"properties": e_properties}}})
         mock__check_response.assert_called_once_with(
             mock_requests_put.return_value, mock.ANY)

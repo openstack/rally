@@ -24,6 +24,7 @@ Added
 ~~~~~
 
 * New validator ``map_keys`` for checking keys of specific argument.
+* Support of ElasticSearch 6.x cluster *elastic* exporter.
 
 Changed
 ~~~~~~~
