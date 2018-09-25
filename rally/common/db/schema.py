@@ -113,7 +113,7 @@ def schema_upgrade(revision=None, config=None, engine=None):
     config = config or _alembic_config()
     engine = engine or api.get_engine()
 
-    if schema_revision() is None:
+    if schema_revision(engine=engine) is None:
         schema_stamp(INITIAL_REVISION_UUID, config=config)
 
     alembic.command.upgrade(config, revision or "head")
