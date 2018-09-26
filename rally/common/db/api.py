@@ -122,7 +122,7 @@ def serialize(data):
             result[k] = serialize(data[k])
         return result
 
-    raise ValueError("data has wrong type %s" % data)
+    raise ValueError("Failed to serialize %r data type." % type(data).__name__)
 
 
 def with_session(f):
