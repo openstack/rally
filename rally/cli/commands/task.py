@@ -878,15 +878,19 @@ class TaskCommands(object):
                                            "--type junit-xml"))
     @cliutils.args("--uuid", dest="tasks", nargs="+", type=str,
                    help="UUIDs of tasks or json reports of tasks")
+    @cliutils.args("--deployment", dest="deployment", type=str,
+                   help="Report all tasks with defined deployment",
+                   required=False)
     @envutils.default_from_global("tasks", envutils.ENV_TASK, "uuid")
     @cliutils.suppress_warnings
     def report(self, api, tasks=None, out=None,
-               open_it=False, out_format="html"):
+               open_it=False, out_format="html", deployment=None):
         """Generate a report for the specified task(s)."""
         self.export(api, tasks=tasks,
                     output_type=out_format,
                     output_dest=out,
-                    open_it=open_it)
+                    open_it=open_it,
+                    deployment=deployment)
 
     @cliutils.args("--force", action="store_true", help="force delete")
     @cliutils.args("--uuid", type=str, dest="task_id", nargs="*",
@@ -979,12 +983,20 @@ class TaskCommands(object):
                         "types) to save the report to or a connection string."
                         " It depends on the report type."
                    )
+    @cliutils.args("--deployment", dest="deployment", type=str,
+                   help="Report all tasks with defined deployment",
+                   required=False)
     @envutils.default_from_global("tasks", envutils.ENV_TASK, "uuid")
     @plugins.ensure_plugins_are_loaded
     def export(self, api, tasks=None, output_type=None, output_dest=None,
-               open_it=False):
+               open_it=False, deployment=None):
         """Export task results to the custom task's exporting system."""
-        tasks = isinstance(tasks, list) and tasks or [tasks]
+
+        if deployment is not None:
+            tasks = api.task.list(deployment=deployment, uuids_only=True)
+            tasks = [task["uuid"] for task in tasks]
+        else:
+            tasks = isinstance(tasks, list) and tasks or [tasks]
 
         exported_tasks = []
         for task_file_or_uuid in tasks:

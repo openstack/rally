@@ -732,7 +732,7 @@ class TaskCommandsTestCase(test.TestCase):
                          out="out", open_it=False, out_format="junit-xml")
         self.task.export.assert_called_once_with(
             self.fake_api, tasks="uuid", output_type="junit-xml",
-            output_dest="out", open_it=False
+            output_dest="out", open_it=False, deployment=None
         )
 
     @mock.patch("rally.cli.commands.task.cliutils.print_list")

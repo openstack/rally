@@ -17,6 +17,16 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
+Unreleased
+----------
+
+Changed
+~~~~~~~
+
+* Add the --deployment option to commands ``rally task report`` and
+  ``rally task export`` that allows to report/export all tasks from defined
+  deployment.
+
 [1.2.1] - 2018-09-27
 --------------------
 

@@ -324,11 +324,12 @@ class Task(object):
 
     def to_dict(self):
         db_task = self.task
-        env_name = db.env_get(self.task["env_uuid"])["name"]
-        db_task["env_name"] = env_name
-        db_task["deployment_name"] = env_name
-        db_task["deployment_uuid"] = db_task["env_uuid"]
-        self._serialize_dt(db_task)
+        if self.task.get("env_uuid"):
+            env_name = db.env_get(self.task["env_uuid"])["name"]
+            db_task["env_name"] = env_name
+            db_task["deployment_name"] = env_name
+            db_task["deployment_uuid"] = db_task["env_uuid"]
+            self._serialize_dt(db_task)
         for subtask in db_task.get("subtasks", []):
             self._serialize_dt(subtask)
             for workload in subtask["workloads"]:
@@ -344,9 +345,9 @@ class Task(object):
         return db.task_get_status(uuid)
 
     @staticmethod
-    def list(status=None, deployment=None, tags=None):
+    def list(status=None, deployment=None, tags=None, uuids_only=False):
         return [Task(db_task) for db_task in db.task_list(
-            status, env=deployment, tags=tags)]
+            status, env=deployment, tags=tags, uuids_only=False)]
 
     @staticmethod
     def delete_by_uuid(uuid, status=None):
