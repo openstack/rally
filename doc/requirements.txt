@@ -1,3 +1,2 @@
-rally-openstack
 # we are using theme from it
 oslosphinx

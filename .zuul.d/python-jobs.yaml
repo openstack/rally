@@ -1,56 +1,98 @@
 - job:
-    name: rally-tox-functional
-    parent: tox
+    name: rally-tox-base
+    parent: unittests
+    pre-run: tests/ci/playbooks/rally-tox-base/pre-run.yaml
+    run: tests/ci/playbooks/rally-tox-base/run.yaml
+    post-run: tests/ci/playbooks/rally-tox-base/post-run.yaml
+    description: |
+      Run test for rally project.
+
+- job:
+    name: rally-tox-docs
+    parent: rally-tox-base
     description: |
       Run test for rally project.
 
       Uses tox with the ``self`` environment.
     vars:
-      tox_envlist: functional
+      tox_env: docs
+
+- job:
+    name: rally0-tox-pep8
+    parent: rally-tox-base
+    description: |
+      Run test for rally project.
+
+      Uses tox with the ``self`` environment.
+    vars:
+      tox_env: pep8
+
+- job:
+    name: rally-tox-functional
+    parent: rally-tox-base
+    description: |
+      Run test for rally project.
+
+      Uses tox with the ``functional`` environment.
+    vars:
+      tox_env: functional
 
 - job:
     name: rally-tox-self
-    parent: tox
+    parent: rally-tox-base
     description: |
       Run test for rally project.
 
       Uses tox with the ``self`` environment.
     vars:
-      tox_envlist: self
+      tox_env: self
 
 - job:
-    name: rally-tox-py34
-    parent: tox
-    nodeset: ubuntu-bionic
-    pre-run: tests/ci/playbooks/pre-run-tox.yaml
+    name: rally0-tox-py27
+    parent: rally-tox-base
     description: |
       Run unit test for rally project.
 
       Uses tox with the ``py34`` environment.
     vars:
-      tox_envlist: py34
-      python_version: 3.4
+      tox_env: py27
+
+- job:
+    name: rally-tox-py34
+    parent: rally-tox-base
+    description: |
+      Run unit test for rally project.
+
+      Uses tox with the ``py34`` environment.
+    vars:
+      tox_env: py34
+
+- job:
+    name: rally0-tox-py35
+    parent: rally-tox-base
+    description: |
+      Run unit test for rally project.
+
+      Uses tox with the ``py35`` environment.
+    vars:
+      tox_env: py35
 
 - job:
     name: rally-tox-py36
-    parent: tox
-    nodeset: ubuntu-bionic
+    parent: rally-tox-base
     description: |
       Run unit test for rally project.
 
       Uses tox with the ``py36`` environment.
     vars:
-      tox_envlist: py36
+      tox_env: py36
 
 - job:
     name: rally-tox-py37
-    parent: tox
-    nodeset: ubuntu-bionic
-    pre-run: tests/ci/playbooks/pre-run-tox.yaml
+    parent: rally-tox-base
     description: |
       Run unit test for rally project.
 
       Uses tox with the ``py37`` environment.
     vars:
-      tox_envlist: py37
-      python_version: 3.7
+      tox_env: py37

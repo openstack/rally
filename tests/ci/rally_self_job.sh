@@ -14,13 +14,11 @@
 
 TASK_FILE=$1
 PLUGIN_PATHS=rally-jobs/plugins
-if [ -n "$ZUUL_PROJECT" ]; then
-    HTML_REPORT=testr_results.html
-    JSON_REPORT=testr_results.json
-else
-    HTML_REPORT=rally_self_results.html
-    JSON_REPORT=rally_self_results.json
-fi
+
+mkdir -p .test_results
+HTML_REPORT=.test_results/rally_self_report.html
+JSON_REPORT=.test_results/rally_self_results.json
+
 RND=$(head /dev/urandom | tr -dc a-z0-9 | head -c 5)
 TMP_RALLY_CONF="/tmp/self-rally-$RND.conf"
 TMP_RALLY_DB="/tmp/self-rally-$RND.sqlite"
@@ -33,7 +31,7 @@ sed -i.bak "s|#connection =.*|connection = \"$DBCONNSTRING\"|" $TMP_RALLY_CONF
 rally --config-file $TMP_RALLY_CONF db create
 
 # Create self deployment
-$RALLY -d deployment create --name=self
+$RALLY -d env create --name=self
 
 # Run task
 $RALLY -d --plugin-paths=$PLUGIN_PATHS task start $TASK_FILE

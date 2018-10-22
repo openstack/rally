@@ -1,0 +1,23 @@
+- hosts: all
+  vars:
+    results_dir: "{{ zuul.project.src_dir }}/.test_results/"
+  tasks:
+    - name: Check the existence of results dir
+      stat:
+        path: '{{ results_dir }}'
+      register: results_dir_stat
+
+    - name: Save results
+      become: yes
+      when: results_dir_stat.stat.exists == True
+      synchronize:
+        src: "{{ results_dir }}"
+        dest: '{{ zuul.executor.log_root }}/'
+        mode: pull
+        copy_links: true
+        verify_host: true
+        rsync_opts:
+        - --include=/**
+        - --include=*/
+        - --exclude=*
+        - --prune-empty-dirs

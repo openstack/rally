@@ -27,32 +27,37 @@
     timeout: 1800
 
 - project:
-    templates:
-      - openstack-python-jobs
-      - openstack-python35-jobs
-      - publish-openstack-docs-pti
+    #templates:
+    #  - publish-openstack-docs-pti
     check:
       jobs:
+        - rally-tox-docs
+        - rally0-tox-pep8
+        - rally0-tox-py27
+        - rally-tox-py34
+        - rally0-tox-py35
+        - rally-tox-py36
+        - rally-tox-py37
+        - rally-tox-cover
+        - rally-tox-functional
         - rally-database-migration
         - rally-install-ubuntu-xenial
         - rally-install-ubuntu-bionic
         - rally-install-centos-7
-        - rally-tox-cover
-        - rally-tox-functional
-        - rally-tox-py34
-        - rally-tox-py36
-        - rally-tox-py37
         - rally-tox-self
     gate:
       jobs:
+        - rally-tox-docs
+        - rally0-tox-pep8
+        - rally0-tox-py27
+        - rally-tox-py34
+        - rally0-tox-py35
+        - rally-tox-py36
+        - rally-tox-py37
+        - rally-tox-cover
+        - rally-tox-functional
         - rally-database-migration
         - rally-install-ubuntu-xenial
         - rally-install-ubuntu-bionic
         - rally-install-centos-7
-        - rally-tox-cover
-        - rally-tox-functional
-        - rally-tox-py34
-        - rally-tox-py36
-        - rally-tox-py37
         - rally-tox-self
-

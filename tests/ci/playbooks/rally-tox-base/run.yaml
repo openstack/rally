@@ -1,0 +1,6 @@
+- hosts: all
+  tasks:
+    - name: Run tox
+      args:
+        chdir: "{{ zuul.project.src_dir }}"
+      command: "tox -e{{ tox_env }}"
