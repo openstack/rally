@@ -18,7 +18,7 @@
       tox_env: docs
 
 - job:
-    name: rally0-tox-pep8
+    name: rally-tox-pep8
     parent: rally-tox-base
     description: |
       Run test for rally project.
@@ -48,7 +48,7 @@
       tox_env: self
 
 - job:
-    name: rally0-tox-py27
+    name: rally-tox-py27
     parent: rally-tox-base
     description: |
       Run unit test for rally project.
@@ -68,7 +68,7 @@
       tox_env: py34
 
 - job:
-    name: rally0-tox-py35
+    name: rally-tox-py35
     parent: rally-tox-base
     description: |
       Run unit test for rally project.
