@@ -516,7 +516,7 @@ class VerifyCommands(object):
                 tags=tags, **run_args)
             verification_uuid = results["verification"]["uuid"]
         except exceptions.DeploymentNotFinishedStatus as e:
-            print("Cannot start a verefication against unfinished deployment: "
+            print("Cannot start a verification against unfinished deployment: "
                   " %s" % e)
             return 1
 
