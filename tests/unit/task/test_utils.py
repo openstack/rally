@@ -471,8 +471,8 @@ class WaitForStatusTestCase(test.TestCase):
     @mock.patch("rally.task.utils.time.sleep")
     @mock.patch("rally.task.utils.time.time", return_value=1)
     def test_wait_deletion_deleted(self, mock_time, mock_sleep):
-        # resource manager return resouce with "deleted" status sometime,
-        # wait_for_status return the resouce instance.
+        # resource manager return resource with "deleted" status sometime,
+        # wait_for_status return the resource instance.
         res = {"status": "deleted"}
         upd = mock.MagicMock(side_effect=[{"status": "deleted"}])
         ret = utils.wait_for_status(resource=res,
