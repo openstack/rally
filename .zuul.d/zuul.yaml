@@ -27,8 +27,10 @@
     timeout: 1800
 
 - project:
-    #templates:
-    #  - publish-openstack-docs-pti
+    templates:
+      - docs-on-readthedocs
+    vars:
+      rtd_webhook_id: "52691"
     check:
       jobs:
         - rally-tox-docs
