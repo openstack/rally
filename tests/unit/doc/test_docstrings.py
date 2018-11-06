@@ -63,9 +63,8 @@ class DocstringsTestCase(test.TestCase):
     # the list with plugins names which use rst definitions in their docstrings
     _HAS_VALID_DEFINITIONS = []
 
-    def _validate_rst(self, plugin_name, text, msg_buffer):
-        parsed_docstring = _parse_rst(text)
-        for item in parsed_docstring:
+    def _iterate_parsed_rst(self, plugin_name, items, msg_buffer):
+        for item in items:
             if (isinstance(item, nodes.definition_list)
                     and plugin_name not in self._HAS_VALID_DEFINITIONS):
                 msg_buffer.append("Plugin %s has a docstring with invalid "
@@ -76,6 +75,9 @@ class DocstringsTestCase(test.TestCase):
                 msg_buffer.append(
                     "A warning is caught while parsing docstring of '%s' "
                     "plugin: %s" % (plugin_name, item.astext()))
+            elif item.children:
+                self._iterate_parsed_rst(plugin_name, item.children,
+                                         msg_buffer)
 
     def _check_docstrings(self, msg_buffer):
         for plg_cls in plugin.Plugin.get_all():
@@ -99,9 +101,10 @@ class DocstringsTestCase(test.TestCase):
             #   "definitions" means that there is an issue with intends or
             #   missed empty line before the list title and list items.
             if doc_info["description"]:
-                self._validate_rst(plg_cls.get_name(),
-                                   doc_info["description"],
-                                   msg_buffer)
+                parsed_docstring = _parse_rst(doc_info["description"])
+                self._iterate_parsed_rst(plg_cls.get_name(),
+                                         parsed_docstring,
+                                         msg_buffer)
 
     def _check_described_params(self, msg_buffer):
         for plg_cls in plugin.Plugin.get_all():
@@ -121,5 +124,26 @@ class DocstringsTestCase(test.TestCase):
         self._check_docstrings(msg_buffer)
 
         self._check_described_params(msg_buffer)
+        if msg_buffer:
+            self.fail("\n%s" % "\n===============\n".join(msg_buffer))
+
+    def test_plugin_bases_have_docstrigs(self):
+        plugin_bases = set()
+        msg_buffer = []
+        for plg_cls in plugin.Plugin.get_all(allow_hidden=True):
+            plugin_bases.add(plg_cls._get_base())
+        for base in plugin_bases:
+            name = "%s.%s" % (base.__module__, base.__name__)
+            try:
+                docstring = base._get_doc()
+            except Exception:
+                docstring = base.__doc__
+
+            print(name)
+            parsed_docstring = _parse_rst(docstring)
+            self._iterate_parsed_rst(name,
+                                     parsed_docstring,
+                                     msg_buffer)
+
         if msg_buffer:
             self.fail("\n%s" % "\n===============\n".join(msg_buffer))

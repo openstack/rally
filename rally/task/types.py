@@ -93,6 +93,7 @@ def preprocess(name, context, args):
 @plugin.base()
 @six.add_metaclass(abc.ABCMeta)
 class ResourceType(plugin.Plugin):
+    """A helper plugin for pre-processing input data of resources."""
 
     def __init__(self, context, cache=None):
         self._context = context

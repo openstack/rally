@@ -172,6 +172,7 @@ class BaseContext(plugin.Plugin, functional.FunctionalMixin,
 @validation.add_default("jsonschema")
 @plugin.base()
 class Context(BaseContext, validation.ValidatablePluginMixin):
+    """The base class for task contexts."""
     def __init__(self, ctx):
         super(Context, self).__init__(ctx)
         self.task = self.context.get("task", {})

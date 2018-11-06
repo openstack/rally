@@ -64,10 +64,12 @@ class TaskExporter(plugin.Plugin, validation.ValidatablePluginMixin):
     different formats and send them to the different systems.
 
     To discover available plugins, call
-      ``rally plugin list --plugin-base TaskExporter``.
+
+      rally plugin list --plugin-base TaskExporter.
 
     To export results of a task, call
-      ``rally task export --uuid <task-uuid> --type <plugin-name> --to <dest>``
+
+      rally task export --uuid <task-uuid> --type <plugin-name> --to <dest>
 
     """
 
