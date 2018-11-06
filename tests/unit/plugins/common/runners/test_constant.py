@@ -56,15 +56,6 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
         else:
             self.assertGreater(len(results), 0)
 
-    @mock.patch(RUNNERS + "constant.runner")
-    def test__run_scenario_once_with_unpack_args(self, mock_runner):
-        result = constant._run_scenario_once_with_unpack_args(
-            ("FOO", ("BAR", "QUUZ")))
-
-        self.assertEqual(result, mock_runner._run_scenario_once.return_value)
-        mock_runner._run_scenario_once.assert_called_once_with(
-            "FOO", ("BAR", "QUUZ"))
-
     @mock.patch(RUNNERS + "constant.time")
     @mock.patch(RUNNERS + "constant.threading.Thread")
     @mock.patch(RUNNERS + "constant.multiprocessing.Queue")
@@ -89,7 +80,7 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
                               "id": "uuid1"}]}
         info = {"processes_to_start": 1, "processes_counter": 1}
 
-        constant._worker_process(mock_queue, fake_ram_int, 1, 2, times,
+        constant._worker_process(mock_queue, fake_ram_int, 1, 2, times, None,
                                  context, "Dummy", "dummy", (),
                                  mock_event_queue, mock_event, info)
 
@@ -268,6 +259,7 @@ class ConstantForDurationScenarioRunnerTestCase(test.TestCase):
         self.context = fakes.FakeContext({"task": {"uuid": "uuid"}}).context
         self.context["iteration"] = 14
         self.args = {"a": 1}
+        self.task = mock.MagicMock()
 
     @ddt.data(({"duration": 0,
                 "concurrency": 2,
@@ -288,8 +280,9 @@ class ConstantForDurationScenarioRunnerTestCase(test.TestCase):
 
         runner_obj._run_scenario(fakes.FakeScenario, "do_it",
                                  self.context, self.args)
-        # NOTE(mmorais): when duration is 0, scenario executes exactly 1 time
-        expected_times = 1
+        # NOTE(mmorais/msimonin): when duration is 0, scenario executes exactly
+        # 1 time per unit of parrallelism
+        expected_times = self.config["concurrency"]
         self.assertEqual(expected_times, len(runner_obj.result_queue))
         for result_batch in runner_obj.result_queue:
             for result in result_batch:
@@ -301,8 +294,9 @@ class ConstantForDurationScenarioRunnerTestCase(test.TestCase):
 
         runner_obj._run_scenario(fakes.FakeScenario, "something_went_wrong",
                                  self.context, self.args)
-        # NOTE(mmorais): when duration is 0, scenario executes exactly 1 time
-        expected_times = 1
+        # NOTE(mmorais/msimonin): when duration is 0, scenario executes exactly
+        # 1 time per unit of parrallelism
+        expected_times = self.config["concurrency"]
         self.assertEqual(expected_times, len(runner_obj.result_queue))
         for result_batch in runner_obj.result_queue:
             for result in result_batch:
@@ -315,8 +309,9 @@ class ConstantForDurationScenarioRunnerTestCase(test.TestCase):
 
         runner_obj._run_scenario(fakes.FakeScenario, "raise_timeout",
                                  self.context, self.args)
-        # NOTE(mmorais): when duration is 0, scenario executes exactly 1 time
-        expected_times = 1
+        # NOTE(mmorais/msimonin): when duration is 0, scenario executes exactly
+        # 1 time per unit of parrallelism
+        expected_times = self.config["concurrency"]
         self.assertEqual(expected_times, len(runner_obj.result_queue))
         for result_batch in runner_obj.result_queue:
             for result in result_batch:
@@ -324,7 +319,7 @@ class ConstantForDurationScenarioRunnerTestCase(test.TestCase):
         self.assertIn("error", runner_obj.result_queue[0][0])
 
     def test__run_scenario_constantly_aborted(self):
-        runner_obj = constant.ConstantForDurationScenarioRunner(None,
+        runner_obj = constant.ConstantForDurationScenarioRunner(self.task,
                                                                 self.config)
 
         runner_obj.abort()
