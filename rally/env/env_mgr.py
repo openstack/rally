@@ -69,8 +69,8 @@ SPEC_SCHEMA = {
         "!extras": {
             "type": "object",
             "description": (
-                "External information provided by users, can be used for"
-                "integration of other tooling outside of rally or just"
+                "External information provided by users, can be used for "
+                "integration of other tooling outside of rally or just "
                 "providing some specific meta information")
         },
         "!config": {

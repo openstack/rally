@@ -143,11 +143,11 @@ class CheckConstantValidator(validation.Validator):
     def validate(self, context, config, plugin_cls, plugin_cfg):
         if plugin_cfg.get("concurrency", 1) > plugin_cfg.get("times", 1):
             return self.fail(
-                "Parameter 'concurrency' means a number of parallel executions"
-                "of iterations. Parameter 'times' means total number of "
-                "iteration executions. It is redundant (and restricted) to "
-                "have number of parallel iterations bigger then total number "
-                "of iterations.")
+                "Parameter 'concurrency' means a number of parallel "
+                "executions of iterations. Parameter 'times' means total "
+                "number of iteration executions. It is redundant "
+                "(and restricted) to have number of parallel iterations "
+                "bigger then total number of iterations.")
 
 
 @validation.add("check_constant")

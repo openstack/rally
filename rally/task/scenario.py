@@ -32,7 +32,7 @@ CONF = cfg.CONF
 CONF_OPTS = [
     cfg.StrOpt(
         "scenario_resource_name_format",
-        help="Template is used to generate random names of resources. X is"
+        help="Template is used to generate random names of resources. X is "
              "replaced with random latter, amount of X can be adjusted")
 ]
 CONF.register_opts(CONF_OPTS)

@@ -115,7 +115,7 @@ def optional_action_timer(name, argument_name="atomic_action", default=True):
     def wrap(func):
         @functools.wraps(func)
         def func_atomic_actions(self, *args, **kwargs):
-            LOG.warning("'optional_action_timer' is deprecated"
+            LOG.warning("'optional_action_timer' is deprecated "
                         "since rally v0.10.0."
                         "Please use action_timer instead, "
                         "we have improved atomic actions, "

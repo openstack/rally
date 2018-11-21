@@ -192,7 +192,7 @@ def wait_for_status(resource, ready_statuses, failure_statuses=["error"],
 
     if (ready_statuses & failure_statuses):
         raise ValueError(
-            "Can't wait for resource's %s status. Ready and Failure"
+            "Can't wait for resource's %s status. Ready and Failure "
             "statuses conflict." % resource_repr)
     if not ready_statuses:
         raise ValueError(
