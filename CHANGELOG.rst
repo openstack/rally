@@ -17,15 +17,22 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
-Unreleased
-----------
+[1.3.0] - 2018-11-30
+--------------------
 
-Changed
-~~~~~~~
+Added
+~~~~~
 
-* Add the --deployment option to commands ``rally task report`` and
-  ``rally task export`` that allows to report/export all tasks from defined
-  deployment.
+Add the --deployment option to commands ``rally task report`` and
+``rally task export`` that allows to report/export all tasks from defined
+deployment.
+
+Fixed
+~~~~~
+
+A floating bug with ``constant_for_duration`` runner.
+
+`Lauchpad-bug #1800447 <https://launchpad.net/bugs/1800447>`_
 
 [1.2.1] - 2018-09-27
 --------------------
