@@ -31,3 +31,18 @@ def database_revision():
     from rally.common.db import schema
 
     return schema.schema_revision(detailed=True)
+
+
+def plugins_versions():
+    """Show packages version"""
+    import pkg_resources
+
+    packages = {}
+    for package in pkg_resources.working_set:
+        entry_map = package.get_entry_map("rally_plugins")
+        if not entry_map:
+            # this package doesn't have rally_plugins entry-point
+            continue
+        packages[package.project_name] = package.version
+
+    return packages

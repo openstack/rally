@@ -27,6 +27,12 @@ Add the --deployment option to commands ``rally task report`` and
 ``rally task export`` that allows to report/export all tasks from defined
 deployment.
 
+Changed
+~~~~~~~
+
+``rally --version`` prints version of Rally framework with versions of
+installed plugins instead of printing just version of Rally framework.
+
 Fixed
 ~~~~~
 

@@ -508,14 +508,22 @@ def _compose_action_description(action_fn):
     return description
 
 
+def _print_version():
+    from rally.common import version
+
+    print("Rally version: %s" % version.version_string())
+    packages = version.plugins_versions()
+    if packages:
+        print("\nInstalled Plugins:")
+        print("\n".join("\t%s: %s" % p for p in sorted(packages.items())))
+
+
 def _add_command_parsers(categories, subparsers):
 
     # INFO(oanufriev) This monkey patching makes our custom parser class to be
     # used instead of native.  This affects all subparsers down from
     # 'subparsers' parameter of this function (categories and actions).
     subparsers._parser_class = CategoryParser
-
-    parser = subparsers.add_parser("version")
 
     parser = subparsers.add_parser("bash-completion")
     parser.add_argument("query_category", nargs="?")
@@ -568,6 +576,10 @@ def validate_deprecated_args(argv, fn):
 
 
 def run(argv, categories):
+    if argv[1] in ["version", "--version"]:
+        _print_version()
+        return 0
+
     parser = lambda subparsers: _add_command_parsers(categories, subparsers)
     category_opt = cfg.SubCommandOpt("category",
                                      title="Command categories",
@@ -610,10 +622,6 @@ def run(argv, categories):
     except exceptions.RallyException as e:
         print(e)
         return(2)
-
-    if CONF.category.name == "version":
-        print(CONF.version)
-        return(0)
 
     if CONF.category.name == "bash-completion":
         print(_generate_bash_completion_script())

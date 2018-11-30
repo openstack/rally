@@ -245,10 +245,10 @@ class CliUtilsTestCase(test.TestCase):
     @mock.patch("rally.api.API",
                 side_effect=exceptions.RallyException("config_file"))
     def test_run_fails(self, mock_rally_api_api):
-        ret = cliutils.run(["rally", "version"], self.categories)
+        ret = cliutils.run(["rally", "task list"], self.categories)
         self.assertEqual(2, ret)
         mock_rally_api_api.assert_called_once_with(
-            config_args=["version"], skip_db_check=True)
+            config_args=["task list"], skip_db_check=True)
 
     @mock.patch("rally.api.API.check_db_revision")
     def test_run_version(self, mock_api_check_db_revision):
