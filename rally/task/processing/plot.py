@@ -243,7 +243,7 @@ def plot(tasks_results, include_libs=False):
                            include_libs=include_libs)
 
 
-def trends(tasks):
+def trends(tasks, include_libs=False):
     trends = Trends()
     for task in tasks:
         for workload in itertools.chain(
@@ -251,7 +251,8 @@ def trends(tasks):
             trends.add_result(task["uuid"], workload)
     template = ui_utils.get_template("task/trends.html")
     return template.render(version=version.version_string(),
-                           data=json.dumps(trends.get_data()))
+                           data=json.dumps(trends.get_data()),
+                           include_libs=include_libs)
 
 
 class Trends(object):

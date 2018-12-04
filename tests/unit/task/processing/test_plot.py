@@ -389,7 +389,8 @@ class PlotTestCase(test.TestCase):
             trends.add_result.mock_calls)
         mock_get_template.assert_called_once_with("task/trends.html")
         template.render.assert_called_once_with(version="42.0",
-                                                data="[\"foo\", \"bar\"]")
+                                                data="[\"foo\", \"bar\"]",
+                                                include_libs=False)
 
 
 @ddt.ddt

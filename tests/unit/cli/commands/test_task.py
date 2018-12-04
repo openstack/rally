@@ -649,77 +649,14 @@ class TaskCommandsTestCase(test.TestCase):
                        consts.TaskStatus.ABORTED)))
         mock_stdout.write.assert_has_calls([mock.call(expected_out)])
 
-    @mock.patch("rally.cli.commands.task.os.path")
-    @mock.patch("rally.cli.commands.task.open", create=True)
-    @mock.patch("rally.cli.commands.task.plot")
-    @mock.patch("rally.cli.commands.task.webbrowser")
-    def test_trends(self, mock_webbrowser, mock_plot,
-                    mock_open, mock_os_path):
-        mock_os_path.exists = lambda p: p.startswith("path_to_")
-        mock_os_path.expanduser = lambda p: p + "_expanded"
-        mock_os_path.realpath.side_effect = lambda p: "realpath_" + p
-        self.task._load_task_results_file = mock.MagicMock(
-            return_value=["result_1_from_file", "result_2_from_file"]
-        )
-        mock_fd = mock.mock_open()
-        mock_open.side_effect = mock_fd
-
-        task_obj = self._make_task()
-        self.fake_api.task.get.return_value = task_obj
-        mock_plot.trends.return_value = "rendered_trends_report"
-
-        ret = self.task.trends(self.fake_api,
-                               tasks=["ab123456-38d8-4c8f-bbcc-fc8f74b004ae",
-                                      "cd654321-38d8-4c8f-bbcc-fc8f74b004ae",
-                                      "path_to_file"],
-                               out="output.html", out_format="html")
-        expected = [task_obj, task_obj,
-                    "result_1_from_file", "result_2_from_file"]
-        mock_plot.trends.assert_called_once_with(expected)
-        self.assertEqual([mock.call(self.fake_api, "path_to_file")],
-                         self.task._load_task_results_file.mock_calls)
-        self.assertEqual([mock.call("output.html_expanded", "w+")],
-                         mock_open.mock_calls)
-        self.assertIsNone(ret)
-        self.assertFalse(mock_webbrowser.open_new_tab.called)
-        mock_fd.return_value.write.assert_called_once_with(
-            "rendered_trends_report")
-
-    @mock.patch("rally.cli.commands.task.os.path")
-    @mock.patch("rally.cli.commands.task.open", create=True)
-    @mock.patch("rally.cli.commands.task.plot")
-    @mock.patch("rally.cli.commands.task.webbrowser")
-    def test_trends_single_file_and_open_webbrowser(
-            self, mock_webbrowser, mock_plot, mock_open, mock_os_path):
-        mock_os_path.exists.return_value = True
-        mock_os_path.expanduser = lambda path: path
-        mock_os_path.realpath.side_effect = lambda p: "realpath_" + p
-        self.task._load_task_results_file = mock.MagicMock(
-            return_value=["result"]
-        )
-        ret = self.task.trends(self.real_api,
-                               tasks=["path_to_file"], open_it=True,
-                               out="output.html", out_format="html")
-        self.assertIsNone(ret)
-        mock_webbrowser.open_new_tab.assert_called_once_with(
-            "file://realpath_output.html")
-
-    @mock.patch("rally.cli.commands.task.os.path")
-    @mock.patch("rally.cli.commands.task.open", create=True)
-    @mock.patch("rally.cli.commands.task.plot")
-    def test_trends_task_id_is_not_uuid_like(self, mock_plot,
-                                             mock_open, mock_os_path):
-        mock_os_path.exists.return_value = False
-
-        ret = self.task.trends(self.fake_api,
-                               tasks=["ab123456-38d8-4c8f-bbcc-fc8f74b004ae"],
-                               out="output.html", out_format="html")
-        self.assertIsNone(ret)
-
-        ret = self.task.trends(self.fake_api,
-                               tasks=["this-is-not-uuid"],
-                               out="output.html", out_format="html")
-        self.assertEqual(1, ret)
+    def test_trends(self):
+        self.task.export = mock.MagicMock()
+        self.task.trends(self.fake_api,
+                         tasks=["uuid"],
+                         out="output.html")
+        self.task.export.assert_called_once_with(
+            self.fake_api, tasks=["uuid"], output_type="trends-html",
+            output_dest="output.html", open_it=False)
 
     def test_trends_no_tasks_given(self):
         ret = self.task.trends(self.fake_api, tasks=[],
@@ -978,7 +915,6 @@ class TaskCommandsTestCase(test.TestCase):
         )
         mock_print.assert_called_once_with("content")
 
-    @mock.patch("rally.cli.commands.task.plot.charts")
     @mock.patch("rally.cli.commands.task.sys.stdout")
     @ddt.data({"error_type": "test_no_trace_type",
                "error_message": "no_trace_error_message",
@@ -990,9 +926,8 @@ class TaskCommandsTestCase(test.TestCase):
                })
     @ddt.unpack
     def test_show_task_errors_no_trace(self, mock_stdout,
-                                       mock_charts, error_type, error_message,
+                                       error_type, error_message,
                                        error_traceback=None):
-        mock_charts.MainStatsTable.columns = ["Column 1", "Column 2"]
         test_uuid = "test_task_id"
         error_data = [error_type, error_message]
         if error_traceback:

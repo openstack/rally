@@ -39,7 +39,6 @@ from rally import exceptions
 from rally import plugins
 from rally.task import atomic
 from rally.task.processing import charts
-from rally.task.processing import plot
 from rally.task import utils as tutils
 from rally.utils import strutils
 
@@ -821,40 +820,21 @@ class TaskCommands(object):
                    help="Open the output in a browser.")
     @cliutils.args("--tasks", dest="tasks", nargs="+",
                    help="UUIDs of tasks, or JSON files with task results")
+    @cliutils.args("--html-static", dest="out_format",
+                   action="store_const", const="trends-html-static")
     @cliutils.suppress_warnings
     def trends(self, api, *args, **kwargs):
         """Generate workloads trends HTML report."""
-
         tasks = kwargs.get("tasks", []) or list(args)
-
         if not tasks:
             print("ERROR: At least one task must be specified",
                   file=sys.stderr)
             return 1
 
-        results = []
-        for task_id in tasks:
-            if os.path.exists(os.path.expanduser(task_id)):
-                results.extend(self._load_task_results_file(api, task_id))
-            elif strutils.is_uuid_like(task_id):
-                results.append(api.task.get(task_id=task_id, detailed=True))
-            else:
-                print("ERROR: Invalid UUID or file name passed: %s" % task_id,
-                      file=sys.stderr)
-                return 1
-
-        result = plot.trends(results)
-
-        out = kwargs.get("out")
-        if out:
-            output_file = os.path.expanduser(out)
-
-            with open(output_file, "w+") as f:
-                f.write(result)
-            if kwargs.get("open_it"):
-                webbrowser.open_new_tab("file://" + os.path.realpath(out))
-        else:
-            print(result)
+        self.export(api, tasks=tasks,
+                    output_type=kwargs.get("out_format", "trends-html"),
+                    output_dest=kwargs.get("out"),
+                    open_it=kwargs.get("open_it", False))
 
     @cliutils.deprecated_args("--tasks", dest="tasks", nargs="+",
                               release="0.10.0", alternative="--uuid")

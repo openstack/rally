@@ -17,6 +17,15 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
+unreleased
+--------------------
+
+Changed
+~~~~~~~
+
+* Add the --html-static option to commands ``rally task trends``, it could generate
+  trends report with embedded js/css.
+
 [1.3.0] - 2018-12-01
 --------------------
 
