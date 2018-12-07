@@ -10,7 +10,7 @@ Glossary
   team is working on improving it.  If you cannot find a definition in
   which you are interested, feel free to ping us via IRC
   (#openstack-rally channel at Freenode) or via E-Mail
-  (openstack-dev@lists.openstack.org with tag [Rally]).
+  (openstack-discuss@lists.openstack.org with tag [Rally]).
 
 .. contents::
   :depth: 1

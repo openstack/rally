@@ -13,7 +13,8 @@
 #  Rally at readthedocs - http://rally.readthedocs.org                        #
 #  How to contribute - http://rally.readthedocs.org/en/latest/contribute.html #
 #  If you have any questions, you can reach the Rally team by:                #
-#    * e-mail - openstack-dev@lists.openstack.org with tag [Rally] in subject #
+#    * e-mail - openstack-discuss@lists.openstack.org with tag [Rally] in     #
+#      subject                                                                #
 #    * Gitter - https://gitter.im/xRally/Lobby room                           #
 #    * irc - "#openstack-rally" channel at freenode.net                       #
 ###############################################################################

@@ -109,7 +109,7 @@ __EOF__
 
 If the above does not help you resolve the issue, please contact the
 Rally team by sending an email to the OpenStack mailing list
-openstack-dev@lists.openstack.org. Include the full output of this
+openstack-discuss@lists.openstack.org. Include the full output of this
 script to help us identifying the problem.
 $RED
 Aborting installation!$NO_COLOR
