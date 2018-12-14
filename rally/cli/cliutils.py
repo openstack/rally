@@ -576,7 +576,7 @@ def validate_deprecated_args(argv, fn):
 
 
 def run(argv, categories):
-    if argv[1] in ["version", "--version"]:
+    if len(argv) > 1 and argv[1] in ["version", "--version"]:
         _print_version()
         return 0
 

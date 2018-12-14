@@ -26,6 +26,8 @@ Changed
 * Add the --html-static option to commands ``rally task trends``, it could generate
   trends report with embedded js/css.
 
+* Fix an issue with calling `rally` command without arguments
+
 [1.3.0] - 2018-12-01
 --------------------
 
