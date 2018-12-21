@@ -21,26 +21,6 @@
       sla:
         failure_rate:
           max: 20
-    -
-      args:
-        network_create_args:
-          provider:network_type: "vxlan"
-      runner:
-        type: "constant"
-        times: {{smoke or 8}}
-        concurrency: {{smoke or 4}}
-      context:
-        users:
-          tenants: {{smoke or 2}}
-          users_per_tenant: {{smoke or 1}}
-        quotas:
-          neutron:
-             network: -1
-        roles:
-          - "admin"
-      sla:
-        failure_rate:
-          max: 20
 
   NeutronNetworks.set_and_clear_router_gateway:
     -
