@@ -292,6 +292,6 @@ and then move on to :ref:`the next step of our tutorial <tutorial_step_2_input_t
 .. references:
 
 .. _OpenRC files: http://docs.openstack.org/user-guide/content/cli_openrc.html
-.. _configuration files: https://github.com/openstack/rally/tree/master/samples/deployments
-.. _existing.json: https://github.com/openstack/rally/blob/master/samples/deployments/existing.json
+.. _configuration files: https://github.com/openstack/rally-openstack/tree/master/samples/deployments
+.. _existing.json: https://github.com/openstack/rally-openstack/tree/master/samples/deployments/existing.json
 .. _samples/tasks/scenarios: https://github.com/openstack/rally/tree/master/samples/tasks/scenarios

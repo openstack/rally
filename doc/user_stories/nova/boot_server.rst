@@ -200,4 +200,4 @@ agent), we got **100% success and 2x improved average performance**:
 
 .. _bug in Keystone: https://bugs.launchpad.net/keystone/+bug/1360446
 .. _Mirantis OpenStack: https://www.mirantis.com/
-.. _ExistingCloud: https://github.com/openstack/rally/blob/master/samples/deployments/existing.json
+.. _ExistingCloud: https://github.com/openstack/rally-openstack/tree/master/samples/deployments/existing.json
