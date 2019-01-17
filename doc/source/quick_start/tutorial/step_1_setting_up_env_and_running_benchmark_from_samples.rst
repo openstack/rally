@@ -29,13 +29,20 @@ have an already existing OpenStack deployment with Keystone available at
 *<KEYSTONE_AUTH_URL>*.
 
 
+Installing rally-openstack package
+----------------------------------
+First, you have to provider Rally with `rally-openstack`_ package, to be done
+with ``pip install rally-openstack`` command.
+
+
 Registering an OpenStack deployment in Rally
 --------------------------------------------
 
-First, you have to provide Rally with an OpenStack deployment that should be
-tested. This should be done either through `OpenRC files`_ or through
-deployment `configuration files`_. In case you already have an *OpenRC*, it is
-extremely simple to register a deployment with the *deployment create* command:
+After successful installation, you have to provide Rally with an OpenStack
+deployment that should be tested. This should be done either through
+`OpenRC files`_ or through deployment `configuration files`_. In case you
+already have an *OpenRC*, it is extremely simple to register a deployment with
+the *deployment create* command:
 
 .. code-block:: console
 
@@ -291,6 +298,7 @@ and then move on to :ref:`the next step of our tutorial <tutorial_step_2_input_t
 
 .. references:
 
+.. _rally-openstack: https://github.com/openstack/rally-openstack
 .. _OpenRC files: http://docs.openstack.org/user-guide/content/cli_openrc.html
 .. _configuration files: https://github.com/openstack/rally-openstack/tree/master/samples/deployments
 .. _existing.json: https://github.com/openstack/rally-openstack/tree/master/samples/deployments/existing.json
