@@ -34,7 +34,13 @@ rally --config-file $TMP_RALLY_CONF db create
 $RALLY -d env create --name=self
 
 # Run task
+set +e
 $RALLY -d --plugin-paths=$PLUGIN_PATHS task start $TASK_FILE
+if [ $? -eq 1 ]; then
+    exit 1
+fi
+set -e
+
 $RALLY task report --html-static --out $HTML_REPORT
 $RALLY task report --json --out $JSON_REPORT
 
