@@ -218,13 +218,10 @@ class MigrationTestCase(rtest.DBTestCase,
         # run migration scripts
         self.db_sync(self.get_engine())
 
-        diff = self._get_metadata_diff()
-
-        self.assertEqual(1, len(diff))
-        action, object = diff[0]
-        self.assertEqual("remove_table", action)
-        self.assertIsInstance(object, sa.Table)
-        self.assertEqual("tags", object.name)
+        for action, object in self._get_metadata_diff():
+            if action == "remove_table":
+                self.assertIsInstance(object, sa.Table)
+                self.assertEqual("tags", object.name)
 
 
 class MigrationWalkTestCase(rtest.DBTestCase,
