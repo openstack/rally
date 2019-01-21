@@ -28,6 +28,8 @@ Changed
 
 * Fix an issue with calling `rally` command without arguments
 
+* Fix the ssh error while passing an dss key in ssh utils.
+
 [1.3.0] - 2018-12-01
 --------------------
 

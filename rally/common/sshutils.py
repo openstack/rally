@@ -98,10 +98,12 @@ class SSH(object):
         if isinstance(key, six.string_types):
             key = six.moves.StringIO(key)
         errors = []
+        key_pos = key.pos if six.PY2 else key.seek(0, 1)
         for key_class in (paramiko.rsakey.RSAKey, paramiko.dsskey.DSSKey):
             try:
                 return key_class.from_private_key(key)
             except paramiko.SSHException as e:
+                key.seek(key_pos)
                 errors.append(e)
         raise exceptions.SSHError("Invalid pkey: %s" % (errors))
 

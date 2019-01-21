@@ -18,6 +18,8 @@ import socket
 
 import ddt
 import mock
+import paramiko
+import six
 
 from rally.common import sshutils
 from rally import exceptions
@@ -65,33 +67,31 @@ class SSHTestCase(test.TestCase):
         dss.from_private_key.side_effect = mock_paramiko.SSHException
         self.assertRaises(exceptions.SSHError, self.ssh._get_pkey, "key")
 
-    @mock.patch("rally.common.sshutils.six.moves.StringIO")
-    @mock.patch("rally.common.sshutils.paramiko")
-    def test__get_pkey_dss(self, mock_paramiko, mock_string_io):
-        mock_paramiko.SSHException = FakeParamikoException
-        mock_string_io.return_value = "string_key"
-        mock_paramiko.dsskey.DSSKey.from_private_key.return_value = "dss_key"
-        rsa = mock_paramiko.rsakey.RSAKey
-        rsa.from_private_key.side_effect = mock_paramiko.SSHException
-        key = self.ssh._get_pkey("key")
-        dss_calls = mock_paramiko.dsskey.DSSKey.from_private_key.mock_calls
-        self.assertEqual([mock.call("string_key")], dss_calls)
-        self.assertEqual("dss_key", key)
-        mock_string_io.assert_called_once_with("key")
+    def test__get_pkey_dss(self):
+        private_dss_key = six.StringIO()
+        private_dss_key_obj = paramiko.DSSKey.generate(1024)
+        private_dss_key_obj.write_private_key(private_dss_key)
+        private_dss_key.seek(0)
+        ssh = sshutils.SSH("root", "example.net")
+        self.assertIsInstance(ssh._get_pkey(private_dss_key),
+                              paramiko.DSSKey)
 
-    @mock.patch("rally.common.sshutils.six.moves.StringIO")
-    @mock.patch("rally.common.sshutils.paramiko")
-    def test__get_pkey_rsa(self, mock_paramiko, mock_string_io):
-        mock_paramiko.SSHException = FakeParamikoException
-        mock_string_io.return_value = "string_key"
-        mock_paramiko.rsakey.RSAKey.from_private_key.return_value = "rsa_key"
-        dss = mock_paramiko.dsskey.DSSKey
-        dss.from_private_key.side_effect = mock_paramiko.SSHException
-        key = self.ssh._get_pkey("key")
-        rsa_calls = mock_paramiko.rsakey.RSAKey.from_private_key.mock_calls
-        self.assertEqual([mock.call("string_key")], rsa_calls)
-        self.assertEqual("rsa_key", key)
-        mock_string_io.assert_called_once_with("key")
+        private_dss_key.seek(0)
+        self.assertIsInstance(ssh._get_pkey(private_dss_key.getvalue()),
+                              paramiko.DSSKey)
+
+    def test__get_pkey_rsa(self):
+        private_rsa_key = six.StringIO()
+        private_rsa_key_obj = paramiko.RSAKey.generate(1024)
+        private_rsa_key_obj.write_private_key(private_rsa_key)
+        private_rsa_key.seek(0)
+        ssh = sshutils.SSH("root", "example.net")
+        self.assertIsInstance(ssh._get_pkey(private_rsa_key),
+                              paramiko.RSAKey)
+
+        private_rsa_key.seek(0)
+        self.assertIsInstance(ssh._get_pkey(private_rsa_key.getvalue()),
+                              paramiko.RSAKey)
 
     @mock.patch("rally.common.sshutils.SSH._get_pkey")
     @mock.patch("rally.common.sshutils.paramiko")
