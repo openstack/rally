@@ -17,7 +17,10 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
-unreleased
+usreleased
+--------------------
+
+[1.4.0] - 2019-01-29
 --------------------
 
 Changed
