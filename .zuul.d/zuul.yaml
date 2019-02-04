@@ -40,6 +40,7 @@
         - rally-tox-py37
         - rally-tox-cover
         - rally-tox-functional
+        - rally-tox-functional-py3
         - rally-database-migration
         - rally-install-ubuntu-xenial
         - rally-install-ubuntu-bionic
@@ -56,6 +57,7 @@
         - rally-tox-py37
         - rally-tox-cover
         - rally-tox-functional
+        - rally-tox-functional-py3
         - rally-database-migration
         - rally-install-ubuntu-xenial
         - rally-install-ubuntu-bionic

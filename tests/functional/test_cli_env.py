@@ -35,7 +35,7 @@ class EnvTestCase(unittest.TestCase):
         self.assertEqual({}, env_data["platforms"])
 
     def _create_spec(self, spec):
-        f = tempfile.NamedTemporaryFile(delete=False)
+        f = tempfile.NamedTemporaryFile(mode="w", delete=False)
 
         def unlink():
             os.unlink(f.name)

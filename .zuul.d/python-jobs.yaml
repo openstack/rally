@@ -38,6 +38,16 @@
       tox_env: functional
 
 - job:
+    name: rally-tox-functional-py3
+    parent: rally-tox-base
+    description: |
+      Run test for rally project.
+
+      Uses tox with the ``functional-py3`` environment.
+    vars:
+      tox_env: functional-py3
+
+- job:
     name: rally-tox-self
     parent: rally-tox-base
     description: |
