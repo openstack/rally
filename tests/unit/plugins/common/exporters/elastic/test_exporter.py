@@ -157,18 +157,6 @@ class ElasticSearchExporterTestCase(test.TestCase):
         self.assertFalse(exporter._remote)
         self.assertIsNone(getattr(exporter, "_client", None))
 
-    def test__pack(self):
-        exporter = elastic.ElasticSearchExporter([], None)
-
-        self.assertEqual(
-            {"key1=value1", "key2=value2"},
-            set(exporter._pack({"key1": "value1", "key2": "value2"})))
-
-        self.assertEqual(
-            {"key1=value1", "key2.foo.bar=1", "key2.xxx=yyy"},
-            set(exporter._pack({"key1": "value1", "key2": {"foo": {"bar": 1},
-                                                           "xxx": "yyy"}})))
-
     @ddt.data(None, "/home/bar", "https://example.com")
     def test__add_index(self, destination):
 

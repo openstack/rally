@@ -17,10 +17,7 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
-usreleased
---------------------
-
-[1.4.0] - 2019-01-29
+[1.4.0] - 2019-02-04
 --------------------
 
 Changed
@@ -29,9 +26,17 @@ Changed
 * Add the --html-static option to commands ``rally task trends``, it could generate
   trends report with embedded js/css.
 
-* Fix an issue with calling `rally` command without arguments
+* Removed dependency to ``morph`` library.
+
+Fixed
+~~~~~
+
+* ``rally`` command crashes while calling without any arguments
 
 * Fix the ssh error while passing an dss key in ssh utils.
+
+  `Launchpad-bug #1807870 <https://launchpad.net/bugs/1807870>`_
+
 
 [1.3.0] - 2018-12-01
 --------------------

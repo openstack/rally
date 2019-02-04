@@ -7,7 +7,6 @@ alembic                                                # MIT
 decorator                                              # new BSD License
 Jinja2                                                 # BSD
 jsonschema<3.0.0                                       # MIT
-morph                                                  # GPLv3+
 netaddr                                                # BSD
 oslo.config!=4.3.0,!=4.4.0                             # Apache Software License
 # do not forget to remove `testresources` from test-requirements. it is a

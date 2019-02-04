@@ -22,7 +22,6 @@ linecache2==1.0.0
 Mako==1.0.7
 MarkupSafe==1.0
 monotonic==1.4
-morph==0.1.2
 msgpack==0.5.4
 netaddr==0.7.19
 netifaces==0.10.6
