@@ -13,25 +13,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from docutils import frontend
 from docutils import nodes
-from docutils.parsers import rst
-from docutils import utils
 
 from rally.common.plugin import plugin
 from rally.common import validation
 from rally import plugins
 from rally.task import scenario
+from tests.unit.doc import utils
 from tests.unit import test
-
-
-def _parse_rst(text):
-    parser = rst.Parser()
-    settings = frontend.OptionParser(
-        components=(rst.Parser,)).get_default_values()
-    document = utils.new_document(text, settings)
-    parser.parse(text, document)
-    return document.children
 
 
 class DocstringsTestCase(test.TestCase):
@@ -101,7 +90,7 @@ class DocstringsTestCase(test.TestCase):
             #   "definitions" means that there is an issue with intends or
             #   missed empty line before the list title and list items.
             if doc_info["description"]:
-                parsed_docstring = _parse_rst(doc_info["description"])
+                parsed_docstring = utils.parse_rst(doc_info["description"])
                 self._iterate_parsed_rst(plg_cls.get_name(),
                                          parsed_docstring,
                                          msg_buffer)
@@ -140,7 +129,7 @@ class DocstringsTestCase(test.TestCase):
                 docstring = base.__doc__
 
             print(name)
-            parsed_docstring = _parse_rst(docstring)
+            parsed_docstring = utils.parse_rst(docstring)
             self._iterate_parsed_rst(name,
                                      parsed_docstring,
                                      msg_buffer)

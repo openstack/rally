@@ -1,8 +1,8 @@
 ReadMe of <rally-repo>/etc/docker dir
 =====================================
 
-We are using automated docker image builds on [Docker Hub](
-https://hub.docker.com/) which allows to reduce time of making new releases.
+We are using automated docker image builds on `Docker Hub
+<https://hub.docker.com/>`_ which allows to reduce time of making new releases.
 
 Docker Hub has one specific feature - each time it builds new image, it
 updates the description of the image. The description it takes from README file
