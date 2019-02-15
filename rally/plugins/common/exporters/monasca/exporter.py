@@ -17,6 +17,9 @@ import datetime as dt
 import itertools
 import json
 import os
+import time
+import hashlib
+import re
 
 from rally.common import logging
 from rally.common import validation
@@ -28,6 +31,99 @@ from rally.plugins.common.exporters.elastic import flatten
 
 LOG = logging.getLogger(__name__)
 
+
+def _hash(items):
+    # hash configuration to sha512sum
+    m = hashlib.sha512()
+    for item in items:
+        m.update(item)
+    return m.hexdigest()
+
+
+def _get_dimensions(report):
+        # these might be useful to someone, but should maybe be specified as as config option
+    # "deployment_uuid",  "deployment_name
+    dimension_keys = ["uuid", "task_uuid", "subtask_uuid", "args_hash",
+                      "runner_hash", "contexts_hash", "tags"]
+    dimensions = {key: report[key] for key in
+                     dimension_keys if key in report and report[key]}
+    return dimensions
+
+def _get_metadata(report):
+    meta_keys = ["args"]
+    meta = {key: report[key] for key in
+                     meta_keys}
+
+def _create_workload_metric(report, field, convert = lambda x: x):
+    metric_name_tmpl = "rally.workload.%(name)s.%(metric)s"
+    title = report["subtask_title"]
+
+    dimensions = _get_dimensions(report)
+    meta = _get_metadata(report)
+
+    metric = {
+        "name": metric_name_tmpl % {"name": title, "metric": field},
+        "value": convert(report[field]),
+        "dimensions": dimensions,
+        #"value_meta": meta, # not sure what happens to the metadata + it could cause issues
+        # if it gets too long
+        "timestamp": report["started_at"]
+    }
+
+    return metric
+
+def _create_action_metric(report, field, convert = lambda x: x):
+    metric_name_tmpl = "rally.action.%(name)s.%(metric)s"
+
+    action_name = report["action_name"]
+
+    # strip the leading action_ prefix, eg. action_duration becomes duration
+    metric = re.sub(r"^action_", "", field)
+    dimensions = _get_dimensions(report)
+    metric = {
+        "name": metric_name_tmpl % {"name": action_name, "metric": metric},
+        "value": convert(report[field]),
+        "dimensions": dimensions,
+        "timestamp": report["action_started_at"]
+    }
+
+    return metric
+
+def _create_task_metric(report):
+
+    dimensions = _get_dimensions(report)
+
+    metric = {
+        "name": "rally.task.pass_sla",
+        "value": float(report["pass_sla"]),
+        "dimensions": dimensions,
+        "timestamp": int(time.time() * 1000)
+    }
+
+    return metric
+
+def _create_action_metrics(report):
+    metrics = []
+
+    metrics.append(_create_action_metric(report, "action_success", float))
+    metrics.append(_create_action_metric(report, "action_duration"))
+
+    return metrics
+
+def _create_workload_metrics(report):
+    metrics = []
+
+    metrics.append(_create_workload_metric(report, "load_duration"))
+    metrics.append(_create_workload_metric(report, "success_rate"))
+    metrics.append(_create_workload_metric(report, "pass_sla", float))
+
+    return metrics
+
+def _merge_dicts(x, *args):
+    x = x.copy()
+    for y in args:
+      x.update(y)
+    return x
 
 @validation.configure("monasca_exporter_destination")
 class Validator(validation.Validator):
@@ -74,57 +170,6 @@ class MonascaExporter(exporter.TaskExporter):
     In case of an empty destination, the http://localhost:9200 destination
     will be used.
     """
-
-    TASK_INDEX = "rally_task_data_v1"
-    WORKLOAD_INDEX = "rally_workload_data_v1"
-    AA_INDEX = "rally_atomic_action_data_v1"
-    INDEX_SCHEMAS = {
-        TASK_INDEX: {
-            "task_uuid": {"type": "keyword"},
-            "deployment_uuid": {"type": "keyword"},
-            "deployment_name": {"type": "keyword"},
-            "title": {"type": "text"},
-            "description": {"type": "text"},
-            "status": {"type": "keyword"},
-            "pass_sla": {"type": "boolean"},
-            "tags": {"type": "keyword"}
-        },
-        WORKLOAD_INDEX: {
-            "deployment_uuid": {"type": "keyword"},
-            "deployment_name": {"type": "keyword"},
-            "scenario_name": {"type": "keyword"},
-            "scenario_cfg": {"type": "keyword"},
-            "description": {"type": "text"},
-            "runner_name": {"type": "keyword"},
-            "runner_cfg": {"type": "keyword"},
-            "contexts": {"type": "keyword"},
-            "task_uuid": {"type": "keyword"},
-            "subtask_uuid": {"type": "keyword"},
-            "started_at": {"type": "date"},
-            "load_duration": {"type": "long"},
-            "full_duration": {"type": "long"},
-            "pass_sla": {"type": "boolean"},
-            "success_rate": {"type": "float"},
-            "sla_details": {"type": "text"}
-        },
-        AA_INDEX: {
-            "deployment_uuid": {"type": "keyword"},
-            "deployment_name": {"type": "keyword"},
-            "action_name": {"type": "keyword"},
-            "workload_uuid": {"type": "keyword"},
-            "scenario_cfg": {"type": "keyword"},
-            "contexts": {"type": "keyword"},
-            "runner_name": {"type": "keyword"},
-            "runner_cfg": {"type": "keyword"},
-            "success": {"type": "boolean"},
-            "duration": {"type": "float"},
-            "started_at": {"type": "date"},
-            "finished_at": {"type": "date"},
-            "parent": {"type": "keyword"},
-            "error": {"type": "keyword"}
-        }
-    }
-
     def __init__(self, tasks_results, output_destination, api=None):
         super(MonascaExporter, self).__init__(tasks_results,
                                               output_destination,
@@ -134,38 +179,32 @@ class MonascaExporter(exporter.TaskExporter):
 
 
     @staticmethod
-    def _make_action_report(name, workload_id, workload, duration,
+    def _make_action_report(name, uuid, report, duration,
                             started_at, finished_at, parent, error):
         # NOTE(andreykurilin): actually, this method just creates a dict object
         #   but we need to have the same format at two places, so the template
         #   transformed into a method.
         parent = parent[0] if parent else None
-        return {
-            "deployment_uuid": workload["deployment_uuid"],
-            "deployment_name": workload["deployment_name"],
+        action_report = {
+            "uuid": uuid,
             "action_name": name,
-            "workload_uuid": workload_id,
-            "scenario_cfg": workload["scenario_cfg"],
-            "contexts": workload["contexts"],
-            "runner_name": workload["runner_name"],
-            "runner_cfg": workload["runner_cfg"],
-            "success": not bool(error),
-            "duration": duration,
-            "started_at": started_at,
-            "finished_at": finished_at,
-            "parent": parent,
-            "error": error
+            "action_success": not bool(error),
+            "action_duration": duration,
+            "action_started_at": started_at,
+            "action_finished_at": finished_at,
+            "action_parent": parent,
+            "action_error": error
         }
+        return _merge_dicts(report, action_report)
 
-    def _process_atomic_actions(self, itr, workload, workload_id,
+    def _process_atomic_actions(self, itr, report,
                                 atomic_actions=None, _parent=None, _depth=0,
                                 _cache=None):
         """Process atomic actions of an iteration
 
         :param atomic_actions: A list with an atomic actions
         :param itr: The iteration data
-        :param workload: The workload report
-        :param workload_id: The workload UUID
+        :param report: The workload report
         :param _parent: An inner parameter which is used for pointing to the
             parent atomic action
         :param _depth: An inner parameter which is used to mark the level of
@@ -177,29 +216,28 @@ class MonascaExporter(exporter.TaskExporter):
         if _depth >= 3:
             return _cache["metrics"]
         cache = _cache or {}
-        cache["metrics"] = cache["metrics"] or []
+        cache["metrics"] = [] if "metrics" not in cache else cache["metrics"]
 
         if atomic_actions is None:
             atomic_actions = itr["atomic_actions"]
 
-        #act_id_tmpl = "%(itr_id)s_action_%(action_name)s_%(num)s"
+        act_id_tmpl = "%(itr_id)s_action_%(action_name)s_%(num)s"
         for i, action in enumerate(atomic_actions, 1):
             cache.setdefault(action["name"], 0)
-            act_id = {
+            act_id = act_id_tmpl % {
                 "itr_id": itr["id"],
                 "action_name": action["name"],
                 "num": cache[action["name"]]}
             cache[action["name"]] += 1
 
-            started_at = dt.datetime.utcfromtimestamp(action["started_at"])
-            finished_at = dt.datetime.utcfromtimestamp(action["finished_at"])
-            started_at = started_at.strftime(consts.TimeFormat.ISO8601)
-            finished_at = finished_at.strftime(consts.TimeFormat.ISO8601)
+            # monasca timestamps are in milliseconds
+            started_at = action["started_at"] * 1000
+            finished_at = action["finished_at"] * 1000
 
             action_report = self._make_action_report(
                 name=action["name"],
-                workload_id=workload_id,
-                workload=workload,
+                uuid=act_id,
+                report=report,
                 duration=(action["finished_at"] - action["started_at"]),
                 started_at=started_at,
                 finished_at=finished_at,
@@ -207,14 +245,13 @@ class MonascaExporter(exporter.TaskExporter):
                 error=(itr["error"] if action.get("failed", False) else None)
             )
 
-            metric = self._create_action_metric(action_report, doc_id=act_id)
-            cache["metrics"].append(metric)
+            metrics = _create_action_metrics(action_report)
+            cache["metrics"].extend(metrics)
 
             self._process_atomic_actions(
                 atomic_actions=action["children"],
                 itr=itr,
-                workload=workload,
-                workload_id=workload_id,
+                report=report,
                 _parent=(act_id, action_report),
                 _depth=(_depth + 1),
                 _cache=cache)
@@ -227,7 +264,7 @@ class MonascaExporter(exporter.TaskExporter):
                 # the item fails after some atomic actions completed
                 (not _parent and atomic_actions and
                     not atomic_actions[-1].get("failed", False))):
-            act_id ={
+            act_id = act_id_tmpl % {
                 "itr_id": itr["id"],
                 "action_name": "no-name-action",
                 "num": 0
@@ -238,53 +275,20 @@ class MonascaExporter(exporter.TaskExporter):
             # finished_at timestamp of iteration with 0 duration
             timestamp = (itr["timestamp"] + itr["duration"] +
                          itr["idle_duration"])
-            timestamp = dt.datetime.utcfromtimestamp(timestamp)
-            timestamp = timestamp.strftime(consts.TimeFormat.ISO8601)
+            timestamp *= 1000
             action_report = self._make_action_report(
                 name="no-name-action",
-                workload_id=workload_id,
-                workload=workload,
+                uuid=act_id,
+                report=report,
                 duration=0,
                 started_at=timestamp,
                 finished_at=timestamp,
                 parent=_parent,
                 error=itr["error"]
             )
-            metric = self._create_action_metric(action_report, doc_id=act_id)
-            cache.metrics.append(metric)
+            metrics = _create_action_metrics(action_report)
+            cache["metrics"].extend(metrics)
         return cache["metrics"]
-
-    def create_workload_metrics(self, context, report):
-        metrics = []
-        metric_name_tmpl = "rally_%(task)s_%(metric)s"
-        title = context["subtask"]["title"]
-
-        dimension_keys = ["task_uuid", "subtask_uuid",  "deployment_uuid",  "deployment_name"]
-        dimensions = {key: report[key] for key in
-                         dimension_keys}
-
-        meta_keys = ["scenario_cfg"]
-        meta = {key: report[key] for key in
-                         meta_keys}
-        metric = {
-            "name": metric_name_tmpl % {"task": title, "metric": "load_duration"},
-            "value": report["load_duration"],
-            "dimensions": dimensions,
-            "value_meta": meta
-        }
-        metrics.append(metric)
-
-        metric = {
-            "name": metric_name_tmpl % {"task": title, "metric": "success_rate"},
-            "value": report["success_rate"],
-            "dimensions": dimensions,
-            "value_meta": meta
-        }
-
-        metrics.append(metric)
-
-        return metrics
-
 
     def generate(self):
 
@@ -299,20 +303,25 @@ class MonascaExporter(exporter.TaskExporter):
 
             result = []
 
-            # this is really useful unless you use the new task engine format where you can set title and description
+            if task["status"] not in [consts.TaskStatus.SLA_FAILED, consts.TaskStatus.FINISHED,
+                                      consts.TaskStatus.CRASHED]:
+              # We don't want to upload data for a task that is till doing work
+              raise exceptions.RallyException("Refusing to upload task report for task that is running")
+
+            # in the new task engine format where you can set title and description
             # https://github.com/openstack/rally/blob/5dfda156e39693870dcf6c6af89b317a6d57a1d2/doc/specs/implemented/new_rally_input_task_format.rst
-            # task_report = {
-            #     "task_uuid": task["uuid"],
-            #     "deployment_uuid": task["env_uuid"],
-            #     "deployment_name": task["env_name"],
-            #     "title": task["title"],
-            #     "description": task["description"],
-            #     "status": task["status"],
-            #     "pass_sla": task["pass_sla"],
-            #     "tags": task["tags"]
-            # }
-            # metric = self._create_task_metric(task_report)
-            #metrics.append(metric)
+            task_report = {
+                 "task_uuid": task["uuid"],
+                 "deployment_uuid": task["env_uuid"],
+                 "deployment_name": task["env_name"],
+                 "title": task["title"],
+                 "description": task["description"],
+                 "status": task["status"],
+                 "pass_sla": task["pass_sla"],
+                 "tags": ":".join(task["tags"]),
+            }
+            metric = _create_task_metric(task_report)
+            result.append(metric)
 
             # NOTE(andreykurilin): The subtasks do not have much logic now, so
             #   there is no reason to save the info about them.
@@ -329,19 +338,30 @@ class MonascaExporter(exporter.TaskExporter):
 
                     started_at = workload["start_time"]
                     if started_at:
-                        started_at = dt.datetime.utcfromtimestamp(started_at)
-                        started_at = started_at.strftime(consts.TimeFormat.ISO8601)
+                        print(started_at)
+                        # monasca requires time stamp in milliseconds
+                        started_at = int(started_at * 1000);
+
+                    runner_hash = _hash([workload["runner_type"]] +
+                        flatten.transform(workload["runner"])
+                    )
+
                     workload_report = {
+                        # Warning: these is a 256 char limit on the monasca dimension
+                        # so can't support infinite number of tags
+                        # flatten tags to string, would be nice to use commas, but
+                        # https://github.com/openstack/monasca-api/blob/master/docs/monasca-api-spec.md#dimensions
+                        "uuid": workload["uuid"],
                         "task_uuid": workload["task_uuid"],
                         "subtask_uuid": workload["subtask_uuid"],
-                        "deployment_uuid": task["env_uuid"],
-                        "deployment_name": task["env_name"],
+                        "subtask_title": subtask["title"],
                         "scenario_name": workload["name"],
-                        "scenario_cfg": flatten.transform(workload["args"]),
+                        "args_hash": _hash(flatten.transform(workload["args"])),
+                        "args": workload["args"],
                         "description": workload["description"],
                         "runner_name": workload["runner_type"],
-                        "runner_cfg": flatten.transform(workload["runner"]),
-                        "contexts": flatten.transform(workload["contexts"]),
+                        "runner_hash": runner_hash,
+                        "contexts_hash": _hash(flatten.transform(workload["contexts"])),
                         "started_at": started_at,
                         "load_duration": workload["load_duration"],
                         "full_duration": workload["full_duration"],
@@ -351,22 +371,24 @@ class MonascaExporter(exporter.TaskExporter):
                                         for s in workload["sla_results"]["sla"]
                                         if not s["success"]]}
 
+                # keep data from task_report
+                # TODO: do we want to override overides?
+                workload_report = _merge_dicts(task_report, workload_report)
                 # do we need to store hooks ?!
-                metrics = self._create_workload_metrics({
-                    "subtask": subtask,
-                    "task": task
-                }, workload_report)
+                metrics = _create_workload_metrics(workload_report)
 
-                result.append(metrics)
+                result.extend(metrics)
 
-                # # Iterations
-                # for idx, itr in enumerate(workload.get("data", []), 1):
-                #     itr["id"] = "%(uuid)s_iter_%(num)s" % {
-                #         "uuid": workload["uuid"],
-                #         "num": str(idx)}
-                #
-                #     self._process_atomic_actions(
-                #         itr=itr,
-                #         workload=workload_report,
-                #         workload_id=workload["uuid"])
-        self.client.post(metrics)
+                # Iterations
+                for idx, itr in enumerate(workload.get("data", []), 1):
+                    itr["id"] = "%(uuid)s_iter_%(num)s" % {
+                        "uuid": workload["uuid"],
+                        "num": str(idx)}
+
+                    metrics = self._process_atomic_actions(
+                        itr=itr,
+                        report=workload_report)
+                    result.extend(metrics)
+        self._client.post(result)
+        msg = "Successfully exported results to Monasca"
+        return {"print": msg}

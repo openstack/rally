@@ -25,7 +25,7 @@ API_VERSION = "2_0"
 class MonascaClient(object):
     """The helper class for communication with Monasca"""
 
-    def __init__(self, url):
+    def __init__(self):
         # might want to specify cloud and region in the connect call
         conn = openstack.connect()
 
@@ -73,9 +73,9 @@ class MonascaClient(object):
             user_domain_id=user.domain_id,
             auth_url=conn.auth["auth_url"]
         )
-
         self.client = c
 
     def post(self, metrics):
         for metric in metrics:
+            print(metric)
             self.client.metrics.create(jsonbody=metric)
