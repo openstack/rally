@@ -20,6 +20,7 @@ import os
 import time
 import hashlib
 import re
+import imp
 
 from rally.common import logging
 from rally.common import validation
@@ -39,6 +40,35 @@ def _hash(items):
         m.update(item)
     return m.hexdigest()
 
+def _load_module(name, path):
+    module = imp.load_source(name, path)
+    return module
+
+def _load_config(path, metric):
+    if os.path.exists(path):
+        config = _load_module('config', path)
+    else:
+        # FIXME: should create a default
+        return {}
+
+    pcomponents = metric.split(".")
+    # Add a dummy value at the end so that we don't have to special case
+    pcomponents.append("THIS WILL NOT BE USED")
+    path = pcomponents[0]
+    dimensions = {}
+    for component in pcomponents[1:]:
+        if path in config.dimensions:
+            # entry is a mapping of dimension name -> path in report
+            entry = config.dimensions[path]
+            dimensions = _merge_dicts(dimensions, entry)
+        path = ".".join([path, component])
+
+    return dimensions
+
+def _do_load_config():
+    home_dir = os.env.get("HOME")
+    config_path = os.path.join(home_dir, ".rally", "monasca-config.py")
+    return _load_config(config_path)
 
 def _get_dimensions(report):
         # these might be useful to someone, but should maybe be specified as as config option
