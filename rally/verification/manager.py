@@ -191,7 +191,8 @@ class VerifierManager(plugin.Plugin):
     def _clone(self):
         """Clone a repo and switch to a certain version."""
         source = self.verifier.source or self._meta_get("default_repo")
-        if not URL_RE.match(source) and not os.path.exists(source):
+        if not source or (
+                not URL_RE.match(source) and not os.path.exists(source)):
             raise exceptions.RallyException("Source path '%s' is not valid."
                                             % source)
 

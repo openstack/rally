@@ -40,9 +40,11 @@ class UtilsTestCase(test.TestCase):
     def test_check_output(self, mock_check_output, mock_log,
                           mock_encodeutils):
 
-        self.assertEqual(mock_check_output.return_value,
+        self.assertEqual(mock_encodeutils.safe_decode.return_value,
                          utils.check_output())
         self.assertFalse(mock_log.error.called)
+        mock_encodeutils.safe_decode.assert_called_once_with(
+            mock_check_output.return_value)
 
         mock_check_output.side_effect = subprocess.CalledProcessError(1, None)
         self.assertRaises(subprocess.CalledProcessError, utils.check_output)

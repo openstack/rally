@@ -58,8 +58,9 @@ def check_output(*args, **kwargs):
         LOG.error("Error output: '%s'" % encodeutils.safe_decode(exc.output))
         raise
 
+    output = encodeutils.safe_decode(output)
     if output and debug_output:
-        LOG.debug("Subprocess output: '%s'" % encodeutils.safe_decode(output))
+        LOG.debug("Subprocess output: '%s'" % output)
 
     return output
 

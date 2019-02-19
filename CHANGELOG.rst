@@ -17,6 +17,15 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
+[unreleased]
+------------
+
+Fixed
+~~~~~
+
+* Python 3 issue of Verification component
+* Docker README file
+
 [1.4.0] - 2019-02-04
 --------------------
 
