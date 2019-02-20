@@ -13,6 +13,7 @@
 #    under the License.
 
 from rally.common import logging
+from rally import exceptions
 
 import openstack
 from monascaclient import client
@@ -75,7 +76,23 @@ class MonascaClient(object):
         )
         self.client = c
 
+    def validate_metrics(self, metrics):
+        err_msg = "We have generated an invalid metric: %s"
+        for metric in metrics:
+            if "name" not in metric:
+                raise exceptions.RallyException(
+                    err_msg % "the name field is missing")
+            if type(metric["value"]) != float:
+                raise exceptions.RallyException(
+                    err_msg % "the value field of metric %s is not a float value, got: %s, which is of type %s" %
+                    (metric["name"], metric["value"], type(metric["value"])))
+
+    def get(self, **kwargs):
+        # valid kwargs, include name, dimensions
+        return self.client.metrics.list(**kwargs)
+
     def post(self, metrics):
+        self.validate_metrics(metrics)
         for metric in metrics:
             print(metric)
             self.client.metrics.create(jsonbody=metric)
