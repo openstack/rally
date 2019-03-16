@@ -1420,8 +1420,7 @@ class HookTestCase(unittest.TestCase):
         self.assertEqual(
             expected,
             sorted(hook_results,
-                   key=lambda i: list(
-                       i["config"]["trigger"].values())[0]["unit"]))
+                   key=lambda i: i["config"]["trigger"]["args"]["unit"]))
         self._assert_results_time(hook_results)
 
     def test_import_hook_result(self):
