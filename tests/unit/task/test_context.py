@@ -118,6 +118,63 @@ class BaseContextTestCase(test.TestCase):
         ins = fakes.FakeContext(ctx)
         self.assertEqual("foo_uuid", ins.get_owner_id())
 
+    def test___eq__(self):
+        @context.configure(name="bar", order=1)
+        class BarContext(fakes.FakeContext):
+            pass
+
+        foo_context = fakes.FakeContext()
+        bar_context = BarContext()
+        self.assertTrue(foo_context == bar_context)
+
+    def test___lt__(self):
+        @context.configure(name="barlt", order=2)
+        class BarContext(fakes.FakeContext):
+            pass
+
+        foo_context = fakes.FakeContext()
+        bar_context = BarContext()
+        self.assertTrue(foo_context < bar_context)
+
+    def test___gt__(self):
+        @context.configure(name="bargt", order=0)
+        class BarContext(fakes.FakeContext):
+            pass
+
+        foo_context = fakes.FakeContext()
+        bar_context = BarContext()
+        self.assertTrue(foo_context > bar_context)
+
+    def test___le__(self):
+        @context.configure(name="barle", order=1)
+        class BarContext(fakes.FakeContext):
+            pass
+
+        @context.configure(name="bazle", order=2)
+        class BazContext(fakes.FakeContext):
+            pass
+
+        foo_context = fakes.FakeContext()
+        bar_context = BarContext()
+        baz_context = BazContext()
+        self.assertTrue(foo_context <= bar_context)
+        self.assertTrue(foo_context <= baz_context)
+
+    def test___ge__(self):
+        @context.configure(name="barge", order=0)
+        class BarContext(fakes.FakeContext):
+            pass
+
+        @context.configure(name="bazge", order=-1)
+        class BazContext(fakes.FakeContext):
+            pass
+
+        foo_context = fakes.FakeContext()
+        bar_context = BarContext()
+        baz_context = BazContext()
+        self.assertTrue(foo_context >= bar_context)
+        self.assertTrue(foo_context >= baz_context)
+
 
 class ContextManagerTestCase(test.TestCase):
     @mock.patch("rally.task.context.ContextManager._get_sorted_context_lst")

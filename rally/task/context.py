@@ -168,6 +168,21 @@ class BaseContext(plugin.Plugin, functional.FunctionalMixin,
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self.cleanup()
 
+    def __eq__(self, other):
+        return self.get_order() == other.get_order()
+
+    def __lt__(self, other):
+        return self.get_order() < other.get_order()
+
+    def __gt__(self, other):
+        return self.get_order() > other.get_order()
+
+    def __le__(self, other):
+        return self.get_order() <= other.get_order()
+
+    def __ge__(self, other):
+        return self.get_order() >= other.get_order()
+
 
 @validation.add_default("jsonschema")
 @plugin.base()
