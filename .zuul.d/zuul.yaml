@@ -22,7 +22,7 @@
 - job:
     name: rally-database-migration
     parent: base
-    nodeset: ubuntu-xenial
+    nodeset: ubuntu-bionic
     run: tests/ci/playbooks/rally-database-migration/run.yaml
     timeout: 1800
 
