@@ -1,7 +1,10 @@
 function changeFrameHeight(){
-  var ifm= document.getElementById("embedchart");
+  var ifm= document.getElementById("embeddedChart");
   ifm.height=document.documentElement.clientHeight;
   ifm.width=document.documentElement.clientWidth;
+}
+function hideEmbeddedChartLoading(){
+  document.getElementById('embeddedChartLoader').style.display = 'none';
 }
 window.onresize=function(){
   changeFrameHeight();
@@ -151,16 +154,27 @@ var widgetDirective = function($compile) {
           var el = element.empty().append($compile(template)(scope)).children()[0]
         }
         else if (attrs.widget == "EmbedChart") {
+          if (typeof data === "string"){
+            // backward compatibility
+            data = {"embedded": data};
+          }
 
-          /* NOTE(chenxu): tag <\/script> in javascript string will be parsed incorrectly.
+          if (data.source !== undefined && data.source !== null){
+            var template = "<span><div id='embeddedChartLoader'>Loading embedded chart. Please wait...</div><iframe id='embeddedChart' frameborder='0' onload='changeFrameHeight(); hideEmbeddedChartLoading()' style='width:100%;' src='" + data.source + "'></iframe></span>";
+            var embeddedData = undefined;
+          } else {
+            var template = "<iframe scrolling='no' id='embeddedChart' frameborder='0' onload='changeFrameHeight()' style='width:100%;'></iframe>";
+            /* NOTE(chenxu): tag <\/script> in javascript string will be parsed incorrectly.
              so we convert <\/script> to <\\/script> in python and convert it back here. */
-          data = data.replace(/\\\/script>/ig, "\/script>");
-          var template = "<iframe scrolling='no' id='embedchart' frameborder='0' onload='changeFrameHeight()' style='width:100%;'></iframe>"
+            var embeddedData = data.embedded.replace(/\\\/script>/ig, "\/script>");
+          }
           var el = element.empty().append($compile(template)(scope)).children()[0];
-          var iframe = el.contentWindow || ( el.contentDocument.document || el.contentDocument);
-          iframe.document.open();
-          iframe.document.write(data);
-          iframe.document.close();
+          if (embeddedData !== undefined) {
+            var iframe = el.contentWindow || (el.contentDocument.document || el.contentDocument);
+            iframe.document.open();
+            iframe.document.write(embeddedData);
+            iframe.document.close();
+          }
         }
         else {
           var el_chart = element.addClass("chart").css({display:"block"});

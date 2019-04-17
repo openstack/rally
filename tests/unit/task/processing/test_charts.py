@@ -993,6 +993,50 @@ class OutputTextAreaTestCase(test.TestCase):
         self.assertEqual("TextArea", charts.OutputTextArea.widget)
 
 
+class OutputEmbeddedChartTestCase(test.TestCase):
+
+    def test_render_complete_data(self):
+        title = "title"
+        custom_page = (
+            "<html>"
+            "<head><script>Something</script></head>"
+            "<body>Hello world!</body>"
+            "</html>"
+        )
+
+        pdata = {"data": custom_page, "title": title}
+
+        chart_data = charts.OutputEmbeddedChart.render_complete_data(pdata)
+        self.assertEqual(
+            {
+                "title": title,
+                "widget": "EmbedChart",
+                "data": {
+                    "source": None,
+                    "embedded": custom_page.replace("/script>", "\\/script>")
+                }
+            },
+            chart_data)
+
+
+class OutputEmbeddedExternalChartTestCase(test.TestCase):
+
+    def test_render_complete_data(self):
+        title = "title"
+        custom_page = "https://example.com"
+
+        pdata = {"data": custom_page, "title": title}
+
+        cdata = charts.OutputEmbeddedExternalChart.render_complete_data(pdata)
+        self.assertEqual(
+            {
+                "title": title,
+                "widget": "EmbedChart",
+                "data": {"source": custom_page, "embedded": None}
+            },
+            cdata)
+
+
 @ddt.ddt
 class ModuleTestCase(test.TestCase):
 

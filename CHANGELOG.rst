@@ -17,8 +17,14 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
-[1.4.1] - 2019-02-28
+[unreleased]
 ------------
+
+Added
+~~~~~
+
+New two charts **EmbeddedChart** and **EmbeddedExternalChart** for embedding
+custom html code or external pages as complete charts of scenarios.
 
 Fixed
 ~~~~~

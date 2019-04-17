@@ -758,6 +758,69 @@ class OutputTextArea(OutputChart):
     widget = "TextArea"
 
 
+@plugin.configure(name="EmbeddedChart")
+class OutputEmbeddedChart(OutputChart):
+    """Chart for embedding custom html as a complete chart.
+
+    Example of usage:
+
+    .. code-block:: python
+
+        self.add_output(
+            complete={
+                "title": "Embedding link to example.com",
+                "chart_plugin": "EmbeddedChart",
+                "data": "<a href='example.com'>"
+                        "To see external logs follow this link"
+                        "</a>"
+            }
+        )
+    """
+
+    widget = "EmbedChart"
+
+    @classmethod
+    def render_complete_data(cls, pdata):
+        return {
+            "title": pdata["title"],
+            "widget": cls.widget,
+            "data": {
+                "source": None,
+                # NOTE(chenxu): ensure that '</script>' of embedded_data will
+                #   not be handled incorrectly by JavaScript.
+                "embedded": pdata["data"].replace("/script>", "\\/script>"),
+            }
+        }
+
+
+@plugin.configure(name="EmbeddedExternalChart")
+class OutputEmbeddedExternalChart(OutputChart):
+    """Chart for embedding external html page as a complete chart.
+
+    Example of usage:
+
+    .. code-block:: python
+
+        self.add_output(
+            complete={
+                "title": "Embedding external html page",
+                "chart_plugin": "EmbeddedExternalChart",
+                "data": "https://example.com"
+            }
+        )
+    """
+
+    widget = "EmbedChart"
+
+    @classmethod
+    def render_complete_data(cls, pdata):
+        return {
+            "title": pdata["title"],
+            "widget": cls.widget,
+            "data": {"embedded": None, "source": pdata["data"]}
+        }
+
+
 _OUTPUT_SCHEMA = {
     "key_types": {
         "title": six.string_types,
