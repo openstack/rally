@@ -1081,7 +1081,8 @@ class _Verification(APIGroup):
                     "There are no failed tests from verification (UUID=%s)."
                     % verification_uuid)
         else:
-            tests = tests.keys()
+            # py2 and py3
+            tests = list(tests.keys())
 
         deployment = (deployment_id if deployment_id
                       else verification.deployment_uuid)

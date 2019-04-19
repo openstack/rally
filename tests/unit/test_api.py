@@ -1955,7 +1955,7 @@ class VerificationAPITestCase(test.TestCase):
                                      concurrency=1)
         mock_start.assert_called_once_with(
             verifier_id="v_uuid", deployment_id="d_uuid",
-            load_list=tests.keys(), tags=None, concurrency=1)
+            load_list=list(tests.keys()), tags=None, concurrency=1)
 
     @mock.patch("rally.api._Verification.start")
     @mock.patch("rally.api.objects.Verification.create")

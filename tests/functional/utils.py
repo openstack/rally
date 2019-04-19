@@ -202,8 +202,8 @@ class Rally(object):
             return output
 
         except subprocess.CalledProcessError as e:
-            output = e.output
-            raise RallyCliError(cmd, e.returncode, e.output)
+            output = encodeutils.safe_decode(e.output)
+            raise RallyCliError(cmd, e.returncode, output)
         finally:
             if write_report:
                 if not report_path:

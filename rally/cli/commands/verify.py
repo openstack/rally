@@ -43,6 +43,8 @@ LIST_VERIFICATIONS_HINT = ("HINT: You can list all verifications, executing "
 
 DEFAULT_REPORT_TYPES = ("HTML", "HTML-Static", "JSON", "JUnit-XML")
 
+ACTIVE = u":-)"
+
 
 class VerifyCommands(object):
     """Verify an OpenStack cloud via a verifier."""
@@ -175,7 +177,7 @@ class VerifyCommands(object):
             formatters = {
                 "Created at": lambda v: v["created_at"],
                 "Updated at": lambda v: v["updated_at"],
-                "Active": lambda v: u"\u2714" if v["uuid"] == cv else "",
+                "Active": lambda v: ACTIVE if v["uuid"] == cv else "",
             }
             cliutils.print_list(verifiers, fields, formatters=formatters,
                                 normalize_field_names=True, sortby_index=4)
@@ -202,8 +204,8 @@ class VerifyCommands(object):
         formatters = {
             "Created at": lambda v: v["created_at"].replace("T", " "),
             "Updated at": lambda v: v["updated_at"].replace("T", " "),
-            "Active": lambda v: u"\u2714"
-                                if v["uuid"] == used_verifier else None,
+            "Active": lambda v: (ACTIVE
+                                 if v["uuid"] == used_verifier else None),
             "Extra settings": lambda v: (json.dumps(v["extra_settings"],
                                                     indent=4)
                                          if v["extra_settings"] else None),

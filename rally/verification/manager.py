@@ -360,7 +360,15 @@ class VerifierManager(plugin.Plugin):
             "'%s' verifiers don't support extensions." % self.get_name())
 
     def list_extensions(self):
-        """List all verifier extensions."""
+        """List all verifier extensions.
+
+        Every extension is a dict object which contains
+        name and entry_point keys. example:
+            {
+                "name": p.name,
+                "entry_point": p.entry_point_target
+            }
+        """
         return []
 
     def uninstall_extension(self, name):
