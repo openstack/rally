@@ -41,3 +41,13 @@ class GoodPlatform(platform.Platform):
 
     def info(self):
         return {"info": {"a": 1}}
+
+    @classmethod
+    def create_spec_from_sys_environ(cls, sys_environ):
+
+        spec = {
+            "auth_url": sys_environ.get("OS_AUTH_URL"),
+            "username": sys_environ.get("OS_USERNAME"),
+            "password": sys_environ.get("OS_PASSWORD")
+        }
+        return {"spec": spec, "available": True, "message": "Available"}

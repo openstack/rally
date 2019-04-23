@@ -29,6 +29,7 @@ from rally.common import fileutils
 from rally.common import logging
 from rally.common import utils
 from rally.common import yamlutils as yaml
+from rally.env import env_mgr
 from rally import exceptions
 from rally import plugins
 
@@ -82,8 +83,8 @@ class DeploymentCommands(object):
         """
 
         if fromenv:
-            # TODO(astudenov): move this to Credential plugin
-            config = {"openstack": envutils.get_creds_from_env_vars()}
+            result = env_mgr.EnvManager.create_spec_from_sys_environ()
+            config = result["spec"]
         else:
             if not filename:
                 config = {}
