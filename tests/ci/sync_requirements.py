@@ -35,7 +35,7 @@ if not LOG.handlers:
 
 GLOBAL_REQUIREMENTS_LOCATIONS = (
     "https://raw.githubusercontent.com/openstack/requirements/master/",
-    "http://git.openstack.org/cgit/openstack/requirements/plain/"
+    "http://opendev.org/openstack/requirements/raw/branch/master/"
 )
 RALLY_REQUIREMENTS_FILES = (
     "requirements.txt",
