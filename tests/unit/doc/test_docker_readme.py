@@ -66,8 +66,8 @@ class DockerReadmeTestCase(test.TestCase):
                 found = True
             elif previous_release in line:
                 self.fail(
-                    "You need to change all places where the latest release is"
-                    " mentioned from %s to %s."
+                    "You need to change %s to %s in all places where the "
+                    "latest release is mentioned."
                     "\n  Filename: %s"
                     "\n  Line Number: %s"
                     "\n  Line:  %s" %
