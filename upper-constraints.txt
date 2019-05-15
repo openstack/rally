@@ -39,6 +39,7 @@ prettytable==0.7.2
 pyasn1==0.4.2
 pycparser==2.18
 pyinotify==0.9.6
+Pygments==2.3.1;python_version=='3.4'
 PyNaCl==1.2.1
 pyOpenSSL==18.0.0
 pyparsing==2.2.0

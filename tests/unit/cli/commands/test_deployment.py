@@ -54,12 +54,43 @@ class DeploymentCommandsTestCase(test.TestCase):
 
     @mock.patch("rally.env.env_mgr.EnvManager.create_spec_from_sys_environ",
                 return_value={"spec": {"auth_url": "http://fake"}})
-    def test_createfromenv(self, mock_create_spec_from_sys_environ):
+    def test_create_fromenv(self, mock_create_spec_from_sys_environ):
         self.deployment.create(self.fake_api, "from_env", True)
         self.fake_api.deployment.create.assert_called_once_with(
             config={"auth_url": "http://fake"},
             name="from_env"
         )
+
+    @mock.patch("rally.env.env_mgr.EnvManager.create_spec_from_sys_environ")
+    def test_create_fromenv_openstack(self, mock_create_spec_from_sys_environ):
+
+        mock_create_spec_from_sys_environ.side_effect = lambda: {
+            "spec": {
+                "existing@openstack": {
+                    "https_key": "some key",
+                    "another_key": "another"
+                }
+            }
+        }
+        mock_rally_os = mock.Mock()
+        mock_rally_os.__version_tuple__ = (1, 4, 0)
+
+        with mock.patch.dict("sys.modules",
+                             {"rally_openstack": mock_rally_os}):
+            self.deployment.create(self.fake_api, "from_env", True)
+            self.fake_api.deployment.create.assert_called_once_with(
+                config={"existing@openstack": {"another_key": "another"}},
+                name="from_env"
+            )
+
+            self.fake_api.deployment.create.reset_mock()
+            mock_rally_os.__version_tuple__ = (1, 5, 0)
+            self.deployment.create(self.fake_api, "from_env", True)
+            self.fake_api.deployment.create.assert_called_once_with(
+                config={"existing@openstack": {"another_key": "another",
+                                               "https_key": "some key"}},
+                name="from_env"
+            )
 
     @mock.patch("rally.cli.commands.deployment.DeploymentCommands.list")
     @mock.patch("rally.cli.commands.deployment.DeploymentCommands.use")

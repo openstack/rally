@@ -27,7 +27,7 @@ DOCKER_DIR = os.path.join(ROOT_DIR, "etc", "docker")
 
 
 class DockerReadmeTestCase(test.TestCase):
-    RE_RELEASE = re.compile(r"\[(?P<version>[0-9]+\.[0-9]+.[0.9]+)\]")
+    RE_RELEASE = re.compile(r"\[(?P<version>[0-9]+\.[0-9]+.[0-9]+)\]")
 
     def get_rally_releases(self):
         full_path = os.path.join(ROOT_DIR, "CHANGELOG.rst")
@@ -58,7 +58,7 @@ class DockerReadmeTestCase(test.TestCase):
         rally_releases = self.get_rally_releases()
         latest_release = rally_releases[0]
         previous_release = rally_releases[1]
-        print(rally_releases)
+        print("All discovered releases: %s" % ",".join(rally_releases))
 
         found = False
         for i, line in enumerate(readme.split("\n"), 1):

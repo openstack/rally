@@ -17,6 +17,18 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
+[1.5.1] - 2019-05-15
+--------------------
+
+Fixed
+~~~~~
+
+**rally deployment create --fromenv** creates wrong spec for
+rally-openstack<=1.4.0 which doesn't pass **rally deployment check**.
+
+`Launchpad-bug #1829030 <https://launchpad.net/bugs/1829030>`_
+
+
 [1.5.0] - 2019-05-08
 --------------------
 
