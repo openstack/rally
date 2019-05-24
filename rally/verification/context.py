@@ -13,12 +13,38 @@
 #    under the License.
 
 import functools
+import re
 
 from rally.common.plugin import plugin
 from rally.task import context
 
 # all VerifierContexts should be always hidden
 configure = functools.partial(context.configure, hidden=True)
+
+
+def _expand_skip_list(load_list, regexps):
+    """Returns mapping of test names to the reason why the test was skipped.
+
+    The dictionary includes all tests in``load_list`` that match a key in
+    ``regexps``.
+    """
+    result = {}
+    if not regexps:
+        return result
+    for regex, reason in regexps.items():
+        try:
+            pattern = re.compile(regex)
+            for test in load_list:
+                if pattern.search(test):
+                    result[test] = reason
+        except re.error:
+            # assume regex is a test id, eg: tempest.api.compute.admin.
+            # test_flavors.FlavorsAdminTestJSON.
+            # test_create_flavor_using_string_ram
+            # [id-3b541a2e-2ac2-4b42-8b8d-ba6e22fcd4da]
+            result[regex] = reason
+            continue
+    return result
 
 
 @plugin.base()
@@ -34,6 +60,26 @@ class VerifierContext(context.BaseContext):
     def validate(cls, config):
         # do not validate jsonschema.
         pass
+
+    def setup(self):
+        self._process_runargs()
+
+    def _process_runargs(self):
+        # Store the skip and test lists in the context
+
+        run_args = self.context.get("run_args", {})
+
+        load_list = run_args.get("load_list")
+        skip_list = run_args.get("skip_list")
+
+        if skip_list:
+            if not load_list:
+                load_list = self.verifier.manager.list_tests()
+            skip_list = _expand_skip_list(load_list, skip_list)
+
+        self.context["skip_list"] = skip_list
+        self.context["load_list"] = load_list
+        self.context["xfail_list"] = run_args.get("xfail_list")
 
 
 class ContextManager(context.ContextManager):

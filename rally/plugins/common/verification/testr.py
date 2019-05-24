@@ -41,6 +41,7 @@ class TestrContext(context.VerifierContext):
         self._tmp_files = []
 
     def setup(self):
+        super(TestrContext, self).setup()
         use_testr = getattr(self.verifier.manager, "_use_testr", True)
 
         if use_testr:
@@ -62,12 +63,10 @@ class TestrContext(context.VerifierContext):
                 self.context["testr_cmd"].extend(
                     ["--concurrency", str(concurrency)])
 
-        load_list = run_args.get("load_list")
-        skip_list = run_args.get("skip_list")
+        load_list = self.context.get("load_list")
+        skip_list = self.context.get("skip_list")
 
         if skip_list:
-            if not load_list:
-                load_list = self.verifier.manager.list_tests()
             load_list = set(load_list) - set(skip_list)
         if load_list:
             load_list_file = common_utils.generate_random_path()
@@ -137,15 +136,14 @@ class TestrLauncher(manager.VerifierManager):
     def run(self, context):
         """Run tests."""
         testr_cmd = context["testr_cmd"]
-        run_args = context.get("run_args", {})
         LOG.debug("Test(s) started by the command: '%s'."
                   % " ".join(testr_cmd))
         stream = subprocess.Popen(testr_cmd, env=self.run_environ,
                                   cwd=self.repo_dir,
                                   stdout=subprocess.PIPE,
                                   stderr=subprocess.STDOUT)
-        xfail_list = run_args.get("xfail_list")
-        skip_list = run_args.get("skip_list")
+        xfail_list = context.get("xfail_list")
+        skip_list = context.get("skip_list")
         results = subunit_v2.parse(stream.stdout, live=True,
                                    expected_failures=xfail_list,
                                    skipped_tests=skip_list,

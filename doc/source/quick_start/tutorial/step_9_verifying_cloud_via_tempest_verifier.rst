@@ -460,7 +460,10 @@ argument.
     Using verification (UUID=af766b2f-cada-44db-a0c2-336ab0c17c27) as the default verification for the future operations.
 
 Moreover, it is possible to skip a certain list of Tempest tests, using the
-**--skip-list** argument.
+**--skip-list** argument; this should be a yaml file containing key-value
+pairs, where the keys are a regex to match against the test name. The values
+are the reason why the test was skipped. If an invalid regex is supplied the
+key is treated as a test id. For example:
 
 .. code-block:: console
 
@@ -470,6 +473,12 @@ Moreover, it is possible to skip a certain list of Tempest tests, using the
     tempest.api.compute.admin.test_flavors.FlavorsAdminTestJSON.test_create_flavor_with_int_id[id-8b4330e1-12c4-4554-9390-e6639971f086]:
     tempest.api.compute.admin.test_flavors.FlavorsAdminTestJSON.test_create_flavor_with_none_id[id-f83fe669-6758-448a-a85e-32d351f36fe0]: Reason 2
     tempest.api.compute.admin.test_flavors.FlavorsAdminTestJSON.test_create_flavor_with_uuid_id[id-94c9bb4e-2c2a-4f3c-bb1f-5f0daf918e6d]:
+
+    # Example: Skipping several tests with a partial match:
+    ^tempest\.api\.compute.servers\.test_attach_interfaces: skip using a regex
+
+The first five keys are invalid regular expressions and are included in the
+skip list as is.
 
 .. code-block:: console
 

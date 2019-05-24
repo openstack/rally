@@ -22,6 +22,7 @@ class FakeContext(context.VerifierContext):
         pass
 
     def setup(self):
+        super(FakeContext, self).setup()
         pass
 
 
