@@ -38,6 +38,9 @@ Added
 New two charts **EmbeddedChart** and **EmbeddedExternalChart** for embedding
 custom html code or external pages as complete charts of scenarios.
 
+[1.4.1] - 2019-02-28
+--------------------
+
 Fixed
 ~~~~~
 
