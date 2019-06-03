@@ -292,19 +292,20 @@ get_pkg_manager () {
         else
             pkg_manager="dnf install"
         fi
+    elif have_command zypper; then
+        # SuSE. Needs to be before yum based RHEL/CentOS/Fedora to handle cases when 
+        # yum is installed on SUSE to fulfill dependencies.
+        if [ "$ASKCONFIRMATION" -eq 0 ]; then
+            pkg_manager="zypper -n --no-gpg-checks --non-interactive install --auto-agree-with-licenses"
+        else
+            pkg_manager="zypper install"
+        fi    
     elif have_command yum; then
         # yum based RHEL/CentOS/Fedora
         if [ "$ASKCONFIRMATION" -eq 0 ]; then
             pkg_manager="yum install -y"
         else
             pkg_manager="yum install"
-        fi
-    elif have_command zypper; then
-        # SuSE
-        if [ "$ASKCONFIRMATION" -eq 0 ]; then
-            pkg_manager="zypper -n --no-gpg-checks --non-interactive install --auto-agree-with-licenses"
-        else
-            pkg_manager="zypper install"
         fi
     else
         # MacOSX maybe?
