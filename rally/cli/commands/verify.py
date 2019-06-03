@@ -455,7 +455,8 @@ class VerifyCommands(object):
                    required=False,
                    help="Path to a file with a list of tests to skip. "
                         "Format: json or yaml like a dictionary where keys "
-                        "are test names and values are reasons.")
+                        "are regexes matching test names and values are "
+                        "reasons.")
     @cliutils.args("--xfail-list", dest="xfail_list", type=str,
                    metavar="<path>", required=False,
                    help="Path to a file with a list of tests that will be "

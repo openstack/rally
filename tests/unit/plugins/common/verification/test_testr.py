@@ -111,7 +111,7 @@ class TestrContextTestCase(test.TestCase):
 
         # with load_list and skip_list
         load_list = ["tests.foo", "tests.bar"]
-        skip_list = ["tests.foo"]
+        skip_list = {"tests.foo": "skip reason"}
         cfg = {"verifier": self.verifier,
                "run_args": {"load_list": load_list,
                             "skip_list": skip_list}}
@@ -131,7 +131,55 @@ class TestrContextTestCase(test.TestCase):
         # with skip_list, but without load_list
         load_list = ["tests.foo", "tests.bar"]
         self.verifier.manager.list_tests.return_value = load_list
-        skip_list = ["tests.foo"]
+        skip_list = {"tests.foo": "skip reason"}
+        cfg = {"verifier": self.verifier,
+               "run_args": {"skip_list": skip_list}}
+        ctx = testr.TestrContext(cfg)
+        mock_open = mock.mock_open()
+        with mock.patch("%s.open" % PATH, mock_open):
+            ctx.setup()
+        mock_open.assert_called_once_with(
+            mock_generate_random_path.return_value, "w")
+        handle = mock_open.return_value
+        handle.write.assert_called_once_with(load_list[1])
+        self.assertEqualCmd(["--parallel", "--load-list",
+                             mock_generate_random_path.return_value],
+                            cfg["testr_cmd"])
+        self.verifier.manager.list_tests.assert_called_once_with()
+
+    @mock.patch("%s.common_utils.generate_random_path" % PATH)
+    def test_skip_list_with_regex_positive_match(self,
+                                                 mock_generate_random_path):
+        # using a regex in skip_list
+        load_list = ["tests.foo.bar", "tests.bar"]
+        self.verifier.manager.list_tests.return_value = load_list
+        skip_list = {"^tests.foo": "skip reason"}
+        cfg = {"verifier": self.verifier,
+               "run_args": {"skip_list": skip_list}}
+        ctx = testr.TestrContext(cfg)
+        mock_open = mock.mock_open()
+        with mock.patch("%s.open" % PATH, mock_open):
+            ctx.setup()
+        mock_open.assert_called_once_with(
+            mock_generate_random_path.return_value, "w")
+        handle = mock_open.return_value
+        handle.write.assert_called_once_with(load_list[1])
+        self.assertEqualCmd(["--parallel", "--load-list",
+                             mock_generate_random_path.return_value],
+                            cfg["testr_cmd"])
+        self.verifier.manager.list_tests.assert_called_once_with()
+
+    @mock.patch("%s.common_utils.generate_random_path" % PATH)
+    def test_skip_list_with_invalid_regex(self,
+                                          mock_generate_random_path):
+        load_list = [
+            "tests.foo[e3976dea-bed9-4b14-abaf-59372de9303]",
+            "tests.bar"
+        ]
+        self.verifier.manager.list_tests.return_value = load_list
+        skip_list = {
+            "tests.foo[e3976dea-bed9-4b14-abaf-59372de9303]": "skip reason"
+        }
         cfg = {"verifier": self.verifier,
                "run_args": {"skip_list": skip_list}}
         ctx = testr.TestrContext(cfg)
@@ -301,8 +349,7 @@ class TestrLauncherTestCase(test.TestCase):
     def test_run(self, mock_popen, mock_parse):
         launcher = testr.TestrLauncher(mock.Mock())
         ctx = {"testr_cmd": ["ls", "-la"],
-               "run_args": {"xfail_list": mock.Mock(),
-                            "skip_list": mock.Mock()}}
+               "xfail_list": None, "skip_list": None}
 
         self.assertEqual(mock_parse.return_value, launcher.run(ctx))
 
@@ -314,8 +361,54 @@ class TestrLauncherTestCase(test.TestCase):
         mock_popen.return_value.wait.assert_called_once_with()
         mock_parse.assert_called_once_with(
             mock_popen.return_value.stdout, live=True,
-            expected_failures=ctx["run_args"]["xfail_list"],
-            skipped_tests=ctx["run_args"]["skip_list"],
+            expected_failures=None,
+            skipped_tests=None,
+            logger_name=launcher.verifier.name)
+
+    @mock.patch("%s.subunit_v2.parse" % PATH)
+    @mock.patch("%s.subprocess.Popen" % PATH)
+    def test_run_skip(self, mock_popen, mock_parse):
+        launcher = testr.TestrLauncher(mock.Mock())
+        skip_list = {"test1": "reason1"}
+        ctx = {"testr_cmd": ["ls", "-la"],
+               "xfail_list": None, "skip_list": skip_list}
+
+        self.assertEqual(mock_parse.return_value, launcher.run(ctx))
+
+        mock_popen.assert_called_once_with(ctx["testr_cmd"],
+                                           env=launcher.run_environ,
+                                           cwd=launcher.repo_dir,
+                                           stdout=subprocess.PIPE,
+                                           stderr=subprocess.STDOUT)
+        mock_popen.return_value.wait.assert_called_once_with()
+        mock_parse.assert_called_once_with(
+            mock_popen.return_value.stdout, live=True,
+            expected_failures=None,
+            skipped_tests=ctx["skip_list"],
+            logger_name=launcher.verifier.name)
+
+    @mock.patch("%s.subunit_v2.parse" % PATH)
+    @mock.patch("%s.subprocess.Popen" % PATH)
+    def test_run_exclude(self, mock_popen, mock_parse):
+        launcher = testr.TestrLauncher(mock.Mock())
+        xfail_list = {"test1": "reason1"}
+        ctx = {"testr_cmd": ["ls", "-la"],
+               "xfail_list": xfail_list, "skip_list": None}
+        launcher = testr.TestrLauncher(mock.Mock())
+
+        result = launcher.run(ctx)
+        self.assertEqual(mock_parse.return_value, result)
+
+        mock_popen.assert_called_once_with(ctx["testr_cmd"],
+                                           env=launcher.run_environ,
+                                           cwd=launcher.repo_dir,
+                                           stdout=subprocess.PIPE,
+                                           stderr=subprocess.STDOUT)
+        mock_popen.return_value.wait.assert_called_once_with()
+        mock_parse.assert_called_once_with(
+            mock_popen.return_value.stdout, live=True,
+            expected_failures=xfail_list,
+            skipped_tests=None,
             logger_name=launcher.verifier.name)
 
     @mock.patch("%s.manager.VerifierManager.install" % PATH)
