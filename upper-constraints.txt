@@ -60,8 +60,8 @@ rfc3986==1.1.0
 six==1.11.0
 Sphinx==1.8.5;python_version=='2.7'
 Sphinx==1.8.5;python_version=='3.4'
-SQLAlchemy==1.2.10
-sqlalchemy-migrate==0.11.0
+SQLAlchemy==1.3.4
+sqlalchemy-migrate==0.12.0
 sqlparse==0.2.4
 stevedore==1.28.0
 Tempita==0.5.2
