@@ -58,7 +58,7 @@ class DockerReadmeTestCase(test.TestCase):
         rally_releases = self.get_rally_releases()
         latest_release = rally_releases[0]
         previous_release = rally_releases[1]
-        print("All discovered releases: %s" % ",".join(rally_releases))
+        print("All discovered releases: %s" % ", ".join(rally_releases))
 
         found = False
         for i, line in enumerate(readme.split("\n"), 1):

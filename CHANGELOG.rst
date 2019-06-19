@@ -17,6 +17,21 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
+[1.6.0] - 2019-06-19
+--------------------
+
+Added
+~~~~~~~
+
+A list of tests to skip while running verification now supports regular
+expressions.
+
+Fixed
+~~~~~
+
+* incompatibility with SQLAlchemy 1.3
+* several py3 issues of verification component
+
 [1.5.1] - 2019-05-15
 --------------------
 
