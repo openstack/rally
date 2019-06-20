@@ -178,7 +178,7 @@ class VerifyCommandsTestCase(test.TestCase):
                            "formatters"]
         self.verify.list_verifiers(self.fake_api)
         # astarove: should be replaced on mock_print_list.assert_called_once()
-        self.assertTrue(1, len(mock_print_list.call_args()))
+        self.assertEqual(1, mock_print_list.call_count)
         self.assertEqual(([self.verifier_data], additional_fields),
                          mock_print_list.call_args[0])
         self.assertEqual(additional_keys.sort(),
@@ -669,7 +669,7 @@ class VerifyCommandsTestCase(test.TestCase):
         additional_keys = ["normalize_field_names", "sortby_index",
                            "formatters"]
         # astarove: Should be replaced on mock_print_list.assert_called_once())
-        self.assertTrue(1, len(mock_print_list.call_args()))
+        self.assertEqual(1, mock_print_list.call_count)
         self.assertEqual(([self.verification_data], additional_fields),
                          mock_print_list.call_args[0])
         self.assertEqual(additional_keys.sort(),

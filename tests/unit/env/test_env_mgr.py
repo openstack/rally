@@ -436,9 +436,9 @@ class EnvManagerTestCase(test.TestCase):
     def test_rename(self, mock_env_rename):
         env = env_mgr.EnvManager({"uuid": "11", "name": "n"})
 
-        self.assertTrue(env.rename, env.rename("n"))
+        self.assertTrue(env.rename("n"))
         self.assertEqual(0, mock_env_rename.call_count)
-        self.assertTrue(env.rename, env.rename("n2"))
+        self.assertTrue(env.rename("n2"))
         mock_env_rename.assert_called_once_with("11", "n", "n2")
 
     @mock.patch("rally.common.db.env_update")

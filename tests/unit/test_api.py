@@ -1380,12 +1380,12 @@ class VerifierAPITestCase(test.TestCase):
         verifier_obj.update_properties.assert_called_once_with(
             status=verifier_obj.status, system_wide=True)
 
+        verifier_obj.update_status.reset_mock()
         # check switching from system-wide to system-wide
         verifier_obj.system_wide = True
-        expected_calls = len(verifier_obj.update_status.call_args())
         self.verifier_inst.update(verifier_id=uuid, system_wide=True)
-        self.assertTrue(expected_calls,
-                        len(verifier_obj.update_status.call_args()))
+        verifier_obj.update_status.assert_called_once_with(
+            consts.VerifierStatus.UPDATING)
         self.assertFalse(verifier_obj.manager.install_venv.called)
 
     @mock.patch("rally.api._Verifier._get")
