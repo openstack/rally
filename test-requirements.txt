@@ -17,7 +17,8 @@ mock                                                   # UNKNOWN
 python-dateutil                                        # Dual License
 testtools                                              # UNKNOWN
 
-sphinx!=1.6.6,!=1.6.7                                  # BSD
+sphinx!=1.6.6,!=1.6.7,>=1.6.2,<2.0.0;python_version=='2.7'  # BSD
+sphinx!=1.6.6,!=1.6.7,>=1.6.2;python_version>='3.4'  # BSD
 oslosphinx                                             # Apache Software License
 
 testresources                                          # UNKNOWN
