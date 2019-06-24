@@ -1448,7 +1448,7 @@ class VerifierAPITestCase(test.TestCase):
                              reconfigure=True,
                              extra_options=extra))
         self.assertFalse(verifier_obj.manager.extend_configuration.called)
-        verifier_obj.manager.configure.asset_called_once_with(
+        verifier_obj.manager.configure.assert_called_once_with(
             extra_options=extra)
 
         verifier_obj.update_status.reset_mock()
@@ -1497,7 +1497,7 @@ class VerifierAPITestCase(test.TestCase):
                              reconfigure=True,
                              extra_options=extra))
         self.assertFalse(verifier_obj.manager.extend_configuration.called)
-        verifier_obj.manager.configure.asset_called_once_with(
+        verifier_obj.manager.configure.assert_called_once_with(
             extra_options=extra)
 
         verifier_obj.update_status.reset_mock()
