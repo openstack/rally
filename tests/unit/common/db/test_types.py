@@ -44,7 +44,7 @@ class JsonEncodedTest(test.TestCase):
             "[[2, 1], [1, 2]]", None))
         with mock.patch("json.loads") as mock_json_loads:
             t.process_result_value("[[2, 1], [1, 2]]", None)
-            mock_json_loads.asser_called_once_with([(2, 1), (1, 2)])
+            mock_json_loads.assert_called_once_with("[[2, 1], [1, 2]]")
 
     def test_process_result_value_none(self):
         t = sa_types.JSONEncodedDict()
