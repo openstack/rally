@@ -37,7 +37,7 @@ class PathOrUrlTestCase(test.TestCase):
         self.assertRaises(exceptions.InvalidScenarioArgument,
                           types.PathOrUrl({}, {}).pre_process,
                           "fake_path", {})
-        mock_requests_head.assert_called_once_with("fake_path")
+        mock_requests_head.assert_called_once_with("fake_path", verify=False)
 
     @mock.patch("os.path.isfile")
     @mock.patch("requests.head")
