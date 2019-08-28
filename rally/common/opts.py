@@ -56,7 +56,11 @@ def register_options_from_path(path):
             return
 
         options = list_func()
-        register_opts(options.items())
+
+        if isinstance(options, dict):
+            options = options.items()
+
+        register_opts(options)
         _registered_paths.append(path)
 
 
