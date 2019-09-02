@@ -50,7 +50,7 @@ def include_var(name, rawtext, text, lineno, inliner, options=None,
         obj = json.dumps(dict, indent=4)
     else:
         obj = str(obj)
-    return [nodes.Text(obj)], []
+    return [nodes.inline("", obj)], []
 
 
 def setup(app):
