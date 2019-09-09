@@ -160,7 +160,7 @@ class RPSScenarioRunner(runner.ScenarioRunner):
                         "description": "Generate constant requests per second "
                                        "during the whole workload.",
                         "type": "number",
-                        "exclusiveMinimum": True,
+                        "exclusiveMinimum": 0,
                         "minimum": 0
                     },
                     {

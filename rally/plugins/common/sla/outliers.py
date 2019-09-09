@@ -38,7 +38,7 @@ class Outliers(sla.SLA):
             "max": {"type": "integer", "minimum": 0},
             "min_iterations": {"type": "integer", "minimum": 3},
             "sigmas": {"type": "number", "minimum": 0.0,
-                       "exclusiveMinimum": True}
+                       "exclusiveMinimum": 0.0}
         },
         "additionalProperties": False,
     }

@@ -17,7 +17,7 @@ idna==2.6
 ipaddress==1.0.19
 iso8601==0.1.12
 Jinja2==2.10
-jsonschema==2.6.0
+jsonschema==3.0.1
 linecache2==1.0.0
 Mako==1.0.7
 MarkupSafe==1.0

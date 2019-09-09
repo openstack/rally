@@ -326,7 +326,7 @@ class ActionBuilder(object):
     ITEM_TEMPLATE = {
         "type": "integer",
         "minimum": 0,
-        "exclusiveMinimum": True,
+        "exclusiveMinimum": 0.0,
         "optional": True
     }
 

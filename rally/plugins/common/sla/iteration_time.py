@@ -26,7 +26,7 @@ from rally.task import sla
 class IterationTime(sla.SLA):
     """Maximum time for one iteration in seconds."""
     CONFIG_SCHEMA = {"type": "number", "minimum": 0.0,
-                     "exclusiveMinimum": True}
+                     "exclusiveMinimum": 0.0}
 
     def __init__(self, criterion_value):
         super(IterationTime, self).__init__(criterion_value)
