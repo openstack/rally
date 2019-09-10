@@ -17,8 +17,14 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
-[unreleased]
-------------
+[1.7.0] - 2019-09-10
+--------------------
+
+Changed
+~~~~~~~
+
+python jsonschema dependency is not limited by *<3.0.0* anymore and you can
+use draft-7 as for now.
 
 Removed
 ~~~~~~~
