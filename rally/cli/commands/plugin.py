@@ -42,8 +42,6 @@ class PluginCommands(object):
                    help="Plugin name.")
     @cliutils.args("--platform", dest="platform", type=str,
                    help="Plugin platform.")
-    @cliutils.deprecated_args("--namespace", dest="platform",
-                              release="0.10.0", alternative="--platform")
     @plugins.ensure_plugins_are_loaded
     def show(self, api, name, platform=None):
         """Show detailed information about a Rally plugin."""
@@ -88,8 +86,6 @@ class PluginCommands(object):
     @cliutils.args(
         "--platform", dest="platform", type=str,
         help="List only plugins that are in the specified platform.")
-    @cliutils.deprecated_args("--namespace", dest="platform",
-                              release="0.10.0", alternative="--platform")
     @cliutils.args(
         "--plugin-base", dest="base_cls", type=str,
         help="Plugin base class.")

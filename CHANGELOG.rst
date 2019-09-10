@@ -17,11 +17,35 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
+[unreleased]
+------------
+
+Removed
+~~~~~~~
+
+* *rally task sla_check* command was deprecated in Rally 0.8.0 in favor of
+  *rally task sla-check*.
+
+* *rally-manage db* command (and the whole *rally-manage* entry-point) was
+  deprecated in Rally 0.10.0 in favor of *rally db* command.
+
+* *--namespace* argument was deprecated in Rally 0.10.0 in favor of
+  *--platform* which has better meaning.
+  Affected commands: *rally plugin show*, *rally plugin list*,
+  *rally verify list-plugins*, *rally verify create-verifier*.
+
+* *--tasks* argument of *rally task report* command and *--task* argument of
+  *rally task use* command were deprecated in Rally 0.10.0 in favor of
+  unified *--uuid* argument.
+
+* *--junit* argument of *rally task report* command is deprecated in
+  Rally 0.10.0 in favor of *rally task export --type junit-xml*
+
 [1.6.0] - 2019-06-19
 --------------------
 
 Added
-~~~~~~~
+~~~~~
 
 A list of tests to skip while running verification now supports regular
 expressions.
