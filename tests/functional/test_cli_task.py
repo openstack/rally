@@ -18,10 +18,10 @@ import os
 import re
 import threading
 import time
-import unittest
 
 import jsonschema
 import mock
+import testtools
 
 from rally import api
 from tests.functional import utils
@@ -30,7 +30,7 @@ from tests.functional import utils
 FAKE_TASK_UUID = "87ab639d-4968-4638-b9a1-07774c32484a"
 
 
-class TaskTestCase(unittest.TestCase):
+class TaskTestCase(testtools.TestCase):
 
     def _get_sample_task_config(self):
         return {
@@ -156,11 +156,9 @@ class TaskTestCase(unittest.TestCase):
             ]
         }
         config = utils.TaskConfig(cfg)
-        try:
-            # it should be failed due to Dummy.dummy_exception
-            rally("task start --task %s" % config.filename)
-        except utils.RallyCliError:
-            pass
+        # it should be failed due to Dummy.dummy_exception
+        self.assertRaises(utils.RallyCliError,
+                          rally, "task start --task %s" % config.filename)
         output = rally("task detailed --filter-by sla-failures")
         self.assertIn("Dummy.dummy_exception", output)
         self.assertNotIn("Dummy.dummy_random_action", output)
@@ -211,10 +209,11 @@ class TaskTestCase(unittest.TestCase):
     def test_start_with_empty_config(self):
         rally = utils.Rally()
         config = utils.TaskConfig(None)
-        with self.assertRaises(utils.RallyCliError) as err:
-            rally("task start --task %s" % config.filename)
+        err = self.assertRaises(
+            utils.RallyCliError,
+            rally, "task start --task %s" % config.filename)
         self.assertIn("Task config is invalid: `It is empty`",
-                      err.exception.output)
+                      err.output)
 
     def test_results(self):
         rally = utils.Rally()
@@ -265,10 +264,11 @@ class TaskTestCase(unittest.TestCase):
 
     def test_report_with_wrong_task_id(self):
         rally = utils.Rally()
-        self.assertRaises(utils.RallyCliError,
-                          rally, "task report --tasks %s" % FAKE_TASK_UUID)
-        self.assertRaises(utils.RallyCliError,
-                          rally, "task report --uuid %s" % FAKE_TASK_UUID)
+        e = self.assertRaises(utils.RallyCliError,
+                              rally, "task report --uuid %s" % FAKE_TASK_UUID)
+        self.assertIn(
+            "Record for uuid: %s not found in table task" % FAKE_TASK_UUID,
+            str(e))
 
     def test_sla_check_with_wrong_task_id(self):
         rally = utils.Rally()
@@ -999,7 +999,7 @@ class TaskTestCase(unittest.TestCase):
         result = re.search(
             r"(?P<uuid>[0-9a-f\-]{36}): started", output)
         uuid = result.group("uuid")
-        rally("task use --task %s" % uuid)
+        rally("task use --uuid %s" % uuid)
         current_task = utils.get_global("RALLY_TASK", rally.env)
         self.assertEqual(uuid, current_task)
 
@@ -1050,7 +1050,7 @@ class TaskTestCase(unittest.TestCase):
         self.assertTrue(os.path.exists(html_report))
 
 
-class SLATestCase(unittest.TestCase):
+class SLATestCase(testtools.TestCase):
 
     def _get_sample_task_config(self, max_seconds_per_iteration=4,
                                 failure_rate_max=0):
@@ -1077,9 +1077,10 @@ class SLATestCase(unittest.TestCase):
         rally = utils.Rally()
         cfg = self._get_sample_task_config(max_seconds_per_iteration=0.001)
         config = utils.TaskConfig(cfg)
-        with self.assertRaises(utils.RallyCliError) as err:
-            rally("task start --task %s" % config.filename)
-        output = err.exception.output
+        err = self.assertRaises(
+            utils.RallyCliError,
+            rally, "task start --task %s" % config.filename)
+        output = err.output
         self.assertIn("At least one workload did not pass SLA criteria.",
                       output)
         self.assertRaises(utils.RallyCliError, rally, "task sla-check")
@@ -1103,7 +1104,7 @@ class SLATestCase(unittest.TestCase):
         self.assertEqual(expected, data)
 
 
-class SLAExtraFlagsTestCase(unittest.TestCase):
+class SLAExtraFlagsTestCase(testtools.TestCase):
 
     def test_abort_on_sla_fail(self):
         rally = utils.Rally()
@@ -1135,13 +1136,9 @@ class SLAExtraFlagsTestCase(unittest.TestCase):
              "detail": mock.ANY,
              "pos": 0, "status": "FAIL"}
         ]
-        try:
-            rally("task sla-check --json", getjson=True)
-        except utils.RallyCliError as expected_error:
-            self.assertEqual(expected, json.loads(expected_error.output))
-        else:
-            self.fail("`rally task sla-check` command should return non-zero "
-                      "exit code")
+        e = self.assertRaises(utils.RallyCliError,
+                              rally, "task sla-check --json", getjson=True)
+        self.assertEqual(expected, json.loads(e.output))
 
     def _test_broken_context(self, runner):
         rally = utils.Rally()
@@ -1170,13 +1167,9 @@ class SLAExtraFlagsTestCase(unittest.TestCase):
              "detail": mock.ANY,
              "pos": 0, "status": "FAIL"}
         ]
-        try:
-            rally("task sla-check --json", getjson=True)
-        except utils.RallyCliError as expected_error:
-            self.assertEqual(expected, json.loads(expected_error.output))
-        else:
-            self.fail("`rally task sla-check` command should return non-zero "
-                      "exit code")
+        e = self.assertRaises(utils.RallyCliError,
+                              rally, "task sla-check --json", getjson=True)
+        self.assertEqual(expected, json.loads(e.output))
 
     def test_broken_context_with_constant_runner(self):
         self._test_broken_context({"type": "constant",
@@ -1190,7 +1183,7 @@ class SLAExtraFlagsTestCase(unittest.TestCase):
                                    "timeout": 6})
 
 
-class SLAPerfDegrTestCase(unittest.TestCase):
+class SLAPerfDegrTestCase(testtools.TestCase):
 
     def _get_sample_task_config(self, max_degradation=500):
         return {
@@ -1219,9 +1212,10 @@ class SLAPerfDegrTestCase(unittest.TestCase):
         rally = utils.Rally()
         cfg = self._get_sample_task_config(max_degradation=1)
         config = utils.TaskConfig(cfg)
-        with self.assertRaises(utils.RallyCliError) as err:
-            rally("task start --task %s" % config.filename)
-        output = err.exception.output
+        err = self.assertRaises(
+            utils.RallyCliError,
+            rally, "task start --task %s" % config.filename)
+        output = err.output
         self.assertIn("At least one workload did not pass SLA criteria.",
                       output)
         self.assertRaises(utils.RallyCliError, rally, "task sla-check")
@@ -1241,7 +1235,7 @@ class SLAPerfDegrTestCase(unittest.TestCase):
         self.assertEqual(expected, data)
 
 
-class HookTestCase(unittest.TestCase):
+class HookTestCase(testtools.TestCase):
 
     def setUp(self):
         super(HookTestCase, self).setUp()

@@ -91,8 +91,6 @@ class VerifyCommands(object):
 
     @cliutils.args("--platform", dest="platform", type=str,
                    help="Requried patform (e.g. openstack).")
-    @cliutils.deprecated_args("--namespace", dest="platform",
-                              release="0.10.0", alternative="--platform")
     @plugins.ensure_plugins_are_loaded
     def list_plugins(self, api, platform=None):
         """List all plugins for verifiers management."""
@@ -120,8 +118,6 @@ class VerifyCommands(object):
                    help="Verifier plugin platform. Should be specified in "
                         "case of two verifier plugins with equal names but "
                         "in different platforms.")
-    @cliutils.deprecated_args("--namespace", dest="platform",
-                              release="0.10.0", alternative="--platform")
     @cliutils.args("--source", dest="source", type=str, required=False,
                    help="Path or URL to the repo to clone verifier from.")
     @cliutils.args("--version", dest="version", type=str, required=False,

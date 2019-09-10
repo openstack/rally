@@ -836,8 +836,6 @@ class TaskCommands(object):
                     output_dest=kwargs.get("out"),
                     open_it=kwargs.get("open_it", False))
 
-    @cliutils.deprecated_args("--tasks", dest="tasks", nargs="+",
-                              release="0.10.0", alternative="--uuid")
     @cliutils.args("--out", metavar="<path>",
                    type=str, dest="out", required=False,
                    help="Report destination. Can be a path to a file (in case"
@@ -851,11 +849,6 @@ class TaskCommands(object):
                    action="store_const", const="html-static")
     @cliutils.args("--json", dest="out_format",
                    action="store_const", const="json")
-    @cliutils.deprecated_args("--junit", dest="out_format",
-                              action="store_const", const="junit-xml",
-                              release="0.10.0",
-                              alternative=("rally task export "
-                                           "--type junit-xml"))
     @cliutils.args("--uuid", dest="tasks", nargs="+", type=str,
                    help="UUIDs of tasks or json reports of tasks")
     @cliutils.args("--deployment", dest="deployment", type=str,
@@ -900,17 +893,6 @@ class TaskCommands(object):
                    action="store_true",
                    help="Output in JSON format.")
     @envutils.with_default_task_id
-    @cliutils.alias("sla_check")
-    def sla_check_deprecated(self, api, task_id=None, tojson=False):
-        """DEPRECATED since Rally 0.8.0, use `rally task sla-check` instead."""
-
-        return self.sla_check(api, task_id=task_id, tojson=tojson)
-
-    @cliutils.args("--uuid", type=str, dest="task_id", help="UUID of task.")
-    @cliutils.args("--json", dest="tojson",
-                   action="store_true",
-                   help="Output in JSON format.")
-    @envutils.with_default_task_id
     def sla_check(self, api, task_id=None, tojson=False):
         """Display SLA check results table."""
 
@@ -938,8 +920,6 @@ class TaskCommands(object):
 
     @cliutils.args("--uuid", type=str, dest="task_id",
                    help="UUID of the task")
-    @cliutils.deprecated_args("--task", dest="task_id", type=str,
-                              release="0.2.0", alternative="--uuid")
     def use(self, api, task_id):
         """Set active task."""
 

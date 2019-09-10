@@ -922,6 +922,28 @@ class ValidateArgsTest(test.TestCase):
         wrapped = cliutils.alias(cmd_name)
         self.assertEqual(cmd_name, wrapped(alias_fn).alias)
 
+    def test_deprecated_args(self):
+        def command():
+            pass
+
+        def deprecated_args(func, *args, **kwargs):
+            cliutils.deprecated_args(*args, **kwargs)(func)
+
+        e = self.assertRaises(ValueError, deprecated_args, command,
+                              "--argument-name", type="const")
+        self.assertIn("'release' is required keyword argument", str(e))
+        self.assertNotIn("args", command.__dict__)
+        self.assertNotIn("deprecated_args", command.__dict__)
+
+        @cliutils.deprecated_args("--argument-name", type="const", release=777)
+        def command():
+            pass
+
+        self.assertEqual(1, len(command.__dict__.get("args", [])))
+        arg_kwargs = command.__dict__["args"][0][1]
+        self.assertIn("[Deprecated since Rally 777]",
+                      arg_kwargs.get("help", ""))
+
 
 class CategoryParserTestCase(test.TestCase):
 
