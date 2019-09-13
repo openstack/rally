@@ -24,7 +24,8 @@ for each enum. (e.g. TaskStatus)
 from rally.common import utils
 
 
-JSON_SCHEMA = "http://json-schema.org/draft-07/schema"
+JSON_SCHEMA = "http://json-schema.org/draft-04/schema"
+JSON_SCHEMA7 = "http://json-schema.org/draft-07/schema"
 
 
 class _TaskStatus(utils.ImmutableMixin, utils.EnumMixin):

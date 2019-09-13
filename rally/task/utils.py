@@ -314,7 +314,7 @@ class ActionBuilder(object):
 
     SCHEMA_TEMPLATE = {
         "type": "array",
-        "$schema": consts.JSON_SCHEMA,
+        "$schema": consts.JSON_SCHEMA7,
         "items": {
             "type": "object",
             "properties": {},

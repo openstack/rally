@@ -38,7 +38,7 @@ class PerformanceDegradation(sla.SLA):
     """
     CONFIG_SCHEMA = {
         "type": "object",
-        "$schema": consts.JSON_SCHEMA,
+        "$schema": consts.JSON_SCHEMA7,
         "properties": {
             "max_degradation": {
                 "type": "number",

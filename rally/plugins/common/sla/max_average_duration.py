@@ -20,14 +20,18 @@ with contracted values such as maximum error rate or minimum response time.
 """
 
 from rally.common import streaming_algorithms
+from rally import consts
 from rally.task import sla
 
 
 @sla.configure(name="max_avg_duration")
 class MaxAverageDuration(sla.SLA):
     """Maximum average duration of one iteration in seconds."""
-    CONFIG_SCHEMA = {"type": "number", "minimum": 0.0,
-                     "exclusiveMinimum": 0.0}
+    CONFIG_SCHEMA = {
+        "type": "number",
+        "$schema": consts.JSON_SCHEMA7,
+        "exclusiveMinimum": 0.0
+    }
 
     def __init__(self, criterion_value):
         super(MaxAverageDuration, self).__init__(criterion_value)

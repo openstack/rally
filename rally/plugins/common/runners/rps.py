@@ -148,7 +148,7 @@ class RPSScenarioRunner(runner.ScenarioRunner):
 
     CONFIG_SCHEMA = {
         "type": "object",
-        "$schema": consts.JSON_SCHEMA,
+        "$schema": consts.JSON_SCHEMA7,
         "properties": {
             "times": {
                 "type": "integer",
