@@ -197,7 +197,8 @@ To start a task, run the ``task start`` command (you can also add the
         rally task report 6fd9a19f-5cf8-4f76-ab72-2e34bb1d4996 --out output.html
 
     * To generate a JUnit report, run:
-        rally task export 6fd9a19f-5cf8-4f76-ab72-2e34bb1d4996 --type junit --to output.xml
+        rally task export 6fd9a19f-5cf8-4f76-ab72-2e34bb1d4996 --type junit-xml
+         --to output.xml
 
     * To get raw JSON output of task results, run:
         rally task report 6fd9a19f-5cf8-4f76-ab72-2e34bb1d4996 --json --out output.json

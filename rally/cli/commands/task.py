@@ -532,7 +532,7 @@ class TaskCommands(object):
         print("* To plot HTML graphics with this data, run:")
         print("\trally task report %s --out output.html\n" % task["uuid"])
         print("* To generate a JUnit report, run:")
-        print("\trally task export %s --type junit --to output.xml\n" %
+        print("\trally task export %s --type junit-xml --to output.xml\n" %
               task["uuid"])
         print("* To get raw JSON output of task results, run:")
         print("\trally task report %s --json --out output.json\n" %
