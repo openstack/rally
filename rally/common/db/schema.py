@@ -149,4 +149,4 @@ def schema_stamp(revision, config=None):
     :param config: Instance of alembic config
     """
     config = config or _alembic_config()
-    return alembic.command.stamp(config, revision=revision)
+    return alembic.command.stamp(config, revision)
