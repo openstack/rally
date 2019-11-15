@@ -25,7 +25,7 @@ from rally.ui import utils as ui_utils
 from rally.verification import reporter
 
 
-SKIP_RE = re.compile("Skipped until Bug: ?(?P<bug_number>\d+) is resolved.")
+SKIP_RE = re.compile(r"Skipped until Bug: ?(?P<bug_number>\d+) is resolved.")
 LP_BUG_LINK = "https://launchpad.net/bugs/%s"
 TIME_FORMAT = consts.TimeFormat.ISO8601
 

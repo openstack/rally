@@ -19,7 +19,7 @@ from tests.unit import test
 
 class ModuleTestCase(test.TestCase):
 
-    VERSION_REGEX = "^\d+\.\d+\.\d+(~dev\d+)?$"
+    VERSION_REGEX = r"^\d+\.\d+\.\d+(~dev\d+)?$"
 
     def test_version_info(self):
         version_str = version.version_info.semantic_version().debian_string()

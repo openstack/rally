@@ -3,11 +3,10 @@
 # process, which may cause wedges in the gate later.
 
 # Rally core dependencies
-alembic                                                # MIT
+alembic!=1.2.0                                         # MIT
 decorator                                              # new BSD License
-Jinja2                                                 # BSD
+Jinja2                                                 # BSD-3-Clause
 jsonschema                                             # MIT
-netaddr                                                # BSD
 oslo.config!=4.3.0,!=4.4.0                             # Apache Software License
 # do not forget to remove `testresources` from test-requirements. it is a
 # dependency of oslo.db for tests
@@ -19,7 +18,8 @@ PrettyTable<0.8                                        # BSD
 pyOpenSSL                                              # Apache License, Version 2.0
 PyYAML                                                 # MIT
 python-subunit
-requests                                               # Apache License, Version 2.0
+requests<2.20.0;python_version=='3.4'                  # Apache License, Version 2.0
+requests!=2.20.0;python_version!='3.4'                 # Apache License, Version 2.0
 SQLAlchemy!=1.1.5,!=1.1.6,!=1.1.7,!=1.1.8              # MIT
 six                                                    # MIT
-virtualenv                                             # MIT
+virtualenv!=16.3.0                                     # MIT

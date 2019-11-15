@@ -4,7 +4,8 @@
 
 hacking>=0.12.0,!=0.13.0                               # Apache Software License
 
-pytest>=2.7                                            # MIT
+pytest>=2.7,<5.0.0;python_version<='3.4'              # MIT
+pytest>=2.7;python_version>'3.4'                       # MIT
 # py.test plugin for measuring coverage.
 pytest-cov>=2.2.1                                      # MIT
 # py.test plugin for generating HTML reports
@@ -13,12 +14,11 @@ pytest-html>=1.10.0                                    # Mozilla Public License 
 pytest-xdist                                           # MIT
 
 ddt                                                    # MIT
-mock                                                   # UNKNOWN
+mock                                                   # OSI Approved :: BSD License
 python-dateutil                                        # Dual License
 testtools                                              # UNKNOWN
 
-sphinx!=1.6.6,!=1.6.7,>=1.6.2,<2.0.0;python_version=='2.7'  # BSD
-sphinx!=1.6.6,!=1.6.7,>=1.6.2;python_version>='3.4'  # BSD
+sphinx!=1.6.6,!=1.6.7,!=2.1.0                          # BSD
 oslosphinx                                             # Apache Software License
 
 testresources                                          # UNKNOWN

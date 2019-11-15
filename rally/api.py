@@ -239,12 +239,12 @@ class _Task(APIGroup):
             # NOTE(boris-42): Removing variables that have default values from
             #                 missing. Construction that won't be properly
             #                 checked is {% set x = x or 1}
-            if re.search(mis.join(["{%\s*set\s+", "\s*=\s*", "[^\w]+"]),
+            if re.search(mis.join([r"{%\s*set\s+", r"\s*=\s*", r"[^\w]+"]),
                          task_template):
                 return False
             # NOTE(jlk): Also check for a default filter which can show up as
             #            a missing variable
-            if re.search(mis + "\s*\|\s*default\(", task_template):
+            if re.search(mis + r"\s*\|\s*default\(", task_template):
                 return False
             return True
 

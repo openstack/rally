@@ -17,6 +17,28 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
+
+[2.1.0] - 2019-11-19
+--------------------
+
+Please note that Python 2.7 will reach the end of its life on
+January 1st, 2020. A future version of Rally will drop support for Python 2.7,
+it will happen soon. Also, the same will happen with support of Python 3.4 and
+Python 3.5
+
+Removed
+~~~~~~~
+
+Library *netaddr* from direct project requirements. We never use it at Rally
+framework.
+
+Fixed
+~~~~~
+
+Support of latest alembic
+
+`Launchpad-bug #1844884 <https://launchpad.net/bugs/1844884>`_
+
 [2.0.0] - 2019-09-13
 --------------------
 

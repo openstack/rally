@@ -58,7 +58,7 @@ class TestFormat(testtools.TestCase):
 
     def _check_trailing_spaces(self, doc_file, raw):
         for i, line in enumerate(raw.split("\n")):
-            trailing_spaces = re.findall("\s+$", line)
+            trailing_spaces = re.findall(r"\s+$", line)
             self.assertEqual(
                 len(trailing_spaces), 0,
                 "Found trailing spaces on line %s of %s" % (i + 1, doc_file))

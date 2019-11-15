@@ -18,8 +18,8 @@ import sys
 
 PARAM_OR_RETURNS_REGEX = re.compile(":(?:param|returns)")
 RETURNS_REGEX = re.compile(":returns: (?P<doc>.*)", re.S)
-PARAM_REGEX = re.compile(":param (?P<name>[\*\w]+): (?P<doc>.*?)"
-                         "(?:(?=:param)|(?=:return)|(?=:raises)|\Z)", re.S)
+PARAM_REGEX = re.compile(r":param (?P<name>[\*\w]+): (?P<doc>.*?)"
+                         r"(?:(?=:param)|(?=:return)|(?=:raises)|\Z)", re.S)
 
 
 def trim(docstring):
