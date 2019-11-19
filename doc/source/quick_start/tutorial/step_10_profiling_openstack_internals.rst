@@ -35,7 +35,7 @@ assume that your OpenStack services have been configured to enable OSprofiler
 and that the secret HMAC key is ``SECRET_KEY``. This key is stored alongside
 the credentials of your deployment. Once Rally is instructed about the HMAC
 key, a new trace can be initialized for each iteration of the workload. Rally
-will then store in its reports a profiler trace id. This id can be finally be
+will then store in its reports a profiler trace id. This id can be finally
 used to query OSprofiler in order to get the full trace of the iteration.
 
 Registering the HMAC key
