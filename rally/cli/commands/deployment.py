@@ -90,17 +90,17 @@ class DeploymentCommands(object):
                 #   rally-openstack package is installed
                 import rally_openstack
                 if rally_openstack.__version_tuple__ <= (1, 4, 0):
-                    print(rally_openstack.__version_tuple__)
-                    if config["existing@openstack"]["https_key"]:
+                    if ("https_key" in config["existing@openstack"]
+                            and config["existing@openstack"]["https_key"]):
                         print("WARNING: OS_KEY is ignored due to old version "
                               "of rally-openstack package.")
-                    # NOTE(andreykurilin): To support rally-openstack <=1.4.0
-                    #   we need to remove https_key, since OpenStackCredentials
-                    #   object doesn't support it.
-                    #   Latest rally-openstack fixed this issue with
-                    #   https://github.com/openstack/rally-openstack/commit/c7483386e6b59474c83e3ecd0c7ee0e77ff50c02
-
-                    config["existing@openstack"].pop("https_key")
+                        # NOTE(andreykurilin): To support
+                        #    rally-openstack<=1.4.0 we need to remove
+                        #    https_key, since OpenStackCredentials object
+                        #    doesn't support it.
+                        #    Latest rally-openstack fixed this issue with
+                        #    https://github.com/openstack/rally-openstack/commit/c7483386e6b59474c83e3ecd0c7ee0e77ff50c02
+                        config["existing@openstack"].pop("https_key")
         else:
             if not filename:
                 config = {}
