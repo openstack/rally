@@ -18,8 +18,7 @@ PrettyTable<0.8                                        # BSD
 pyOpenSSL                                              # Apache License, Version 2.0
 PyYAML                                                 # MIT
 python-subunit
-requests<2.20.0;python_version=='3.4'                  # Apache License, Version 2.0
-requests!=2.20.0;python_version!='3.4'                 # Apache License, Version 2.0
+requests!=2.20.0                                       # Apache License, Version 2.0
 SQLAlchemy!=1.1.5,!=1.1.6,!=1.1.7,!=1.1.8              # MIT
 six                                                    # MIT
 virtualenv!=16.3.0                                     # MIT

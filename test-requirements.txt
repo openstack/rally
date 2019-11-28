@@ -4,7 +4,6 @@
 
 hacking>=0.12.0,!=0.13.0                               # Apache Software License
 
-pytest>=2.7,<5.0.0;python_version<='3.4'              # MIT
 pytest>=2.7;python_version>'3.4'                       # MIT
 # py.test plugin for measuring coverage.
 pytest-cov>=2.2.1                                      # MIT

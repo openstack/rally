@@ -17,6 +17,14 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
+[unreleased]
+------------
+
+Removed
+~~~~~~~
+
+* Python 2.7, Python 3.4 and Python 3.5 support
+
 
 [2.1.0] - 2019-11-19
 --------------------
