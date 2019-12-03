@@ -183,13 +183,13 @@ Work Items
 Dependencies
 ============
 
-* Consistent resource names: https://review.openstack.org/201545
+* Consistent resource names: https://review.opendev.org/201545
 
 * Add name pattern filter for resource cleanup:
-  https://review.openstack.org/#/c/139643/
+  https://review.opendev.org/#/c/139643/
 
 * Finish support of running tasks using existing users:
-  https://review.openstack.org/#/c/168524/
+  https://review.opendev.org/#/c/168524/
 
 * Add support of persistence context environment:
   https://github.com/openstack/rally/blob/master/doc/feature_request/persistence_benchmark_env.rst
