@@ -70,7 +70,7 @@ def method_wrapper(func):
     1) Each service method should not be called with positional arguments,
        since it can lead mistakes in wrong order while writing version
        compatible code. We had such situation in KeystoneWrapper
-       (see https://review.openstack.org/#/c/309470/ ):
+       (see https://review.opendev.org/#/c/309470/ ):
 
        .. code-block:: python
 
