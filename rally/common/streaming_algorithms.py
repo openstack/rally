@@ -102,9 +102,9 @@ class StdDevComputation(StreamingAlgorithm):
         self.mean = self.mean_computation.result()
         self.count += other.count
 
-        self.dev_sum = (dev_sum1 + count1 * mean1 ** 2 +
-                        dev_sum2 + count2 * mean2 ** 2 -
-                        self.count * self.mean ** 2)
+        self.dev_sum = (dev_sum1 + count1 * mean1 ** 2
+                        + dev_sum2 + count2 * mean2 ** 2
+                        - self.count * self.mean ** 2)
 
     def result(self):
         # NOTE(amaretskiy): Need at least two values to be processed

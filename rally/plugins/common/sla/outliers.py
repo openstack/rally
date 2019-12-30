@@ -69,8 +69,8 @@ class Outliers(sla.SLA):
             self.iterations += 1
 
             # NOTE(msdubov): First check if the current iteration is an outlier
-            if ((self.iterations >= self.min_iterations and self.threshold and
-                 duration > self.threshold)):
+            if (self.iterations >= self.min_iterations
+                    and self.threshold and duration > self.threshold):
                 self.outliers += 1
 
             # NOTE(msdubov): Then update the threshold value

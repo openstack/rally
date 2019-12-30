@@ -17,6 +17,10 @@ import sys
 import six
 
 
+def _get_default_encoding():
+    return sys.stdin.encoding or sys.getdefaultencoding()
+
+
 def safe_decode(text, incoming=None, errors="strict"):
     """Decodes incoming string using `incoming` if they're not already unicode.
 
@@ -34,8 +38,7 @@ def safe_decode(text, incoming=None, errors="strict"):
         return text
 
     if not incoming:
-        incoming = (sys.stdin.encoding or
-                    sys.getdefaultencoding())
+        incoming = _get_default_encoding()
 
     try:
         return text.decode(incoming, errors)
@@ -75,8 +78,7 @@ def safe_encode(text, incoming=None, encoding="utf-8", errors="strict"):
         raise TypeError("%s can't be encoded" % type(text))
 
     if not incoming:
-        incoming = (sys.stdin.encoding or
-                    sys.getdefaultencoding())
+        incoming = _get_default_encoding()
 
     # Avoid case issues in comparisons
     if hasattr(incoming, "lower"):

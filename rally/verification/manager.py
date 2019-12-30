@@ -163,8 +163,8 @@ class VerifierManager(plugin.Plugin):
                 raise exceptions.ValidationError(
                     "'pattern' argument should be a string.")
         if "concurrency" in args:
-            if (not isinstance(args["concurrency"], int) or
-                    args["concurrency"] < 0):
+            if (not isinstance(args["concurrency"], int)
+                    or args["concurrency"] < 0):
                 raise exceptions.ValidationError(
                     "'concurrency' argument should be a positive integer or "
                     "zero.")

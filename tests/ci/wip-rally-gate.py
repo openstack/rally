@@ -52,6 +52,7 @@ def use_keystone_v3():
                      "--name", "V3", "--file", cfg_file.name])
     print(subprocess.check_output(["rally", "deployment", "check"]))
 
+
 TAG_HANDLERS = {"v3": use_keystone_v3}
 
 

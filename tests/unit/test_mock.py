@@ -192,8 +192,8 @@ class FuncMockArgsDecoratorsChecker(ast.NodeVisitor):
             if funcname == "mock.patch":
                 decname = self._get_value(decorator.args[0])
             elif funcname == "mock.patch.object":
-                decname = (self._get_name(decorator.args[0]) + "." +
-                           self._get_value(decorator.args[1]))
+                decname = (self._get_name(decorator.args[0]) + "."
+                           + self._get_value(decorator.args[1]))
             else:
                 continue
 
@@ -306,8 +306,8 @@ class MockUsageCheckerTestCase(test.TestCase):
 
         for dirname, dirnames, filenames in os.walk(self.tests_path):
             for filename in filenames:
-                if (not filename.startswith("test_") or
-                   not filename.endswith(".py")):
+                if (not filename.startswith("test_")
+                        or not filename.endswith(".py")):
                     continue
 
                 filename = os.path.relpath(os.path.join(dirname, filename))

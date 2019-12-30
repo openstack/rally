@@ -240,8 +240,8 @@ class RPSScenarioRunner(runner.ScenarioRunner):
                 return float(rps_cfg) / number_of_processes
             stage_order = (time.time() - start_timer) / rps_cfg.get(
                 "duration", 1) - 1
-            rps = (float(rps_cfg["start"] + rps_cfg["step"] * stage_order) /
-                   number_of_processes)
+            rps = (float(rps_cfg["start"] + rps_cfg["step"] * stage_order)
+                   / number_of_processes)
 
             return min(rps, float(rps_cfg["end"]))
 

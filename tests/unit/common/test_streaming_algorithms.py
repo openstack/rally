@@ -86,8 +86,8 @@ class StdDevComputationTestCase(test.TestCase):
         for value in stream:
             std_computation.add(value)
         mean = float(sum(stream)) / len(stream)
-        excepted_std = math.sqrt(sum((x - mean) ** 2 for x in stream) /
-                                 (len(stream) - 1))
+        excepted_std = math.sqrt(
+            sum((x - mean) ** 2 for x in stream) / (len(stream) - 1))
         self.assertEqual(excepted_std, std_computation.result())
 
     def test_merge(self):

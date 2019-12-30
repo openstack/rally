@@ -46,8 +46,9 @@ def get_status(resource, status_attr="status"):
             return status.upper()
 
     # Dict case
-    if ((isinstance(resource, dict) and status_attr in resource.keys() and
-         isinstance(resource[status_attr], six.string_types))):
+    if (isinstance(resource, dict)
+            and status_attr in resource.keys()
+            and isinstance(resource[status_attr], six.string_types)):
         return resource[status_attr].upper()
 
     return "NONE"

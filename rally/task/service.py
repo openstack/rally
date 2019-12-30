@@ -142,9 +142,9 @@ class ServiceMeta(type):
         # properties of parents
         not_implemented_apis = set()
         for name, obj in inspect.getmembers(cls):
-            if (getattr(obj, "require_impl", False) and
+            if (getattr(obj, "require_impl", False)
                     # name in namespace means that object was introduced in cls
-                    name not in namespaces):
+                    and name not in namespaces):
                 # it is not overridden...
                 not_implemented_apis.add(name)
 
@@ -307,8 +307,8 @@ class UnifiedService(Service):
         # find all classes with unified implementation
         impls = {cls: cls._meta_get("impl")
                  for cls in discover.itersubclasses(self.__class__)
-                 if (cls._meta_is_inited(raise_exc=False) and
-                     cls._meta_get("impl"))}
+                 if (cls._meta_is_inited(raise_exc=False)
+                     and cls._meta_get("impl"))}
 
         service_names = {o._meta_get("name") for o in impls.values()}
 
@@ -319,8 +319,8 @@ class UnifiedService(Service):
             enabled_services = list(self._clients.services().values())
 
         for cls, impl in impls.items():
-            if (enabled_services is not None and
-                    impl._meta_get("name") not in enabled_services):
+            if (enabled_services is not None
+                    and impl._meta_get("name") not in enabled_services):
                 continue
             if cls.is_applicable(self._clients):
                 return cls, impls
@@ -356,8 +356,8 @@ class _Resource(object):
 
     def __eq__(self, other):
         self_id = getattr(self, self._id_property)
-        return (isinstance(other, self.__class__) and
-                self_id == getattr(other, self._id_property))
+        return (isinstance(other, self.__class__)
+                and self_id == getattr(other, self._id_property))
 
     def _as_dict(self):
         return dict((k, self[k]) for k in self.__slots__)

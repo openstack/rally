@@ -237,17 +237,17 @@ class DeploymentCommands(object):
 
         info = api.deployment.check(deployment=deployment)
         for platform in info:
-            for i, credentials in enumerate(info[platform]):
+            for i, creds in enumerate(info[platform]):
                 failed = False
 
                 n = "" if len(info[platform]) == 1 else " #%s" % (i + 1)
                 header = "Platform %s%s:" % (platform, n)
                 print(cliutils.make_header(header))
-                if "admin_error" in credentials:
-                    print_error("admin", credentials["admin_error"])
+                if "admin_error" in creds:
+                    print_error("admin", creds["admin_error"])
                     failed = True
-                if "user_error" in credentials:
-                    print_error("users", credentials["user_error"])
+                if "user_error" in creds:
+                    print_error("users", creds["user_error"])
                     failed = True
 
                 if not failed:
@@ -256,19 +256,19 @@ class DeploymentCommands(object):
                         "Service": lambda x: x.get("name"),
                         "Service Type": lambda x: x.get("type"),
                         "Status": lambda x: x.get("status", "Available")}
-                    if (is_field_there(credentials["services"], "type") and
-                            is_field_there(credentials["services"], "name")):
+                    if (is_field_there(creds["services"], "type")
+                            and is_field_there(creds["services"], "name")):
                         headers = ["Service", "Service Type", "Status"]
                     else:
                         headers = ["Service", "Status"]
 
-                    if is_field_there(credentials["services"], "version"):
+                    if is_field_there(creds["services"], "version"):
                         headers.append("Version")
 
-                    if is_field_there(credentials["services"], "description"):
+                    if is_field_there(creds["services"], "description"):
                         headers.append("Description")
 
-                    cliutils.print_list(credentials["services"], headers,
+                    cliutils.print_list(creds["services"], headers,
                                         normalize_field_names=True,
                                         formatters=formatters)
                 else:

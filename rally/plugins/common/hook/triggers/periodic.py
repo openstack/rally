@@ -61,9 +61,9 @@ class PeriodicTrigger(hook.HookTrigger):
         return self.config["unit"]
 
     def on_event(self, event_type, value=None):
-        if not (event_type == self.get_listening_event() and
-                self.config["start"] <= value <= self.config["end"] and
-                (value - self.config["start"]) % self.config["step"] == 0):
+        if not (event_type == self.get_listening_event()
+                and self.config["start"] <= value <= self.config["end"]
+                and (value - self.config["start"]) % self.config["step"] == 0):
             # do nothing
             return
         super(PeriodicTrigger, self).on_event(event_type, value)

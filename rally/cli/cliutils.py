@@ -195,8 +195,8 @@ def print_dict(obj, fields=None, formatters=None, mixed_case_fields=False,
             fields = sorted(obj.keys())
         else:
             fields = [name for name in dir(obj)
-                      if (not name.startswith("_") and
-                          not callable(getattr(obj, name)))]
+                      if (not name.startswith("_")
+                          and not callable(getattr(obj, name)))]
 
     pt = prettytable.PrettyTable([property_label, value_label], caching=False)
     pt.align = "l"
@@ -222,9 +222,8 @@ def print_dict(obj, fields=None, formatters=None, mixed_case_fields=False,
             data = textwrap.fill(six.text_type(data), wrap)
         # if value has a newline, add in multiple rows
         # e.g. fault with stacktrace
-        if (data and
-                isinstance(data, six.string_types) and
-                (r"\n" in data or "\r" in data)):
+        if (data and isinstance(data, six.string_types)
+                and (r"\n" in data or "\r" in data)):
             # "\r" would break the table, so remove it.
             if "\r" in data:
                 data = data.replace("\r", "")
@@ -729,7 +728,7 @@ _rally()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
 
-    if [[ $cur =~ ^(\.|\~|\/) ]] || [[ $prev =~ ^--out(|put-file)$ ]] ; then
+    if [[ $cur =~ ^(\\.|\\~|\\/) ]] || [[ $prev =~ ^--out(|put-file)$ ]] ; then
         _rally_filedir
     elif [[ $prev =~ ^--(task|filename)$ ]] ; then
         _rally_filedir "\\.json|\\.yaml|\\.yml"

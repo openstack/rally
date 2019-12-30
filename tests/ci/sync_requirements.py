@@ -120,8 +120,8 @@ class PYPIPackage(object):
         return self._license
 
     def __eq__(self, other):
-        return (isinstance(other, PYPIPackage) and
-                self.package_name == other.package_name)
+        return (isinstance(other, PYPIPackage)
+                and self.package_name == other.package_name)
 
 
 class Requirement(PYPIPackage):
@@ -180,9 +180,11 @@ class Requirement(PYPIPackage):
 
             min_equal_to_max = False
             if self.version["min"] and self.version["max"]:
-                if (self.version["min"].startswith(">=") and
-                        self.version["max"].startswith("<=") and
-                        self.version["min"][2:] == self.version["max"][2:]):
+                if (
+                        self.version["min"].startswith(">=")
+                        and self.version["max"].startswith("<=")
+                        and self.version["min"][2:] == self.version["max"][2:]
+                ):
                     # min and max versions are equal there is no need to write
                     # both of them
                     min_equal_to_max = True
@@ -220,8 +222,8 @@ class Requirement(PYPIPackage):
         return string
 
     def __eq__(self, other):
-        return (isinstance(other, self.__class__) and
-                self.package_name == other.package_name)
+        return (isinstance(other, self.__class__)
+                and self.package_name == other.package_name)
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -273,15 +275,15 @@ def parse_data(raw_data, include_comments=True, dependency_cls=Requirement):
                 requirements[-1].finish_him()
             requirements.append(Comment(finished=True))
         else:
-            if (isinstance(requirements[-1], Comment) and
-                    not requirements[-1].is_finished):
+            if (isinstance(requirements[-1], Comment)
+                    and not requirements[-1].is_finished):
                 requirements[-1].finish_him()
 
             # parse_line
             dep = dependency_cls.parse_line(line)
             if dep:
-                if (isinstance(requirements[-1], Comment) and
-                        DO_NOT_TOUCH_TAG in str(requirements[-1])):
+                if (isinstance(requirements[-1], Comment)
+                        and DO_NOT_TOUCH_TAG in str(requirements[-1])):
                     dep.do_not_touch = True
                 requirements.append(dep)
 

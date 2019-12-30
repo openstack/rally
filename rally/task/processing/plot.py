@@ -305,8 +305,8 @@ class Trends(object):
                 "config": workload_cfg}
 
         self._data[key]["tasks"].append(task_uuid)
-        if (self._data[key]["description"] and
-                self._data[key]["description"] != w_description):
+        if (self._data[key]["description"]
+                and self._data[key]["description"] != w_description):
             self._data[key]["description"] = None
 
         self._data[key]["sla_failures"] += not workload["pass_sla"]

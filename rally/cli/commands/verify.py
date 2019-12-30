@@ -630,10 +630,9 @@ class VerifyCommands(object):
         formatters = {
             "Started at": lambda v: v["created_at"].replace("T", " "),
             "Finished at": lambda v: v["updated_at"].replace("T", " "),
-            "Duration": lambda v: (dt.datetime.strptime(v["updated_at"],
-                                                        TIME_FORMAT) -
-                                   dt.datetime.strptime(v["created_at"],
-                                                        TIME_FORMAT)),
+            "Duration": lambda v: (
+                dt.datetime.strptime(v["updated_at"], TIME_FORMAT)
+                - dt.datetime.strptime(v["created_at"], TIME_FORMAT)),
             "Run arguments": run_args_formatter,
             "Tags": lambda v: ", ".join(v["tags"]) or None,
             "Verifier name": lambda v: "%s (UUID: %s)" % (verifier["name"],
@@ -700,10 +699,9 @@ class VerifyCommands(object):
                     deployment=v["deployment_uuid"])["name"]),
                 "Started at": lambda v: v["created_at"],
                 "Finished at": lambda v: v["updated_at"],
-                "Duration": lambda v: (dt.datetime.strptime(v["updated_at"],
-                                                            TIME_FORMAT) -
-                                       dt.datetime.strptime(v["created_at"],
-                                                            TIME_FORMAT))
+                "Duration": lambda v:
+                (dt.datetime.strptime(v["updated_at"], TIME_FORMAT)
+                 - dt.datetime.strptime(v["created_at"], TIME_FORMAT))
             }
             cliutils.print_list(verifications, fields, formatters=formatters,
                                 normalize_field_names=True, sortby_index=4)

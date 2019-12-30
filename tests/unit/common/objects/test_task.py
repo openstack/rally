@@ -225,7 +225,6 @@ class TaskTestCase(test.TestCase):
             "soft": True, "status": consts.TaskStatus.INIT
         },
         {
-            "soft": True, "status": consts.TaskStatus.VALIDATING,
             "soft": True, "status": consts.TaskStatus.ABORTED
         },
         {

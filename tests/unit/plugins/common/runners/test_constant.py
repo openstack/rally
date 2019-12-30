@@ -149,8 +149,8 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
     @mock.patch(RUNNERS + "constant.multiprocessing.Queue")
     @mock.patch(RUNNERS + "constant.multiprocessing.cpu_count")
     @mock.patch(RUNNERS + "constant.ConstantScenarioRunner._log_debug_info")
-    @mock.patch(RUNNERS +
-                "constant.ConstantScenarioRunner._create_process_pool")
+    @mock.patch(
+        RUNNERS + "constant.ConstantScenarioRunner._create_process_pool")
     @mock.patch(RUNNERS + "constant.ConstantScenarioRunner._join_processes")
     def test_that_cpu_count_is_adjusted_properly(
             self,

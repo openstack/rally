@@ -339,8 +339,8 @@ class RandomNameTestCase(test.TestCase):
         self.assertFalse(utils.name_matches_object(name, One, Two))
         # ensure that exactly one of the two objects is checked
         self.assertItemsEqual(
-            One.name_matches_object.call_args_list +
-            Two.name_matches_object.call_args_list,
+            One.name_matches_object.call_args_list
+            + Two.name_matches_object.call_args_list,
             [mock.call(name)])
 
     def test_name_matches_object_differing_list(self):

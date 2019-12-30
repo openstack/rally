@@ -244,8 +244,8 @@ def assert_equal_none(logical_line, physical_line, filename):
 
     N322
     """
-    res = (re_assert_equal_start_with_none.search(logical_line) or
-           re_assert_equal_end_with_none.search(logical_line))
+    res = (re_assert_equal_start_with_none.search(logical_line)
+           or re_assert_equal_end_with_none.search(logical_line))
     if res:
         yield (0, "N322 assertEqual(A, None) or assertEqual(None, A) "
                   "sentences not allowed, you should use assertIsNone(A) "
@@ -262,8 +262,9 @@ def assert_true_or_false_with_in(logical_line, physical_line, filename):
 
     N323
     """
-    res = (re_assert_true_false_with_in_or_not_in.search(logical_line) or
-           re_assert_true_false_with_in_or_not_in_spaces.search(logical_line))
+    res = (re_assert_true_false_with_in_or_not_in.search(logical_line)
+           or re_assert_true_false_with_in_or_not_in_spaces.search(
+               logical_line))
     if res:
         yield (0, "N323 assertTrue/assertFalse(A in/not in B)sentences not "
                   "allowed, you should use assertIn(A, B) or assertNotIn(A, B)"
@@ -280,8 +281,8 @@ def assert_equal_in(logical_line, physical_line, filename):
 
     N324
     """
-    res = (re_assert_equal_in_end_with_true_or_false.search(logical_line) or
-           re_assert_equal_in_start_with_true_or_false.search(logical_line))
+    res = (re_assert_equal_in_end_with_true_or_false.search(logical_line)
+           or re_assert_equal_in_start_with_true_or_false.search(logical_line))
     if res:
         yield (0, "N324: Use assertIn/NotIn(A, B) rather than "
                   "assertEqual(A in/not in B, True/False) when checking "
@@ -294,8 +295,8 @@ def assert_not_equal_none(logical_line, physical_line, filename):
 
     N325
     """
-    res = (re_assert_not_equal_start_with_none.search(logical_line) or
-           re_assert_not_equal_end_with_none.search(logical_line))
+    res = (re_assert_not_equal_start_with_none.search(logical_line)
+           or re_assert_not_equal_end_with_none.search(logical_line))
     if res:
         yield (0, "N325 assertNotEqual(A, None) or assertNotEqual(None, A) "
                   "sentences not allowed, you should use assertIsNotNone(A) "
@@ -311,8 +312,8 @@ def assert_equal_true_or_false(logical_line, physical_line, filename):
 
     N326
     """
-    res = (re_assert_equal_end_with_true_or_false.search(logical_line) or
-           re_assert_equal_start_with_true_or_false.search(logical_line))
+    res = (re_assert_equal_end_with_true_or_false.search(logical_line)
+           or re_assert_equal_start_with_true_or_false.search(logical_line))
     if res:
         yield (0, "N326 assertEqual(A, True/False) or "
                   "assertEqual(True/False, A) sentences not allowed,"
@@ -371,8 +372,8 @@ def check_quotes(logical_line, physical_line, filename):
 
     check_tripple = (
         lambda line, i, char: (
-            i + 2 < len(line) and
-            (char == line[i] == line[i + 1] == line[i + 2])
+            i + 2 < len(line)
+            and (char == line[i] == line[i + 1] == line[i + 2])
         )
     )
 
@@ -434,9 +435,9 @@ def check_dict_formatting_in_string(logical_line, tokens):
     # NOTE(stpierre): Can't use @skip_ignored_lines here because it's
     # a stupid decorator that only works on functions that take
     # (logical_line, filename) as arguments.
-    if (not logical_line or
-            logical_line.startswith("#") or
-            logical_line.endswith("# noqa")):
+    if (not logical_line
+            or logical_line.startswith("#")
+            or logical_line.endswith("# noqa")):
         return
 
     current_string = ""

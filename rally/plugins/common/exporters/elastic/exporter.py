@@ -265,11 +265,11 @@ class ElasticSearchExporter(exporter.TaskExporter):
         if itr["error"] and (
                 # the case when it is a top level of the scenario and the
                 #   first fails the item which is not wrapped by AtomicTimer
-                (not _parent and not atomic_actions) or
+                (not _parent and not atomic_actions)
                 # the case when it is a top level of the scenario and and
                 # the item fails after some atomic actions completed
-                (not _parent and atomic_actions and
-                    not atomic_actions[-1].get("failed", False))):
+                or (not _parent and atomic_actions
+                    and not atomic_actions[-1].get("failed", False))):
             act_id = act_id_tmpl % {
                 "itr_id": itr["id"],
                 "action_name": "no-name-action",
@@ -278,8 +278,8 @@ class ElasticSearchExporter(exporter.TaskExporter):
             # Since the action had not be wrapped by AtomicTimer, we cannot
             # make any assumption about it's duration (start_time) so let's use
             # finished_at timestamp of iteration with 0 duration
-            timestamp = (itr["timestamp"] + itr["duration"] +
-                         itr["idle_duration"])
+            timestamp = (itr["timestamp"] + itr["duration"]
+                         + itr["idle_duration"])
             timestamp = dt.datetime.utcfromtimestamp(timestamp)
             timestamp = timestamp.strftime(consts.TimeFormat.ISO8601)
             action_report = self._make_action_report(

@@ -105,9 +105,9 @@ class ResultConsumer(object):
                     self.load_finished_at = max(r["duration"] + r["timestamp"],
                                                 self.load_finished_at)
                     success = self.sla_checker.add_iteration(r)
-                    if (self.abort_on_sla_failure and
-                            not success and
-                            not task_aborted):
+                    if (self.abort_on_sla_failure
+                            and not success
+                            and not task_aborted):
                         self.sla_checker.set_aborted_on_sla()
                         self.runner.abort()
                         self.task.update_status(

@@ -275,8 +275,8 @@ class _Task(APIGroup):
         # declared in jinja2.Environment.globals for both types of undeclared
         # variables and successfully renders templates in both cases.
         required_kwargs = jinja2.meta.find_undeclared_variables(ast)
-        missing = (set(required_kwargs) - set(kwargs) - set(dir(builtins)) -
-                   set(env.globals))
+        missing = (set(required_kwargs) - set(kwargs) - set(dir(builtins))
+                   - set(env.globals))
         real_missing = [mis for mis in missing
                         if is_really_missing(mis, task_template)]
         if real_missing:
@@ -745,8 +745,8 @@ class _Verifier(APIGroup):
                     verifier, verifier.status, consts.VerifierStatus.INSTALLED)
             )
 
-        system_wide_in_use = (system_wide or
-                              (system_wide is None and verifier.system_wide))
+        system_wide_in_use = (
+            system_wide or (system_wide is None and verifier.system_wide))
         if update_venv and system_wide_in_use:
             raise exceptions.RallyException(
                 "It is impossible to update the virtual environment for "

@@ -301,8 +301,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
     @mock.patch(RUNNERS + "constant.multiprocessing.Queue")
     @mock.patch(RUNNERS + "rps.multiprocessing.cpu_count")
     @mock.patch(RUNNERS + "rps.RPSScenarioRunner._log_debug_info")
-    @mock.patch(RUNNERS +
-                "rps.RPSScenarioRunner._create_process_pool")
+    @mock.patch(RUNNERS + "rps.RPSScenarioRunner._create_process_pool")
     @mock.patch(RUNNERS + "rps.RPSScenarioRunner._join_processes")
     def test_that_cpu_count_is_adjusted_properly(
             self, mock__join_processes, mock__create_process_pool,

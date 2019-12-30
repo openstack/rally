@@ -236,14 +236,14 @@ class TaskTestCase(testtools.TestCase):
         with open(json_report, "w+") as f:
             f.write(rally("task results", no_logs=True))
         import_print = rally("task import --file %s" % json_report)
-        task_uuid = re.search("UUID:\s([a-z0-9\-]+)", import_print).group(1)
+        task_uuid = re.search(r"UUID:\s([a-z0-9\-]+)", import_print).group(1)
         self.assertIn("Dummy.dummy_random_fail_in_atomic",
                       rally("task results --uuid %s" % task_uuid))
 
         # new json report
         rally("task report --json --out %s" % json_report, no_logs=True)
         import_print = rally("task import --file %s" % json_report)
-        task_uuid = re.search("UUID:\s([a-z0-9\-]+)", import_print).group(1)
+        task_uuid = re.search(r"UUID:\s([a-z0-9\-]+)", import_print).group(1)
         self.assertIn("Dummy.dummy_random_fail_in_atomic",
                       rally("task report --uuid %s --json" % task_uuid))
 
@@ -1453,7 +1453,7 @@ class HookTestCase(testtools.TestCase):
         with open(json_report, "w+") as f:
             f.write(rally("task results", no_logs=True))
         import_print = rally("task import --file %s" % json_report)
-        task_uuid = re.search("UUID:\s([a-z0-9\-]+)", import_print).group(1)
+        task_uuid = re.search(r"UUID:\s([a-z0-9\-]+)", import_print).group(1)
         results = rally("task results --uuid %s" % task_uuid)
         self.assertIn("Dummy.dummy", results)
         self.assertIn("event_hook", results)

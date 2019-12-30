@@ -45,8 +45,8 @@ class GraphZipper(object):
             order = self.point_order - int(self.compression_ratio / 2.0)
 
         value = (
-            sum(p[0] * p[1] for p in self.ratio_value_points) /
-            self.compression_ratio
+            sum(p[0] * p[1] for p in self.ratio_value_points)
+            / self.compression_ratio
         )
 
         return [order, value]

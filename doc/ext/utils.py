@@ -33,6 +33,7 @@ def parse_text(text):
     parser.parse(text, document)
     return document.children
 
+
 paragraph = lambda text: parse_text(text)[0]
 note = lambda msg: nodes.note("", paragraph(msg))
 hint = lambda msg: nodes.hint("", *parse_text(msg))

@@ -115,5 +115,6 @@ def main(args):
     if exit_code == 1:
         error("")
 
+
 if __name__ == "__main__":
     sys.exit(main(sys.argv))

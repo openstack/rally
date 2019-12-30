@@ -153,8 +153,9 @@ class TaskSampleTestCase(test.TestCase):
         bad_filenames = []
         for dirname, dirnames, filenames in os.walk(self.samples_path):
             for filename in filenames:
-                if "_" in filename and (filename.endswith(".yaml") or
-                                        filename.endswith(".json")):
+                if "_" in filename and (
+                        filename.endswith(".yaml")
+                        or filename.endswith(".json")):
                     full_path = os.path.join(dirname, filename)
                     bad_filenames.append(full_path)
 

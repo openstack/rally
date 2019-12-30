@@ -29,8 +29,8 @@ def prepare_input_args(func):
         if not test_id:
             return
 
-        if (test_id.startswith("setUpClass (") or
-                test_id.startswith("tearDown (")):
+        if (test_id.startswith("setUpClass (")
+                or test_id.startswith("tearDown (")):
             test_id = test_id[test_id.find("(") + 1:-1]
 
         tags = _parse_test_tags(test_id)
@@ -81,8 +81,8 @@ class SubunitV2StreamResult(object):
         return test_id.split("[")[0] if test_id.find("[") > -1 else test_id
 
     def _check_expected_failure(self, test_id):
-        if (test_id in self._expected_failures or
-                self._get_test_name(test_id) in self._expected_failures):
+        if (test_id in self._expected_failures
+                or self._get_test_name(test_id) in self._expected_failures):
             if self._tests[test_id]["status"] == "fail":
                 self._tests[test_id]["status"] = "xfail"
                 if self._expected_failures[test_id]:
@@ -113,9 +113,9 @@ class SubunitV2StreamResult(object):
         # failed, there is only one event with reason and status. So we should
         # modify all tests of test class manually.
         for test_id in self._unknown_entities:
-            known_test_ids = filter(lambda t:
-                                    t == test_id or t.startswith(
-                                        "%s." % test_id), self._tests)
+            known_test_ids = filter(
+                lambda t: t == test_id or t.startswith("%s." % test_id),
+                self._tests)
             for t_id in known_test_ids:
                 if self._tests[t_id]["status"] == "init":
                     self._tests[t_id]["status"] = (

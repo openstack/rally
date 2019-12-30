@@ -38,7 +38,7 @@ class TestFormat(testtools.TestCase):
             if "http://" in line or "https://" in line or ":ref:" in line:
                 continue
             # Allow lines which do not contain any whitespace
-            if re.match("\s*[^\s]+$", line):
+            if re.match(r"\s*[^\s]+$", line):
                 continue
             if not text_inside_simple_tables:
                 self.assertTrue(

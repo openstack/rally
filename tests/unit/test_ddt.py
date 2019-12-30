@@ -84,8 +84,8 @@ class DDTDecoratorCheckerTestCase(test.TestCase):
 
         for dirname, dirnames, filenames in os.walk(self.tests_path):
             for filename in filenames:
-                if not (filename.startswith("test_") and
-                        filename.endswith(".py")):
+                if not (filename.startswith("test_")
+                        and filename.endswith(".py")):
                     continue
 
                 filename = os.path.relpath(os.path.join(dirname, filename))
