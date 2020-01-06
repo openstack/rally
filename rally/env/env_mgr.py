@@ -104,7 +104,7 @@ class EnvManager(object):
     information about tested platforms.
 
     Env manager is using platform plugins to: create, delete, cleanup,
-    check health, obtain information about about platforms.
+    check health, obtain information about platforms.
 
     Every Env has:
     - unique name and UUID
