@@ -86,7 +86,7 @@ class DeploymentCommands(object):
             result = env_mgr.EnvManager.create_spec_from_sys_environ()
             config = result["spec"]
             if "existing@openstack" in config:
-                # NOTE(andreykurilin): if we are are here it means that
+                # NOTE(andreykurilin): if we are here it means that
                 #   rally-openstack package is installed
                 import rally_openstack
                 if rally_openstack.__version_tuple__ <= (1, 4, 0):
