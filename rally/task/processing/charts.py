@@ -330,7 +330,11 @@ class Table(Chart):
         :returns: rounded float
         :returns: str "n/a"
         """
-        return round(ins.result(), 3) if has_result else "n/a"
+        r = ins.result()
+        if not has_result or r is None:
+            return "n/a"
+        else:
+            return round(r, 3)
 
     def _row_has_results(self, values):
         """Determine whether row can be assumed as having values.
