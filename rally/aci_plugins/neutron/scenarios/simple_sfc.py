@@ -8,13 +8,12 @@ from rally import exceptions
 from rally_openstack.scenarios.nova import utils as nova_utils
 from rally_openstack.scenarios.neutron import utils as neutron_utils
 
-
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(name="ScenarioPlugin.verify_sfc_api", context={"cleanup@openstack": ["nova", "neutron"]}, platform="openstack")
-class VerifySFCAPI(scenario.OpenStackScenario, neutron_utils.NeutronScenario, nova_utils.NovaScenario):
+@scenario.configure(name="ScenarioPlugin.simple_sfc", context={"cleanup@openstack": ["nova", "neutron"]}, platform="openstack")
+class SimpleSFC(scenario.OpenStackScenario, neutron_utils.NeutronScenario, nova_utils.NovaScenario):
     
-    
+     
     @atomic.action_timer("neutron.create_port_pair")
     def _create_port_pair(self, port1, port2, **port_pair_create_args):
         
@@ -159,6 +158,7 @@ class VerifySFCAPI(scenario.OpenStackScenario, neutron_utils.NeutronScenario, no
     def _delete_port_chain(self, port_chain):
         
         self.clients("neutron").delete_sfc_port_chain(port_chain["port_chain"]["id"])
+    
 
     def run(self, src_cidr, dest_cidr, image, flavor):
         
@@ -172,21 +172,33 @@ class VerifySFCAPI(scenario.OpenStackScenario, neutron_utils.NeutronScenario, no
         self._add_interface_router(sub2[0].get("subnet"), router.get("router"))
         self._add_interface_router(sub3[0].get("subnet"), router.get("router"))
         self._add_interface_router(sub4[0].get("subnet"), router.get("router"))
-
-        
+  
         net1_id = net1.get('network', {}).get('id')
         net2_id = net2.get('network', {}).get('id')
+        
         port_create_args = {}
+        psrc = self._create_port(net1, port_create_args)
+        p1_id = psrc.get('port', {}).get('id')
+        nics = [{"port-id": p1_id}]
+        kwargs = {}
+        kwargs.update({'nics': nics})
+        src_vm = self._boot_server(image, flavor, False, **kwargs)
+
+        pdest = self._create_port(net2, port_create_args)
+        p2_id = pdest.get('port', {}).get('id')
+        nics = [{"port-id": p2_id}]
+        kwargs = {}
+        kwargs.update({'nics': nics})
+        dest_vm = self._boot_server(image, flavor, False, **kwargs)
+
         pin = self._create_port(net3, port_create_args)
         pout = self._create_port(net4, port_create_args)
-        
         kwargs = {}
         pin_id = pin.get('port', {}).get('id')
         pout_id = pout.get('port', {}).get('id')
         nics = [{"port-id": pin_id}, {"port-id": pout_id}]
         kwargs.update({'nics': nics})
-        
-        inst = self._boot_server(image, flavor, False, **kwargs)
+        service_vm = self._boot_server(image, flavor, False, **kwargs)
     
         pp = self._create_port_pair(pin, pout)
         ppg = self._create_port_pair_group(pp)
@@ -194,21 +206,6 @@ class VerifySFCAPI(scenario.OpenStackScenario, neutron_utils.NeutronScenario, no
         fc = self._create_flow_classifier(src_cidr, '0.0.0.0/0', l7_para)
         pc = self._create_port_chain(ppg, fc)
         
-        self._list_port_pairs()
-        self._list_port_pair_groups()
-        self._list_flow_classifiers()
-        self._list_port_chains()
-
-        self._show_port_pair(pp)
-        self._show_port_pair_group(ppg)
-        self._show_flow_classifier(fc)
-        self._show_port_chain(pc)
-        
-        self._update_port_pair(pp)
-        self._update_port_pair_group(ppg)
-        self._update_flow_classifier(fc)
-        self._update_port_chain(pc)
-
         self._delete_port_chain(pc)
         self._delete_port_pair_group(ppg)
         self._delete_flow_classifier(fc)
