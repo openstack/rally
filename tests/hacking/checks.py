@@ -83,7 +83,11 @@ def skip_ignored_lines(func):
         line = physical_line.strip()
         if not line or line.startswith("#") or line.endswith("# noqa"):
             return
-        yield next(func(logical_line, physical_line, filename))
+        try:
+            for res in func(logical_line, physical_line, filename):
+                yield res
+        except StopIteration:
+            return
 
     return wrapper
 
@@ -211,9 +215,9 @@ def no_use_conf_debug_check(logical_line, physical_line, filename):
 
     point = logical_line.find("CONF.debug")
     if point != -1 and filename not in excluded_files:
-        yield(point, "N312 Don't use `CONF.debug`. "
-                     "Function `rally.common.logging.is_debug` "
-                     "should be used instead.")
+        yield (point, "N312 Don't use `CONF.debug`. "
+                      "Function `rally.common.logging.is_debug` "
+                      "should be used instead.")
 
 
 @skip_ignored_lines
@@ -409,7 +413,7 @@ def check_quotes(logical_line, physical_line, filename):
         i += 1
 
     if single_quotas_are_used:
-        yield (i, "N350 Remove Single quotes")
+        yield i, "N350 Remove Single quotes"
 
 
 @skip_ignored_lines
@@ -421,10 +425,10 @@ def check_no_constructor_data_struct(logical_line, physical_line, filename):
 
     match = re_no_construct_dict.search(logical_line)
     if match:
-        yield (0, "N351 Remove dict() construct and use literal {}")
+        yield 0, "N351 Remove dict() construct and use literal {}"
     match = re_no_construct_list.search(logical_line)
     if match:
-        yield (0, "N351 Remove list() construct and use literal []")
+        yield 0, "N351 Remove list() construct and use literal []"
 
 
 def check_dict_formatting_in_string(logical_line, tokens):
@@ -506,7 +510,7 @@ def check_using_unicode(logical_line, physical_line, filename):
                   "use 'six.text_type' instead.")
 
 
-def check_raises(physical_line, filename):
+def check_raises(logical_line, physical_line, filename):
     """Check raises usage
 
     N354
@@ -516,8 +520,8 @@ def check_raises(physical_line, filename):
                      "./tests/hacking/checks.py"]
     if filename not in ignored_files:
         if re_raises.search(physical_line):
-            return (0, "N354 ':Please use ':raises Exception: conditions' "
-                       "in docstrings.")
+            yield (0, "N354 ':Please use ':raises Exception: conditions' "
+                      "in docstrings.")
 
 
 @skip_ignored_lines
@@ -540,7 +544,7 @@ def check_datetime_alias(logical_line, physical_line, filename):
     N356
     """
     if re_datetime_alias.search(logical_line):
-        yield (0, "N356 Please use ``dt`` as alias for ``datetime``.")
+        yield 0, "N356 Please use ``dt`` as alias for ``datetime``."
 
 
 @skip_ignored_lines
@@ -550,7 +554,7 @@ def check_no_six_iteritems(logical_line, physical_line, filename):
     N357
     """
     if re.search(r"\six.iteritems\(\)", logical_line):
-        yield (0, "N357 Use dict.items() instead of six.iteritems()")
+        yield 0, "N357 Use dict.items() instead of six.iteritems()"
 
 
 @skip_ignored_lines
@@ -583,7 +587,7 @@ def check_objects_imports_in_cli(logical_line, physical_line, filename):
 @skip_ignored_lines
 def check_log_warn(logical_line, physical_line, filename):
     if re_log_warn.search(logical_line):
-        yield(0, "N313 LOG.warn is deprecated, please use LOG.warning")
+        yield 0, "N313 LOG.warn is deprecated, please use LOG.warning"
 
 
 @skip_ignored_lines

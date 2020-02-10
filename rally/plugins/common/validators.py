@@ -43,17 +43,16 @@ class ArgsValidator(validation.Validator):
         scenario = plugin_cls
         name = scenario.get_name()
         platform = scenario.get_platform()
-        scenario = scenario().run
-        args, _varargs, varkwargs, defaults = inspect.getargspec(scenario)
+
+        args_spec = inspect.signature(scenario().run).parameters
+        missed_args = [
+            p.name for p in args_spec.values()
+            if p.default == inspect.Parameter.empty
+            and p.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD]
 
         hint_msg = (" Use `rally plugin show --name %s --platform %s` "
                     "to display scenario description." % (name, platform))
 
-        # scenario always accepts an instance of scenario cls as a first arg
-        missed_args = args[1:]
-        if defaults:
-            # do not require args with default values
-            missed_args = missed_args[:-len(defaults)]
         if "args" in config:
             missed_args = set(missed_args) - set(config["args"])
         if missed_args:
@@ -62,8 +61,13 @@ class ArgsValidator(validation.Validator):
                                  "hint": hint_msg})
             self.fail(msg)
 
-        if varkwargs is None and "args" in config:
-            redundant_args = set(config["args"]) - set(args[1:])
+        support_kwargs = any(
+            p for p in args_spec.values()
+            if p.kind == inspect.Parameter.VAR_KEYWORD
+        )
+
+        if not support_kwargs and "args" in config:
+            redundant_args = [p for p in config["args"] if p not in args_spec]
             if redundant_args:
                 msg = ("Unexpected argument(s) found ['%(args)s'].%(hint)s" %
                        {"args": "', '".join(redundant_args),

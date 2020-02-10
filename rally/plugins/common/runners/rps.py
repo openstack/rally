@@ -108,7 +108,7 @@ def _worker_process(queue, iteration_gen, timeout, times, max_concurrent,
                     len(pool) >= max_concurrent):
             if pool:
                 pool[0].join(0.001)
-                if not pool[0].isAlive():
+                if not pool[0].is_alive():
                     pool.popleft()
             else:
                 time.sleep(0.001)

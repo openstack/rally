@@ -10,7 +10,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import sys
 import tokenize
 
 import ddt
@@ -22,14 +21,14 @@ from tests.unit import test
 
 @ddt.ddt
 class HackingTestCase(test.TestCase):
-    def setUp(self):
-        super(HackingTestCase, self).setUp()
-        # NOTE(andreykurilin): the current implementation of our hacking
-        #   rules with a magic method skip_ignored_lines fails due to
-        #   https://www.python.org/dev/peps/pep-0479/ rule which is enabled
-        #   on Python 3.7 env
-        if sys.version_info.major == 3 and sys.version_info.minor == 7:
-            self.skip("There is no need to check this at all envs.")
+
+    def _assert_good_samples(self, checker, samples, module_file="f"):
+        for s in samples:
+            self.assertEqual([], list(checker(s, s, module_file)), s)
+
+    def _assert_bad_samples(self, checker, samples, module_file="f"):
+        for s in samples:
+            self.assertEqual(1, len(list(checker(s, s, module_file))), s)
 
     def test__parse_assert_mock_str(self):
         pos, method, obj = checks._parse_assert_mock_str(
@@ -91,14 +90,6 @@ class HackingTestCase(test.TestCase):
             fake_method, fake_method, "./tests/fake/test"))
         self.assertEqual(4, actual_number)
         self.assertTrue(actual_msg.startswith("N303"))
-
-    def _assert_good_samples(self, checker, samples, module_file="f"):
-        for s in samples:
-            self.assertEqual([], list(checker(s, s, module_file)), s)
-
-    def _assert_bad_samples(self, checker, samples, module_file="f"):
-        for s in samples:
-            self.assertEqual(1, len(list(checker(s, s, module_file))), s)
 
     def test_check_wrong_logging_import(self):
         bad_imports = ["from oslo_log import log",
@@ -354,13 +345,14 @@ class HackingTestCase(test.TestCase):
         self.assertEqual([], list(checkres))
 
     def test_check_raises(self):
-        checkres = checks.check_raises(
-            "text = :raises: Exception if conditions", "fakefile")
-        self.assertIsNotNone(checkres)
+        self._assert_bad_samples(
+            checks.check_raises,
+            ["text = :raises: Exception if conditions"])
 
-        checkres = checks.check_raises(
-            "text = :raises Exception: if conditions", "fakefile")
-        self.assertIsNone(checkres)
+        self._assert_good_samples(
+            checks.check_raises,
+            ["text = :raises Exception: if conditions"]
+        )
 
     def test_check_db_imports_of_cli(self):
         line = "from rally.common import db"

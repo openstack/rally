@@ -68,15 +68,12 @@ def validate_args(fn, *args, **kwargs):
     :param args: the positional arguments supplied
     :param kwargs: the keyword arguments supplied
     """
-    argspec = inspect.getargspec(fn)
-
-    num_defaults = len(argspec.defaults or [])
-    required_args = argspec.args[:len(argspec.args) - num_defaults]
-
-    if getattr(fn, "__self__", None):
-        required_args.pop(0)
-
+    required_args = [
+        p.name for p in inspect.signature(fn).parameters.values()
+        if p.default == inspect.Parameter.empty
+        and p.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD]
     missing_required_args = required_args[len(args):]
+
     missing = [arg for arg in missing_required_args if arg not in kwargs]
     if missing:
         raise MissingArgs(missing)
@@ -157,14 +154,9 @@ def print_list(objs, fields, formatters=None, sortby_index=0,
         table_header = make_table_header(table_label, table_width)
         table_header += "\n"
 
-    if six.PY3:
-        if table_header:
-            out.write(encodeutils.safe_encode(table_header).decode())
-        out.write(encodeutils.safe_encode(table_body).decode())
-    else:
-        if table_header:
-            out.write(encodeutils.safe_encode(table_header))
-        out.write(encodeutils.safe_encode(table_body))
+    if table_header:
+        out.write(encodeutils.safe_encode(table_header).decode())
+    out.write(encodeutils.safe_encode(table_body).decode())
 
 
 def print_dict(obj, fields=None, formatters=None, mixed_case_fields=False,
@@ -247,14 +239,9 @@ def print_dict(obj, fields=None, formatters=None, mixed_case_fields=False,
         table_header = make_table_header(table_label, table_width)
         table_header += "\n"
 
-    if six.PY3:
-        if table_header:
-            out.write(encodeutils.safe_encode(table_header).decode())
-        out.write(encodeutils.safe_encode(table_body).decode())
-    else:
-        if table_header:
-            out.write(encodeutils.safe_encode(table_header))
-        out.write(encodeutils.safe_encode(table_body))
+    if table_header:
+        out.write(encodeutils.safe_encode(table_header).decode())
+    out.write(encodeutils.safe_encode(table_body).decode())
 
 
 def make_table_header(table_label, table_width,
@@ -675,7 +662,7 @@ def run(argv, categories):
 
     except (IOError, TypeError, ValueError,
             exceptions.RallyException, jsonschema.ValidationError) as e:
-        known_errors = (exceptions.InvalidTaskConfig,)
+        known_errors = (exceptions.InvalidTaskConfig, )
         if logging.is_debug() and not isinstance(e, known_errors):
             LOG.exception("Unexpected exception in CLI")
         else:

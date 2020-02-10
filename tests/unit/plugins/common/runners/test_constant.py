@@ -64,7 +64,7 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
                              mock_time):
 
         mock_thread_instance = mock.MagicMock(
-            isAlive=mock.MagicMock(return_value=False))
+            is_alive=mock.MagicMock(return_value=False))
         mock_thread.return_value = mock_thread_instance
 
         mock_event = mock.MagicMock(

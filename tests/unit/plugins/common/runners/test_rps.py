@@ -154,7 +154,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         mock_time.time = time_side
 
         mock_thread_instance = mock.MagicMock(
-            isAlive=mock.MagicMock(return_value=False))
+            is_alive=mock.MagicMock(return_value=False))
         mock_thread.return_value = mock_thread_instance
 
         mock_event = mock.MagicMock(
@@ -187,7 +187,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         # of the thread stuff.
 
         self.assertEqual(1, mock_time.sleep.call_count)
-        self.assertEqual(2, mock_thread_instance.isAlive.call_count)
+        self.assertEqual(2, mock_thread_instance.is_alive.call_count)
         self.assertEqual(times * 4 - 1, mock_time.time.count)
 
         self.assertEqual(times, mock_runner._get_scenario_context.call_count)

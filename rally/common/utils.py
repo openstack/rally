@@ -593,7 +593,7 @@ def timeout_thread(queue):
         except (moves.queue.Empty, ValueError):
             # NOTE(rvasilets) Empty means that timeout was occurred.
             # ValueError means that timeout lower than 0.
-            if thread.isAlive():
+            if thread.is_alive():
                 LOG.info("Thread %s is timed out. Terminating." % thread.ident)
                 terminate_thread(thread.ident)
             all_threads.popleft()

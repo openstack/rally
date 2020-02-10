@@ -604,7 +604,7 @@ class TaskTestCase(testtools.TestCase):
         plugin_paths = ("tests/functional/extra/fake_dir1/,"
                         "tests/functional/extra/fake_dir2/")
         task_file = "tests/functional/extra/test_fake_scenario.json"
-        output = rally(("--plugin-paths %(plugin_paths)s "
+        output = rally(("--debug --plugin-paths %(plugin_paths)s "
                         "task validate --task %(task_file)s") %
                        {"task_file": task_file,
                         "plugin_paths": plugin_paths})
