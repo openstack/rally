@@ -2,8 +2,8 @@ FROM ubuntu:18.04
 
 RUN sed -i s/^deb-src.*// /etc/apt/sources.list
 
-RUN apt-get update && apt-get install --yes sudo python python-pip vim git-core && \
-    pip install --upgrade pip && \
+RUN apt-get update && apt-get install --yes sudo python3-dev python3-pip vim git-core && \
+    pip3 install --upgrade pip && \
     useradd -u 65500 -m rally && \
     usermod -aG sudo rally && \
     echo "rally ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/00-rally-user && \
@@ -13,9 +13,9 @@ COPY ./src /rally/source
 COPY ./motd /etc/motd
 WORKDIR /rally/source
 
-RUN pip install . --constraint upper-constraints.txt && \
-    pip install pymysql && \
-    pip install psycopg2 && \
+RUN pip3 install . --constraint upper-constraints.txt && \
+    pip3 install pymysql && \
+    pip3 install psycopg2 && \
     mkdir -p /etc/rally && \
     echo "[database]" > /etc/rally/rally.conf && \
     echo "connection=sqlite:////home/rally/.rally/rally.db" >> /etc/rally/rally.conf
