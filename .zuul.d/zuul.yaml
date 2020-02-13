@@ -1,23 +1,29 @@
 - job:
-    name: rally-install-ubuntu-xenial
+    name: rally-install-base
     parent: base
-    nodeset: ubuntu-xenial
+    pre-run: tests/ci/playbooks/rally-install/pre.yaml
     run: tests/ci/playbooks/rally-install/run.yaml
     timeout: 1800
+
+- job:
+    name: rally-install-ubuntu-xenial
+    parent: rally-install-base
+    nodeset: ubuntu-xenial
 
 - job:
     name: rally-install-ubuntu-bionic
-    parent: base
+    parent: rally-install-base
     nodeset: ubuntu-bionic
-    run: tests/ci/playbooks/rally-install/run.yaml
-    timeout: 1800
 
 - job:
     name: rally-install-centos-7
-    parent: base
+    parent: rally-install-base
     nodeset: centos-7
-    run: tests/ci/playbooks/rally-install/run.yaml
-    timeout: 1800
+
+- job:
+    name: rally-install-centos-8
+    parent: rally-install-base
+    nodeset: centos-8
 
 - job:
     name: rally-database-migration
@@ -43,6 +49,7 @@
         - rally-install-ubuntu-xenial
         - rally-install-ubuntu-bionic
         - rally-install-centos-7
+        - rally-install-centos-8
         - rally-tox-self
     gate:
       jobs:

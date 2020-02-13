@@ -1,34 +1,27 @@
 - hosts: all
-  name: a run script for rally-install-ubuntu-xenial and rally-install-centos-7 jobs
+  name: a run script for rally-install-* jobs
   tasks:
+    - name: Get list of packages to install from bindep
+      command: "bindep -b -f {{ zuul.project.src_dir }}/bindep.txt"
+      register: bindep_output
+      ignore_errors: True
 
-    - shell:
+    - name: Install distro packages from bindep
+      package:
+        name: "{{ bindep_output.stdout_lines }}"
+        state: present
+      become: yes
+      when: bindep_output.stdout_lines
+
+    - name: Install Rally and check
+      shell:
         cmd: |
-          sudo yum remove -y python-crypto || true
+          # install system wide
+          sudo pip3 install --constraint ./upper-constraints.txt ./
 
-          # NOTE(pabelanger): We run apt-get update to ensure we dont have a stale
-          # package cache in the gate.
-          sudo apt-get update || true
-
-          sudo ./install_rally.sh --system --yes
-
-          rally deployment list
-          [ -d /etc/bash_completion.d ] && cat /etc/bash_completion.d/rally.bash_completion || true
-
-          sudo ./install_rally.sh --system --yes
-          rally deployment list
-
-          sudo ./install_rally.sh --yes -d /tmp/rallytest_root/
-          /tmp/rallytest_root/bin/rally deployment list
-          cat /tmp/rallytest_root/etc/bash_completion.d/rally.bash_completion
-
-          sudo rm -fr ~/.rally
-
-          ./install_rally.sh --yes -d /tmp/rallytest_user
-          /tmp/rallytest_user/bin/rally deployment list
-
-          ./install_rally.sh --overwrite --dbtype sqlite
-
+          rally --version
+          rally db create
+          rally env list
 
         executable: /bin/sh
         chdir: '{{ zuul.project.src_dir }}'
