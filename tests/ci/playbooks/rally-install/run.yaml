@@ -13,15 +13,23 @@
       become: yes
       when: bindep_output.stdout_lines
 
-    - name: Install Rally and check
+    - name: Install Rally system wide
+      shell:
+        executable: /bin/sh
+        chdir: '{{ zuul.project.src_dir }}'
+        cmd: "sudo pip3 install --constraint ./upper-constraints.txt ./"
+
+    - name: Check Rally base commands
       shell:
         cmd: |
-          # install system wide
-          sudo pip3 install --constraint ./upper-constraints.txt ./
-
           rally --version
           rally db create
           rally env list
 
+          # should be loaded from ~/.rally/plugins
+          rally plugin show --name FakePlugin.testplugin
+
+          # builtin plugin
+          rally plugin show --name HttpRequests.check_request
+
         executable: /bin/sh
-        chdir: '{{ zuul.project.src_dir }}'

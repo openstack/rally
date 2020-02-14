@@ -51,3 +51,9 @@
       shell:
         cmd: |
           sudo pip3 install bindep
+
+    - name: Prepare rally plugins stored at home dir
+      shell:
+        cmd: |
+          mkdir --parents ~/.rally/plugins
+          cp --recursive {{ zuul.project.src_dir }}/rally-jobs/plugins/* ~/.rally/plugins

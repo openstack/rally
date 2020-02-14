@@ -14,14 +14,14 @@
 #    under the License.
 
 import subprocess
-import unittest
 
 import six
+import testtools
 
 from rally.utils import encodeutils
 
 
-class CLITestCase(unittest.TestCase):
+class CLITestCase(testtools.TestCase):
 
     def test_rally_cli(self):
         try:

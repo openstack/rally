@@ -156,8 +156,10 @@ class Plugin(meta.MetaMixin, info.InfoMixin):
                               allow_hidden=allow_hidden)
 
         if not results:
+            base = cls._get_base()
+            base = "" if base == Plugin else " %s" % base.__name__
             raise exceptions.PluginNotFound(
-                name=name, platform=platform or "in any")
+                name=name, platform=platform or "any", base=base)
 
         if len(results) == 1:
             return results[0]

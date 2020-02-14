@@ -25,6 +25,11 @@ Removed
 
 * Python 2.7, Python 3.4 and Python 3.5 support
 
+Changed
+~~~~~~~
+
+* *rally plugin show* command returns not-zero exit code in case of not found
+  or multiple match errors
 
 [2.1.0] - 2019-11-19
 --------------------

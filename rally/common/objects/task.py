@@ -560,7 +560,7 @@ class Workload(object):
         task["subtasks"] = [collections.OrderedDict()]
         subtask = task["subtasks"][0]
         subtask["title"] = workload["name"]
-        subtask["description"] = workload["description"]
+        subtask["description"] = workload.get("description", "")
         subtask["scenario"] = {workload["name"]: workload["args"]}
         subtask["contexts"] = workload["contexts"]
         subtask["runner"] = {workload["runner_type"]: workload["runner"]}

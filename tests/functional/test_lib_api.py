@@ -15,12 +15,13 @@
 
 import os
 import subprocess
-import unittest
+
+import testtools
 
 from tests.functional import utils
 
 
-class LibAPITestCase(unittest.TestCase):
+class LibAPITestCase(testtools.TestCase):
 
     def test_rally_lib(self):
         rally = utils.Rally(force_new_db=True)
