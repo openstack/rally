@@ -214,9 +214,8 @@ class ValidatablePluginMixin(object):
         """
         try:
             plugin = cls.get(name, allow_hidden=allow_hidden)
-        except exceptions.PluginNotFound:
-            return ["There is no %s plugin with name: '%s'" %
-                    (cls.__name__, name)]
+        except exceptions.PluginNotFound as e:
+            return [e.format_message()]
 
         if vtype is None:
             semantic = True

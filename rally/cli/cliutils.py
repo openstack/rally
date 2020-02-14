@@ -675,7 +675,8 @@ def run(argv, categories):
 
     except (IOError, TypeError, ValueError,
             exceptions.RallyException, jsonschema.ValidationError) as e:
-        if logging.is_debug():
+        known_errors = (exceptions.InvalidTaskConfig,)
+        if logging.is_debug() and not isinstance(e, known_errors):
             LOG.exception("Unexpected exception in CLI")
         else:
             print(e)

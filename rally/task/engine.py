@@ -256,7 +256,15 @@ class TaskEngine(object):
         :param vcontext: a validation context
         :param vtype: a type of validation (platform, syntax or semantic)
         """
-        scenario_cls = scenario.Scenario.get(workload["name"])
+        try:
+            scenario_cls = scenario.Scenario.get(workload["name"])
+        except exceptions.PluginNotFound as e:
+            raise exceptions.InvalidTaskConfig(
+                name=workload["name"],
+                pos=workload["position"],
+                config=json.dumps(objects.Workload.to_task(workload)),
+                reason=e.format_message()) from None
+
         scenario_context = copy.deepcopy(scenario_cls.get_default_context())
         results = []
 
@@ -318,14 +326,11 @@ class TaskEngine(object):
                 vtype=vtype))
 
         if results:
-            msg = "\n ".join(results)
-            kw = {"name": workload["name"],
-                  "pos": workload["position"],
-                  "config": json.dumps(
-                      objects.Workload.to_task(workload)),
-                  "reason": msg}
-
-            raise exceptions.InvalidTaskConfig(**kw)
+            raise exceptions.InvalidTaskConfig(
+                name=workload["name"],
+                pos=workload["position"],
+                config=json.dumps(objects.Workload.to_task(workload)),
+                reason="\n ".join(results))
 
     @logging.log_task_wrapper(LOG.info, "Task validation of syntax.")
     def _validate_config_syntax(self, config):

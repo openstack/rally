@@ -140,7 +140,8 @@ class NotFoundException(RallyException):
 
 class PluginNotFound(NotFoundException):
     error_code = 211
-    msg_fmt = "There is no plugin `%(name)s` in %(platform)s platform."
+    msg_fmt = "There is no%(base)s plugin `%(name)s` in %(platform)s " \
+              "platform."
 
 
 class PluginWithSuchNameExists(RallyException):
