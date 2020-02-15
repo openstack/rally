@@ -71,35 +71,49 @@ class IterSubclassesTestCase(test.TestCase):
 
 class LoadExtraModulesTestCase(test.TestCase):
 
-    @mock.patch("%s.os.path.isdir" % DISCOVER, return_value=True)
-    @mock.patch("%s.imp.load_module" % DISCOVER)
-    @mock.patch("%s.imp.find_module" % DISCOVER,
-                return_value=(mock.MagicMock(), None, None))
-    @mock.patch("%s.os.walk" % DISCOVER, return_value=[
-        ("/somewhere", ("/subdir", ), ("plugin1.py", )),
-        ("/somewhere/subdir", ("/subsubdir", ), ("plugin2.py",
-                                                 "withoutextension")),
-        ("/somewhere/subdir/subsubdir", [], ("plugin3.py", ))])
+    @mock.patch("%s.os.path.isfile" % DISCOVER, return_value=True)
+    @mock.patch("%s.os.path.isdir" % DISCOVER)
+    @mock.patch("%s.importlib.util.module_from_spec" % DISCOVER)
+    @mock.patch("%s.importlib.util.spec_from_file_location" % DISCOVER)
+    @mock.patch("%s.os.walk" % DISCOVER)
     def test_load_plugins_from_dir_successful(self, mock_os_walk,
-                                              mock_find_module,
-                                              mock_load_module, mock_isdir):
+                                              mock_spec_from_file_location,
+                                              mock_module_from_spec,
+                                              mock_isdir, mock_isfile):
+        mock_os_walk.return_value = [
+            ("/somewhere", ("/subdir", ), ("plugin1.py", )),
+            ("/somewhere/subdir", ("/subsubdir", ), ("plugin2.py",
+                                                     "withoutextension")),
+            ("/somewhere/subdir/subsubdir", [], ("plugin3.py", ))
+        ]
+
+        def fake_isdir(p):
+            return not (p.endswith(".py") or p.endswith("withoutextension"))
+
+        mock_isdir.side_effect = fake_isdir
+
         test_path = "/somewhere"
         discover.load_plugins(test_path)
         expected = [
-            mock.call("plugin1", ["/somewhere"]),
-            mock.call("plugin2", ["/somewhere/subdir"]),
-            mock.call("plugin3", ["/somewhere/subdir/subsubdir"])
+            mock.call(p, p)
+            for p in ("/somewhere/plugin1.py", "/somewhere/subdir/plugin2.py",
+                      "/somewhere/subdir/subsubdir/plugin3.py")
         ]
-        self.assertEqual(expected, mock_find_module.mock_calls)
-        self.assertEqual(3, len(mock_load_module.mock_calls))
+        self.assertEqual(expected, mock_spec_from_file_location.call_args_list)
+        self.assertEqual(3, len(mock_module_from_spec.mock_calls))
 
     @mock.patch("%s.os.path.isfile" % DISCOVER, return_value=True)
-    @mock.patch("%s.imp.load_source" % DISCOVER)
-    def test_load_plugins_from_file_successful(self, mock_load_source,
-                                               mock_isfile):
-        discover.load_plugins("/somewhere/plugin.py")
-        expected = [mock.call("plugin", "/somewhere/plugin.py")]
-        self.assertEqual(expected, mock_load_source.mock_calls)
+    @mock.patch("%s.importlib.util.module_from_spec" % DISCOVER)
+    @mock.patch("%s.importlib.util.spec_from_file_location" % DISCOVER)
+    def test_load_plugins_from_file_successful(
+            self, mock_spec_from_file_location, mock_module_from_spec,
+            mock_isfile):
+        path = "/somewhere/plugin.py"
+        discover.load_plugins(path)
+
+        mock_spec_from_file_location.assert_called_once_with(path, path)
+        mock_module_from_spec.assert_called_once_with(
+            mock_spec_from_file_location.return_value)
 
     @mock.patch("%s.os" % DISCOVER)
     def test_load_plugins_from_nonexisting_and_empty_dir(self, mock_os):
@@ -120,16 +134,16 @@ class LoadExtraModulesTestCase(test.TestCase):
         # test no fails for nonexisting file
         discover.load_plugins("/somewhere/plugin.py")
 
-    @mock.patch("%s.imp.load_module" % DISCOVER, side_effect=Exception())
-    @mock.patch("%s.imp.find_module" % DISCOVER)
-    @mock.patch("%s.os.path" % DISCOVER, return_value=True)
-    @mock.patch("%s.os.walk" % DISCOVER,
-                return_value=[("/etc/.rally/plugins", [], ("load_it.py", ))])
-    def test_load_plugins_fails(self, mock_os_walk, mock_os_path,
-                                mock_find_module, mock_load_module):
+    @mock.patch("%s.importlib.util.module_from_spec" % DISCOVER)
+    @mock.patch("%s.importlib.util.spec_from_file_location" % DISCOVER)
+    @mock.patch("%s.os.path.isfile" % DISCOVER, return_value=True)
+    def test_load_plugins_fails(self, mock_isfile,
+                                mock_spec_from_file_location,
+                                mock_module_from_spec):
+        mock_spec_from_file_location.side_effect = Exception()
         # test no fails if module is broken
         # TODO(olkonami): check exception is handled correct
-        discover.load_plugins("/somewhere")
+        discover.load_plugins("/somewhere/foo.py")
 
     @mock.patch("%s.importlib" % DISCOVER)
     @mock.patch("%s.pkgutil.walk_packages" % DISCOVER)

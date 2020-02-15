@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import imp
 import importlib
 import os
 import pkg_resources
@@ -126,44 +125,37 @@ def import_modules_by_entry_point(_packages=None):
     return loaded_packages
 
 
-def load_plugins(dir_or_file):
+_loaded_modules = []
+
+
+def load_plugins(dir_or_file, depth=0):
     if os.path.isdir(dir_or_file):
         directory = dir_or_file
         LOG.info("Loading plugins from directories %s/*" %
                  directory.rstrip("/"))
+        for root, _dirs, files in os.walk(directory, followlinks=True):
+            for plugin in files:
+                load_plugins(os.path.join(root, plugin), depth=1)
 
-        to_load = []
-        for root, dirs, files in os.walk(directory, followlinks=True):
-            to_load.extend((plugin[:-3], root)
-                           for plugin in files if plugin.endswith(".py"))
-        for plugin, directory in to_load:
-            if directory not in sys.path:
-                sys.path.append(directory)
-
-            fullpath = os.path.join(directory, plugin)
-            try:
-                fp, pathname, descr = imp.find_module(plugin, [directory])
-                imp.load_module(plugin, fp, pathname, descr)
-                fp.close()
-                LOG.info("\t Loaded module with plugins: %s.py" % fullpath)
-            except Exception as e:
-                msg = "\t Failed to load module with plugins %s.py" % fullpath
-                if logging.is_debug():
-                    LOG.exception(msg)
-                else:
-                    LOG.warning("%(msg)s: %(e)s" % {"msg": msg, "e": e})
     elif os.path.isfile(dir_or_file) and dir_or_file.endswith(".py"):
         plugin_file = dir_or_file
-        LOG.info("Loading plugins from file %s" % plugin_file)
-        if plugin_file not in sys.path:
-            sys.path.append(plugin_file)
+        msg = "Loading plugins from file %s" % plugin_file
+        if depth:
+            msg = "\t" + msg
+        LOG.info(msg)
         try:
-            plugin_name = os.path.splitext(plugin_file.split("/")[-1])[0]
-            imp.load_source(plugin_name, plugin_file)
-            LOG.info("\t Loaded module with plugins: %s.py" % plugin_name)
+            spec = importlib.util.spec_from_file_location(
+                plugin_file, plugin_file)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+
         except Exception as e:
             msg = "\t Failed to load module with plugins %s" % plugin_file
             if logging.is_debug():
                 LOG.exception(msg)
             else:
                 LOG.warning("%(msg)s: %(e)s" % {"msg": msg, "e": e})
+            return
+        _loaded_modules.append(module)
+        LOG.info("\t Loaded module with plugins: %s" %
+                 os.path.splitext(plugin_file.split("/")[-1])[0])
