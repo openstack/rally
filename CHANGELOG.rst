@@ -31,6 +31,11 @@ Changed
 * *rally plugin show* command returns not-zero exit code in case of not found
   or multiple match errors
 
+Fixed
+~~~~~
+
+* inaccurate calculation of 90 and 95 percentiles in case of 10k+ iterations
+
 [2.1.0] - 2019-11-19
 --------------------
 

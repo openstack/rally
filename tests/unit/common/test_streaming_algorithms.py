@@ -14,6 +14,7 @@
 #    under the License.
 
 import math
+import os
 
 import ddt
 import six
@@ -191,61 +192,6 @@ class MaxComputationTestCase(test.TestCase):
         self.assertEqual(single_max_algo.result(), merged_max_algo.result())
 
 
-@ddt.ddt
-class PercentileComputationTestCase(test.TestCase):
-
-    mixed1 = [0]
-    mixed6 = [100, 100, 0, 100, 100, 100]
-    mixed5 = [0, 0, 100, 0, 0]
-    mixed16 = [55.71, 83.05, 24.12, 27, 48.36, 16.36, 96.23, 6, 16.0, 88.11,
-               29.52, 99.2, 79.96, 77.84, 85.45, 85.32, 7, 17.1, 3.02, 15.23]
-    mixed50 = [51.63, 82.2, 52.52, .05, 66, 94.03, 78.6, 80.9, 51.89, 79, 1.4,
-               65.06, 12.46, 51.89, 41, 45.39, 124, 62.2, 32.72, 56.98, 31.19,
-               26.27, 97.3, 56.6, 19.75, 69, 25.03, 10.76, 17.71, 29.4, 15.75,
-               19.88, 90.16, 82.0, 63.4, 14.84, 49.07, 72.06, 41, 1.48, 82.19,
-               48.45, 53, 88.33, 52.31, 62, 15.96, 21.17, 25.33, 53.27]
-    mixed5000 = mixed50 * 1000
-    range5000 = range(5000)
-
-    @ddt.data(
-        {"stream": "mixed1", "percent": 0.95, "expected": 0},
-        {"stream": "mixed6", "percent": 0.5, "expected": 100},
-        {"stream": "mixed5", "percent": 0.5, "expected": 0},
-        {"stream": "mixed5", "percent": 0.999, "expected": 99.6},
-        {"stream": "mixed5", "percent": 0.001, "expected": 0},
-        {"stream": "mixed16", "percent": 0.25, "expected": 16.27},
-        {"stream": "mixed16", "percent": 0.50, "expected": 38.94},
-        {"stream": "mixed16", "percent": 0.90, "expected":
-            88.92200000000001},
-        {"stream": "mixed50", "percent": 0.25, "expected": 25.105},
-        {"stream": "mixed50", "percent": 0.50, "expected": 51.89},
-        {"stream": "mixed50", "percent": 0.90, "expected":
-            82.81300000000002},
-        {"stream": "mixed5000", "percent": 0.25, "expected":
-            35.54600000000001},
-        {"stream": "mixed5000", "percent": 0.50, "expected": 48.351},
-        {"stream": "mixed5000", "percent": 0.90, "expected":
-            66.05880000000437},
-        {"stream": "range5000", "percent": 0.25, "expected": 1249.75},
-        {"stream": "range5000", "percent": 0.50, "expected": 2499.5},
-        {"stream": "range5000", "percent": 0.90, "expected": 4499.1})
-    @ddt.unpack
-    def test_add_and_result(self, percent, stream, expected):
-        comp = algo.PercentileComputation(percent=percent, length=len(
-            getattr(self, stream)))
-        [comp.add(i) for i in getattr(self, stream)]
-        self.assertEqual(expected, comp.result())
-
-    def test_add_raises(self):
-        comp = algo.PercentileComputation(0.50, 100)
-        self.assertRaises(TypeError, comp.add)
-
-    def test_result_empty(self):
-        self.assertRaises(TypeError, algo.PercentileComputation)
-        comp = algo.PercentileComputation(0.50, 100)
-        self.assertIsNone(comp.result())
-
-
 class IncrementComputationTestCase(test.TestCase):
 
     def test_add_and_result(self):
@@ -318,3 +264,45 @@ class DegradationComputationTestCase(test.TestCase):
         self.assertEqual(min_value, comp1.min_value.result())
         self.assertEqual(max_value, comp1.max_value.result())
         self.assertEqual(result, comp1.result())
+
+
+class PointsSaverTestCase(test.TestCase):
+
+    def test_add(self):
+        points_saver = algo.PointsSaver(chunk_size=5)
+        points = [i / 10.0 for i in range(1, 10)]
+
+        for p in points[:4]:
+            points_saver.add(p)
+        # chunk should not be exceeded yet
+        self.assertFalse(os.path.isfile(points_saver._filename))
+        self.assertEqual(4, points_saver._current_chunk_size)
+        self.assertEqual([0.1, 0.2, 0.3, 0.4], points_saver.result())
+
+        for p in points[4:]:
+            points_saver.add(p)
+
+        self.assertEqual([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+                         points_saver.result())
+
+        self.assertTrue(os.path.isfile(points_saver._filename))
+        with open(points_saver._filename) as f:
+            self.assertEqual("  0.1 0.2 0.3 0.4 0.5", f.read())
+
+    def test_merge(self):
+        points_saver1 = algo.PointsSaver()
+        points_saver1.add(1)
+        points_saver2 = algo.PointsSaver()
+        points_saver2.add(2)
+        points_saver2.merge(points_saver1)
+
+        self.assertEqual([2, 1], points_saver2.result())
+
+    def test_reset(self):
+        points_saver = algo.PointsSaver()
+        points_saver.add(1)
+        points_saver.reset()
+
+        self.assertRaises(TypeError, points_saver.merge, algo.PointsSaver())
+        self.assertRaises(TypeError, points_saver.add, 0)
+        self.assertRaises(TypeError, points_saver.result)

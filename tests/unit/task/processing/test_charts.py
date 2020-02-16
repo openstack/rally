@@ -530,12 +530,20 @@ class TableTestCase(test.TestCase):
 
     def test__round(self):
         table = self.Table({"total_iteration_count": 4})
-        streaming_ins = mock.Mock()
-        streaming_ins.result.return_value = 42.424242
-        self.assertRaises(TypeError, table._round, streaming_ins)
-        self.assertEqual("n/a", table._round(streaming_ins, False))
-        self.assertEqual(round(42.424242, 3),
-                         table._round(streaming_ins, True))
+
+        class FakeSA(charts.streaming.StreamingAlgorithm):
+            def add(self, value):
+                pass
+
+            def merge(self, other):
+                pass
+
+            def result(self):
+                return 42.424242
+
+        self.assertRaises(TypeError, table._round, FakeSA())
+        self.assertEqual("n/a", table._round(FakeSA(), False))
+        self.assertEqual(round(42.424242, 3), table._round(FakeSA(), True))
 
     def test__row_has_results(self):
         table = self.Table({"total_iteration_count": 1})
@@ -964,8 +972,8 @@ class OutputStatsTableTestCase(test.TestCase):
          "description": "Test description!",
          "iterations": [[("a", 11), ("b", 22)], [("a", 5.6), ("b", 7.8)],
                         [("a", 42), ("b", 24)]],
-         "expected": [["a", 5.6, 11.0, 35.8, 38.9, 42.0, 10.267, 3],
-                      ["b", 7.8, 22.0, 23.6, 23.8, 24.0, 9.467, 3]]})
+         "expected": [["a", 5.6, 11.0, 35.8, 38.9, 42.0, 19.533, 3],
+                      ["b", 7.8, 22.0, 23.6, 23.8, 24.0, 17.933, 3]]})
     @ddt.unpack
     def test_add_iteration_and_render(self, title, description, iterations,
                                       expected):

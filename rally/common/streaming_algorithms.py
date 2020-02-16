@@ -16,11 +16,14 @@
 from __future__ import division
 
 import abc
+import contextlib
+import itertools
 import math
+import os
 
 import six
 
-from rally.task.processing import utils
+from rally.common import utils as cutils
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -153,43 +156,69 @@ class MaxComputation(StreamingAlgorithm):
         return self._value
 
 
-class PercentileComputation(StreamingAlgorithm):
-    """Compute percentile value from a stream of numbers."""
+class PointsSaver(StreamingAlgorithm):
 
-    def __init__(self, percent, length):
-        """Init streaming computation.
+    def __init__(self, chunk_size=10000, sep=" "):
+        self.chunk_size = chunk_size
+        self._sep = sep
+        self._filename = cutils.generate_random_path()
+        self._chunk = []
+        self._current_chunk_size = 0
+        self._deleted = False
 
-        :param percent: numeric percent (from 0.00..1 to 0.999..)
-        :param length: count of the measurements
-        """
-        if not 0 < percent < 1:
-            raise ValueError("Unexpected percent: %s" % percent)
-        self._percent = percent
-
-        self._graph_zipper = utils.GraphZipper(length, 10000)
+    def _dump_chunk(self):
+        with open(self._filename, "a") as f:
+            f.write(
+                " ".join(
+                    itertools.chain(
+                        (" ", ),
+                        map(lambda x: str(x), self._chunk))
+                )
+            )
+        self._chunk = []
+        self._current_chunk_size = 0
 
     def add(self, value):
-        self._graph_zipper.add_point(value)
+        if self._deleted:
+            raise TypeError("Cannot add more points since %s is in deleted "
+                            "state." % self.__class__.__name__)
+
+        self._chunk.append(value)
+        self._current_chunk_size += 1
+        if self._current_chunk_size >= self.chunk_size:
+            self._dump_chunk()
 
     def merge(self, other):
-        # TODO(ikhudoshyn): Implement me
-        raise NotImplementedError()
+        if self._deleted:
+            raise TypeError("Cannot merge points since %s is in deleted "
+                            "state." % self.__class__.__name__)
+        for point in other.result():
+            self.add(point)
 
     def result(self):
-        results = list(
-            map(lambda x: x[1], self._graph_zipper.get_zipped_graph()))
-        if results:
-            # NOTE(amaretskiy): Calculate percentile of a list of values
-            results.sort()
-            k = (len(results) - 1) * self._percent
-            f = math.floor(k)
-            c = math.ceil(k)
-            if f == c:
-                return results[int(k)]
-            d0 = results[int(f)] * (c - k)
-            d1 = results[int(c)] * (k - f)
-            return (d0 + d1)
-        return None
+        if self._deleted:
+            raise TypeError("Cannot fetch points since %s is in deleted "
+                            "state." % self.__class__.__name__)
+
+        if os.path.isfile(self._filename):
+            with open(self._filename) as f:
+                data = f.read().strip(self._sep)
+            res = [float(p) for p in data.split(self._sep) if p]
+        else:
+            # the number of points were less than self.chunk_size, so they were
+            #   not saved to the disk. OR no points at all
+            res = []
+
+        if self._chunk:
+            res.extend(self._chunk)
+        return res
+
+    def reset(self):
+        with contextlib.suppress(FileNotFoundError):
+            os.remove(self._filename)
+        self._deleted = True
+        self._chunk = []
+        self._current_chunk_size = 0
 
 
 class IncrementComputation(StreamingAlgorithm):

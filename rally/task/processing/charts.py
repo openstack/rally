@@ -330,11 +330,13 @@ class Table(Chart):
         :returns: rounded float
         :returns: str "n/a"
         """
-        r = ins.result()
-        if not has_result or r is None:
+        if isinstance(ins, streaming.StreamingAlgorithm):
+            ins = ins.result()
+
+        if not has_result or ins is None:
             return "n/a"
         else:
-            return round(r, 3)
+            return round(ins, 3)
 
     def _row_has_results(self, values):
         """Determine whether row can be assumed as having values.
@@ -401,17 +403,13 @@ class MainStatsTable(Table):
         root[name] = {
             # streaming algorithms
             "sa": [
-                [streaming.MinComputation(), None],
-                [streaming.PercentileComputation(0.5, self.iters_num), None],
-                [streaming.PercentileComputation(0.9, self.iters_num), None],
-                [streaming.PercentileComputation(0.95, self.iters_num), None],
-                [streaming.MaxComputation(), None],
-                [streaming.MeanComputation(), None],
-                [streaming.MeanComputation(),
-                 lambda st, has_result: ("%.1f%%" % (st.result() * 100)
-                                         if has_result else "n/a")],
-                [streaming.IncrementComputation(),
-                 lambda st, has_result: st.result()]],
+                streaming.PointsSaver(),
+                streaming.MinComputation(),
+                streaming.MaxComputation(),
+                streaming.MeanComputation(),
+                streaming.MeanComputation(),
+                streaming.IncrementComputation()
+            ],
             "children": collections.OrderedDict(),
             "real_name": real_name,
             "count_per_iteration": count
@@ -430,13 +428,11 @@ class MainStatsTable(Table):
                                         real_name=original_name,
                                         count=data["count"])
 
-            stats = p_data[name]["sa"]
-            # count
-            stats[-1][0].add()
-            # success
-            stats[-2][0].add(0 if data.get("failed", False) else 1)
-            for idx in range(6):
-                stats[idx][0].add(data["duration"])
+            points, min_v, max_v, mean, success, count = p_data[name]["sa"]
+            count.add()
+            success.add(0 if data.get("failed", False) else 1)
+            for sa in (points, min_v, max_v, mean):
+                sa.add(data["duration"])
 
             if data["children"]:
                 self._add_data(data["children"], root=p_data[name]["children"])
@@ -475,20 +471,47 @@ class MainStatsTable(Table):
 
         self._add_data(data)
 
-    def _process_result(self, name, values, depth=0):
-        row = self._process_row(name, values["sa"])
+    def _process_row(self, sa):
+        points_ins, min_v, max_v, avg, success, count = sa
+
+        # process percentiles
+        points = points_ins.result()
+        # clear the space on the disk
+        points_ins.reset()
+        # sort data once
+        points.sort()
+        p50ile = utils.percentile(points, 0.5, ignore_sorting=True)
+        p90ile = utils.percentile(points, 0.9, ignore_sorting=True)
+        p95ile = utils.percentile(points, 0.95, ignore_sorting=True)
+
+        # process and round values
+        count = count.result()
+        has_result = bool(count)
+        min_v = self._round(min_v, has_result)
+        max_v = self._round(max_v, has_result)
+        avg = self._round(avg, has_result)
+        p50ile = self._round(p50ile, has_result)
+        p90ile = self._round(p90ile, has_result)
+        p95ile = self._round(p95ile, has_result)
+        success = "%.1f%%" % (success.result() * 100) if has_result else "n/a"
+
+        return min_v, max_v, avg, p50ile, p90ile, p95ile, success, count
+
+    def _process_result(self, name, values):
+        r = self._process_row(values["sa"])
+        min_v, max_v, avg, p50ile, p90ile, p95ile, success, count = r
         children = []
 
         for c_name, c_values in values["children"].items():
             children.append(self._process_result(c_name, c_values))
-        return {"data": {"iteration_count": row[8],
-                         "min": row[1],
-                         "median": row[2],
-                         "90%ile": row[3],
-                         "95%ile": row[4],
-                         "max": row[5],
-                         "avg": row[6],
-                         "success": row[7]},
+        return {"data": {"iteration_count": count,
+                         "min": min_v,
+                         "median": p50ile,
+                         "90%ile": p90ile,
+                         "95%ile": p95ile,
+                         "max": max_v,
+                         "avg": avg,
+                         "success": success},
                 "count_per_iteration": values["count_per_iteration"],
                 "name": values["real_name"],
                 "display_name": name,
@@ -725,21 +748,54 @@ class OutputStatsTable(OutputTable):
     def add_iteration(self, iteration):
         for name, value in self._map_iteration_values(iteration):
             if name not in self._data:
-                iters_num = self._workload["total_iteration_count"]
                 self._data[name] = [
-                    [streaming.MinComputation(), None],
-                    [streaming.PercentileComputation(0.5, iters_num), None],
-                    [streaming.PercentileComputation(0.9, iters_num), None],
-                    [streaming.PercentileComputation(0.95, iters_num), None],
-                    [streaming.MaxComputation(), None],
-                    [streaming.MeanComputation(), None],
-                    [streaming.IncrementComputation(),
-                     lambda v, na: v.result()]]
+                    streaming.PointsSaver(),
+                    streaming.IncrementComputation(),
+                    streaming.MinComputation(),
+                    streaming.MaxComputation(),
+                    streaming.MeanComputation()
+                ]
+            points, count, min_v, max_v, avg = self._data[name]
 
-            self._data[name][-1][0].add(None)
-            self._data[name][-2][0].add(1)
-            for idx, dummy in enumerate(self._data[name][:-1]):
-                self._data[name][idx][0].add(value)
+            count.add()
+            for ins in (points, min_v, max_v, avg):
+                ins.add(value)
+
+    def _process_row(self, name, sa):
+        points_ins, count, min_v, max_v, avg = sa
+
+        # process percentiles
+        points = points_ins.result()
+        # clear the space on the disk
+        points_ins.reset()
+        # sort data once
+        points.sort()
+        p50ile = utils.percentile(points, 0.5, ignore_sorting=True)
+        p90ile = utils.percentile(points, 0.9, ignore_sorting=True)
+        p95ile = utils.percentile(points, 0.95, ignore_sorting=True)
+
+        # process and round values
+        count = count.result()
+        has_result = bool(count)
+
+        min_v = self._round(min_v, has_result)
+        max_v = self._round(max_v, has_result)
+        avg = self._round(avg, has_result)
+        p50ile = self._round(p50ile, has_result)
+        p90ile = self._round(p90ile, has_result)
+        p95ile = self._round(p95ile, has_result)
+
+        return [name, min_v, p50ile, p90ile, p95ile, max_v, avg, count]
+
+    def get_rows(self):
+        """Collect rows values finally, after all data is processed.
+
+        :returns: [str_name, (float or str), (float or str), ...]
+        """
+        rows = []
+        for name, values in self._data.items():
+            rows.append(self._process_row(name, values))
+        return rows
 
 
 @plugin.configure(name="TextArea")
