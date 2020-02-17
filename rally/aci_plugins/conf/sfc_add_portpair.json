@@ -6,7 +6,7 @@
                 "dest_cidr": "192.168.200.0/24",
                 "image": "83210423-382a-49c2-8cb5-a19875bf00f9",
                 "flavor": "tiny",
-                "public_net": "a14cf9d1-ebdd-438a-8c5c-143e5cd68e35",
+                "public_net": "d2c8b7f3-45e9-4238-b95e-2de42abef8fc",
                 "username" : "root",
                 "password" : "noir0123"
             },

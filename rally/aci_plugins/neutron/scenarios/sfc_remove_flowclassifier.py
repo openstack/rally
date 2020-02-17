@@ -82,7 +82,7 @@ class SFCRemoveFlowclassifier(vcpe_utils.vCPEScenario, neutron_utils.NeutronScen
         pp = self._create_port_pair(pin, pout)
         ppg = self._create_port_pair_group([pp])
         fc1 = self._create_flow_classifier(src_cidr, '192.168.0.0/24', net1_id, testnet_id)
-        fc2 = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
+        fc2 = self._create_flow_classifier(src_cidr, '0.0.0.0/0', net1_id, net2_id)
         pc = self._create_port_chain([ppg], [fc1, fc2])
         self.sleep_between(30, 40)
        
@@ -101,4 +101,3 @@ class SFCRemoveFlowclassifier(vcpe_utils.vCPEScenario, neutron_utils.NeutronScen
         self._delete_flow_classifier(fc1)
         self._delete_flow_classifier(fc2)
         self._delete_port_pair(pp)
-

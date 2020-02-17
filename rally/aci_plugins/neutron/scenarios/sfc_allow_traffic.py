@@ -81,7 +81,7 @@ class SFCAllowTraffic(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, no
 
         pp = self._create_port_pair(pin, pout)
         ppg = self._create_port_pair_group([pp])
-        fc = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
+        fc = self._create_flow_classifier(src_cidr, '0.0.0.0/0', net1_id, net2_id)
         pc = self._create_port_chain([ppg], [fc])
         self.sleep_between(30, 40)
         
