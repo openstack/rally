@@ -67,7 +67,7 @@ class SFCBlockTraffic(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, no
         kwargs.update({'nics': nics})
         kwargs.update({'key_name': key_name})
         service_vm = self._boot_server(service_image, flavor, False, **kwargs)
-        self.sleep_between(50, 60)
+        self.sleep_between(30, 40)
 
         fip = p1.get('port', {}).get('fixed_ips')[0].get('ip_address')
         pdest_add = pdest.get('port', {}).get('fixed_ips')[0].get('ip_address')
@@ -81,7 +81,7 @@ class SFCBlockTraffic(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, no
 
         pp = self._create_port_pair(pin, pout)
         ppg = self._create_port_pair_group([pp])
-        fc = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
+        fc = self._create_flow_classifier(src_cidr, '0.0.0.0/0', net1_id, net2_id)
         pc = self._create_port_chain([ppg], [fc])
         self.sleep_between(30, 40)
         

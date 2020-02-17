@@ -70,7 +70,7 @@ class SFCAddFlowclassifier(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenari
         kwargs.update({'nics': nics})
         kwargs.update({'key_name': key_name})
         service_vm = self._boot_server(image, flavor, False, **kwargs)
-        self.sleep_between(60, 70) 
+        self.sleep_between(30, 40) 
 
         fip = p1.get('port', {}).get('fixed_ips')[0].get('ip_address')
         pdest_add = pdest.get('port', {}).get('fixed_ips')[0].get('ip_address')
@@ -89,7 +89,7 @@ class SFCAddFlowclassifier(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenari
         self._remote_command(username, password, fip, command, src_vm)
         
         print "Adding a new flow classifier to the chain..."
-        fc2 = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
+        fc2 = self._create_flow_classifier(src_cidr, '0.0.0.0/0', net1_id, net2_id)
         self._update_port_chain(pc, [ppg], [fc1, fc2])
         self.sleep_between(30, 40)
 

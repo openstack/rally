@@ -1,15 +1,15 @@
+import json
 from rally import exceptions
-from rally.plugins.openstack import scenario
-from rally.task import atomic
 from rally.task import utils
 from rally.common import cfg
-import json
+from rally.task import atomic
 from rally.common import logging
 from rally.common import sshutils
+from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.vm import utils as vm_utils
 
-LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
+LOG = logging.getLogger(__name__)
 
 class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
 
@@ -25,8 +25,9 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
 
             code, out, err = self._run_command(
                 fip, port, username, password, command=command)
-
-            print 'LOGS: out: ', out
+            
+            print "\n"
+            print out
 
             text_area_output = ["StdErr: %s" % (err or "(none)"),
                                 "StdOut:"]

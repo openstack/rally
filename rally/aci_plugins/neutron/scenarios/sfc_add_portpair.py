@@ -100,7 +100,7 @@ class SFCAddPortpair(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nov
         pp2 = self._create_port_pair(pin2, pout2)
         pp3 = self._create_port_pair(pin3, pout3)
         ppg = self._create_port_pair_group([pp1, pp2, pp3])
-        fc = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
+        fc = self._create_flow_classifier(src_cidr, '0.0.0.0/0', net1_id, net2_id)
         pc = self._create_port_chain([ppg], [fc])
         self.sleep_between(30, 40)
 

@@ -94,14 +94,14 @@ class SFCRemoveService(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, n
         ppg1 = self._create_port_pair_group([pp1])
         pp2 = self._create_port_pair(pin2, pout2)
         ppg2 = self._create_port_pair_group([pp2])
-        fc = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
+        fc = self._create_flow_classifier(src_cidr, '0.0.0.0/0', net1_id, net2_id)
         pc = self._create_port_chain([ppg1, ppg2], [fc])
         self.sleep_between(30, 40)
  
         print "\nTraffic verification with multi chain service function\n"
         self._remote_command(username, password, fip, command, src_vm)
-        print "Removing a function from the chain..."
         
+        print "Removing a function from the chain..."
         self._update_port_chain(pc, [ppg1], [fc])
         self._delete_port_pair_group(ppg2)
         self._delete_port_pair(pp2)

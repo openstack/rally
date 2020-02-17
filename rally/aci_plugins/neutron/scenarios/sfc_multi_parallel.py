@@ -136,9 +136,9 @@ class SFCMultiParallel(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, n
         ppg2 = self._create_port_pair_group([pp21, pp22, pp23])
         pp3 = self._create_port_pair(pin3, pout3)
         ppg3 = self._create_port_pair_group([pp3])
-        fc = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
+        fc = self._create_flow_classifier(src_cidr, '0.0.0.0/0', net1_id, net2_id)
         pc = self._create_port_chain([ppg1, ppg2, ppg3], [fc])
-        self.sleep_between(30, 40)
+        self.sleep_between(50, 60)
 
         print "\nTraffic verification after creating SFC\n"
         self._remote_command(username, password, fip, command, src_vm)

@@ -78,14 +78,14 @@ class SFCAddService(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova
         
         pp1 = self._create_port_pair(pin1, pout1)
         ppg1 = self._create_port_pair_group([pp1])
-        fc = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
+        fc = self._create_flow_classifier(src_cidr, '0.0.0.0/0', net1_id, net2_id)
         pc = self._create_port_chain([ppg1], [fc])
         self.sleep_between(30, 40)
         
         print "\nTraffic verification with a single SFC\n"
         self._remote_command(username, password, fip, command, src_vm)
-        print "Adding a new function to the chain..."
         
+        print "Adding a new function to the chain..."
         left2, sub5 = self._create_network_and_subnets({},{"cidr": "3.3.0.0/24", 'host_routes': [{'destination': src_cidr, 'nexthop': '3.3.0.1'}]}, 1, None)
         right2, sub6 = self._create_network_and_subnets({},{"cidr": "4.4.0.0/24", 'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '4.4.0.1'}, {'destination': '128.0.0.0/1', 'nexthop': '4.4.0.1'}]}, 1, None)
         self._add_interface_router(sub5[0].get("subnet"), router.get("router"))
