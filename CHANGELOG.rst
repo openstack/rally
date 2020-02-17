@@ -31,6 +31,9 @@ Changed
 * *rally plugin show* command returns not-zero exit code in case of not found
   or multiple match errors
 
+* `docker image <https://hub.docker.com/r/xrally/xrally>`_ is switched to use
+  python3.6.
+
 Fixed
 ~~~~~
 

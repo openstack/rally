@@ -15,7 +15,7 @@ WORKDIR /rally/source
 
 RUN pip3 install . --constraint upper-constraints.txt && \
     pip3 install pymysql && \
-    pip3 install psycopg2 && \
+    pip3 install psycopg2-binary && \
     mkdir -p /etc/rally && \
     echo "[database]" > /etc/rally/rally.conf && \
     echo "connection=sqlite:////home/rally/.rally/rally.db" >> /etc/rally/rally.conf

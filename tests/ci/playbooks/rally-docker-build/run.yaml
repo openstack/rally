@@ -1,0 +1,7 @@
+- hosts: all
+  name: a run script for rally-install-* jobs
+  tasks:
+    - name: Build docker image for Rally
+      shell:
+        cmd: "sudo docker build -t rally:dev ./"
+        chdir: '{{ zuul.project.src_dir }}/etc/docker'
