@@ -36,6 +36,8 @@ Changed
 * `docker image <https://hub.docker.com/r/xrally/xrally>`_ is switched to use
   python3.6.
 
+* *path_or_url* plugin follows redirects while validating urls now.
+
 Fixed
 ~~~~~
 
