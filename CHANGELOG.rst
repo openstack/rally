@@ -20,13 +20,6 @@ Changelog
 [unreleased]
 ------------
 
-Removed
-~~~~~~~
-
-* Python 2.7, Python 3.4 and Python 3.5 support
-* Devstack plugin. It was deprecated long time ago. rally-openstack project
-  should be used instead
-
 Changed
 ~~~~~~~
 
@@ -38,7 +31,33 @@ Changed
 
 * *path_or_url* plugin follows redirects while validating urls now.
 
+Removed
+~~~~~~~
+
+* Python 2.7, Python 3.4 and Python 3.5 support
+
+* Devstack plugin. It was deprecated long time ago. rally-openstack project
+  should be used instead
+
+* *rally.common.utils.distance* method was deprecated since Rally 0.4.1
+
+* *rally.common.utils.format_float_to_str* method was deprecated since
+  Rally 0.11.2. *rally.utils.strutils.format_float_to_str* should be used
+  instead.
+
+* *rally.task.atomic.optional_action_timer* decorator was deprecated since
+  Rally 0.10.0
+
+* *rally.task.hook.Hook* class was deprecated since Rally 0.10.0.
+  *rally.task.hook.HookAction* should be used instead.
+
+* *rally.task.trigger* module was deprecated since Rally 0.10.0.
+  *rally.task.hook.HookTrigger* should be used instead.
+
+* *rally.common.i18n* module was deprecated since Rally 0.10.0
+
 Fixed
+
 ~~~~~
 
 * inaccurate calculation of 90 and 95 percentiles in case of 10k+ iterations

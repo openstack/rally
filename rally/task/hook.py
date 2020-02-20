@@ -245,14 +245,3 @@ class HookTrigger(plugin.Plugin, validation.ValidatablePluginMixin):
             results["summary"].setdefault(action_result["status"], 0)
             results["summary"][action_result["status"]] += 1
         return results
-
-
-class Hook(HookAction):
-    """DEPRECATED! USE `rally.task.hook.HookAction` instead."""
-
-    def __init__(self, *args, **kwargs):
-        super(Hook, self).__init__(*args, **kwargs)
-        LOG.warning("Please contact Rally plugin maintainer. The plugin '%s' "
-                    "inherits the deprecated base class(Hook), "
-                    "`rally.task.hook.HookAction` should be used instead."
-                    % self.get_name())
