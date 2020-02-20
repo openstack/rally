@@ -30,7 +30,7 @@ class PathOrUrl(types.ResourceType):
         if os.path.isfile(path):
             return path
         try:
-            head = requests.head(path, verify=False)
+            head = requests.head(path, verify=False, allow_redirects=True)
             if head.status_code == 200:
                 return path
             raise exceptions.InvalidScenarioArgument(
