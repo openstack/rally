@@ -24,6 +24,8 @@ Removed
 ~~~~~~~
 
 * Python 2.7, Python 3.4 and Python 3.5 support
+* Devstack plugin. It was deprecated long time ago. rally-openstack project
+  should be used instead
 
 Changed
 ~~~~~~~
