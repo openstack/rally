@@ -13,9 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import io
+
 import ddt
 import mock
-import six
 
 from rally.cli import cliutils
 from rally.cli.commands import plugin as plugin_cmd
@@ -65,7 +66,7 @@ class PluginCommandsTestCase(test.TestCase):
         self.Plugin3.unregister()
 
     def test__print_plugins_list(self):
-        out = six.StringIO()
+        out = io.StringIO()
         original_print_list = cliutils.print_list
 
         def print_list(*args, **kwargs):

@@ -19,7 +19,6 @@ import datetime as dt
 import ddt
 from jsonschema import exceptions as schema_exceptions
 import mock
-import six
 
 from rally import exceptions
 from rally.task import utils
@@ -532,7 +531,7 @@ class WrapperForAtomicActionsTestCase(test.TestCase):
         self.assertEqual(1, atomic_wrapper.get("action_1"))
         self.assertIsNone(atomic_wrapper.get("action_3"))
         self.assertEqual(2, len(atomic_wrapper))
-        self.assertEqual(atomic_actions[0], six.next(iter(atomic_wrapper)))
+        self.assertEqual(atomic_actions[0], next(iter(atomic_wrapper)))
 
     def test__convert_new_atomic_actions(self):
         atomic_actions = collections.OrderedDict(

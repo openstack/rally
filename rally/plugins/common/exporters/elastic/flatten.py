@@ -12,8 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
-
 
 def _join_keys(first, second):
     if not second:
@@ -25,7 +23,7 @@ def _join_keys(first, second):
 
 
 def _process(obj):
-    if isinstance(obj, (six.string_types, six.binary_type)):
+    if isinstance(obj, (str, bytes)):
         yield "", obj
     elif isinstance(obj, dict):
         for first, tmp_value in obj.items():

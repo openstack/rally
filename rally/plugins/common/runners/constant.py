@@ -15,10 +15,9 @@
 
 import collections
 import multiprocessing
+import queue as Queue
 import threading
 import time
-
-from six.moves import queue as Queue
 
 from rally.common import utils
 from rally.common import validation

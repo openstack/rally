@@ -16,7 +16,6 @@
 import collections
 import copy
 import datetime as dt
-import six
 import uuid
 
 from rally.common import db
@@ -451,7 +450,7 @@ class Task(object):
                 actions_list.extend(action["children"])
 
         for e in result["error"]:
-            if not isinstance(e, (six.string_types, six.text_type)):
+            if not isinstance(e, str):
                 LOG.warning("error value has wrong type '%s', should be 'str'"
                             % type(e))
                 return False

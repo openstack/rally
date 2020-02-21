@@ -17,8 +17,6 @@ import abc
 import collections
 import threading
 
-import six
-
 from rally.common import logging
 from rally.common.plugin import plugin
 from rally.common import utils as rutils
@@ -110,8 +108,8 @@ class HookExecutor(object):
 
 @validation.add_default("jsonschema")
 @plugin.base()
-@six.add_metaclass(abc.ABCMeta)
-class HookAction(plugin.Plugin, validation.ValidatablePluginMixin):
+class HookAction(plugin.Plugin, validation.ValidatablePluginMixin,
+                 metaclass=abc.ABCMeta):
     """Factory for hook classes."""
 
     CONFIG_SCHEMA = {"type": "null"}
@@ -207,8 +205,8 @@ class HookAction(plugin.Plugin, validation.ValidatablePluginMixin):
 
 @validation.add_default("jsonschema")
 @plugin.base()
-@six.add_metaclass(abc.ABCMeta)
-class HookTrigger(plugin.Plugin, validation.ValidatablePluginMixin):
+class HookTrigger(plugin.Plugin, validation.ValidatablePluginMixin,
+                  metaclass=abc.ABCMeta):
     """Factory for hook trigger classes."""
 
     CONFIG_SCHEMA = {"type": "null"}

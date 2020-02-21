@@ -10,10 +10,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import io
 import tokenize
 
 import ddt
-import six
 
 from tests.hacking import checks
 from tests.unit import test
@@ -310,14 +310,14 @@ class HackingTestCase(test.TestCase):
         for sample in bad:
             sample = "print(%s)" % sample
             tokens = tokenize.generate_tokens(
-                six.moves.StringIO(sample).readline)
+                io.StringIO(sample).readline)
             self.assertEqual(
                 1,
                 len(list(checks.check_dict_formatting_in_string(sample,
                                                                 tokens))))
 
         sample = "print(\"%(a)05.2lF\" % d + \" added: %(a)s\" % d)"
-        tokens = tokenize.generate_tokens(six.moves.StringIO(sample).readline)
+        tokens = tokenize.generate_tokens(io.StringIO(sample).readline)
         self.assertEqual(
             2,
             len(list(checks.check_dict_formatting_in_string(sample, tokens))))
@@ -329,7 +329,7 @@ class HackingTestCase(test.TestCase):
         for sample in good:
             sample = "print(%s)" % sample
             tokens = tokenize.generate_tokens(
-                six.moves.StringIO(sample).readline)
+                io.StringIO(sample).readline)
             self.assertEqual(
                 [],
                 list(checks.check_dict_formatting_in_string(sample, tokens)))

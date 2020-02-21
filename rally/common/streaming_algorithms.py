@@ -21,13 +21,10 @@ import itertools
 import math
 import os
 
-import six
-
 from rally.common import utils as cutils
 
 
-@six.add_metaclass(abc.ABCMeta)
-class StreamingAlgorithm(object):
+class StreamingAlgorithm(object, metaclass=abc.ABCMeta):
     """Base class for streaming computations that scale."""
 
     @abc.abstractmethod

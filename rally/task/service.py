@@ -14,8 +14,6 @@
 import functools
 import inspect
 
-import six
-
 from rally.common.plugin import discover
 from rally.common.plugin import meta
 from rally import exceptions
@@ -156,8 +154,7 @@ class ServiceMeta(type):
                 (cls.__name__, ", ".join(not_implemented_apis)))
 
 
-@six.add_metaclass(ServiceMeta)
-class Service(meta.MetaMixin):
+class Service(meta.MetaMixin, metaclass=ServiceMeta):
     """Base help class for Cloud Services(for example OpenStack services).
 
     A simple example of implementation:

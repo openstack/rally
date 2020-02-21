@@ -18,7 +18,6 @@ SQLAlchemy models for rally data.
 import datetime as dt
 import uuid
 
-import six
 import sqlalchemy as sa
 import sqlalchemy.ext.declarative
 import sqlalchemy.orm   # noqa (used as sa.orm)
@@ -34,7 +33,7 @@ def UUID():
     return str(uuid.uuid4())
 
 
-class RallyBase(six.Iterator):
+class RallyBase(object):
     """Base class for models."""
     __table_initialized__ = False
     metadata = None

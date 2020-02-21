@@ -16,7 +16,6 @@ import inspect
 import os
 
 import jsonschema
-import six
 
 from rally.common import logging
 from rally.common import validation
@@ -193,7 +192,7 @@ class EnumValidator(validation.Validator):
         if self.case_insensitive:
             self.values = []
             for value in values:
-                if isinstance(value, (six.text_type, six.string_types)):
+                if isinstance(value, str):
                     value = value.lower()
                 self.values.append(value)
         else:
@@ -203,7 +202,7 @@ class EnumValidator(validation.Validator):
         value = config.get("args", {}).get(self.param_name)
         if value:
             if self.case_insensitive:
-                if isinstance(value, (six.text_type, six.string_types)):
+                if isinstance(value, str):
                     value = value.lower()
 
             if value not in self.values:

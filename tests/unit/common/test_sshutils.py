@@ -13,13 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import io
 import os
 import socket
 
 import ddt
 import mock
 import paramiko
-import six
 
 from rally.common import sshutils
 from rally import exceptions
@@ -68,7 +68,7 @@ class SSHTestCase(test.TestCase):
         self.assertRaises(exceptions.SSHError, self.ssh._get_pkey, "key")
 
     def test__get_pkey_dss(self):
-        private_dss_key = six.StringIO()
+        private_dss_key = io.StringIO()
         private_dss_key_obj = paramiko.DSSKey.generate(1024)
         private_dss_key_obj.write_private_key(private_dss_key)
         private_dss_key.seek(0)
@@ -81,7 +81,7 @@ class SSHTestCase(test.TestCase):
                               paramiko.DSSKey)
 
     def test__get_pkey_rsa(self):
-        private_rsa_key = six.StringIO()
+        private_rsa_key = io.StringIO()
         private_rsa_key_obj = paramiko.RSAKey.generate(1024)
         private_rsa_key_obj.write_private_key(private_rsa_key)
         private_rsa_key.seek(0)
@@ -119,7 +119,7 @@ class SSHTestCase(test.TestCase):
         m_client.close.assert_called_once_with()
         self.assertFalse(self.ssh._client)
 
-    @mock.patch("rally.common.sshutils.six.moves.StringIO")
+    @mock.patch("rally.common.sshutils.io.StringIO")
     def test_execute(self, mock_string_io):
         mock_string_io.side_effect = stdio = [mock.Mock(), mock.Mock()]
         stdio[0].read.return_value = "stdout fake data"

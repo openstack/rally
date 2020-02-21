@@ -25,7 +25,6 @@ import warnings
 
 import jsonschema
 import prettytable
-import six
 import sqlalchemy.exc
 
 from rally import api
@@ -211,10 +210,10 @@ def print_dict(obj, fields=None, formatters=None, mixed_case_fields=False,
         if isinstance(data, (dict, list)):
             data = json.dumps(data)
         if wrap > 0:
-            data = textwrap.fill(six.text_type(data), wrap)
+            data = textwrap.fill(str(data), wrap)
         # if value has a newline, add in multiple rows
         # e.g. fault with stacktrace
-        if (data and isinstance(data, six.string_types)
+        if (data and isinstance(data, str)
                 and (r"\n" in data or "\r" in data)):
             # "\r" would break the table, so remove it.
             if "\r" in data:
@@ -623,7 +622,7 @@ def run(argv, categories):
         v = getattr(CONF.category, "action_kwarg_" + k)
         if v is None:
             continue
-        if isinstance(v, six.string_types):
+        if isinstance(v, str):
             v = encodeutils.safe_decode(v)
         fn_kwargs[k] = v
 

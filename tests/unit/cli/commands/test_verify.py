@@ -13,10 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import io
 import tempfile
 
 import mock
-import six
 
 from rally.cli import cliutils
 from rally.cli.commands import verify
@@ -195,7 +195,7 @@ class VerifyCommandsTestCase(test.TestCase):
         print_dict_calls = []
 
         def print_dict(*args, **kwargs):
-            print_dict_calls.append(six.StringIO())
+            print_dict_calls.append(io.StringIO())
             kwargs["out"] = print_dict_calls[-1]
             original_print_dict(*args, **kwargs)
 
@@ -518,7 +518,7 @@ class VerifyCommandsTestCase(test.TestCase):
         print_dict_calls = []
 
         def print_dict(*args, **kwargs):
-            print_dict_calls.append(six.StringIO())
+            print_dict_calls.append(io.StringIO())
             kwargs["out"] = print_dict_calls[-1]
             original_print_dict(*args, **kwargs)
 

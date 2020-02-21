@@ -25,7 +25,6 @@ import sys
 import webbrowser
 
 import jsonschema
-import six
 
 from rally.cli import cliutils
 from rally.cli import envutils
@@ -179,7 +178,7 @@ class TaskCommands(object):
         if raw_args:
             try:
                 data = yaml.safe_load(raw_args)
-                if isinstance(data, (six.text_type, six.string_types)):
+                if isinstance(data, str):
                     raise yaml.ParserError("String '%s' doesn't look like a "
                                            "dictionary." % raw_args)
                 task_args.update(data)
@@ -709,7 +708,7 @@ class TaskCommands(object):
                         result, OLD_TASK_RESULT_SCHEMA)
                 except jsonschema.ValidationError as e:
                     raise FailedToLoadResults(source=task_id,
-                                              msg=six.text_type(e))
+                                              msg=str(e))
 
                 iter_count = 0
                 failed_iter_count = 0
@@ -795,7 +794,7 @@ class TaskCommands(object):
                     jsonschema.validate(task_result,
                                         api.task.TASK_SCHEMA)
                 except jsonschema.ValidationError as e:
-                    msg = six.text_type(e)
+                    msg = str(e)
                     raise exceptions.RallyException(
                         "ERROR: Invalid task result format\n\n\t%s" % msg)
                 task_result.setdefault("env_name", "n/a")

@@ -48,11 +48,11 @@ class StrUtilsTestCase(test.TestCase):
     def test_name_is_uuid_like(self):
         self.assertFalse(strutils.is_uuid_like("asdasdasd"))
 
-    @mock.patch("six.text_type")
-    def test_bool_bool_from_string_no_text(self, mock_text_type):
+    @mock.patch("builtins.str")
+    def test_bool_bool_from_string_no_text(self, mock_str):
         self.assertTrue(strutils.bool_from_string(True))
         self.assertFalse(strutils.bool_from_string(False))
-        self.assertEqual(0, mock_text_type.call_count)
+        self.assertEqual(0, mock_str.call_count)
 
     def test_bool_bool_from_string(self):
         self.assertTrue(strutils.bool_from_string(True))

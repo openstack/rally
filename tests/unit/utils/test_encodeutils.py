@@ -13,10 +13,13 @@
 #    under the License.
 
 import mock
-import six
 
 from rally.utils import encodeutils
 from tests.unit import test
+
+
+def b(s):
+    return s.encode("latin-1")
 
 
 class EncodeUtilsTestCase(test.TestCase):
@@ -25,16 +28,16 @@ class EncodeUtilsTestCase(test.TestCase):
         safe_decode = encodeutils.safe_decode
         self.assertRaises(TypeError, safe_decode, True)
         self.assertEqual("ni\xf1o",
-                         safe_decode(six.b("ni\xc3\xb1o"), incoming="utf-8"))
+                         safe_decode(b("ni\xc3\xb1o"), incoming="utf-8"))
         self.assertEqual("strange",
-                         safe_decode(six.b("\x80strange"), errors="ignore"))
+                         safe_decode(b("\x80strange"), errors="ignore"))
 
         self.assertEqual("\xc0",
-                         safe_decode(six.b("\xc0"), incoming="iso-8859-1"))
+                         safe_decode(b("\xc0"), incoming="iso-8859-1"))
 
         # Forcing incoming to ascii so it falls back to utf-8
         self.assertEqual("ni\xf1o",
-                         safe_decode(six.b("ni\xc3\xb1o"), incoming="ascii"))
+                         safe_decode(b("ni\xc3\xb1o"), incoming="ascii"))
 
         self.assertEqual("foo", safe_decode(b"foo"))
 
@@ -59,8 +62,8 @@ class EncodeUtilsTestCase(test.TestCase):
     def test_safe_encode_force_incoming_utf8_to_ascii(self):
         # Forcing incoming to ascii so it falls back to utf-8
         self.assertEqual(
-            six.b("ni\xc3\xb1o"),
-            encodeutils.safe_encode(six.b("ni\xc3\xb1o"), incoming="ascii"),
+            b("ni\xc3\xb1o"),
+            encodeutils.safe_encode(b("ni\xc3\xb1o"), incoming="ascii"),
         )
 
     def test_safe_encode_same_encoding_different_cases(self):
@@ -83,4 +86,4 @@ class EncodeUtilsTestCase(test.TestCase):
             text=text, incoming="utf-8", encoding="iso-8859-1")
         self.assertNotEqual(text, result)
 
-        self.assertNotEqual(six.b("foo\xf1bar"), result)
+        self.assertNotEqual(b("foo\xf1bar"), result)

@@ -15,7 +15,6 @@
 
 import subprocess
 
-import six
 import testtools
 
 from rally.utils import encodeutils
@@ -31,12 +30,7 @@ class CLITestCase(testtools.TestCase):
         else:
             self.fail("It should ve non-zero exit code.")
 
-        # NOTE(andreykurilin): we should have the same errors...
-        if six.PY2:
-            self.assertIn("too few arguments", output)
-        else:
-            self.assertIn("the following arguments are required: category",
-                          output)
+        self.assertIn("the following arguments are required: category", output)
 
     def test_version_cli(self):
         output = encodeutils.safe_decode(

@@ -12,10 +12,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import configparser
 import subprocess
 
 import mock
-from six.moves import configparser
 
 from rally.verification import utils
 from tests.unit import test
@@ -58,10 +58,10 @@ class UtilsTestCase(test.TestCase):
         self.assertEqual(3, mock_log.error.call_count)
         mock_log.error.assert_any_call(msg)
 
-    @mock.patch("rally.verification.utils.six.StringIO")
+    @mock.patch("rally.verification.utils.io.StringIO")
     @mock.patch("rally.verification.utils.add_extra_options")
     @mock.patch("rally.verification.utils.configparser.ConfigParser")
-    @mock.patch("six.moves.builtins.open", side_effect=mock.mock_open())
+    @mock.patch("builtins.open", side_effect=mock.mock_open())
     def test_extend_configfile(self, mock_open, mock_config_parser,
                                mock_add_extra_options, mock_string_io):
         extra_options = mock.Mock()

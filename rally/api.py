@@ -252,7 +252,7 @@ class _Task(APIGroup):
         #                 builtin functions (e.g. range()). Unfortunately,
         #                 __builtins__ doesn't return them (when it is not
         #                 main module)
-        from six.moves import builtins
+        import builtins
 
         env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(template_dir, encoding="utf8"))

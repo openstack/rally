@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import configparser
 import copy
 import errno
 import inspect
@@ -21,8 +22,6 @@ import os
 import shutil
 import subprocess
 import tempfile
-
-from six.moves import configparser
 
 from rally.utils import encodeutils
 

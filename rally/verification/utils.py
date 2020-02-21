@@ -12,11 +12,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import configparser
+import io
 import os
 import subprocess
-
-import six
-from six.moves import configparser
 
 from rally.common import logging
 from rally.utils import encodeutils
@@ -80,7 +79,7 @@ def extend_configfile(extra_options, conf_path):
     with open(conf_path, "w") as configfile:
         conf_object.write(configfile)
 
-    raw_conf = six.StringIO()
+    raw_conf = io.StringIO()
     conf_object.write(raw_conf)
 
     return raw_conf.getvalue()

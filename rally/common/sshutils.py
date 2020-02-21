@@ -57,13 +57,14 @@ Eventlet:
 
 """
 
+import io
 import os
 import select
+import shlex
 import socket
 import time
 
 import paramiko
-import six
 
 from rally.common import logging
 from rally import exceptions
@@ -95,8 +96,8 @@ class SSH(object):
         self._client = False
 
     def _get_pkey(self, key):
-        if isinstance(key, six.string_types):
-            key = six.moves.StringIO(key)
+        if isinstance(key, str):
+            key = io.StringIO(key)
         errors = []
         key_pos = key.seek(0, 1)
         for key_class in (paramiko.rsakey.RSAKey, paramiko.dsskey.DSSKey):
@@ -149,8 +150,8 @@ class SSH(object):
 
         client = self._get_client()
 
-        if isinstance(stdin, six.string_types):
-            stdin = six.moves.StringIO(stdin)
+        if isinstance(stdin, str):
+            stdin = io.StringIO(stdin)
 
         return self._run(client, cmd, stdin=stdin, stdout=stdout,
                          stderr=stderr, raise_on_error=raise_on_error,
@@ -160,7 +161,7 @@ class SSH(object):
              raise_on_error=True, timeout=3600):
 
         if isinstance(cmd, (list, tuple)):
-            cmd = " ".join(six.moves.shlex_quote(str(p)) for p in cmd)
+            cmd = " ".join(shlex.quote(str(p)) for p in cmd)
 
         transport = client.get_transport()
         session = transport.open_session()
@@ -238,8 +239,8 @@ class SSH(object):
 
         :returns: tuple (exit_status, stdout, stderr)
         """
-        stdout = six.moves.StringIO()
-        stderr = six.moves.StringIO()
+        stdout = io.StringIO()
+        stderr = io.StringIO()
 
         exit_status, data = self.run(cmd, stderr=stderr, stdout=stdout,
                                      stdin=stdin, timeout=timeout,

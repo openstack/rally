@@ -16,7 +16,6 @@ import collections
 import copy
 
 import jsonschema
-import six
 
 from rally.common import cfg
 from rally.common import logging
@@ -332,7 +331,7 @@ class TaskConfig(object):
     @staticmethod
     def _check_title(title, identifier=None):
         identifier = " of %s" % identifier if identifier else ""
-        if not isinstance(title, (six.text_type, six.string_types)):
+        if not isinstance(title, str):
             raise exceptions.InvalidTaskException(
                 "Title%s should be a string, but '%s' is found." %
                 (identifier, type(title).__name__))
@@ -353,7 +352,7 @@ class TaskConfig(object):
                 % (identifier, type(tags).__name__))
 
         for tag in tags:
-            if not isinstance(tag, (six.text_type, six.string_types)):
+            if not isinstance(tag, str):
                 raise exceptions.InvalidTaskException(
                     "Tag '%s'%s should be a string, but '%s' is found." %
                     (tag, identifier, type(tag).__name__))

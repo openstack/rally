@@ -14,13 +14,13 @@
 
 import abc
 import inspect
+import io
 import os
 import re
 import shutil
 import sys
 
 import pkg_resources
-import six
 
 from rally.common.io import subunit_v2
 from rally.common import logging
@@ -68,8 +68,7 @@ def configure(name, platform="default", default_repo=None,
 
 
 @plugin.base()
-@six.add_metaclass(abc.ABCMeta)
-class VerifierManager(plugin.Plugin):
+class VerifierManager(plugin.Plugin, metaclass=abc.ABCMeta):
     """Verifier base class.
 
     This class provides an interface for operating specific tool.
@@ -159,7 +158,7 @@ class VerifierManager(plugin.Plugin):
         # NOTE(andreykurilin): By default we do not use jsonschema here.
         # So it cannot be extended by inheritors => requires duplication.
         if "pattern" in args:
-            if not isinstance(args["pattern"], six.string_types):
+            if not isinstance(args["pattern"], str):
                 raise exceptions.ValidationError(
                     "'pattern' argument should be a string.")
         if "concurrency" in args:
@@ -392,7 +391,7 @@ class VerifierManager(plugin.Plugin):
     def parse_results(self, results_data):
         """Parse subunit results data of a test run."""
         # TODO(andreykurilin): Support more formats.
-        return subunit_v2.parse(six.StringIO(results_data))
+        return subunit_v2.parse(io.StringIO(results_data))
 
     @abc.abstractmethod
     def run(self, context):

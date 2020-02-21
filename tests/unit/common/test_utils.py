@@ -14,6 +14,7 @@
 
 from __future__ import print_function
 import collections
+import queue as Queue
 import string
 import sys
 import threading
@@ -21,7 +22,6 @@ import time
 
 import ddt
 import mock
-from six.moves import queue as Queue
 import testtools
 
 from rally.common import utils

@@ -19,8 +19,6 @@ import pkg_resources
 import pkgutil
 import sys
 
-import six
-
 import rally
 from rally.common import logging
 
@@ -121,7 +119,7 @@ def import_modules_by_entry_point(_packages=None):
                 if logging.is_debug():
                     LOG.exception(msg)
                 else:
-                    LOG.warning(msg + (": %s" % six.text_type(e)))
+                    LOG.warning(msg + (": %s" % str(e)))
     return loaded_packages
 
 

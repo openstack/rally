@@ -507,7 +507,7 @@ def check_using_unicode(logical_line, physical_line, filename):
 
     if re.search(r"\bunicode\(", logical_line):
         yield (0, "N353 'unicode' function is absent in python3. Please "
-                  "use 'six.text_type' instead.")
+                  "use 'str' instead.")
 
 
 def check_raises(logical_line, physical_line, filename):
@@ -545,16 +545,6 @@ def check_datetime_alias(logical_line, physical_line, filename):
     """
     if re_datetime_alias.search(logical_line):
         yield 0, "N356 Please use ``dt`` as alias for ``datetime``."
-
-
-@skip_ignored_lines
-def check_no_six_iteritems(logical_line, physical_line, filename):
-    """Check no six.iteritems
-
-    N357
-    """
-    if re.search(r"\six.iteritems\(\)", logical_line):
-        yield 0, "N357 Use dict.items() instead of six.iteritems()"
 
 
 @skip_ignored_lines
@@ -632,6 +622,5 @@ def factory(register):
     register(check_db_imports_in_cli)
     register(check_objects_imports_in_cli)
     register(check_old_type_class)
-    register(check_no_six_iteritems)
     register(check_log_warn)
     register(check_opts_import_path)

@@ -42,7 +42,6 @@ these objects be simple dictionaries.
 
 import datetime as dt
 import functools
-import six
 import tempfile
 import time
 
@@ -101,9 +100,8 @@ def engine_reset():
 def serialize(data):
     if data is None:
         return None
-    if isinstance(data, (six.integer_types,
-                         six.string_types,
-                         six.text_type,
+    if isinstance(data, (int,
+                         str,
                          dt.date,
                          dt.time,
                          float,

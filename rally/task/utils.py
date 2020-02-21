@@ -19,7 +19,6 @@ import time
 import traceback
 
 import jsonschema
-import six
 
 from rally.common import logging
 from rally import consts
@@ -42,13 +41,13 @@ def get_status(resource, status_attr="status"):
 
     for s_attr in ["stack_status", "state", status_attr]:
         status = getattr(resource, s_attr, None)
-        if isinstance(status, six.string_types):
+        if isinstance(status, str):
             return status.upper()
 
     # Dict case
     if (isinstance(resource, dict)
             and status_attr in resource.keys()
-            and isinstance(resource[status_attr], six.string_types)):
+            and isinstance(resource[status_attr], str)):
         return resource[status_attr].upper()
 
     return "NONE"

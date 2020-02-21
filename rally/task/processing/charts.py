@@ -16,7 +16,6 @@ import abc
 import bisect
 import collections
 import math
-import six
 
 from rally.common.plugin import plugin
 from rally.common import streaming_algorithms as streaming
@@ -25,8 +24,7 @@ from rally.task.processing import utils
 
 
 @plugin.base()
-@six.add_metaclass(abc.ABCMeta)
-class Chart(plugin.Plugin):
+class Chart(plugin.Plugin, metaclass=abc.ABCMeta):
     """Base class for charts.
 
     This is a base for all plugins that prepare data for specific charts
@@ -176,7 +174,7 @@ class LoadProfileChart(Chart):
 
         self.step = self._duration / float(scale)
         self._time_axis = [self.step * x
-                           for x in six.moves.range(int(scale))
+                           for x in range(int(scale))
                            if (self.step * x) < self._duration]
         self._time_axis.append(self._duration)
         self._running = [0] * len(self._time_axis)
@@ -298,8 +296,7 @@ class AtomicHistogramChart(HistogramChart):
         return self._fix_atomic_actions(atomic_actions)
 
 
-@six.add_metaclass(abc.ABCMeta)
-class Table(Chart):
+class Table(Chart, metaclass=abc.ABCMeta):
     """Base class for tables.
 
     Each Table subclass represents HTML table which can be easily rendered in
@@ -883,12 +880,12 @@ class OutputEmbeddedExternalChart(OutputChart):
 
 _OUTPUT_SCHEMA = {
     "key_types": {
-        "title": six.string_types,
-        "description": six.string_types,
-        "chart_plugin": six.string_types,
+        "title": str,
+        "description": str,
+        "chart_plugin": str,
         "data": (list, dict),
-        "label": six.string_types,
-        "axis_label": six.string_types},
+        "label": str,
+        "axis_label": str},
     "required": ["title", "chart_plugin", "data"]}
 
 

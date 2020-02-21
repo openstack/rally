@@ -289,7 +289,7 @@ class VerifierManagerTestCase(test.TestCase):
                           FakeVerifier(mock.Mock()).uninstall_extension,
                           "name")
 
-    @mock.patch("rally.verification.manager.six.StringIO")
+    @mock.patch("rally.verification.manager.io.StringIO")
     @mock.patch("rally.verification.manager.subunit_v2")
     def test_parse_results(self, mock_subunit_v2, mock_string_io):
         data = "123123"

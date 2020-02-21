@@ -14,13 +14,13 @@
 #    under the License.
 
 import datetime as dt
+import io
 import json
 import os.path
 import sys
 
 import ddt
 import mock
-import six
 
 import rally
 from rally import api
@@ -707,7 +707,7 @@ class TaskCommandsTestCase(test.TestCase):
              "status": consts.TaskStatus.RUNNING,
              "tags": ["d"],
              "deployment_name": "some_name"}]
-        out = six.StringIO()
+        out = io.StringIO()
         with mock.patch.object(sys, "stdout", new=out):
             self.task.list(self.fake_api, status="running", uuids_only=True)
             self.assertEqual("a\n", out.getvalue())
@@ -754,7 +754,7 @@ class TaskCommandsTestCase(test.TestCase):
         print_list_calls = []
 
         def print_list(*args, **kwargs):
-            print_list_calls.append(six.StringIO())
+            print_list_calls.append(io.StringIO())
             kwargs["out"] = print_list_calls[-1]
             original_print_list(*args, **kwargs)
 

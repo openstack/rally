@@ -17,7 +17,6 @@ import math
 import os
 
 import ddt
-import six
 
 from rally.common import streaming_algorithms as algo
 from tests.unit import test
@@ -45,14 +44,14 @@ class MeanComputationTestCase(test.TestCase):
     def test_merge(self):
         single_mean = algo.MeanComputation()
 
-        for val in six.moves.range(100):
+        for val in range(100):
             single_mean.add(val)
 
         means = [algo.MeanComputation()
-                 for _ in six.moves.range(10)]
+                 for _ in range(10)]
 
         for idx, mean in enumerate(means):
-            for val in six.moves.range(idx * 10, (idx + 1) * 10):
+            for val in range(idx * 10, (idx + 1) * 10):
                 mean.add(val)
 
         merged_mean = means[0]
@@ -94,14 +93,14 @@ class StdDevComputationTestCase(test.TestCase):
     def test_merge(self):
         single_std = algo.StdDevComputation()
 
-        for val in six.moves.range(100):
+        for val in range(100):
             single_std.add(val)
 
         stds = [algo.StdDevComputation()
-                for _ in six.moves.range(10)]
+                for _ in range(10)]
 
         for idx, std in enumerate(stds):
-            for val in six.moves.range(idx * 10, (idx + 1) * 10):
+            for val in range(idx * 10, (idx + 1) * 10):
                 std.add(val)
 
         merged_std = stds[0]
@@ -135,14 +134,14 @@ class MinComputationTestCase(test.TestCase):
     def test_merge(self):
         single_min_algo = algo.MinComputation()
 
-        for val in six.moves.range(100):
+        for val in range(100):
             single_min_algo.add(val)
 
         algos = [algo.MinComputation()
-                 for _ in six.moves.range(10)]
+                 for _ in range(10)]
 
         for idx, min_algo in enumerate(algos):
-            for val in six.moves.range(idx * 10, (idx + 1) * 10):
+            for val in range(idx * 10, (idx + 1) * 10):
                 min_algo.add(val)
 
         merged_min_algo = algos[0]
@@ -174,14 +173,14 @@ class MaxComputationTestCase(test.TestCase):
     def test_merge(self):
         single_max_algo = algo.MaxComputation()
 
-        for val in six.moves.range(100):
+        for val in range(100):
             single_max_algo.add(val)
 
         algos = [algo.MaxComputation()
-                 for _ in six.moves.range(10)]
+                 for _ in range(10)]
 
         for idx, max_algo in enumerate(algos):
-            for val in six.moves.range(idx * 10, (idx + 1) * 10):
+            for val in range(idx * 10, (idx + 1) * 10):
                 max_algo.add(val)
 
         merged_max_algo = algos[0]
@@ -204,14 +203,14 @@ class IncrementComputationTestCase(test.TestCase):
     def test_merge(self):
         single_inc = algo.IncrementComputation()
 
-        for val in six.moves.range(100):
+        for val in range(100):
             single_inc.add(val)
 
         incs = [algo.IncrementComputation()
-                for _ in six.moves.range(10)]
+                for _ in range(10)]
 
         for idx, inc in enumerate(incs):
-            for val in six.moves.range(idx * 10, (idx + 1) * 10):
+            for val in range(idx * 10, (idx + 1) * 10):
                 inc.add(val)
 
         merged_inc = incs[0]

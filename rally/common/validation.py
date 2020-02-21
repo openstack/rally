@@ -16,8 +16,6 @@
 import abc
 import traceback
 
-import six
-
 from rally.common import logging
 from rally.common.plugin import plugin
 from rally import exceptions
@@ -38,8 +36,7 @@ def configure(name, platform="default", namespace=None):
 
 
 @plugin.base()
-@six.add_metaclass(abc.ABCMeta)
-class Validator(plugin.Plugin):
+class Validator(plugin.Plugin, metaclass=abc.ABCMeta):
     """A base class for all validators."""
 
     def __init__(self):

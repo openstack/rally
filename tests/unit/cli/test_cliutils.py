@@ -13,9 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import io
+
 import ddt
 import mock
-import six
 import sqlalchemy.exc
 
 from rally.cli import cliutils
@@ -47,7 +48,7 @@ class CliUtilsTestCase(test.TestCase):
         super(CliUtilsTestCase, self).tearDown()
 
     def test_print_dict(self):
-        out = six.StringIO()
+        out = io.StringIO()
         dict = {"key": "value"}
         cliutils.print_dict(dict, out=out)
         self.assertEqual("+----------+-------+\n"
@@ -58,7 +59,7 @@ class CliUtilsTestCase(test.TestCase):
                          out.getvalue())
 
     def test_print_dict_wrap(self):
-        out = six.StringIO()
+        out = io.StringIO()
         dict = {"key1": "not wrapped",
                 "key2": "this will be wrapped"}
         cliutils.print_dict(dict, wrap=16, out=out)
@@ -72,7 +73,7 @@ class CliUtilsTestCase(test.TestCase):
                          out.getvalue())
 
     def test_print_dict_formatters_and_fields(self):
-        out = six.StringIO()
+        out = io.StringIO()
         dict = {"key1": "value",
                 "key2": "Value",
                 "key3": "vvv"}
@@ -90,7 +91,7 @@ class CliUtilsTestCase(test.TestCase):
                          out.getvalue())
 
     def test_print_dict_header(self):
-        out = six.StringIO()
+        out = io.StringIO()
         dict = {"key": "value"}
         cliutils.print_dict(dict, table_label="Some Table", print_header=False,
                             out=out)
@@ -122,7 +123,7 @@ class CliUtilsTestCase(test.TestCase):
             def foobar():
                 pass
 
-        out = six.StringIO()
+        out = io.StringIO()
         formatters = {"c": lambda x: "a + b = %s" % x.c}
         cliutils.print_dict(SomeStruct(1, 2), formatters=formatters, out=out)
         self.assertEqual("+----------+-----------+\n"
@@ -135,7 +136,7 @@ class CliUtilsTestCase(test.TestCase):
                          out.getvalue())
 
     def test_print_dict_with_spec_chars(self):
-        out = six.StringIO()
+        out = io.StringIO()
         dict = {"key": "line1\r\nline2"}
         cliutils.print_dict(dict, out=out)
         self.assertEqual("+----------+-------+\n"
@@ -441,13 +442,13 @@ class CliUtilsTestCase(test.TestCase):
                       "+---+---+")})
     @ddt.unpack
     def test_print_list(self, args, kwargs, expected):
-        out = six.moves.StringIO()
+        out = io.StringIO()
         kwargs["out"] = out
         cliutils.print_list(*args, **kwargs)
         self.assertEqual(expected, out.getvalue().strip())
 
     def test_print_list_raises(self):
-        out = six.moves.StringIO()
+        out = io.StringIO()
         self.assertRaisesRegex(
             ValueError,
             "Field labels list.*has different number "

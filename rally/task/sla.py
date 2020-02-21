@@ -20,8 +20,7 @@ with contracted values such as maximum error rate or minimum response time.
 """
 
 import abc
-
-import six
+import itertools
 
 from rally.common.plugin import plugin
 from rally.common import validation
@@ -65,11 +64,10 @@ class SLAChecker(object):
 
         return all([self_sla.merge(other_sla)
                     for self_sla, other_sla
-                    in six.moves.zip(
-                        self.sla_criteria, other.sla_criteria)])
+                    in zip(self.sla_criteria, other.sla_criteria)])
 
     def _validate_sla_types(self, other):
-        for self_sla, other_sla in six.moves.zip_longest(
+        for self_sla, other_sla in itertools.zip_longest(
                 self.sla_criteria, other.sla_criteria):
             self_sla.validate_type(other_sla)
 
@@ -113,8 +111,8 @@ class SLAChecker(object):
 
 @validation.add_default("jsonschema")
 @plugin.base()
-@six.add_metaclass(abc.ABCMeta)
-class SLA(plugin.Plugin, validation.ValidatablePluginMixin):
+class SLA(plugin.Plugin, validation.ValidatablePluginMixin,
+          metaclass=abc.ABCMeta):
     """Factory for criteria classes."""
 
     CONFIG_SCHEMA = {"type": "null"}

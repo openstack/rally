@@ -51,7 +51,7 @@ class PathOrUrlTestCase(test.TestCase):
 
 class FileTypeTestCase(test.TestCase):
 
-    @mock.patch("six.moves.builtins.open",
+    @mock.patch("builtins.open",
                 side_effect=mock.mock_open(read_data="file_context"),
                 create=True)
     def test_preprocess_by_path(self, mock_open):
@@ -59,7 +59,7 @@ class FileTypeTestCase(test.TestCase):
         file_context = types.FileType({}, {}).pre_process(resource_spec, {})
         self.assertEqual("file_context", file_context)
 
-    @mock.patch("six.moves.builtins.open", side_effect=IOError, create=True)
+    @mock.patch("builtins.open", side_effect=IOError, create=True)
     def test_preprocess_by_path_no_match(self, mock_open):
         resource_spec = "nonexistant.yaml"
         self.assertRaises(IOError,
@@ -70,7 +70,7 @@ class FileTypeTestCase(test.TestCase):
 
 class FileTypeDictTestCase(test.TestCase):
 
-    @mock.patch("six.moves.builtins.open",
+    @mock.patch("builtins.open",
                 side_effect=mock.mock_open(read_data="file_context"),
                 create=True)
     def test_preprocess_by_path(self, mock_open):
@@ -79,7 +79,7 @@ class FileTypeDictTestCase(test.TestCase):
                                                               {})
         self.assertEqual({"file.yaml": "file_context"}, file_context)
 
-    @mock.patch("six.moves.builtins.open", side_effect=IOError, create=True)
+    @mock.patch("builtins.open", side_effect=IOError, create=True)
     def test_preprocess_by_path_no_match(self, mock_open):
         resource_spec = ["nonexistant.yaml"]
         self.assertRaises(IOError,

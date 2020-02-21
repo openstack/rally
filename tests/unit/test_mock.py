@@ -15,8 +15,6 @@ import itertools
 import os
 import re
 
-import six.moves
-
 from tests.unit import test
 
 
@@ -255,7 +253,7 @@ class FuncMockArgsDecoratorsChecker(ast.NodeVisitor):
 
         error_msgs = []
         mismatched = False
-        for arg, dec_vars in six.moves.zip_longest(mock_args, mock_decs):
+        for arg, dec_vars in itertools.zip_longest(mock_args, mock_decs):
             if not self.check_name(arg, dec_vars):
                 if arg and dec_vars:
                     sorted_by_len = sorted(

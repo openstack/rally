@@ -17,6 +17,7 @@
 
 import copy
 import datetime as dt
+import importlib
 import iso8601
 import json
 import pickle
@@ -28,7 +29,6 @@ import jsonschema
 import mock
 from oslo_db.sqlalchemy import test_migrations
 from oslo_db.sqlalchemy import utils as db_utils
-import six
 import sqlalchemy as sa
 
 import rally
@@ -38,6 +38,10 @@ from rally import consts
 from rally.task import context
 from tests.unit.common.db import test_migrations_base
 from tests.unit import test as rtest
+
+
+def b(s):
+    return s.encode("latin-1")
 
 
 @context.configure(name="users", platform="testing", order=2)
@@ -123,7 +127,7 @@ class MigrationTestCase(rtest.DBTestCase,
     def setUp(self):
         # we change DB metadata in tests so we reload
         # models to refresh the metadata to it's original state
-        six.moves.reload_module(rally.common.db.models)
+        importlib.reload(rally.common.db.models)
         super(MigrationTestCase, self).setUp()
         self.alembic_config = db.schema._alembic_config()
         self.engine = db.get_engine()
@@ -352,8 +356,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     [{"uuid": deployment, "name": deployment,
                       "config": conf,
                       "enum_deployments_status": deployment_status,
-                      "credentials": six.b(json.dumps([])),
-                      "users": six.b(json.dumps([]))
+                      "credentials": b(json.dumps([])),
+                      "users": b(json.dumps([]))
                       }])
 
     _OLD_DEPLOYMENT_SCHEMA = {
@@ -494,11 +498,11 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 deployment_table.insert(),
                 [{"uuid": self._08e1515a576c_deployment_uuid,
                   "name": self._08e1515a576c_deployment_uuid,
-                  "config": six.b("{}"),
+                  "config": b("{}"),
                   "enum_deployments_status":
                   consts.DeployStatus.DEPLOY_FINISHED,
-                  "credentials": six.b(json.dumps([])),
-                  "users": six.b(json.dumps([]))
+                  "credentials": b(json.dumps([])),
+                  "users": b(json.dumps([]))
                   }])
             for i in range(0, len(self._08e1515a576c_logs)):
                 log = json.dumps(self._08e1515a576c_logs[i]["pre"])
@@ -553,8 +557,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "name": self._e654a0648db0_deployment_uuid,
                     "config": "{}",
                     "enum_deployments_status": consts.DeployStatus.DEPLOY_INIT,
-                    "credentials": six.b(json.dumps([])),
-                    "users": six.b(json.dumps([]))
+                    "credentials": b(json.dumps([])),
+                    "users": b(json.dumps([]))
                 }]
             )
 
@@ -803,8 +807,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "name": "my_deployment",
                     "config": json.dumps(conf),
                     "enum_deployments_status": deployment_status,
-                    "credentials": six.b(json.dumps([])),
-                    "users": six.b(json.dumps([]))
+                    "credentials": b(json.dumps([])),
+                    "users": b(json.dumps([]))
                 }])
 
             # create task
@@ -904,8 +908,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     [{"uuid": deployment, "name": deployment,
                       "config": conf,
                       "enum_deployments_status": deployment_status,
-                      "credentials": six.b(json.dumps([])),
-                      "users": six.b(json.dumps([]))
+                      "credentials": b(json.dumps([])),
+                      "users": b(json.dumps([]))
                       }])
 
     def _check_32fada9b2fde(self, engine, data):
@@ -1004,10 +1008,10 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 deployment_table.insert(),
                 [{"uuid": self._484cd9413e66_deployment_uuid,
                   "name": self._484cd9413e66_deployment_uuid,
-                  "config": six.b(json.dumps([])),
+                  "config": b(json.dumps([])),
                   "enum_deployments_status": deployment_status,
-                  "credentials": six.b(json.dumps([])),
-                  "users": six.b(json.dumps([]))
+                  "credentials": b(json.dumps([])),
+                  "users": b(json.dumps([]))
                   }])
 
             for i in range(len(self._484cd9413e66_verifications)):
@@ -1143,10 +1147,10 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 deployment_table.insert(),
                 [{"uuid": self._37fdbb373e8d_deployment_uuid,
                   "name": self._37fdbb373e8d_deployment_uuid,
-                  "config": six.b(json.dumps([])),
+                  "config": b(json.dumps([])),
                   "enum_deployments_status": deployment_status,
-                  "credentials": six.b(json.dumps([])),
-                  "users": six.b(json.dumps([]))
+                  "credentials": b(json.dumps([])),
+                  "users": b(json.dumps([]))
                   }])
 
             conn.execute(
@@ -1277,10 +1281,10 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 deployment_table.insert(),
                 [{"uuid": self._f33f4610dcda_deployment_uuid,
                   "name": self._f33f4610dcda_deployment_uuid,
-                  "config": six.b(json.dumps([])),
+                  "config": b(json.dumps([])),
                   "enum_deployments_status": deployment_status,
-                  "credentials": six.b(json.dumps([])),
-                  "users": six.b(json.dumps([]))
+                  "credentials": b(json.dumps([])),
+                  "users": b(json.dumps([]))
                   }])
 
             conn.execute(
@@ -1362,11 +1366,11 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 deployment_table.insert(),
                 [{"uuid": self._4ef544102ba7_deployment_uuid,
                   "name": self._4ef544102ba7_deployment_uuid,
-                  "config": six.b(json.dumps([])),
+                  "config": b(json.dumps([])),
                   "enum_deployments_status":
                   consts.DeployStatus.DEPLOY_FINISHED,
-                  "credentials": six.b(json.dumps([])),
-                  "users": six.b(json.dumps([]))
+                  "credentials": b(json.dumps([])),
+                  "users": b(json.dumps([]))
                   }])
 
         task_table = db_utils.get_table(engine, "tasks")
@@ -1531,8 +1535,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "name": str(uuid.uuid4()),
                     "config": "{}",
                     "enum_deployments_status": consts.DeployStatus.DEPLOY_INIT,
-                    "credentials": six.b(json.dumps([])),
-                    "users": six.b(json.dumps([]))
+                    "credentials": b(json.dumps([])),
+                    "users": b(json.dumps([]))
                 }]
             )
 
@@ -1543,7 +1547,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "created_at": dt.datetime.utcnow(),
                     "updated_at": dt.datetime.utcnow(),
                     "status": consts.TaskStatus.FINISHED,
-                    "validation_result": six.b(json.dumps({})),
+                    "validation_result": b(json.dumps({})),
                     "deployment_uuid": deployment_uuid
                 }]
             )
@@ -1556,8 +1560,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                         "created_at": dt.datetime.utcnow(),
                         "updated_at": dt.datetime.utcnow(),
                         "task_uuid": self._35fe16d4ab1c_task_uuid,
-                        "context": six.b(json.dumps([])),
-                        "sla": six.b(json.dumps([])),
+                        "context": b(json.dumps([])),
+                        "sla": b(json.dumps([])),
                         "run_in_parallel": False
                     }]
                 )
@@ -1652,8 +1656,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "name": str(uuid.uuid4()),
                     "config": "{}",
                     "enum_deployments_status": consts.DeployStatus.DEPLOY_INIT,
-                    "credentials": six.b(json.dumps([])),
-                    "users": six.b(json.dumps([]))
+                    "credentials": b(json.dumps([])),
+                    "users": b(json.dumps([]))
                 }]
             )
 
@@ -1664,7 +1668,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "created_at": dt.datetime.utcnow(),
                     "updated_at": dt.datetime.utcnow(),
                     "status": consts.TaskStatus.FINISHED,
-                    "validation_result": six.b(json.dumps({})),
+                    "validation_result": b(json.dumps({})),
                     "deployment_uuid": self._7948b83229f6_deployment_uuid
                 }]
             )
@@ -1676,8 +1680,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "created_at": dt.datetime.utcnow(),
                     "updated_at": dt.datetime.utcnow(),
                     "task_uuid": self._7948b83229f6_task_uuid,
-                    "context": six.b(json.dumps([])),
-                    "sla": six.b(json.dumps([])),
+                    "context": b(json.dumps([])),
+                    "sla": b(json.dumps([])),
                     "run_in_parallel": False
                 }]
             )
@@ -1724,7 +1728,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                             "failed_iteration_count": 0,
                             "chunk_size": 0,
                             "compressed_chunk_size": 0,
-                            "chunk_data": six.b(json.dumps([]))
+                            "chunk_data": b(json.dumps([]))
                         }]
                     )
 
@@ -1806,8 +1810,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "name": str(uuid.uuid4()),
                     "config": "{}",
                     "enum_deployments_status": consts.DeployStatus.DEPLOY_INIT,
-                    "credentials": six.b(json.dumps([])),
-                    "users": six.b(json.dumps([]))
+                    "credentials": b(json.dumps([])),
+                    "users": b(json.dumps([]))
                 }]
             )
 
@@ -1818,7 +1822,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "created_at": dt.datetime.utcnow(),
                     "updated_at": dt.datetime.utcnow(),
                     "status": consts.TaskStatus.FINISHED,
-                    "validation_result": six.b(json.dumps({})),
+                    "validation_result": b(json.dumps({})),
                     "deployment_uuid": self._046a38742e89_deployment_uuid
                 }]
             )
@@ -1830,8 +1834,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "created_at": dt.datetime.utcnow(),
                     "updated_at": dt.datetime.utcnow(),
                     "task_uuid": self._046a38742e89_task_uuid,
-                    "context": six.b(json.dumps([])),
-                    "sla": six.b(json.dumps([])),
+                    "context": b(json.dumps([])),
+                    "sla": b(json.dumps([])),
                     "run_in_parallel": False
                 }]
             )
@@ -2061,8 +2065,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "name": str(uuid.uuid4()),
                     "config": "{}",
                     "enum_deployments_status": consts.DeployStatus.DEPLOY_INIT,
-                    "credentials": six.b(json.dumps([])),
-                    "users": six.b(json.dumps([]))
+                    "credentials": b(json.dumps([])),
+                    "users": b(json.dumps([]))
                 }]
             )
 
@@ -2073,7 +2077,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "created_at": dt.datetime.utcnow(),
                     "updated_at": dt.datetime.utcnow(),
                     "status": consts.TaskStatus.FINISHED,
-                    "validation_result": six.b(json.dumps({})),
+                    "validation_result": b(json.dumps({})),
                     "deployment_uuid": self._4394bdc32cfd_deployment_uuid
                 }]
             )
@@ -2085,8 +2089,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "created_at": dt.datetime.utcnow(),
                     "updated_at": dt.datetime.utcnow(),
                     "task_uuid": task_uuid,
-                    "context": six.b(json.dumps([])),
-                    "sla": six.b(json.dumps([])),
+                    "context": b(json.dumps([])),
+                    "sla": b(json.dumps([])),
                     "run_in_parallel": False
                 }]
             )
@@ -2236,8 +2240,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "name": str(uuid.uuid4()),
                     "config": "{}",
                     "enum_deployments_status": consts.DeployStatus.DEPLOY_INIT,
-                    "credentials": six.b(json.dumps([])),
-                    "users": six.b(json.dumps([]))
+                    "credentials": b(json.dumps([])),
+                    "users": b(json.dumps([]))
                 }]
             )
 
@@ -2248,7 +2252,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "created_at": dt.datetime.utcnow(),
                     "updated_at": dt.datetime.utcnow(),
                     "status": consts.TaskStatus.FINISHED,
-                    "validation_result": six.b(json.dumps({})),
+                    "validation_result": b(json.dumps({})),
                     "deployment_uuid": self._046a38742e89_deployment_uuid
                 }]
             )
@@ -2260,8 +2264,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "created_at": dt.datetime.utcnow(),
                     "updated_at": dt.datetime.utcnow(),
                     "task_uuid": self._dc46687661df_task_uuid,
-                    "context": six.b(json.dumps([])),
-                    "sla": six.b(json.dumps([])),
+                    "context": b(json.dumps([])),
+                    "sla": b(json.dumps([])),
                     "run_in_parallel": False
                 }]
             )
@@ -2275,12 +2279,12 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "created_at": w["created_at"],
                     "updated_at": dt.datetime.utcnow(),
                     "position": 0,
-                    "runner": six.b(json.dumps([])),
+                    "runner": b(json.dumps([])),
                     "runner_type": "",
                     "context": json.dumps(w["context"]),
                     "context_execution": "foo",
                     "statistics": "",
-                    "hooks": six.b(json.dumps([])),
+                    "hooks": b(json.dumps([])),
                     "sla": "",
                     "sla_results": "",
                     "args": "",
@@ -2421,9 +2425,9 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "name": str(uuid.uuid4()),
                     "config": (
                         json.dumps(d_cfg) if d_cfg
-                        else six.b(json.dumps(d_cfg))),
+                        else b(json.dumps(d_cfg))),
                     "enum_deployments_status": consts.DeployStatus.DEPLOY_INIT,
-                    "credentials": six.b(json.dumps([]))
+                    "credentials": b(json.dumps([]))
                 } for d_uuid, d_cfg in self._dc0fe6de6786_deployments]
             )
 
@@ -2494,9 +2498,9 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "name": str(uuid.uuid4()),
                     "config": (
                         json.dumps(d_cfg) if d_cfg
-                        else six.b(json.dumps(d_cfg))),
+                        else b(json.dumps(d_cfg))),
                     "enum_deployments_status": consts.DeployStatus.DEPLOY_INIT,
-                    "credentials": six.b(json.dumps([]))
+                    "credentials": b(json.dumps([]))
                 } for d_uuid, d_cfg in self._bc908ac9a1fc_deployments]
             )
 
@@ -2507,7 +2511,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "created_at": dt.datetime.utcnow(),
                     "updated_at": dt.datetime.utcnow(),
                     "status": consts.TaskStatus.FINISHED,
-                    "validation_result": six.b(json.dumps({})),
+                    "validation_result": b(json.dumps({})),
                     "deployment_uuid": self._bc908ac9a1fc_deployments[0][0]
                 }]
             )

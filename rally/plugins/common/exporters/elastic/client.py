@@ -15,7 +15,6 @@
 import copy
 
 import requests
-import six
 
 from rally.common import logging
 from rally import exceptions
@@ -95,7 +94,7 @@ class ElasticSearchClient(object):
                   #     in `documents` (action and document itself).
                   (len(documents) / 2, self.CHUNK_LENGTH / 2))
 
-        for pos in six.moves.range(0, len(documents), self.CHUNK_LENGTH):
+        for pos in range(0, len(documents), self.CHUNK_LENGTH):
             data = "\n".join(documents[pos:pos + self.CHUNK_LENGTH]) + "\n"
 
             raw_resp = requests.post(

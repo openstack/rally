@@ -14,8 +14,6 @@
 
 import uuid
 
-import six
-
 
 def _format_uuid_string(string):
     return (string.replace("urn:", "")
@@ -63,8 +61,8 @@ def bool_from_string(subject, strict=False, default=False):
     """
     if isinstance(subject, bool):
         return subject
-    if not isinstance(subject, six.string_types):
-        subject = six.text_type(subject)
+    if not isinstance(subject, str):
+        subject = str(subject)
 
     lowered = subject.strip().lower()
 

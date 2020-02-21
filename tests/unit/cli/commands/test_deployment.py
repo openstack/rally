@@ -14,10 +14,10 @@
 #    under the License.
 
 import collections
+import io
 import os
 
 import mock
-import six
 
 from rally.cli import cliutils
 from rally.cli.commands import deployment
@@ -363,7 +363,7 @@ class DeploymentCommandsTestCase(test.TestCase):
 
     @mock.patch("rally.cli.commands.deployment.logging.is_debug",
                 return_value=False)
-    @mock.patch("sys.stdout", new_callable=six.StringIO)
+    @mock.patch("sys.stdout", new_callable=io.StringIO)
     def test_deployment_check(self, mock_stdout, mock_is_debug):
         deployment_uuid = "some"
         # OrderedDict is used to predict the order of platfrom in output
@@ -435,7 +435,7 @@ class DeploymentCommandsTestCase(test.TestCase):
 
     @mock.patch("rally.cli.commands.deployment.logging.is_debug",
                 return_value=True)
-    @mock.patch("sys.stdout", new_callable=six.StringIO)
+    @mock.patch("sys.stdout", new_callable=io.StringIO)
     def test_deployment_check_is_debug_turned_on(self, mock_stdout,
                                                  mock_is_debug):
         deployment_uuid = "some"

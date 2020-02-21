@@ -17,12 +17,11 @@
 
 from __future__ import print_function
 
+import configparser
 import datetime as dt
 import json
 import os
 import webbrowser
-
-from six.moves import configparser
 
 from rally.cli import cliutils
 from rally.cli import envutils

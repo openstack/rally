@@ -18,7 +18,6 @@ import traceback
 
 from oslo_log import handlers
 from oslo_log import log as oslogging
-import six
 
 from rally.common import cfg
 
@@ -107,7 +106,7 @@ class RallyContextAdapter(oslogging.KeywordArgumentAdapter):
         self.log(log.ERROR, msg, *args, **kwargs)
 
     def exception(self, msg, exc_info=True, *args, **kwargs):
-        if not isinstance(msg, (six.text_type, six.string_types)):
+        if not isinstance(msg, str):
             caller = self._find_the_caller()
             logger = getLogger("%s:%s" % (caller[0], caller[1]))
             logger.warning("[%s] %s" % (caller[2], self._exc_msg))

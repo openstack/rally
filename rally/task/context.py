@@ -16,8 +16,6 @@
 import abc
 import collections
 
-import six
-
 from rally.common import cfg
 from rally.common import logging
 from rally.common.plugin import plugin
@@ -86,9 +84,9 @@ def add_default_context(name, config):
 
 # TODO(andreykurilin): BaseContext is used by Task and Verification and should
 #                      be moved to common place
-@six.add_metaclass(abc.ABCMeta)
 class BaseContext(plugin.Plugin, functional.FunctionalMixin,
-                  utils.RandomNameGeneratorMixin, atomic.ActionTimerMixin):
+                  utils.RandomNameGeneratorMixin, atomic.ActionTimerMixin,
+                  metaclass=abc.ABCMeta):
     """This class is a factory for context classes.
 
     Every context class should be a subclass of this class and implement

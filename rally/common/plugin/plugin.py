@@ -33,9 +33,6 @@ def base():
     - Plugin lookup - one can easily get all plugins from some base.
 
     Plugin bases by default initialize _default_meta
-
-    .. warning:: This decorator should be added the line before
-        six.add_metaclass if it is used.
     """
     def wrapper(cls):
         if not issubclass(cls, Plugin):
