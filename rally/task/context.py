@@ -37,9 +37,7 @@ CONF_OPTS = [
 CONF.register_opts(CONF_OPTS)
 
 
-@logging.log_deprecated_args("Use 'platform' arg instead", "0.10.0",
-                             ["namespace"], log_function=LOG.warning)
-def configure(name, order, platform="default", namespace=None, hidden=False):
+def configure(name, order, platform="default", hidden=False):
     """Context class wrapper.
 
     Each context class has to be wrapped by configure() wrapper. It
@@ -54,8 +52,6 @@ def configure(name, order, platform="default", namespace=None, hidden=False):
     :param hidden: If it is true you won't be able to specify context via
                    task config
     """
-    if namespace:
-        platform = namespace
 
     def wrapper(cls):
         cls = plugin.configure(name=name, platform=platform,

@@ -56,8 +56,11 @@ Removed
 
 * *rally.common.i18n* module was deprecated since Rally 0.10.0
 
-Fixed
+* *namespace* argument of *configure* decorator of Scenario, Context,
+  Validators plugins. It was deprecated since Rally 0.10.0 in favor of
+  *platform*.
 
+Fixed
 ~~~~~
 
 * inaccurate calculation of 90 and 95 percentiles in case of 10k+ iterations

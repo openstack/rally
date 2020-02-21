@@ -23,12 +23,7 @@ from rally import exceptions
 LOG = logging.getLogger(__name__)
 
 
-@logging.log_deprecated_args("Use 'platform' arg instead", "0.10.0",
-                             ["namespace"], log_function=LOG.warning)
-def configure(name, platform="default", namespace=None):
-    if namespace:
-        platform = namespace
-
+def configure(name, platform="default"):
     def wrapper(cls):
         return plugin.configure(name=name, platform=platform)(cls)
 

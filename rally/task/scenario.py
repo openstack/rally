@@ -38,9 +38,7 @@ CONF_OPTS = [
 CONF.register_opts(CONF_OPTS)
 
 
-@logging.log_deprecated_args("Use 'platform' arg instead", "0.10.0",
-                             ["namespace"], log_function=LOG.warning)
-def configure(name, platform="default", namespace=None, context=None):
+def configure(name, platform="default", context=None):
     """Configure scenario by setting proper meta data.
 
     This can also transform plain function into scenario plugin, however
@@ -54,8 +52,6 @@ def configure(name, platform="default", namespace=None, context=None):
                     will be updated by provided contexts.
     """
     context = context or {}
-    if namespace:
-        platform = namespace
 
     def wrapper(cls):
         # TODO(boris-42): Drop this check as soon as we refactor rally report
