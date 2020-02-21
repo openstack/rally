@@ -31,6 +31,8 @@ Changed
 
 * *path_or_url* plugin follows redirects while validating urls now.
 
+* Move *rally.common.sshutils* to *rally.utils.sshutils*
+
 Removed
 ~~~~~~~
 
