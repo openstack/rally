@@ -16,8 +16,8 @@ TASK_FILE=$1
 PLUGIN_PATHS=rally-jobs/plugins
 
 mkdir -p .test_results
-HTML_REPORT=.test_results/rally_self_report.html
-JSON_REPORT=.test_results/rally_self_results.json
+HTML_REPORT=.test_results/self_report.html
+JSON_REPORT=.test_results/self_report.json
 
 RND=$(head /dev/urandom | tr -dc a-z0-9 | head -c 5)
 TMP_RALLY_CONF="/tmp/self-rally-$RND.conf"
