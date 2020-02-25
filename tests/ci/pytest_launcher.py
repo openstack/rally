@@ -17,9 +17,8 @@ import subprocess
 import sys
 
 
-PYTEST_REPORT = os.environ.get("PYTEST_REPORT",
-                               ".test_results/pytest_results.html")
-TESTR_REPORT = "testr_results.html"
+DEFAULT_REPORT = ".test_results/%s_report.html" % os.environ["TOX_ENV_NAME"]
+PYTEST_REPORT = os.environ.get("PYTEST_REPORT", DEFAULT_REPORT)
 PYTEST_ARGUMENTS = ("py.test"  # base command
                     " -vv"  # show test names in logs
                     " --html=%(html_report)s"  # html report
@@ -86,17 +85,7 @@ def main(args):
 
     print("Test(s) to launch (pytest format): %s" % path)
 
-    # NOTE(andreykurilin): we cannot publish pytest reports at gates, but we
-    #   can mask them as testr reports. It looks like a dirty hack and I
-    #   prefer to avoid it, but I see no other solutions at this point.
-
-    # apply dirty hack only in gates.
-    if os.environ.get("ZUUL_PROJECT"):
-        pytest_report = TESTR_REPORT
-    else:
-        pytest_report = PYTEST_REPORT
-
-    args = PYTEST_ARGUMENTS % {"html_report": pytest_report,
+    args = PYTEST_ARGUMENTS % {"html_report": PYTEST_REPORT,
                                "path": path,
                                "concurrency": args.concurrency or "auto"}
     try:
@@ -104,15 +93,6 @@ def main(args):
                               stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError:
         # NOTE(andreykurilin): it is ok, since tests can fail.
-        exit_code = 1
-    else:
-        exit_code = 0
-
-    if os.path.exists(pytest_report) and os.environ.get("ZUUL_PROJECT"):
-        subprocess.check_call(["gzip", "-9", "-f", pytest_report],
-                              stderr=subprocess.STDOUT)
-
-    if exit_code == 1:
         error("")
 
 
