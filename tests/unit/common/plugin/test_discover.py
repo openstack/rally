@@ -95,7 +95,7 @@ class LoadExtraModulesTestCase(test.TestCase):
         test_path = "/somewhere"
         discover.load_plugins(test_path)
         expected = [
-            mock.call(p, p)
+            mock.call(p.rsplit("/", 1)[1][:-3], p)
             for p in ("/somewhere/plugin1.py", "/somewhere/subdir/plugin2.py",
                       "/somewhere/subdir/subsubdir/plugin3.py")
         ]
@@ -111,7 +111,7 @@ class LoadExtraModulesTestCase(test.TestCase):
         path = "/somewhere/plugin.py"
         discover.load_plugins(path)
 
-        mock_spec_from_file_location.assert_called_once_with(path, path)
+        mock_spec_from_file_location.assert_called_once_with("plugin", path)
         mock_module_from_spec.assert_called_once_with(
             mock_spec_from_file_location.return_value)
 

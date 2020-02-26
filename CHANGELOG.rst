@@ -31,7 +31,13 @@ Changed
 
 * *path_or_url* plugin follows redirects while validating urls now.
 
-* Move *rally.common.sshutils* to *rally.utils.sshutils*
+* *rally task sla-check` fails if there is no data.
+
+Deprecated
+~~~~~~~~~~
+
+* Module *rally.common.sshutils* is deprecated. Use *rally.utils.sshutils*
+  instead.
 
 Removed
 ~~~~~~~

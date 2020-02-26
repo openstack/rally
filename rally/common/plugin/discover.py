@@ -132,6 +132,10 @@ def load_plugins(dir_or_file, depth=0):
         LOG.info("Loading plugins from directories %s/*" %
                  directory.rstrip("/"))
         for root, _dirs, files in os.walk(directory, followlinks=True):
+            if root not in sys.path:
+                # this hack is required to support relative imports
+                sys.path.append(root)
+
             for plugin in files:
                 load_plugins(os.path.join(root, plugin), depth=1)
 
@@ -141,9 +145,10 @@ def load_plugins(dir_or_file, depth=0):
         if depth:
             msg = "\t" + msg
         LOG.info(msg)
+        module_name = os.path.splitext(plugin_file.split("/")[-1])[0]
         try:
             spec = importlib.util.spec_from_file_location(
-                plugin_file, plugin_file)
+                module_name, plugin_file)
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
 
@@ -155,5 +160,4 @@ def load_plugins(dir_or_file, depth=0):
                 LOG.warning("%(msg)s: %(e)s" % {"msg": msg, "e": e})
             return
         _loaded_modules.append(module)
-        LOG.info("\t Loaded module with plugins: %s" %
-                 os.path.splitext(plugin_file.split("/")[-1])[0])
+        LOG.info("\t Loaded module with plugins: %s" % module_name)

@@ -25,10 +25,15 @@ TMP_RALLY_DB="/tmp/self-rally-$RND.sqlite"
 DBCONNSTRING="sqlite:///$TMP_RALLY_DB"
 RALLY="rally --config-file $TMP_RALLY_CONF"
 
-# Create temp db
+# Create temp cfg
 cp etc/rally/rally.conf.sample $TMP_RALLY_CONF
 sed -i.bak "s|#connection =.*|connection = \"$DBCONNSTRING\"|" $TMP_RALLY_CONF
-rally --config-file $TMP_RALLY_CONF db create
+
+# ensure plugins loading
+$RALLY --debug --plugin-paths=$PLUGIN_PATHS plugin show --name FakePlugin.testplugin
+
+# Create db
+$RALLY db create
 
 # Create self deployment
 $RALLY -d env create --name=self
@@ -43,11 +48,6 @@ set -e
 
 $RALLY task report --html-static --out $HTML_REPORT
 $RALLY task report --json --out $JSON_REPORT
-
-if [ -n "$ZUUL_PROJECT" ]; then
-    gzip -9 -f $HTML_REPORT
-    gzip -9 -f $JSON_REPORT
-fi
 
 # Check sla (this may fail the job)
 $RALLY task sla-check

@@ -915,6 +915,8 @@ class TaskCommands(object):
         else:
             cliutils.print_list(data, ("benchmark", "pos", "criterion",
                                        "status", "detail"))
+        if not data:
+            return 2
         return failed_criteria
 
     @cliutils.args("--uuid", type=str, dest="task_id",

@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""Simple app based on rally api for testing porpuses"""
+"""Simple app based on rally api for testing purpose"""
 
 import sys
 

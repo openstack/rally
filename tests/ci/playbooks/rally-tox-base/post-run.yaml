@@ -2,7 +2,7 @@
   vars:
     results_dir: "{{ zuul.project.src_dir }}/.test_results/"
     html_report: "{{ tox_env }}_report.html"
-    json_report: "{{ tox_env }}_report.html"
+    json_report: "{{ tox_env }}_report.json"
   tasks:
     - shell: "ls {{ results_dir }}"
       register: results_dir_stat
