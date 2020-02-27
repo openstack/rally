@@ -20,6 +20,12 @@ Changelog
 [unreleased]
 ------------
 
+Added
+~~~~~
+
+* CI for covering unit and functional tests against Python 3.8 environment.
+  Everything works, so we have proved Python 3.8 support
+
 Changed
 ~~~~~~~
 

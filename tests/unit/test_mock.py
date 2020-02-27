@@ -220,7 +220,9 @@ class FuncMockArgsDecoratorsChecker(ast.NodeVisitor):
         self.generic_visit(node)
 
         if node.col_offset == 0:
-            mnode = ast.Module(body=[node])
+            mnode = ast.parse("")
+            mnode.body = [node]
+            mnode = ast.fix_missing_locations(mnode)
             code = compile(mnode, "<ast>", "exec")
             try:
                 exec(code, self.globals_)
