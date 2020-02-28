@@ -15,7 +15,6 @@
 import collections
 import datetime as dt
 import os
-import sys
 
 import ddt
 import mock
@@ -388,16 +387,11 @@ class HTMLReporterTestCase(test.TestCase):
 
 
 class JUnitXMLReporterTestCase(test.TestCase):
-    def setUp(self):
-        super(JUnitXMLReporterTestCase, self).setUp()
-        if sys.version_info >= (3, 8):
-            self.skipTest("This test case is failing due to changed order of "
-                          "xml tag parameters.")
 
-    @mock.patch("%s.dt" % PATH)
-    @mock.patch("%s.version.version_string" % PATH)
+    @mock.patch("rally.common.io.junit.dt")
+    @mock.patch("rally.common.version.version_string")
     def test_generate(self, mock_version_string, mock_dt):
-        mock_dt.datetime.utcnow.return_value.strftime.return_value = "TIME"
+        mock_dt.datetime.utcnow.return_value.isoformat.return_value = "TIME"
         # release when junit reporter was introduced
         mock_version_string.return_value = "0.8.0"
         with open(os.path.join(os.path.dirname(__file__),

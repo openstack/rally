@@ -14,7 +14,6 @@
 
 import datetime as dt
 import os
-import sys
 
 import mock
 
@@ -66,20 +65,15 @@ def get_tasks_results():
 class JUnitXMLExporterTestCase(test.TestCase):
     def setUp(self):
         super(JUnitXMLExporterTestCase, self).setUp()
-        if sys.version_info >= (3, 8):
-            self.skipTest("This test case is failing due to changed order of "
-                          "xml tag parameters.")
         self.datetime = dt.datetime
 
-        patcher = mock.patch("rally.plugins.common.exporters.junit.dt")
+        patcher = mock.patch("rally.common.io.junit.dt")
         self.dt = patcher.start()
-        self.dt.datetime.strptime.side_effect = self.datetime.strptime
+        self.dt.datetime.utcnow.return_value.isoformat.return_value = "$TIME"
         self.addCleanup(patcher.stop)
 
-    @mock.patch("rally.plugins.common.exporters.junit.version.version_string")
+    @mock.patch("rally.common.version.version_string")
     def test_generate(self, mock_version_string):
-        now = self.dt.datetime.utcnow.return_value
-        now.strftime.return_value = "$TIME"
         mock_version_string.return_value = "$VERSION"
 
         with open(os.path.join(os.path.dirname(__file__),

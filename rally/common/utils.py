@@ -32,6 +32,7 @@ import uuid
 
 from six import moves
 
+from rally.common.io import junit
 from rally.common import logging
 from rally import exceptions
 
@@ -786,23 +787,6 @@ class BackupHelper(object):
                 shutil.rmtree(path)
 
 
+@logging.log_deprecated("it was an inner helper.", rally_version="3.0.0")
 def prettify_xml(elem, level=0):
-    """Adds indents.
-
-    Code of this method was copied from
-        http://effbot.org/zone/element-lib.htm#prettyprint
-
-    """
-    i = "\n" + level * "  "
-    if len(elem):
-        if not elem.text or not elem.text.strip():
-            elem.text = i + "  "
-        if not elem.tail or not elem.tail.strip():
-            elem.tail = i
-        for elem in elem:
-            prettify_xml(elem, level + 1)
-        if not elem.tail or not elem.tail.strip():
-            elem.tail = i
-    else:
-        if level and (not elem.tail or not elem.tail.strip()):
-            elem.tail = i
+    return junit._prettify_xml(elem, level=level)
