@@ -28,6 +28,16 @@
       tox_env: pep8
 
 - job:
+    name: rally-tox-functional-py38
+    parent: rally-tox-base
+    description: |
+      Run test for rally project.
+
+      Uses tox with the ``functional`` environment.
+    vars:
+      tox_env: functional-py38
+
+- job:
     name: rally-tox-functional
     parent: rally-tox-base
     description: |
@@ -66,6 +76,16 @@
       Uses tox with the ``py37`` environment.
     vars:
       tox_env: py37
+
+- job:
+    name: rally-tox-py38
+    parent: rally-tox-base
+    description: |
+      Run unit test for rally project.
+
+      Uses tox with the ``py38`` environment.
+    vars:
+      tox_env: py38
 
 # TODO(andreykurilin): Remove these jobs definitions as soon as
 #   rally-openstack project stops using them

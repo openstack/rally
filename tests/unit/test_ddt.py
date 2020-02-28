@@ -68,13 +68,13 @@ class DDTDecoratorChecker(ast.NodeVisitor):
                            "but is not decorated with `ddt.ddt`" %
                            cls.name)
                     self.errors[cls.name] = {
-                        "lineno": node.lineno,
+                        "lineno": decorator.lineno,
                         "message": msg
                     }
 
 
 class DDTDecoratorCheckerTestCase(test.TestCase):
-    tests_path = os.path.join(os.path.dirname(__file__))
+    tests_path = os.path.dirname(__file__)
 
     def test_ddt_class_decorator(self):
         """Classes with DDT-decorated functions have ddt.ddt class decorator.
