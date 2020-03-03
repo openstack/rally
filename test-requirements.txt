@@ -21,3 +21,6 @@ sphinx!=1.6.6,!=1.6.7,!=2.1.0                          # BSD
 oslosphinx                                             # Apache Software License
 
 testresources                                          # UNKNOWN
+
+# needed for functional job
+stestr                                                 # Apache Software License
