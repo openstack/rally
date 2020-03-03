@@ -6,11 +6,6 @@
     timeout: 1800
 
 - job:
-    name: rally-install-ubuntu-xenial
-    parent: rally-install-base
-    nodeset: ubuntu-xenial
-
-- job:
     name: rally-install-ubuntu-bionic
     parent: rally-install-base
     nodeset: ubuntu-bionic
@@ -57,7 +52,6 @@
         - rally-tox-functional-py38
         - rally-tox-self
         - rally-database-migration
-        - rally-install-ubuntu-xenial
         - rally-install-ubuntu-bionic
         - rally-install-centos-7
         - rally-install-centos-8
@@ -72,7 +66,6 @@
         - rally-tox-functional
         - rally-tox-self
         - rally-database-migration
-        - rally-install-ubuntu-xenial
         - rally-install-ubuntu-bionic
         - rally-install-centos-7
         - rally-install-centos-8
