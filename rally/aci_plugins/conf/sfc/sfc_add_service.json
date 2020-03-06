@@ -1,0 +1,20 @@
+{
+    "ScenarioPlugin.sfc_add_service": [
+        {
+            "args": {
+                "src_cidr": "192.168.100.0/24",
+                "dest_cidr": "192.168.200.0/24",
+                "image": "83210423-382a-49c2-8cb5-a19875bf00f9",
+                "flavor": "tiny",
+                "public_net": "219269de-40ca-4dfa-875b-5c332add62df",
+                "username" : "root",
+                "password" : "noir0123"
+            },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ]
+}
+

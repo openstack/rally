@@ -1,0 +1,20 @@
+{
+    "ScenarioPlugin.svi_reachability_of_bgp_route": [
+        {
+            "args": {
+                "cidr1": "192.168.10.0/24",
+                "cidr2": "192.168.20.0/24",
+                "image" : "d8b5060a-ef63-4b01-8b79-083ae8866aaf",
+                "flavor": "small",
+                "public_net": "219269de-40ca-4dfa-875b-5c332add62df",
+                "username" : "root",
+                "password" : "noir0123"
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ]
+}
+

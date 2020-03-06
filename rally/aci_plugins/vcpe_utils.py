@@ -12,7 +12,8 @@ CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 
 class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
-
+    
+    @atomic.action_timer("run_remote_command")
     def _remote_command(self, username, password, fip, command, server, **kwargs):
 
         port=22
@@ -26,7 +27,6 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
             code, out, err = self._run_command(
                 fip, port, username, password, command=command)
             
-            print "\n"
             print out
 
             text_area_output = ["StdErr: %s" % (err or "(none)"),
@@ -37,10 +37,8 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
                     "Error running command %(command)s. "
                     "Error %(code)s: %(error)s" % {
                         "command": command, "code": code, "error": err})
-                print "\nRemote command execution failed"
                 print "------------------------------"
             else:
-                print "Remote command execution passed"
                 print "------------------------------"
             # Let's try to load output data
             try:
@@ -239,13 +237,125 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
         return self.clients("neutron").list_ports(device_id=device_id)
 
     @atomic.action_timer("neutron.list_subports_by_trunk")
-    def _list_subports_by_trunk(self, trunk_id):
+    def _list_subports_by_trunk(self, trunk):
 
-        return self.clients("neutron").trunk_get_subports(trunk_id)
+        return self.clients("neutron").trunk_get_subports(trunk["trunk"]["id"])
 
     @atomic.action_timer("neutron._add_subports_to_trunk")
-    def _add_subports_to_trunk(self, trunk_id, subports):
+    def _add_subports_to_trunk(self, trunk, subports):
 
         return self.clients("neutron").trunk_add_subports(
-            trunk_id, {"sub_ports": subports})
+            trunk["trunk"]["id"], {"sub_ports": subports})
 
+    @atomic.action_timer("neutron._remove_subports_from_trunk")
+    def _remove_subports_from_trunk(self, trunk, subports):
+
+        return self.clients("neutron").trunk_remove_subports(
+            trunk["trunk"]["id"], {"sub_ports": subports})
+
+
+    @atomic.action_timer("create_svi_ports")
+    def _create_svi_ports(self, network, subnet, prefix):
+       
+        port_list = self._list_ports()
+        for item in port_list:
+            if item['network_id'] == network["network"]["id"]:
+                self._delete_port({"port": item})
+
+        port_create_args = {}
+        port_create_args["device_owner"] = 'apic:svi'
+        port_create_args["name"] = 'apic-svi-port:node-102'
+        port_create_args["network_id"] = network["network"]["id"]
+        port_create_args.update({"fixed_ips": [{"subnet_id": subnet[0].get("subnet", {}).get("id"), "ip_address": prefix+".200"}]})
+        self.clients("neutron").create_port({"port": port_create_args})
+         
+        port_create_args = {}
+        port_create_args["device_owner"] = 'apic:svi'
+        port_create_args["name"] = 'apic-svi-port:node-101'
+        port_create_args["network_id"] = network["network"]["id"]
+        port_create_args.update({"fixed_ips": [{"subnet_id": subnet[0].get("subnet", {}).get("id"), "ip_address": prefix+".199"}]})
+        self.clients("neutron").create_port({"port": port_create_args}) 
+
+    @atomic.action_timer("nova.admin_boot_server")
+    def _admin_boot_server(self, image, flavor,
+                 auto_assign_nic=False, **kwargs):
+  
+        server_name = self.generate_random_name()
+       
+        if auto_assign_nic and not kwargs.get("nics", False):
+            nic = self._pick_random_nic()
+            if nic:
+                kwargs["nics"] = nic
+
+        server = self.admin_clients("nova").servers.create(
+            server_name, image, flavor, **kwargs)
+
+        self.sleep_between(CONF.openstack.nova_server_boot_prepoll_delay)
+        server = utils.wait_for_status(
+            server,
+            ready_statuses=["ACTIVE"],
+            update_resource=utils.get_from_manager(),
+            timeout=CONF.openstack.nova_server_boot_timeout,
+            check_interval=CONF.openstack.nova_server_boot_poll_interval
+        )
+        return server
+
+    @atomic.action_timer("neutron.admin_create_port")
+    def _admin_create_port(self, network, port_create_args):
+    
+        port_create_args["network_id"] = network["network"]["id"]
+        port_create_args["name"] = self.generate_random_name()
+        return self.admin_clients("neutron").create_port({"port": port_create_args})
+
+    @atomic.action_timer("neutron.admin_delete_port")
+    def _admin_delete_port(self, port):
+       
+        self.admin_clients("neutron").delete_port(port["port"]["id"])
+
+
+    @atomic.action_timer("neutron.admin_create_trunk")
+    def _admin_create_trunk(self, trunk_payload):
+
+        trunk_payload["name"] = self.generate_random_name()
+        return self.admin_clients("neutron").create_trunk({"trunk": trunk_payload})
+
+    @atomic.action_timer("neutron.admin_delete_trunk")
+    def _admin_delete_trunk(self, trunk_port):
+
+        self.admin_clients("neutron").delete_trunk(trunk_port["trunk"]["id"])
+
+    @atomic.action_timer("neutron._admin_add_subports_to_trunk")
+    def _admin_add_subports_to_trunk(self, trunk, subports):
+
+        return self.admin_clients("neutron").trunk_add_subports(
+            trunk["trunk"]["id"], {"sub_ports": subports})
+
+    def _remote_command_wo_server(self, username, password, fip, command, **kwargs):
+
+        port=22
+        wait_for_ping=True
+        max_log_length=None
+
+        try:
+            if wait_for_ping:
+                self._wait_for_ping(fip)
+
+            code, out, err = self._run_command(
+                fip, port, username, password, command=command)
+
+            print out
+
+            text_area_output = ["StdErr: %s" % (err or "(none)"),
+                                "StdOut:"]
+
+            if code:
+                print exceptions.ScriptError(
+                    "Error running command %(command)s. "
+                    "Error %(code)s: %(error)s" % {
+                        "command": command, "code": code, "error": err})
+                print "------------------------------"
+            else:
+                print "------------------------------"
+        except (exceptions.TimeoutException,
+                exceptions.SSHTimeout):
+            raise
