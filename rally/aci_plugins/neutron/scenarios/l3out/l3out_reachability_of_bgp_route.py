@@ -17,7 +17,7 @@ from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
 
 class L3OutReachabilityofBGPRoute(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_utils.NovaScenario, scenario.OpenStackScenario):
 
-    def run(self, access_network, nat_network, image, flavor, username, password):
+    def run(self, access_network, nat_network, image, flavor, username, password, access_router_ip, nat_router_ip):
         
         acc_net = self.clients("neutron").show_network(access_network)
         nat_net = self.clients("neutron").show_network(nat_network)              
@@ -107,8 +107,8 @@ class L3OutReachabilityofBGPRoute(vcpe_utils.vCPEScenario, neutron_utils.Neutron
                     "interpreter": "/bin/sh",
                     "script_inline": "ping -c 10 10.10.251.1"
                 }
-        self._remote_command_wo_server('noiro', password, '10.108.1.5', command)
-        self._remote_command_wo_server('noiro', password, '10.108.1.6', command)
+        self._remote_command_wo_server('noiro', password, access_router_ip, command)
+        self._remote_command_wo_server('noiro', password, nat_router_ip, command)
         self._delete_server(access_vm, False)
         self._delete_server(nat_vm, False)
         self._admin_delete_port(pfip1)
