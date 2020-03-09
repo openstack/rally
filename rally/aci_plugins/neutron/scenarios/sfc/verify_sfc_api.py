@@ -57,11 +57,11 @@ class VerifySFCAPI(neutron_utils.NeutronScenario, vcpe_utils.vCPEScenario, nova_
         self._show_port_pair_group(ppg)
         self._show_flow_classifier(fc)
         self._show_port_chain(pc)
-        
+             
         self._update_port_pair(pp)
-        self._update_port_pair_group(ppg)
+        self._update_port_pair_group(ppg, [pp])
         self._update_flow_classifier(fc)
-        self._update_port_chain(pc)
+        self._update_port_chain(pc, [ppg], [fc])
 
         self._delete_port_chain(pc)
         self._delete_port_pair_group(ppg)
