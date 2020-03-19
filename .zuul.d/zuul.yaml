@@ -1,8 +1,8 @@
 - job:
     name: rally-install-base
     parent: base
-    pre-run: tests/ci/playbooks/rally-install/pre.yaml
-    run: tests/ci/playbooks/rally-install/run.yaml
+    pre-run: tests/ci/playbooks/rally-install-pre.yaml
+    run: tests/ci/playbooks/rally-install-run.yaml
     timeout: 1800
 
 - job:
@@ -24,15 +24,15 @@
     name: rally-docker-build
     parent: base
     nodeset: ubuntu-bionic
-    pre-run: tests/ci/playbooks/rally-docker-build/pre.yaml
-    run: tests/ci/playbooks/rally-docker-build/run.yaml
+    pre-run: tests/ci/playbooks/rally-docker-build-pre.yaml
+    run: tests/ci/playbooks/rally-docker-build-run.yaml
     timeout: 1800
 
 - job:
     name: rally-database-migration
     parent: base
     nodeset: ubuntu-bionic
-    run: tests/ci/playbooks/rally-database-migration/run.yaml
+    run: tests/ci/playbooks/rally-database-migration-run.yaml
     timeout: 1800
 
 - project:

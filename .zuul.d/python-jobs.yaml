@@ -1,9 +1,9 @@
 - job:
     name: rally-tox-base
     parent: unittests
-    pre-run: tests/ci/playbooks/rally-tox-base/pre-run.yaml
-    run: tests/ci/playbooks/rally-tox-base/run.yaml
-    post-run: tests/ci/playbooks/rally-tox-base/post-run.yaml
+    pre-run: tests/ci/playbooks/tox-install.yaml
+    run: tests/ci/playbooks/tox-run.yaml
+    post-run: tests/ci/playbooks/rally-tox-base-post-run.yaml
     description: |
       Run test for rally project.
 
