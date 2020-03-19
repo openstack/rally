@@ -23,7 +23,6 @@ from tests.unit import test
 
 
 ROOT_DIR = os.path.dirname(os.path.dirname(rally.__file__))
-DOCKER_DIR = os.path.join(ROOT_DIR, "etc", "docker")
 
 
 class DockerReadmeTestCase(test.TestCase):
@@ -51,7 +50,7 @@ class DockerReadmeTestCase(test.TestCase):
         return releases
 
     def test_mentioned_latest_version(self):
-        full_path = os.path.join(ROOT_DIR, "etc/docker/README.md")
+        full_path = os.path.join(ROOT_DIR, "DOCKER_README.md")
         with open(full_path) as f:
             readme = f.read()
 

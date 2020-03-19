@@ -19,8 +19,18 @@
         chdir: '{{ zuul.project.src_dir }}'
         cmd: "sudo pip3 install --constraint ./upper-constraints.txt ./"
 
+    - name: Create direcotry for html and json reports
+      shell:
+        executable: /bin/bash
+        chdir: '{{ zuul.project.src_dir }}'
+        cmd: mkdir .test_results
+
     - name: Execute the similar script as `tox -e self`
       shell:
-        chdir: '{{ zuul.project.src_dir }}'
         executable: /bin/bash
-        cmd: './tests/ci/rally_self_job.sh ./rally-jobs/self-rally.yaml'
+        chdir: '{{ zuul.project.src_dir }}'
+        cmd: >
+          python3 ./tests/ci/rally_self_job.py
+          --task ./rally-jobs/self-rally.yaml
+          --plugins-path ./rally-jobs/plugins
+          --results-dir ./.test_results

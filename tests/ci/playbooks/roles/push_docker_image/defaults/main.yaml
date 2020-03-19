@@ -1,0 +1,4 @@
+docker_repository: xrally/xrally
+docker_image_version: latest
+docker_image_tag: "{{ docker_repository }}:{{ docker_image_version }}"
+docker_file: "{{ zuul.project.src_dir }}/DOCKER_README.md"

@@ -1,0 +1,24 @@
+- name: Build xrally/xrally docker image
+  shell:
+    chdir: '{{ zuul.project.src_dir }}'
+    cmd: 'docker build -t {{ docker_image_tag }} ./'
+
+- name: List available docker images
+  shell: docker image list
+
+- name: Prepare directories to mount to the docker container for persistency
+  shell:
+    chdir: '{{ zuul.project.src_dir }}'
+    cmd: |
+      mkdir -p .test_results
+      sudo chown 65500 .test_results
+
+- name: Execute the similar wokrloads as `tox -e self`
+  shell:
+    cmd: >
+      python3 {{ zuul.project.src_dir }}/tests/ci/rally_self_job.py
+      --task /rally/source/rally-jobs/self-rally.yaml
+      --plugins-path /rally/source/rally-jobs/plugins
+      --rally-cmd 'docker run -v '$(realpath {{ zuul.project.src_dir }})'/.test_results:/home/rally/.rally {{ docker_image_tag }}'
+      --results-dir /home/rally/.rally
+      --without-tmp-sqlite

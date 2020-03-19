@@ -1,0 +1,5 @@
+- hosts: all
+  name: Execute the similar to `tox -e self` job
+  roles:
+    - build_docker_image
+    - push_docker_image

@@ -1,0 +1,42 @@
+- name: Log in to dockerhub
+  command: "docker login -u '{{ docker_credentials.username }}' -p '{{ docker_credentials.password }}'"
+  no_log: true
+
+- name: Upload image to dockerhub
+  command: "docker push {{ docker_image_tag }}"
+  register: result
+  until: result.rc == 0
+  retries: 3
+  delay: 30
+
+- name: Read README file for docker
+  command: "cat {{ docker_file }}"
+  register: docker_readme
+
+- name: Get dockerhub JWT token
+  no_log: true
+  uri:
+    url: "https://hub.docker.com/v2/users/login/"
+    body_format: json
+    body:
+      username: '{{ docker_credentials.username }}'
+      password: '{{ docker_credentials.password }}'
+  register: jwt_token
+  delay: 5
+  retries: 3
+  until: jwt_token and jwt_token.status==200
+
+- name: Update README at Docker HUB
+  no_log: true
+  uri:
+    url: "https://hub.docker.com/v2/repositories/{{ docker_repository }}/"
+    method: "PATCH"
+    body_format: json
+    headers:
+      Authorization: "JWT {{ jwt_token.json.token }}"
+    body:
+      full_description: "{{ docker_readme.stdout }}"
+  register: repository_metadata
+  delay: 5
+  retries: 3
+  until: repository_metadata and repository_metadata.status==200

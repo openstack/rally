@@ -1,3 +1,29 @@
+- secret:
+    name: dockerhub_credentials
+    data:
+      username: !encrypted/pkcs1-oaep
+        - k7GCjmH8P2DqliVc5ihbr+yYwVeylzShrmoP3qIMb1jx4Mkgn8YDY54vf84HT5xEDAuJw
+          y/ndAtvVY/4WF0MsRZ/p4ZaAZx1FyV90ZgNXKNAgizMmvBIZoVEbFN5gimJn8DVnvcm5R
+          vIezNzsgWQoNiOOuxwB3j6Fq+40K6mBg2k1ceuvqX/DAKqXgNdX/V5SPxBYek4WkofxUs
+          gDFdHt3aMIty+Gd/fW4D/ufGAurW4CUbFmiAVyZagXzq8NKXCKUOGFeNvL/tftXhT2bd1
+          PczUz8Nhur1Z7nYeqc5K1TnN35OlNP0IT4KG8vst33nX4ycSkFOpbkdvflnchlysEvn/+
+          Z1NMFKLxQvi/k4rMa2jBv7O6xs9y1LOZMSHwG0Y2U8lV6m1FqrDyi9h22fcBGEtOyp0KV
+          V9DmSFRCNb7lhd7v7vaztzL8yqrGlezrJYELodUvYLy2AwZi+FnkUVFw7dB4D5m/fjMCf
+          ej/LRO4XiUpVpLUL0BOxLNXVHqqrbROwPkp2ekJL3WxMwhAGSxlAuMwvPU1KZzRhrdnG7
+          Ysm12YV5qgd6b6XZ8X7vELxAiqZPCjSN+66FPZW+Q6I5UVX+IxIgndgxgkoHJOgg9Wjwb
+          kKDgYM8EE5Ks4/Rv9jfNXxXvH/cQFqWIMHHbsZfmV6QcLfJxYXDRZ98r6KTzwA=
+      password: !encrypted/pkcs1-oaep
+        - JxlQJhxRBxgyqfHyUPVbS4pagJxkA6sdJyPf5p84iWFa1nWbIDTbpzhGYhYBqMt1YrXFf
+          NWGHzs7rJ/hp4MXSRHWVG4lEi5O6RFx/KEWiru+rGJwr7CyIfyyVORlRGlnABrc/LYyAe
+          LoSsQ5GM98Q1wERbhiZq7zsKSf0xIazFDmf34+bIx6Q9r4nlWdCQuQJ9N07UT4aRsl3WS
+          hOlUp8ekxBiQRtS9lRUPLUmJ8OzHTzXjJ6V0fM3MhDGA3YnH0Tj9r1D7cmwhsTy5ZT36k
+          bt2WCknxJ9tiJND5/NMvzo9T82apgoqeH8HCWDjE6PEdmJdYLiiW4aCk22D2M6a0+qvQI
+          fD8ZeEbrlJLvf58ldGgCJfl1Rpql0FspgnERBkCL4xSlyMQa8+S5R2S/SN6hAsbLRm/jZ
+          zUt3C4n8pJJvBDUBGEK+lqersyJtx5jEiz6xh0FVDVzFxBn/fUbNvQQH+zJAe4V1j1hHw
+          MBu4V2p20Qpjv2+wF2yzwT+tnrCkaeyuBfBLGRVdn4nCz630X1eaOwqh0hu1ZPDiwNBs4
+          hNv/EV7oaaTlk4VftYRwYocdK/pvj1Mi0QCea+hC01vuoqJE8EK05oOD1KThOTrbwXQX5
+          CDzBLc/Vyd4tFnAXPwEJDEKFNo25R7nmDBYTQIuiHSOSZHJis+r5UwvHfbuJPk=
+
 - job:
     name: rally-install-base
     parent: base
@@ -23,11 +49,24 @@
 
 - job:
     name: rally-docker-build
-    parent: base
+    parent: build-docker-image
     nodeset: ubuntu-bionic
-    pre-run: tests/ci/playbooks/rally-docker-build-pre.yaml
-    run: tests/ci/playbooks/rally-docker-build-run.yaml
+    run: tests/ci/playbooks/build-and-check-docker-image.yaml
+    post-run: tests/ci/playbooks/fetch-html-and-json-reports.yaml
     timeout: 1800
+
+
+- job:
+    name: rally-docker-build-and-push
+    parent: build-docker-image
+    nodeset: ubuntu-bionic
+    run: tests/ci/playbooks/build-check-and-push-docker-image.yaml
+    post-run: tests/ci/playbooks/fetch-html-and-json-reports.yaml
+    timeout: 1800
+    secrets:
+      name: docker_credentials
+      secret: dockerhub_credentials
+      pass-to-parent: false
 
 - job:
     name: rally-database-migration
@@ -71,4 +110,4 @@
         - rally-install-ubuntu-bionic
         - rally-install-centos-7
         - rally-install-centos-8
-        - rally-docker-build
+        - rally-docker-build-and-push
