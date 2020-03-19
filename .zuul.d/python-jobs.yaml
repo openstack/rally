@@ -3,7 +3,7 @@
     parent: unittests
     pre-run: tests/ci/playbooks/tox-install.yaml
     run: tests/ci/playbooks/tox-run.yaml
-    post-run: tests/ci/playbooks/rally-tox-base-post-run.yaml
+    post-run: tests/ci/playbooks/fetch-html-and-json-reports.yaml
     description: |
       Run test for rally project.
 
