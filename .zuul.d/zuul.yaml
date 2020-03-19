@@ -3,6 +3,7 @@
     parent: base
     pre-run: tests/ci/playbooks/rally-install-pre.yaml
     run: tests/ci/playbooks/rally-install-run.yaml
+    post-run: tests/ci/playbooks/fetch-html-and-json-reports.yaml
     timeout: 1800
 
 - job:
@@ -62,6 +63,7 @@
         - rally-tox-pep8
         - rally-tox-py36
         - rally-tox-py37
+        - rally-tox-py38
         - rally-tox-cover
         - rally-tox-functional
         - rally-tox-self

@@ -19,17 +19,8 @@
         chdir: '{{ zuul.project.src_dir }}'
         cmd: "sudo pip3 install --constraint ./upper-constraints.txt ./"
 
-    - name: Check Rally base commands
+    - name: Execute the similar script as `tox -e self`
       shell:
-        cmd: |
-          rally --version
-          rally db create
-          rally env list
-
-          # should be loaded from ~/.rally/plugins
-          rally plugin show --name FakePlugin.testplugin
-
-          # builtin plugin
-          rally plugin show --name HttpRequests.check_request
-
-        executable: /bin/sh
+        chdir: '{{ zuul.project.src_dir }}'
+        executable: /bin/bash
+        cmd: './tests/ci/rally_self_job.sh ./rally-jobs/self-rally.yaml'
