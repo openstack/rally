@@ -18,9 +18,9 @@ import io
 import json
 import os.path
 import sys
+from unittest import mock
 
 import ddt
-import mock
 
 import rally
 from rally import api

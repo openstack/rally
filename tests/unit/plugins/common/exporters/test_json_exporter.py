@@ -14,8 +14,7 @@
 
 import collections
 import datetime as dt
-
-import mock
+from unittest import mock
 
 from rally.common import version as rally_version
 from rally.plugins.common.exporters import json_exporter

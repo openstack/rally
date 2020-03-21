@@ -14,8 +14,7 @@
 #    under the License.
 
 import os
-
-import mock
+from unittest import mock
 
 from rally.common import fileutils
 from tests.unit import test

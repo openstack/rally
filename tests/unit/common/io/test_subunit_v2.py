@@ -12,8 +12,7 @@
 #    under the License.
 
 import os
-
-import mock
+from unittest import mock
 
 from rally.common.io import subunit_v2
 from tests.unit import test

@@ -13,8 +13,7 @@
 #    under the License.
 
 import os
-
-import mock
+from unittest import mock
 
 from tests.ci import pytest_launcher
 from tests.unit import test

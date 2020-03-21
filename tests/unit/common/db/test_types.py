@@ -14,7 +14,8 @@
 
 """Tests for custom sqlalchemy types"""
 
-import mock
+from unittest import mock
+
 import sqlalchemy as sa
 
 from rally.common.db import sa_types

@@ -17,9 +17,9 @@
 
 import collections
 import datetime as dt
+from unittest import mock
 
 import ddt
-import mock
 
 from rally.common import objects
 from rally import consts

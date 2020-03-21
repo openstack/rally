@@ -12,7 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
 from rally import exceptions
 from rally.plugins.common.contexts import dummy
 from tests.unit import test

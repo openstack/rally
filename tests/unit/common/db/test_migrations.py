@@ -22,11 +22,11 @@ import iso8601
 import json
 import pickle
 import pprint
+from unittest import mock
 import uuid
 
 import alembic
 import jsonschema
-import mock
 from oslo_db.sqlalchemy import test_migrations
 from oslo_db.sqlalchemy import utils as db_utils
 import sqlalchemy as sa

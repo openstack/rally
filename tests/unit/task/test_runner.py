@@ -15,9 +15,9 @@
 
 import collections
 import multiprocessing
+from unittest import mock
 
 import ddt
-import mock
 
 from rally.plugins.common.runners import serial
 from rally.task import runner

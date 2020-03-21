@@ -13,10 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import io
 import os
-
-import mock
-from six import moves
+from unittest import mock
 
 from rally.cli import envutils
 from rally import exceptions
@@ -34,7 +33,7 @@ class EnvUtilsTestCase(test.TestCase):
             pass
 
         with mock.patch("sys.stdout",
-                        new_callable=moves.StringIO) as mock_stdout:
+                        new_callable=io.StringIO) as mock_stdout:
             test_function()
             self.assertEqual("Missing argument: --test_missing_arg\n",
                              mock_stdout.getvalue())

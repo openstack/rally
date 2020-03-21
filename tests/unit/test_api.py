@@ -17,9 +17,9 @@
 
 import copy
 import os
+from unittest import mock
 
 import ddt
-import mock
 
 from rally import api
 from rally.common import cfg

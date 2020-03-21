@@ -12,8 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from unittest import mock
+
 import jsonschema
-import mock
 
 from rally.task import exporter
 from tests.unit import test

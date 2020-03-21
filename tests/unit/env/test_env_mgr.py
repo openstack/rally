@@ -15,8 +15,7 @@
 import copy
 import datetime as dt
 import os
-
-import mock
+from unittest import mock
 
 from rally.env import env_mgr
 from rally.env import platform

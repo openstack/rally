@@ -10,9 +10,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from unittest import mock
 
 import ddt
-import mock
 
 from rally.plugins.common.scenarios.dummy import dummy
 from tests.unit import test

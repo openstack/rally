@@ -15,11 +15,11 @@
 
 import collections
 import datetime as dt
+from unittest import mock
 import uuid
 
 import ddt
 from jsonschema import exceptions as schema_exceptions
-import mock
 
 from rally import exceptions
 from rally.task import utils

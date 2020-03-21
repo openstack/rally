@@ -15,8 +15,7 @@
 
 import itertools
 import multiprocessing
-
-import mock
+from unittest import mock
 
 from rally import api
 from rally.common import utils as rally_utils

@@ -16,9 +16,9 @@
 import fixtures
 from fixtures._fixtures.tempdir import TempDir
 import os
+from unittest import mock
 import uuid
 
-import mock
 import testtools
 
 from rally.common import cfg

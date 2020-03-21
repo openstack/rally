@@ -14,8 +14,7 @@
 
 import datetime as dt
 import os
-
-import mock
+from unittest import mock
 
 from rally.plugins.common.exporters import junit
 from tests.unit import test

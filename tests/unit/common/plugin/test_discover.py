@@ -13,9 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from unittest import mock
 import uuid
-
-import mock
 
 from rally.common.plugin import discover
 from tests.unit import test

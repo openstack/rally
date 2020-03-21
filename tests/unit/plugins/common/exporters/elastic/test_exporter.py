@@ -13,10 +13,10 @@
 #    under the License.
 
 import copy
+import json
+from unittest import mock
 
 import ddt
-import json
-import mock
 
 from rally import exceptions
 from rally.plugins.common.exporters.elastic import exporter as elastic

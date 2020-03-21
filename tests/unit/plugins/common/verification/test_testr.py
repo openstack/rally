@@ -13,8 +13,7 @@
 
 import os
 import subprocess
-
-import mock
+from unittest import mock
 
 from rally import exceptions
 from rally.plugins.common.verification import testr
