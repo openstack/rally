@@ -25,9 +25,8 @@ import webbrowser
 
 from rally.cli import cliutils
 from rally.cli import envutils
-from rally.common import fileutils
+from rally.cli import yamlutils as yaml
 from rally.common import logging
-from rally.common import yamlutils as yaml
 from rally import exceptions
 from rally import plugins
 
@@ -151,7 +150,7 @@ class VerifyCommands(object):
     def use_verifier(self, api, verifier_id):
         """Choose a verifier to use for the future operations."""
         verifier = api.verifier.get(verifier_id=verifier_id)
-        fileutils.update_globals_file(envutils.ENV_VERIFIER, verifier["uuid"])
+        envutils.update_globals_file(envutils.ENV_VERIFIER, verifier["uuid"])
         print("Using verifier '%s' (UUID=%s) as the default verifier "
               "for the future CLI operations."
               % (verifier["name"], verifier["uuid"]))
@@ -536,7 +535,7 @@ class VerifyCommands(object):
 
         verification = api.verification.get(
             verification_uuid=verification_uuid)
-        fileutils.update_globals_file(
+        envutils.update_globals_file(
             envutils.ENV_VERIFICATION, verification["uuid"])
         print("Using verification (UUID=%s) as the default verification "
               "for the future operations." % verification["uuid"])

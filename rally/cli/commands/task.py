@@ -28,11 +28,10 @@ import jsonschema
 
 from rally.cli import cliutils
 from rally.cli import envutils
-from rally.common import fileutils
+from rally.cli import yamlutils as yaml
 from rally.common import logging
 from rally.common import utils as rutils
 from rally.common import version
-from rally.common import yamlutils as yaml
 from rally import consts
 from rally import exceptions
 from rally import plugins
@@ -926,7 +925,7 @@ class TaskCommands(object):
 
         print("Using task: %s" % task_id)
         api.task.get(task_id=task_id)
-        fileutils.update_globals_file("RALLY_TASK", task_id)
+        envutils.update_globals_file("RALLY_TASK", task_id)
 
     @cliutils.args("--uuid", dest="tasks", nargs="+", type=str,
                    help="UUIDs of tasks or json reports of tasks")

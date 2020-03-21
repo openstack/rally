@@ -156,6 +156,7 @@ class RAMInt(object):
             self.__int.value = 0
 
 
+@logging.log_deprecated("it was an inner helper.", rally_version="3.0.0")
 def get_method_class(func):
     """Return the class that defined the given method.
 
@@ -178,6 +179,7 @@ def get_method_class(func):
         return None
 
 
+@logging.log_deprecated("it was an inner helper.", rally_version="3.0.0")
 def first_index(lst, predicate):
     """Return the index of the first element that matches a predicate.
 
@@ -212,6 +214,7 @@ def retry(times, func, *args, **kwargs):
                 raise
 
 
+@logging.log_deprecated("it is openstack specific.", rally_version="3.0.0")
 def iterate_per_tenants(users):
     """Iterate of a single arbitrary user from each tenant
 
@@ -425,6 +428,7 @@ def make_name_matcher(*names):
     return CustomNameMatcher
 
 
+@logging.log_deprecated("it was an inner helper.", rally_version="3.0.0")
 def merge(length, *sources):
     """Merge lists of lists.
 

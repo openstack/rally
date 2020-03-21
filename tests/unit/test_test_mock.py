@@ -337,7 +337,7 @@ def test_func(self, mock_args, mock_args2, mock_some_longer_args):
                 {
                     "lineno": lineno,
                     "messages": [
-                        "Argument 'bar_foo_misnamed' misnamed; should be "
+                        "Argument 'mock_bar_foo_misnamed' misnamed; should be "
                         "either of %s that is derived from the mock decorator "
                         "args.\n" % variants
                     ],
@@ -377,10 +377,10 @@ def test_func(self, mock_args, mock_args2, mock_some_longer_args):
                 {
                     "lineno": lineno,
                     "messages": [
-                        "Argument 'bar_foo_misnamed' misnamed; should be "
+                        "Argument 'mock_bar_foo_misnamed' misnamed; should be "
                         "either of %s that is derived from the mock decorator "
                         "args.\n" % variants,
-                        "Missing or malformed decorator for 'mismatched' "
+                        "Missing or malformed decorator for 'mock_mismatched' "
                         "argument."
                     ],
                     "args": self.visitor._get_mock_args.return_value,

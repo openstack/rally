@@ -26,7 +26,7 @@ import rally
 from rally import api
 from rally.cli import cliutils
 from rally.cli.commands import task
-from rally.common import yamlutils as yaml
+from rally.cli import yamlutils as yaml
 from rally import consts
 from rally import exceptions
 from tests.unit import fakes
@@ -859,7 +859,7 @@ class TaskCommandsTestCase(test.TestCase):
             deployment="deployment",
             config=mock__load_and_validate_task.return_value)
 
-    @mock.patch("rally.common.fileutils._rewrite_env_file")
+    @mock.patch("rally.cli.envutils._rewrite_env_file")
     def test_use(self, mock__rewrite_env_file):
         task_id = "80422553-5774-44bd-98ac-38bd8c7a0feb"
         self.task.use(self.fake_api, task_id)

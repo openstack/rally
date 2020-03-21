@@ -243,8 +243,8 @@ class DeploymentCommandsTestCase(test.TestCase):
     @mock.patch("os.remove")
     @mock.patch("os.symlink")
     @mock.patch("os.path.exists", return_value=True)
-    @mock.patch("rally.common.fileutils.update_env_file")
-    def test_use(self, mock_update_env_file, mock_path_exists,
+    @mock.patch("rally.cli.envutils._update_env_file")
+    def test_use(self, mock__update_env_file, mock_path_exists,
                  mock_symlink, mock_remove):
         deployment_id = "593b683c-4b16-4b2b-a56b-e162bd60f10b"
         self.fake_api.deployment.get.return_value = {
@@ -262,7 +262,7 @@ class DeploymentCommandsTestCase(test.TestCase):
                         create=True) as mock_file:
             self.deployment.use(self.fake_api, deployment_id)
             self.assertEqual(3, mock_path_exists.call_count)
-            mock_update_env_file.assert_has_calls([
+            mock__update_env_file.assert_has_calls([
                 mock.call(os.path.expanduser("~/.rally/globals"),
                           "RALLY_DEPLOYMENT", "%s\n" % deployment_id),
                 mock.call(os.path.expanduser("~/.rally/globals"),
@@ -286,8 +286,8 @@ class DeploymentCommandsTestCase(test.TestCase):
     @mock.patch("os.remove")
     @mock.patch("os.symlink")
     @mock.patch("os.path.exists", return_value=True)
-    @mock.patch("rally.common.fileutils.update_env_file")
-    def test_use_with_v3_auth(self, mock_update_env_file, mock_path_exists,
+    @mock.patch("rally.cli.envutils._update_env_file")
+    def test_use_with_v3_auth(self, mock__update_env_file, mock_path_exists,
                               mock_symlink, mock_remove):
         deployment_id = "593b683c-4b16-4b2b-a56b-e162bd60f10b"
 
@@ -308,7 +308,7 @@ class DeploymentCommandsTestCase(test.TestCase):
                         create=True) as mock_file:
             self.deployment.use(self.fake_api, deployment_id)
             self.assertEqual(3, mock_path_exists.call_count)
-            mock_update_env_file.assert_has_calls([
+            mock__update_env_file.assert_has_calls([
                 mock.call(os.path.expanduser("~/.rally/globals"),
                           "RALLY_DEPLOYMENT", "%s\n" % deployment_id),
                 mock.call(os.path.expanduser("~/.rally/globals"),
@@ -334,7 +334,7 @@ class DeploymentCommandsTestCase(test.TestCase):
 
     @mock.patch("rally.cli.commands.deployment.DeploymentCommands."
                 "_update_openrc_deployment_file")
-    @mock.patch("rally.common.fileutils.update_globals_file")
+    @mock.patch("rally.cli.envutils.update_globals_file")
     def test_use_by_name(self, mock_update_globals_file,
                          mock__update_openrc_deployment_file):
         fake_credentials = {"admin": "foo_admin", "users": ["foo_user"]}

@@ -241,7 +241,7 @@ class FuncMockArgsDecoratorsChecker(ast.NodeVisitor):
         self.generic_visit(node)
 
     def check_name(self, arg, dec_vars):
-        return (dec_vars is not None and arg in dec_vars)
+        return dec_vars is not None and arg in dec_vars
 
     def visit_FunctionDef(self, node):
         self.generic_visit(node)
@@ -263,19 +263,19 @@ class FuncMockArgsDecoratorsChecker(ast.NodeVisitor):
                     shortest_name = sorted_by_len.pop()
                     if len(shortest_name) <= self.SHORTEST_VARIANT_LEN_LIMIT:
                         error_msgs.append(
-                            ("Argument '%(arg)s' misnamed; should be either "
-                             "of %(dec)s that is derived from the mock "
-                             "decorator args.\n") % {"arg": arg,
-                                                     "dec": dec_vars})
+                            (f"Argument 'mock_{arg}' misnamed; should be "
+                             f"either of {dec_vars} that is derived from the "
+                             f"mock decorator args.\n")
+                        )
                 elif not arg:
                     error_msgs.append(
-                        "Missing or malformed argument for %s decorator."
-                        % dec_vars)
+                        f"Missing or malformed argument for {dec_vars} "
+                        f"decorator.")
                     mismatched = True
                 elif not dec_vars:
                     error_msgs.append(
-                        "Missing or malformed decorator for '%s' argument."
-                        % arg)
+                        f"Missing or malformed decorator for 'mock_{arg}' "
+                        f"argument.")
                     mismatched = True
 
         if error_msgs:

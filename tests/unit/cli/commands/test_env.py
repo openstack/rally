@@ -494,7 +494,7 @@ class EnvCommandsTestCase(test.TestCase):
         mock__use.assert_has_calls(
             [mock.call("aa", False), mock.call("bb", True)])
 
-    @mock.patch("rally.cli.commands.env.fileutils.update_globals_file")
+    @mock.patch("rally.cli.commands.env.envutils.update_globals_file")
     @mock.patch("rally.cli.commands.env.print")
     def test__use(self, mock_print, mock_update_globals_file):
         self.env._use("aa", True)

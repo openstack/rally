@@ -45,6 +45,11 @@ Deprecated
 * Module *rally.common.sshutils* is deprecated. Use *rally.utils.sshutils*
   instead.
 
+* Module *rally.common.yamlutils* is deprecated. It was designed for CLI usage
+  and moves to right place.
+
+* Module *rally.common.fileutils* is deprecated.
+
 * All modules from *rally.plugins.common.contexts* are deprecated. Use
   *rally.plugins.task.contexts* instead.
 

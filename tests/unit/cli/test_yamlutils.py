@@ -12,7 +12,7 @@
 
 from yaml import constructor
 
-from rally.common import yamlutils
+from rally.cli import yamlutils
 from tests.unit import test
 
 

@@ -25,10 +25,9 @@ import jsonschema
 
 from rally.cli import cliutils
 from rally.cli import envutils
-from rally.common import fileutils
+from rally.cli import yamlutils as yaml
 from rally.common import logging
 from rally.common import utils
-from rally.common import yamlutils as yaml
 from rally.env import env_mgr
 from rally import exceptions
 from rally import plugins
@@ -326,10 +325,10 @@ class DeploymentCommands(object):
             return 1
         print("Using deployment: %s" % deployment["uuid"])
 
-        fileutils.update_globals_file(envutils.ENV_DEPLOYMENT,
-                                      deployment["uuid"])
-        fileutils.update_globals_file(envutils.ENV_ENV,
-                                      deployment["uuid"])
+        envutils.update_globals_file(envutils.ENV_DEPLOYMENT,
+                                     deployment["uuid"])
+        envutils.update_globals_file(envutils.ENV_ENV,
+                                     deployment["uuid"])
 
         if "openstack" in deployment["credentials"]:
             creds = deployment["credentials"]["openstack"][0]

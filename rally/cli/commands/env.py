@@ -21,8 +21,7 @@ import traceback
 
 from rally.cli import cliutils
 from rally.cli import envutils
-from rally.common import fileutils
-from rally.common import yamlutils as yaml
+from rally.cli import yamlutils as yaml
 from rally.env import env_mgr
 from rally import exceptions
 
@@ -336,4 +335,4 @@ class EnvCommands(object):
 
     def _use(self, env_uuid, to_json):
         _print("Using environment: %s" % env_uuid, to_json)
-        fileutils.update_globals_file(envutils.ENV_ENV, env_uuid)
+        envutils.update_globals_file(envutils.ENV_ENV, env_uuid)
