@@ -13,11 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.utils.sshutils import *  # noqa
+from rally.utils.sshutils import *  # noqa: F401,F403
+from rally.utils import sshutils as _new
 
+# import it as last item to be sure that we use the right module
 from rally.common import logging
 
-logging.getLogger(__name__).warning(
-    f"Module {__name__} moved to rally.utils.sshutils. "
-    f"Please correct your import."
+
+logging.log_deprecated_module(
+    target=__name__, new_module=_new.__name__, release="3.0.0"
 )

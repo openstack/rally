@@ -37,13 +37,37 @@ Changed
 
 * *path_or_url* plugin follows redirects while validating urls now.
 
-* *rally task sla-check` fails if there is no data.
+* *rally task sla-check* fails if there is no data.
 
 Deprecated
 ~~~~~~~~~~
 
 * Module *rally.common.sshutils* is deprecated. Use *rally.utils.sshutils*
   instead.
+
+* All modules from *rally.plugins.common.contexts* are deprecated. Use
+  *rally.plugins.task.contexts* instead.
+
+* All modules from *rally.plugins.common.exporters* are deprecated. Use
+  *rally.plugins.task.exporters* instead.
+
+* Module *rally.plugins.common.hook.sys_call* is deprecated. Use
+  *rally.plugins.task.hooks.sys_call* instead.
+
+* All modules from *rally.plugins.common.hook.triggers* are deprecated. Use
+  *rally.plugins.task.hook_triggers* instead.
+
+* All modules from *rally.plugins.common.runners* are deprecated. Use
+  *rally.plugins.task.runners* instead.
+
+* All modules from *rally.plugins.common.scenarios* are deprecated. Use
+  *rally.plugins.task.scenarios* instead.
+
+* All modules from *rally.plugins.common.sla* are deprecated. Use
+  *rally.plugins.task.sla* instead.
+
+* All modules from *rally.plugins.common.verification* are deprecated. Use
+  *rally.plugins.verification* instead.
 
 Removed
 ~~~~~~~

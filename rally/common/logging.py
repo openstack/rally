@@ -15,6 +15,7 @@
 
 import functools
 import traceback
+import warnings
 
 from oslo_log import handlers
 from oslo_log import log as oslogging
@@ -329,6 +330,14 @@ def log_deprecated_args(message, rally_version, deprecated_args,
 
         return wrapper
     return decorator
+
+
+def log_deprecated_module(target, new_module, release):
+    warnings.warn(
+        f"Module `{target}` moved to `{new_module}` since Rally v{release}. "
+        f"The import from old place is deprecated and may be removed in "
+        f"further releases."
+    )
 
 
 def is_debug():

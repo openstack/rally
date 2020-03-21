@@ -19,7 +19,7 @@ from unittest import mock
 
 import ddt
 
-from rally.plugins.common.runners import serial
+from rally.plugins.task.runners import serial
 from rally.task import runner
 from tests.unit import fakes
 from tests.unit import test

@@ -12,45 +12,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import itertools
-import os
+from rally.plugins.task.exporters.html import *  # noqa: F401,F403
+from rally.plugins.task.exporters import html as _new
 
-from rally.task import exporter
-from rally.task.processing import plot
-
-
-@exporter.configure("html")
-class HTMLExporter(exporter.TaskExporter):
-    """Generates task report in HTML format."""
-    INCLUDE_LIBS = False
-
-    def _generate_results(self):
-        results = []
-        processed_names = {}
-        for task in self.tasks_results:
-            for workload in itertools.chain(
-                    *[s["workloads"] for s in task["subtasks"]]):
-                if workload["name"] in processed_names:
-                    processed_names[workload["name"]] += 1
-                    workload["position"] = processed_names[workload["name"]]
-                else:
-                    processed_names[workload["name"]] = 0
-            results.append(task)
-        return results
-
-    def generate(self):
-        report = plot.plot(self._generate_results(),
-                           include_libs=self.INCLUDE_LIBS)
-
-        if self.output_destination:
-            return {"files": {self.output_destination: report},
-                    "open": "file://" + os.path.abspath(
-                        self.output_destination)}
-        else:
-            return {"print": report}
+# import it as last item to be sure that we use the right module
+from rally.common import logging
 
 
-@exporter.configure("html-static")
-class HTMLStaticExporter(HTMLExporter):
-    """Generates task report in HTML format with embedded JS/CSS."""
-    INCLUDE_LIBS = True
+logging.log_deprecated_module(
+    target=__name__, new_module=_new.__name__, release="3.0.0"
+)

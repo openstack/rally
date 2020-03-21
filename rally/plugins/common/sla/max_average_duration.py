@@ -1,4 +1,3 @@
-# Copyright 2014: Mirantis Inc.
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -13,44 +12,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from rally.plugins.task.sla.max_average_duration import *  # noqa: F401,F403
+from rally.plugins.task.sla import max_average_duration as _new
 
-"""
-SLA (Service-level agreement) is set of details for determining compliance
-with contracted values such as maximum error rate or minimum response time.
-"""
-
-from rally.common import streaming_algorithms
-from rally import consts
-from rally.task import sla
+# import it as last item to be sure that we use the right module
+from rally.common import logging
 
 
-@sla.configure(name="max_avg_duration")
-class MaxAverageDuration(sla.SLA):
-    """Maximum average duration of one iteration in seconds."""
-    CONFIG_SCHEMA = {
-        "type": "number",
-        "$schema": consts.JSON_SCHEMA7,
-        "exclusiveMinimum": 0.0
-    }
-
-    def __init__(self, criterion_value):
-        super(MaxAverageDuration, self).__init__(criterion_value)
-        self.avg = 0.0
-        self.avg_comp = streaming_algorithms.MeanComputation()
-
-    def add_iteration(self, iteration):
-        if not iteration.get("error"):
-            self.avg_comp.add(iteration["duration"])
-            self.avg = self.avg_comp.result()
-        self.success = self.avg <= self.criterion_value
-        return self.success
-
-    def merge(self, other):
-        self.avg_comp.merge(other.avg_comp)
-        self.avg = self.avg_comp.result() or 0.0
-        self.success = self.avg <= self.criterion_value
-        return self.success
-
-    def details(self):
-        return ("Average duration of one iteration %.2fs <= %.2fs - %s" %
-                (self.avg, self.criterion_value, self.status()))
+logging.log_deprecated_module(
+    target=__name__, new_module=_new.__name__, release="3.0.0"
+)

@@ -12,60 +12,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import os
+from rally.plugins.task.types import *  # noqa: F401,F403
+from rally.plugins.task import types as _new
 
-import requests
-
-from rally.common.plugin import plugin
-from rally import exceptions
-from rally.task import types
+# import it as last item to be sure that we use the right module
+from rally.common import logging
 
 
-@plugin.configure(name="path_or_url")
-class PathOrUrl(types.ResourceType):
-    """Check whether file exists or url available."""
-
-    def pre_process(self, resource_spec, config):
-        path = os.path.expanduser(resource_spec)
-        if os.path.isfile(path):
-            return path
-        try:
-            head = requests.head(path, verify=False, allow_redirects=True)
-            if head.status_code == 200:
-                return path
-            raise exceptions.InvalidScenarioArgument(
-                "Url %s unavailable (code %s)" % (path, head.status_code))
-        except Exception as ex:
-            raise exceptions.InvalidScenarioArgument(
-                "Url error %s (%s)" % (path, ex))
-
-
-@plugin.configure(name="file")
-class FileType(types.ResourceType):
-    """Return content of the file by its path."""
-
-    def pre_process(self, resource_spec, config):
-        with open(os.path.expanduser(resource_spec), "r") as f:
-            return f.read()
-
-
-@plugin.configure(name="expand_user_path")
-class ExpandUserPath(types.ResourceType):
-    """Expands user path."""
-
-    def pre_process(self, resource_spec, config):
-        return os.path.expanduser(resource_spec)
-
-
-@plugin.configure(name="file_dict")
-class FileTypeDict(types.ResourceType):
-    """Return the dictionary of items with file path and file content."""
-
-    def pre_process(self, resource_spec, config):
-        file_type_dict = {}
-        for file_path in resource_spec:
-            file_path = os.path.expanduser(file_path)
-            with open(file_path, "r") as f:
-                file_type_dict[file_path] = f.read()
-
-        return file_type_dict
+logging.log_deprecated_module(
+    target=__name__, new_module=_new.__name__, release="3.0.0"
+)

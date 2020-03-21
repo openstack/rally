@@ -1,3 +1,5 @@
+# All Rights Reserved.
+#
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
@@ -10,29 +12,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import requests
+from rally.plugins.task.scenarios.requests.utils import *  # noqa: F401,F403
+from rally.plugins.task.scenarios.requests import utils as _new
 
-from rally.task import atomic
-from rally.task import scenario
+# import it as last item to be sure that we use the right module
+from rally.common import logging
 
 
-class RequestScenario(scenario.Scenario):
-    """Base class for Request scenarios with basic atomic actions."""
-
-    @atomic.action_timer("requests.check_request")
-    def _check_request(self, url, method, status_code, **kwargs):
-        """Compare request status code with specified code
-
-        :param status_code: Expected status code of request
-        :param url: Uniform resource locator
-        :param method: Type of request method (GET | POST ..)
-        :param kwargs: Optional additional request parameters
-        :raises ValueError: if return http status code
-                            not equal to expected status code
-        """
-
-        resp = requests.request(method, url, **kwargs)
-        if status_code != resp.status_code:
-            error_msg = "Expected HTTP request code is `%s` actual `%s`"
-            raise ValueError(
-                error_msg % (status_code, resp.status_code))
+logging.log_deprecated_module(
+    target=__name__, new_module=_new.__name__, release="3.0.0"
+)

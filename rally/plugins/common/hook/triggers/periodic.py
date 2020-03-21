@@ -1,4 +1,3 @@
-# Copyright 2016: Mirantis Inc.
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -13,57 +12,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally import consts
-from rally.task import hook
+from rally.plugins.task.hook_triggers.periodic import *  # noqa: F401,F403
+from rally.plugins.task.hook_triggers import periodic as _new
+
+# import it as last item to be sure that we use the right module
+from rally.common import logging
 
 
-@hook.configure(name="periodic")
-class PeriodicTrigger(hook.HookTrigger):
-    """Periodically triggers hook with specified range and step."""
-
-    CONFIG_SCHEMA = {
-        "type": "object",
-        "$schema": consts.JSON_SCHEMA,
-        "oneOf": [
-            {
-                "description": "Periodically triage hook based on elapsed time"
-                               " after start of workload.",
-                "properties": {
-                    "unit": {"enum": ["time"]},
-                    "start": {"type": "integer", "minimum": 0},
-                    "end": {"type": "integer", "minimum": 1},
-                    "step": {"type": "integer", "minimum": 1},
-                },
-                "required": ["unit", "step"],
-                "additionalProperties": False,
-            },
-            {
-                "description": "Periodically triage hook based on iterations.",
-                "properties": {
-                    "unit": {"enum": ["iteration"]},
-                    "start": {"type": "integer", "minimum": 1},
-                    "end": {"type": "integer", "minimum": 1},
-                    "step": {"type": "integer", "minimum": 1},
-                },
-                "required": ["unit", "step"],
-                "additionalProperties": False,
-            },
-        ]
-    }
-
-    def __init__(self, context, task, hook_cls):
-        super(PeriodicTrigger, self).__init__(context, task, hook_cls)
-        self.config.setdefault(
-            "start", 0 if self.config["unit"] == "time" else 1)
-        self.config.setdefault("end", float("Inf"))
-
-    def get_listening_event(self):
-        return self.config["unit"]
-
-    def on_event(self, event_type, value=None):
-        if not (event_type == self.get_listening_event()
-                and self.config["start"] <= value <= self.config["end"]
-                and (value - self.config["start"]) % self.config["step"] == 0):
-            # do nothing
-            return
-        super(PeriodicTrigger, self).on_event(event_type, value)
+logging.log_deprecated_module(
+    target=__name__, new_module=_new.__name__, release="3.0.0"
+)
