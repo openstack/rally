@@ -13,7 +13,6 @@ pytest-html>=1.10.0                                    # Mozilla Public License 
 pytest-xdist                                           # MIT
 
 ddt                                                    # MIT
-mock                                                   # OSI Approved :: BSD License
 python-dateutil                                        # Dual License
 testtools                                              # UNKNOWN
 
@@ -24,3 +23,4 @@ testresources                                          # UNKNOWN
 
 # needed for functional job
 stestr                                                 # Apache Software License
+mock 

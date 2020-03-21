@@ -15,8 +15,7 @@
 
 import io
 import tempfile
-
-import mock
+from unittest import mock
 
 from rally.cli import cliutils
 from rally.cli.commands import verify

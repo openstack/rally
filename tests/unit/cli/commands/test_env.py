@@ -16,9 +16,8 @@
 import collections
 import datetime as dt
 import json
+from unittest import mock
 import uuid
-
-import mock
 
 from rally.cli.commands import env
 from rally.env import env_mgr

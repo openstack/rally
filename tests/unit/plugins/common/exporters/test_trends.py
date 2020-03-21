@@ -13,8 +13,7 @@
 #    under the License.
 
 import os
-
-import mock
+from unittest import mock
 
 from rally.plugins.common.exporters import trends
 from tests.unit import test

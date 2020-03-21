@@ -14,9 +14,9 @@
 #    under the License.
 
 import subprocess
+from unittest import mock
 
 import ddt
-import mock
 
 from rally import consts
 from rally.plugins.common.hook import sys_call

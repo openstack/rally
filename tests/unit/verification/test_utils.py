@@ -14,8 +14,7 @@
 
 import configparser
 import subprocess
-
-import mock
+from unittest import mock
 
 from rally.verification import utils
 from tests.unit import test

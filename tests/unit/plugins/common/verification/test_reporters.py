@@ -15,9 +15,9 @@
 import collections
 import datetime as dt
 import os
+from unittest import mock
 
 import ddt
-import mock
 
 from rally.common import utils
 from rally.plugins.common.verification import reporters

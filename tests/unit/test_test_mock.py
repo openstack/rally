@@ -12,8 +12,7 @@
 
 import ast
 import sys
-
-import mock
+from unittest import mock
 
 from tests.unit import test
 from tests.unit import test_mock

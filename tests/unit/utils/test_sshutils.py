@@ -16,9 +16,9 @@
 import io
 import os
 import socket
+from unittest import mock
 
 import ddt
-import mock
 import paramiko
 
 from rally import exceptions

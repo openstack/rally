@@ -14,9 +14,9 @@
 #    under the License.
 
 import collections
+from unittest import mock
 
 import ddt
-import mock
 
 from rally.common.plugin import plugin
 from rally.task.processing import charts

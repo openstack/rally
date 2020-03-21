@@ -19,9 +19,9 @@ import string
 import sys
 import threading
 import time
+from unittest import mock
 
 import ddt
-import mock
 import testtools
 
 from rally.common import utils

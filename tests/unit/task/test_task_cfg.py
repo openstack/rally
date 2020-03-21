@@ -13,8 +13,7 @@
 #    under the License.
 
 import collections
-
-import mock
+from unittest import mock
 
 from rally import exceptions
 from rally.task import task_cfg

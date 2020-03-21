@@ -12,8 +12,7 @@
 
 import os
 import sys
-
-import mock
+from unittest import mock
 
 from rally import exceptions
 from rally.verification import manager

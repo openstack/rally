@@ -14,8 +14,7 @@
 #    under the License.
 
 import collections
-
-import mock
+from unittest import mock
 
 from rally.task import atomic
 from tests.unit import test

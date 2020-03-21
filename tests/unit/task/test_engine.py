@@ -17,8 +17,7 @@
 
 import collections
 import threading
-
-import mock
+from unittest import mock
 
 from rally.common import objects
 from rally import consts

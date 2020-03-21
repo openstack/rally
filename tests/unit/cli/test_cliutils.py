@@ -14,9 +14,9 @@
 #    under the License.
 
 import io
+from unittest import mock
 
 import ddt
-import mock
 import sqlalchemy.exc
 
 from rally.cli import cliutils

@@ -15,8 +15,9 @@
 
 """Tests for HookExecutor and Hook classes."""
 
+from unittest import mock
+
 import ddt
-import mock
 
 from rally import consts
 from rally.task import hook

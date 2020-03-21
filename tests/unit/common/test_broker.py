@@ -14,8 +14,7 @@
 #    under the License.
 
 import collections
-
-import mock
+from unittest import mock
 
 from rally.common import broker
 from tests.unit import test

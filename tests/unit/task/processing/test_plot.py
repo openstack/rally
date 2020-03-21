@@ -15,9 +15,9 @@
 
 import collections
 import json
+from unittest import mock
 
 import ddt
-import mock
 
 from rally.task.processing import plot
 from tests.unit import test

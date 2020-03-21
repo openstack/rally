@@ -14,12 +14,13 @@
 #    under the License.
 
 import re
-import unittest
+
+import testtools
 
 from tests.functional import utils
 
 
-class VerifyTestCase(unittest.TestCase):
+class VerifyTestCase(testtools.TestCase):
 
     def test_list_plugins(self):
         rally = utils.Rally(plugin_path="tests/functional/extra")

@@ -1,9 +1,0 @@
-# Purpose of optional-requirements is simple - list requirements which cannot
-# be placed in main requirements.txt .
-#
-# Reasons:
-#  - package doesn't support the same Python versions as Rally package
-#    supports (see classifiers from setup.cfg)
-#  - package doesn't have releases
-# If these rules do not relate to your package, feel free to propose it as main
-# requirement to Rally (requirements.txt file).

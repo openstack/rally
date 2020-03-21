@@ -18,9 +18,9 @@ import os
 import re
 import threading
 import time
+from unittest import mock
 
 import jsonschema
-import mock
 import testtools
 
 from rally import api
