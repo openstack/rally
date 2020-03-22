@@ -16,7 +16,6 @@
 """Rally command: task"""
 
 from __future__ import print_function
-import collections
 import datetime as dt
 import itertools
 import json
@@ -544,69 +543,15 @@ class TaskCommands(object):
     @envutils.with_default_task_id
     @cliutils.suppress_warnings
     def results(self, api, task_id=None):
-        """Display raw task results.
-
-        This will produce a lot of output data about every iteration.
-        """
-
-        task = api.task.get(task_id=task_id, detailed=True)
-        finished_statuses = (consts.TaskStatus.FINISHED,
-                             consts.TaskStatus.ABORTED)
-        if task["status"] not in finished_statuses:
-            print("Task status is %s. Results available when it is one of %s."
-                  % (task["status"], ", ".join(finished_statuses)))
+        """DEPRECATED since Rally 3.0.0."""
+        LOG.warning("CLI method `rally task results` is deprecated since "
+                    "Rally 3.0.0 and will be removed soon. "
+                    "Use `rally task report --json` instead.")
+        try:
+            self.export(api, tasks=[task_id], output_type="old-json-results")
+        except exceptions.RallyException as e:
+            print(e.format_message())
             return 1
-
-        # TODO(chenhb): Ensure `rally task results` puts out old format.
-        for workload in itertools.chain(
-                *[s["workloads"] for s in task["subtasks"]]):
-            for itr in workload["data"]:
-                itr["atomic_actions"] = collections.OrderedDict(
-                    tutils.WrapperForAtomicActions(
-                        itr["atomic_actions"]).items()
-                )
-
-        results = []
-        for w in itertools.chain(*[s["workloads"] for s in task["subtasks"]]):
-            w["runner"]["type"] = w["runner_type"]
-
-            def port_hook_cfg(h):
-                h["config"] = {
-                    "name": h["config"]["action"][0],
-                    "args": h["config"]["action"][1],
-                    "description": h["config"].get("description", ""),
-                    "trigger": {"name": h["config"]["trigger"][0],
-                                "args": h["config"]["trigger"][1]}
-                }
-                return h
-
-            hooks = [port_hook_cfg(h) for h in w["hooks"]]
-
-            created_at = dt.datetime.strptime(w["created_at"],
-                                              "%Y-%m-%dT%H:%M:%S")
-            created_at = created_at.strftime("%Y-%d-%mT%H:%M:%S")
-
-            results.append({
-                "key": {
-                    "name": w["name"],
-                    "description": w["description"],
-                    "pos": w["position"],
-                    "kw": {
-                        "args": w["args"],
-                        "runner": w["runner"],
-                        "context": w["contexts"],
-                        "sla": w["sla"],
-                        "hooks": [h["config"] for h in w["hooks"]],
-                    }
-                },
-                "result": w["data"],
-                "sla": w["sla_results"].get("sla", []),
-                "hooks": hooks,
-                "load_duration": w["load_duration"],
-                "full_duration": w["full_duration"],
-                "created_at": created_at})
-
-        print(json.dumps(results, sort_keys=False, indent=4))
 
     @cliutils.args("--deployment", dest="deployment", type=str,
                    metavar="<uuid>", required=False,

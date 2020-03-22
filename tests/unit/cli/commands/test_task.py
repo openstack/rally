@@ -573,11 +573,24 @@ class TaskCommandsTestCase(test.TestCase):
                 "contexts": {"users": {}},
                 "data": data or []}]}]}
 
-    @mock.patch("rally.cli.commands.task.json.dumps")
+    @mock.patch("rally.plugins.task.exporters.old_json_results.json.dumps")
     def test_results(self, mock_json_dumps):
+
+        mock_json_dumps.return_value = ""
+
+        def fake_export(tasks, output_type, output_dest=None):
+            tasks = [self.fake_api.task.get(u, detailed=True) for u in tasks]
+            return self.real_api.task.export(tasks, output_type, output_dest)
+
+        self.fake_api.task.export.side_effect = fake_export
+
         task_id = "foo_task_id"
 
-        task_obj = self._make_task(data=[{"atomic_actions": {"foo": 1.1}}])
+        task_obj = self._make_task(
+            data=[{"atomic_actions": [{"name": "foo",
+                                       "started_at": 0,
+                                       "finished_at": 1.1}]}]
+        )
         task_obj["subtasks"][0]["workloads"][0]["hooks"] = [{
             "config": {
                 "action": ("foo", "arg"),
@@ -585,6 +598,7 @@ class TaskCommandsTestCase(test.TestCase):
             },
             "summary": {"success": 1}}
         ]
+        task_obj["uuid"] = task_id
 
         def fix_r(workload):
             cfg = workload["runner"]
@@ -633,9 +647,16 @@ class TaskCommandsTestCase(test.TestCase):
 
     @mock.patch("rally.cli.commands.task.sys.stdout")
     def test_results_no_data(self, mock_stdout):
+        def fake_export(tasks, output_type, output_dest=None):
+            tasks = [self.fake_api.task.get(u, detailed=True) for u in tasks]
+            return self.real_api.task.export(tasks, output_type, output_dest)
+
+        self.fake_api.task.export.side_effect = fake_export
+
         task_id = "foo"
-        self.fake_api.task.get.return_value = self._make_task(
-            status=consts.TaskStatus.CRASHED)
+        task_obj = self._make_task(status=consts.TaskStatus.CRASHED)
+        task_obj["uuid"] = task_id
+        self.fake_api.task.get.return_value = task_obj
 
         self.assertEqual(1, self.task.results(self.fake_api, task_id))
 

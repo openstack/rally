@@ -365,7 +365,8 @@ class TaskTestCase(testtools.TestCase):
         rally("task start --task %s" % config.filename)
         task_result_file = rally.gen_report_path(suffix="results")
         self.addCleanup(os.remove, task_result_file)
-        rally("task results", report_path=task_result_file, raw=True)
+        rally("task results", report_path=task_result_file, raw=True,
+              getjson=True)
 
         html_report = rally.gen_report_path(extension="html")
         rally("task report --html-static %s --out %s"

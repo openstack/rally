@@ -18,7 +18,7 @@ from unittest import mock
 
 from rally.common import version as rally_version
 from rally.plugins.task.exporters import json_exporter
-from tests.unit.plugins.task.exporters import test_html
+from tests.unit.plugins.task.exporters import dummy_data
 from tests.unit import test
 
 PATH = "rally.plugins.task.exporters.json_exporter"
@@ -27,8 +27,10 @@ PATH = "rally.plugins.task.exporters.json_exporter"
 class JSONExporterTestCase(test.TestCase):
 
     def test__generate_tasks(self):
-        tasks_results = test_html.get_tasks_results()
+        tasks_results = dummy_data.get_tasks_results()
         reporter = json_exporter.JSONExporter(tasks_results, None)
+
+        w_data = tasks_results[0]["subtasks"][0]["workloads"][0]["data"]
 
         self.assertEqual([
             collections.OrderedDict([
@@ -65,7 +67,7 @@ class JSONExporterTestCase(test.TestCase):
                                 ("load_duration", 2.03029203414917),
                                 ("full_duration", 29.969523191452026),
                                 ("statistics", {}),
-                                ("data", {"raw": []}),
+                                ("data", w_data),
                                 ("failed_iteration_count", 0),
                                 ("total_iteration_count", 10),
                                 ("created_at", "2017-06-04T05:14:44"),
@@ -86,7 +88,7 @@ class JSONExporterTestCase(test.TestCase):
     @mock.patch("%s.dt" % PATH)
     def test_generate(self, mock_dt, mock_json_dumps):
         mock_dt.datetime.utcnow.return_value = dt.datetime.utcnow()
-        tasks_results = test_html.get_tasks_results()
+        tasks_results = dummy_data.get_tasks_results()
 
         # print
         reporter = json_exporter.JSONExporter(tasks_results, None)

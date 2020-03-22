@@ -16,73 +16,18 @@ import os
 from unittest import mock
 
 from rally.plugins.task.exporters import html
+from tests.unit.plugins.task.exporters import dummy_data
 from tests.unit import test
 
 PATH = "rally.plugins.task.exporters.html"
-
-
-def get_tasks_results():
-    task_id = "2fa4f5ff-7d23-4bb0-9b1f-8ee235f7f1c8"
-    workload = {"uuid": "uuid",
-                "name": "CinderVolumes.list_volumes",
-                "description": "List all volumes.",
-                "created_at": "2017-06-04T05:14:44",
-                "updated_at": "2017-06-04T05:15:14",
-                "task_uuid": task_id,
-                "position": 0,
-                "data": {"raw": []},
-                "full_duration": 29.969523191452026,
-                "load_duration": 2.03029203414917,
-                "hooks": [],
-                "runner": {},
-                "runner_type": "runner_type",
-                "args": {},
-                "contexts": {},
-                "contexts_results": [],
-                "min_duration": 0.0,
-                "max_duration": 1.0,
-                "start_time": 0,
-                "statistics": {},
-                "failed_iteration_count": 0,
-                "total_iteration_count": 10,
-                "sla": {},
-                "sla_results": {"sla": []},
-                "pass_sla": True
-                }
-    task = {
-        "uuid": task_id,
-        "title": "task",
-        "description": "description",
-        "status": "finished",
-        "env_uuid": "env-uuid",
-        "env_name": "env-name",
-        "tags": [],
-        "created_at": "2017-06-04T05:14:44",
-        "updated_at": "2017-06-04T05:15:14",
-        "pass_sla": True,
-        "task_duration": 2.0,
-        "subtasks": [
-            {"uuid": "subtask_uuid",
-             "title": "subtask",
-             "description": "description",
-             "status": "finished",
-             "run_in_parallel": True,
-             "created_at": "2017-06-04T05:14:44",
-             "updated_at": "2017-06-04T05:15:14",
-             "sla": {},
-             "duration": 29.969523191452026,
-             "task_uuid": task_id,
-             "workloads": [workload]}
-        ]}
-    return [task]
 
 
 class HTMLExporterTestCase(test.TestCase):
 
     @mock.patch("%s.plot.plot" % PATH, return_value="html")
     def test_generate(self, mock_plot):
-        tasks_results = get_tasks_results()
-        tasks_results.extend(get_tasks_results())
+        tasks_results = dummy_data.get_tasks_results()
+        tasks_results.extend(dummy_data.get_tasks_results())
         reporter = html.HTMLExporter(tasks_results, None)
         reporter._generate_results = mock.MagicMock()
 

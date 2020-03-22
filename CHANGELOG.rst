@@ -42,6 +42,9 @@ Changed
 Deprecated
 ~~~~~~~~~~
 
+* Command *rally task results* is deprecated. Use *rally task report --json*
+  instead.
+
 * Module *rally.common.sshutils* is deprecated. Use *rally.utils.sshutils*
   instead.
 
