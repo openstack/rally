@@ -15,8 +15,6 @@
 
 """Rally command: deployment"""
 
-from __future__ import print_function
-
 import json
 import os
 import sys

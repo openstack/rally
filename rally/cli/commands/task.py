@@ -15,7 +15,6 @@
 
 """Rally command: task"""
 
-from __future__ import print_function
 import itertools
 import json
 import os
