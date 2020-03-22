@@ -896,12 +896,13 @@ class TaskCommandsTestCase(test.TestCase):
         self.assertRaises(exceptions.DBRecordNotFound, self.task.use,
                           self.fake_api, task_id)
 
+    @mock.patch("rally.cli.task_results_loader.load")
     @mock.patch("rally.cli.commands.task.os.path")
     @mock.patch("rally.cli.commands.task.webbrowser.open_new_tab")
     @mock.patch("rally.cli.commands.task.open", create=True)
     @mock.patch("rally.cli.commands.task.print")
     def test_export(self, mock_print, mock_open, mock_open_new_tab,
-                    mock_path):
+                    mock_path, mock_load):
 
         # file
         self.fake_api.task.export.return_value = {
@@ -911,15 +912,14 @@ class TaskCommandsTestCase(test.TestCase):
         mock_path.realpath.return_value = "real_path"
         mock_fd = mock.mock_open()
         mock_open.side_effect = mock_fd
-        self.task._load_task_results_file = mock.MagicMock(
-            return_value=[{"task": "task_1"}, {"task": "task2"}])
+        mock_load.return_value = [{"task": "task_1"}, {"task": "task2"}]
 
         self.task.export(self.fake_api, tasks=["uuid", "file"],
                          output_type="json", output_dest="output_dest",
                          open_it=True)
 
         self.fake_api.task.export.assert_called_once_with(
-            tasks=["uuid"] + self.task._load_task_results_file.return_value,
+            tasks=["uuid"] + mock_load.return_value,
             output_type="json",
             output_dest="output_dest"
         )
@@ -1034,160 +1034,18 @@ class TaskCommandsTestCase(test.TestCase):
             mock.call(error_traceback or "No traceback available.")
         ], any_order=False)
 
-    @mock.patch("rally.cli.commands.task.open", create=True)
-    @mock.patch("rally.cli.commands.task.json.loads")
-    @mock.patch("rally.cli.commands.task.jsonschema.validate",
-                return_value=None)
-    def test__load_task_results_file(self, mock_validate, mock_loads,
-                                     mock_open):
-        task_file = "/tmp/task.json"
-        workload = {
-            "uuid": "n/a",
-            "full_duration": 2, "load_duration": 1,
-            "created_at": "2017-07-01T07:03:01",
-            "updated_at": "2017-07-01T07:03:03",
-            "total_iteration_count": 2,
-            "failed_iteration_count": 1,
-            "min_duration": 3,
-            "max_duration": 5,
-            "start_time": 1,
-            "name": "Foo.bar", "description": "descr",
-            "position": 2,
-            "args": {"key1": "value1"},
-            "runner_type": "constant",
-            "runner": {"time": 3},
-            "hooks": [{"config": {
-                "description": "descr",
-                "action": ("foo", {"arg1": "v1"}),
-                "trigger": ("t", {"a2", "v2"})}}],
-            "pass_sla": True,
-            "sla": {"failure_rate": {"max": 0}},
-            "sla_results": {"sla": [{"success": True}]},
-            "contexts": {"users": {}},
-            "contexts_results": [],
-            "data": [{"timestamp": 1, "atomic_actions": {"foo": 1.0,
-                                                         "bar": 1.0},
-                      "duration": 5, "idle_duration": 0, "error": [{}]},
-                     {"timestamp": 2, "atomic_actions": {"bar": 1.1},
-                      "duration": 3, "idle_duration": 0, "error": []}],
-            "statistics": {"durations": mock.ANY}
-        }
-
-        results = [{
-            "hooks": [{
-                "config": {
-                    "name": "foo",
-                    "args": {"arg1": "v1"},
-                    "description": "descr",
-                    "trigger": {"name": "t", "args": {"a2", "v2"}}}}],
-            "key": {
-                "name": workload["name"],
-                "description": workload["description"],
-                "pos": workload["position"],
-                "kw": {
-                    "args": workload["args"],
-                    "runner": {"type": "constant", "time": 3},
-                    "hooks": [{
-                        "name": "foo",
-                        "args": {"arg1": "v1"},
-                        "description": "descr",
-                        "trigger": {"name": "t", "args": {"a2", "v2"}}}],
-                    "sla": workload["sla"],
-                    "context": workload["contexts"]}},
-            "sla": workload["sla_results"]["sla"],
-            "result": workload["data"],
-            "full_duration": workload["full_duration"],
-            "load_duration": workload["load_duration"],
-            "created_at": "2017-01-07T07:03:01"}
-        ]
-        mock_loads.return_value = results
-        ret = self.task._load_task_results_file(self.fake_api, task_file)
-        self.assertEqual([{
-            "version": 2,
-            "title": "Task loaded from a file.",
-            "description": "Auto-ported from task format V1.",
-            "uuid": "n/a",
-            "env_uuid": "n/a",
-            "env_name": "n/a",
-            "status": "finished",
-            "tags": [],
-            "subtasks": [{
-                "title": "A SubTask",
-                "description": "",
-                "workloads": [workload]}]}], ret)
-
-    @mock.patch("rally.cli.commands.task.open", create=True)
-    @mock.patch("rally.cli.commands.task.json.loads")
-    @mock.patch("rally.cli.commands.task.jsonschema.validate")
-    def test__load_task_new_results_file(self, mock_validate,
-                                         mock_loads, mock_open):
-        task_file = "/tmp/task.json"
-        results = {
-            "tasks": [{
-                "env_uuid": "env-uuid-1",
-                "env_name": "env-name-1",
-                "subtasks": [{
-                    "workloads": [{
-                        "contexts": "contexts",
-                        "scenario": {"Foo.bar": {}},
-                        "runner": {"constant": {
-                            "times": 100,
-                            "concurrency": 5
-                        }}
-                    }]
-                }]
-            }]
-        }
-
-        mock_loads.return_value = results
-        ret = self.task._load_task_results_file(self.fake_api, task_file)
-        self.assertEqual([{
-            "env_uuid": "env-uuid-1",
-            "env_name": "env-name-1",
-            "subtasks": [{
-                "workloads": [{
-                    "args": {},
-                    "name": "Foo.bar",
-                    "contexts": "contexts",
-                    "contexts_results": [],
-                    "runner_type": "constant",
-                    "runner": {
-                        "times": 100,
-                        "concurrency": 5
-                    }
-                }]
-            }]
-        }], ret)
-
-    @mock.patch("rally.cli.commands.task.open", create=True)
-    @mock.patch("rally.cli.commands.task.json.loads")
-    def test__load_task_results_file_wrong_format(self, mock_loads, mock_open):
-        task_id = "/tmp/task.json"
-        mock_loads.return_value = "results"
-        self.assertRaises(task.FailedToLoadResults,
-                          self.task._load_task_results_file,
-                          api=self.real_api, task_id=task_id)
-
-        mock_loads.return_value = ["results"]
-        self.assertRaises(task.FailedToLoadResults,
-                          self.task._load_task_results_file,
-                          api=self.real_api, task_id=task_id)
-
+    @mock.patch("rally.cli.task_results_loader.load")
     @mock.patch("rally.cli.commands.task.os.path")
-    def test_import_results(self, mock_os_path):
+    def test_import_results(self, mock_os_path, mock_load):
         mock_os_path.exists.return_value = True
         mock_os_path.expanduser = lambda path: path
-        self.task._load_task_results_file = mock.MagicMock(
-            return_value=["results"]
-        )
+        mock_load.return_value = ["results"]
 
         self.task.import_results(self.fake_api,
                                  "deployment_uuid",
                                  "task_file", tags=["tag"])
 
-        self.task._load_task_results_file.assert_called_once_with(
-            self.fake_api, "task_file"
-        )
+        mock_load.assert_called_once_with("task_file")
         self.fake_api.task.import_results.assert_called_once_with(
             deployment="deployment_uuid", task_results="results",
             tags=["tag"])

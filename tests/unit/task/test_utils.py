@@ -13,12 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import collections
 import datetime as dt
 from unittest import mock
 import uuid
 
-import ddt
 from jsonschema import exceptions as schema_exceptions
 
 from rally import exceptions
@@ -549,80 +547,3 @@ class WaitForStatusTestCase(test.TestCase):
                           utils.wait_for_status,
                           resource=res, ready_statuses=["ready"],
                           update_resource=upd, timeout=2, id_attr="uuid")
-
-
-@ddt.ddt
-class WrapperForAtomicActionsTestCase(test.TestCase):
-
-    def test_dict_atomic(self):
-        atomic_actions = collections.OrderedDict(
-            [("action_1", 1), ("action_2", 2)])
-        atomic_wrapper = utils.WrapperForAtomicActions(atomic_actions, 1)
-        self.assertEqual(1, atomic_wrapper["action_1"])
-        self.assertEqual(2, atomic_wrapper["action_2"])
-        self.assertEqual(atomic_actions.items(),
-                         atomic_wrapper.items())
-        self.assertEqual(1, atomic_wrapper.get("action_1"))
-        self.assertIsNone(atomic_wrapper.get("action_3"))
-        self.assertEqual(2, len(atomic_wrapper))
-        self.assertEqual([{"name": "action_1", "started_at": 1,
-                           "finished_at": 2, "children": []},
-                          {"name": "action_2", "started_at": 2,
-                           "finished_at": 4, "children": []}
-                          ], atomic_wrapper)
-
-    def test_list_atomic(self):
-        atomic_actions = [{"name": "action_1", "started_at": 1,
-                           "finished_at": 2, "children": []},
-                          {"name": "action_2", "started_at": 2,
-                           "finished_at": 4, "children": []}]
-
-        atomic_wrapper = utils.WrapperForAtomicActions(atomic_actions)
-        self.assertEqual(1, atomic_wrapper["action_1"])
-        self.assertEqual(2, atomic_wrapper["action_2"])
-        self.assertEqual(
-            collections.OrderedDict(
-                [("action_1", 1), ("action_2", 2)]).items(),
-            atomic_wrapper.items())
-        self.assertEqual(atomic_actions[0], atomic_wrapper[0])
-        self.assertEqual(atomic_actions[1], atomic_wrapper[1])
-        self.assertEqual(1, atomic_wrapper.get("action_1"))
-        self.assertIsNone(atomic_wrapper.get("action_3"))
-        self.assertEqual(2, len(atomic_wrapper))
-        self.assertEqual(atomic_actions[0], next(iter(atomic_wrapper)))
-
-    def test__convert_new_atomic_actions(self):
-        atomic_actions = collections.OrderedDict(
-            [("action_1", 1), ("action_2", 2)])
-        atomic_wrapper = utils.WrapperForAtomicActions(atomic_actions)
-        self.assertEqual(
-            [{"name": "action_1", "started_at": 0,
-              "finished_at": 1, "children": []},
-             {"name": "action_2", "started_at": 1,
-              "finished_at": 3, "children": []}],
-            atomic_wrapper._convert_old_atomic_actions(atomic_actions))
-
-    @ddt.data(
-        {"atomic_actions": [{"name": "some", "started_at": 1.0,
-                             "finished_at": 2.0, "children": []}],
-         "expected": {"some": 1.0}},
-        {"atomic_actions": [{"name": "some", "started_at": 1.0,
-                             "finished_at": 2.0, "children": []},
-                            {"name": "some", "started_at": 2.0,
-                             "finished_at": 3.0, "children": []}],
-         "expected": {"some": 1.0, "some (2)": 1.0}},
-        {"atomic_actions": [{"name": "some", "started_at": 1.0,
-                             "finished_at": 2.0, "children": []},
-                            {"name": "some", "started_at": 2.0,
-                             "finished_at": 3.0, "children": []},
-                            {"name": "some", "started_at": 3.0,
-                             "finished_at": 4.0, "children": []}
-                            ],
-         "expected": {"some": 1.0, "some (2)": 1.0, "some (3)": 1.0}}
-    )
-    @ddt.unpack
-    def test_convert_new_atomic_actions(self, atomic_actions, expected):
-        atomic_wrapper = utils.WrapperForAtomicActions(atomic_actions)
-        self.assertEqual(expected,
-                         atomic_wrapper._convert_new_atomic_actions(
-                             atomic_actions))

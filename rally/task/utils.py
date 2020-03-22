@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import collections
 import itertools
 import time
 import traceback
@@ -401,70 +400,3 @@ class ActionBuilder(object):
                 self._build(binding["action"], times,
                             *(binding["args"] + args), **dft_kwargs))
         return bound_actions
-
-
-# TODO(andreykurilin): We need to implement some wrapper for atomic actions,
-# we can use these wrapper to simulate new and old format.
-class WrapperForAtomicActions(list):
-
-    def __init__(self, atomic_actions, timestamp=0):
-
-        self.timestamp = timestamp
-
-        if isinstance(atomic_actions, list):
-            self.__atomic_actions = atomic_actions
-            self.__old_atomic_actions = self._convert_new_atomic_actions(
-                self.__atomic_actions)
-        else:
-            self.__atomic_actions = self._convert_old_atomic_actions(
-                atomic_actions)
-            self.__old_atomic_actions = atomic_actions
-
-        super(WrapperForAtomicActions, self).__init__(self.__atomic_actions)
-
-    def _convert_old_atomic_actions(self, old_atomic_actions):
-        """Convert atomic actions to new format. """
-        atomic_actions = []
-        started_at = self.timestamp
-        for name, duration in old_atomic_actions.items():
-            finished_at = started_at + duration
-            atomic_actions.append({"name": name,
-                                   "started_at": started_at,
-                                   "finished_at": finished_at,
-                                   "children": []})
-            started_at = finished_at
-        return atomic_actions
-
-    def _convert_new_atomic_actions(self, atomic_actions):
-        """Convert atomic actions to old format. """
-        old_style = collections.OrderedDict()
-        for action in atomic_actions:
-            duration = action["finished_at"] - action["started_at"]
-            if action["name"] in old_style:
-                name_template = action["name"] + " (%i)"
-                i = 2
-                while name_template % i in old_style:
-                    i += 1
-                old_style[name_template % i] = duration
-            else:
-                old_style[action["name"]] = duration
-        return old_style
-
-    def items(self):
-        return self.__old_atomic_actions.items()
-
-    def get(self, name, default=None):
-        return self.__old_atomic_actions.get(name, default)
-
-    def __iter__(self):
-        return iter(self.__atomic_actions)
-
-    def __len__(self):
-        return len(self.__atomic_actions)
-
-    def __getitem__(self, item):
-        if isinstance(item, int):
-            # it is a call to list:
-            return self.__atomic_actions[item]
-        else:
-            return self.__old_atomic_actions[item]
