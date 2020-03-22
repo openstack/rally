@@ -106,6 +106,9 @@ Removed
   Validators plugins. It was deprecated since Rally 0.10.0 in favor of
   *platform*.
 
+* *install_rally.sh* script is too complicated and installs only rally
+  framework without plugins.
+
 Fixed
 ~~~~~
 
