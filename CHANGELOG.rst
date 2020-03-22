@@ -17,14 +17,19 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
-[unreleased]
-------------
+[3.0.0] - 2020-03-23
+--------------------
 
 Added
 ~~~~~
 
 * CI for covering unit and functional tests against Python 3.8 environment.
   Everything works, so we have proved Python 3.8 support
+
+* Add CI job for testing installation of Rally at Centos 8.
+
+* Updating a *latest* tag of `docker image
+  <https://hub.docker.com/r/xrally/xrally>`_ on every merged commit.
 
 Changed
 ~~~~~~~
