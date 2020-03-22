@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from __future__ import print_function
-
 from rally.cli import cliutils
 from rally.common.plugin import plugin
 from rally.common import utils

@@ -15,8 +15,6 @@
 
 """Rally command: verify"""
 
-from __future__ import print_function
-
 import configparser
 import datetime as dt
 import json
