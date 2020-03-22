@@ -13,13 +13,10 @@
 #    under the License.
 
 import os
-import shutil
-import tempfile
 from unittest import mock
 
 import ddt
 
-import rally
 from rally.common.plugin import plugin
 from rally.common import validation
 from rally.plugins.common import validators
@@ -335,34 +332,12 @@ class RequiredParamOrContextValidatorTestCase(test.TestCase):
 
 
 class FileExistsValidatorTestCase(test.TestCase):
-    rally_jobs_path = os.path.join(
-        os.path.dirname(rally.__file__), "..", "rally-jobs")
-
-    def setUp(self):
-        super(FileExistsValidatorTestCase, self).setUp()
-        self.validator = validators.FileExistsValidator(param_name="p",
-                                                        required=False)
-        self.credentials = dict(openstack={"admin": mock.MagicMock(),
-                                           "users": [mock.MagicMock()], })
-        self.tmp_dir = tempfile.mkdtemp()
-        os.makedirs(os.path.join(self.tmp_dir, ".rally"))
-        shutil.copytree(os.path.join(self.rally_jobs_path, "extra"),
-                        os.path.join(self.tmp_dir, ".rally", "extra"))
-
-        self.original_home = os.environ["HOME"]
-        os.environ["HOME"] = self.tmp_dir
-
-        def return_home():
-            os.environ["HOME"] = self.original_home
-        self.addCleanup(shutil.rmtree, self.tmp_dir)
-
-        self.addCleanup(return_home)
 
     @mock.patch("rally.plugins.common.validators."
                 "FileExistsValidator._file_access_ok")
     def test_file_exists(self, mock__file_access_ok):
-        self.validator.validate(self.credentials, {"args": {"p": "test_file"}},
-                                None, None)
+        validator = validators.FileExistsValidator("p", required=False)
+        validator.validate({}, {"args": {"p": "test_file"}}, None, None)
         mock__file_access_ok.assert_called_once_with(
             "test_file", os.R_OK, "p", False)
 
