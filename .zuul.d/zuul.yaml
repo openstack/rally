@@ -95,7 +95,9 @@
         - rally-install-ubuntu-bionic
         - rally-install-centos-7
         - rally-install-centos-8
-        - rally-docker-build
+        - rally-docker-build:
+            vars:
+              docker_image_version: latest
     gate:
       jobs:
         - rally-tox-docs
@@ -110,4 +112,9 @@
         - rally-install-ubuntu-bionic
         - rally-install-centos-7
         - rally-install-centos-8
+        - rally-docker-build-and-push:
+            vars:
+              docker_image_version: latest
+    release:
+      jobs:
         - rally-docker-build-and-push
