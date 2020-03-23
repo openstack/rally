@@ -5,6 +5,7 @@ from rally.common import cfg
 from rally.task import atomic
 from rally.common import logging
 from rally.common import sshutils
+from rally.plugins.openstack import osclients
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.vm import utils as vm_utils
 
@@ -100,7 +101,7 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
     @atomic.action_timer("neutron.delete_port_pair")
     def _delete_port_pair(self, port_pair):
 
-        self.clients("neutron").delete_sfc_port_pair(port_pair["port_pair"]["id"])
+        self.admin_clients("neutron").delete_sfc_port_pair(port_pair["port_pair"]["id"])
 
 
 
@@ -137,7 +138,7 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
     @atomic.action_timer("neutron.delete_port_pair_group")
     def _delete_port_pair_group(self, port_pair_group):
 
-        self.clients("neutron").delete_sfc_port_pair_group(port_pair_group["port_pair_group"]["id"])
+        self.admin_clients("neutron").delete_sfc_port_pair_group(port_pair_group["port_pair_group"]["id"])
 
 
 
@@ -175,7 +176,7 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
     @atomic.action_timer("neutron.delete_flow_classifier")
     def _delete_flow_classifier(self, flow_classifier):
 
-        self.clients("neutron").delete_sfc_flow_classifier(flow_classifier["flow_classifier"]["id"])
+        self.admin_clients("neutron").delete_sfc_flow_classifier(flow_classifier["flow_classifier"]["id"])
 
 
     @atomic.action_timer("neutron.create_port_chain")
@@ -213,7 +214,7 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
     @atomic.action_timer("neutron.delete_port_chain")
     def _delete_port_chain(self, port_chain):
 
-        self.clients("neutron").delete_sfc_port_chain(port_chain["port_chain"]["id"])
+        self.admin_clients("neutron").delete_sfc_port_chain(port_chain["port_chain"]["id"])
 
     @atomic.action_timer("neutron.delete_trunk")
     def _delete_trunk(self, trunk_port):
@@ -256,7 +257,7 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
 
     @atomic.action_timer("create_svi_ports")
     def _create_svi_ports(self, network, subnet, prefix):
-       
+        
         port_list = self._list_ports()
         for item in port_list:
             if item['network_id'] == network["network"]["id"]:
@@ -274,14 +275,14 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
         port_create_args["name"] = 'apic-svi-port:node-101'
         port_create_args["network_id"] = network["network"]["id"]
         port_create_args.update({"fixed_ips": [{"subnet_id": subnet[0].get("subnet", {}).get("id"), "ip_address": prefix+".199"}]})
-        self.clients("neutron").create_port({"port": port_create_args}) 
-
+        self.clients("neutron").create_port({"port": port_create_args})
+  
     @atomic.action_timer("nova.admin_boot_server")
     def _admin_boot_server(self, image, flavor,
                  auto_assign_nic=False, **kwargs):
   
         server_name = self.generate_random_name()
-       
+        
         if auto_assign_nic and not kwargs.get("nics", False):
             nic = self._pick_random_nic()
             if nic:
@@ -359,3 +360,34 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
         except (exceptions.TimeoutException,
                 exceptions.SSHTimeout):
             raise
+
+    def _change_client(self, pos, context=None, admin_clients=None, clients=None):
+        super(scenario.OpenStackScenario, self).__init__(context)
+        
+        if context:
+            api_info = {}
+            if "api_versions@openstack" in context.get("config", {}):
+                api_versions = context["config"]["api_versions@openstack"]
+                for service in api_versions:
+                    api_info[service] = {
+                        "version": api_versions[service].get("version"),
+                        "service_type": api_versions[service].get(
+                            "service_type")}
+
+            if admin_clients is None and "admin" in context:
+                self._admin_clients = osclients.Clients(
+                    context["admin"]["credential"], api_info)
+            if clients is None:
+                if "users" in context and "user" not in context:
+                    self._choose_user(context)
+                
+                if "user" in context:
+                    self._clients = osclients.Clients(context["users"][pos]["credential"], api_info)
+            
+        if admin_clients:
+            self._admin_clients = admin_clients
+
+        if clients:
+            self._clients = clients
+
+        self._init_profiler(context)

@@ -1,0 +1,21 @@
+{
+    "ScenarioPlugin.two_customer_single_sfc": [
+        {
+            "args": {
+                "access_network": "219269de-40ca-4dfa-875b-5c332add62df",
+                "nat_network": "fb3803b3-6ecc-4c6a-bf10-55d8b3218357",
+                "bras_image" : "d8b5060a-ef63-4b01-8b79-083ae8866aaf",
+                "nat_image" : "ff54e7d0-fdb2-4b39-8713-1e9e4521e849",
+                "service_image1" : "4a634c5f-9006-418b-b569-db178e47744a",
+                "flavor": "small",
+                "username" : "root",
+                "password" : "noir0123",
+                "access_router_ip" : "10.108.1.5"
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ]
+}
