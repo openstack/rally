@@ -3,6 +3,7 @@ FROM ubuntu:18.04
 RUN sed -i s/^deb-src.*// /etc/apt/sources.list
 
 RUN apt-get update && apt-get install --yes sudo python3-dev python3-pip vim git-core && \
+    apt clean && \
     pip3 install --upgrade pip && \
     useradd -u 65500 -m rally && \
     usermod -aG sudo rally && \
@@ -12,14 +13,11 @@ RUN apt-get update && apt-get install --yes sudo python3-dev python3-pip vim git
 COPY ./ /rally/source
 WORKDIR /rally/source
 
-RUN pip3 install . --constraint upper-constraints.txt && \
-    pip3 install pymysql && \
-    pip3 install psycopg2-binary && \
+RUN pip3 install . --constraint upper-constraints.txt --no-cache-dir && \
+    pip3 install pymysql psycopg2-binary --no-cache-dir && \
     mkdir -p /etc/rally && \
     echo "[database]" > /etc/rally/rally.conf && \
     echo "connection=sqlite:////home/rally/.rally/rally.db" >> /etc/rally/rally.conf
-# Cleanup pip
-RUN rm -rf /root/.cache/
 
 COPY ./etc/motd_for_docker /etc/motd
 RUN echo '[ ! -z "$TERM" -a -r /etc/motd ] && cat /etc/motd' >> /etc/bash.bashrc
