@@ -23,4 +23,3 @@ testresources                                          # UNKNOWN
 
 # needed for functional job
 stestr                                                 # Apache Software License
-mock 

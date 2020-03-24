@@ -98,23 +98,3 @@
       Uses tox with the ``py27`` environment.
     vars:
       tox_env: py27
-
-- job:
-    name: rally-tox-py34
-    parent: rally-tox-base
-    description: |
-      Run unit test for rally project.
-
-      Uses tox with the ``py34`` environment.
-    vars:
-      tox_env: py34
-
-- job:
-    name: rally-tox-py35
-    parent: rally-tox-base
-    description: |
-      Run unit test for rally project.
-
-      Uses tox with the ``py35`` environment.
-    vars:
-      tox_env: py35

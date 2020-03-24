@@ -87,7 +87,6 @@
         - rally-tox-py36
         - rally-tox-py37
         - rally-tox-py38
-        - rally-tox-cover
         - rally-tox-functional
         - rally-tox-functional-py38
         - rally-tox-self
@@ -105,13 +104,14 @@
         - rally-tox-py36
         - rally-tox-py37
         - rally-tox-py38
-        - rally-tox-cover
         - rally-tox-functional
         - rally-tox-self
         - rally-database-migration
         - rally-install-ubuntu-bionic
         - rally-install-centos-7
         - rally-install-centos-8
+    post:
+      jobs:
         - rally-docker-build-and-push:
             vars:
               docker_image_version: latest
