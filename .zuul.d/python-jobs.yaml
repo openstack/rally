@@ -87,6 +87,17 @@
     vars:
       tox_env: py38
 
+- job:
+    name: rally-tox-cover
+    parent: tox-cover
+    description: |
+      Run test for rally project.
+
+      Uses tox with the ``cover`` environment.
+    vars:
+      coverage_output_src: '{{ zuul.project.src_dir }}/cover/'
+      zuul_executor_dest: '{{ zuul.executor.log_root }}/coverage/'
+
 # TODO(andreykurilin): Remove these jobs definitions as soon as
 #   rally-openstack project stops using them
 - job:

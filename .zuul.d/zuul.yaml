@@ -82,6 +82,7 @@
       rtd_webhook_id: "52691"
     check:
       jobs:
+        - rally-tox-cover
         - rally-tox-docs
         - rally-tox-pep8
         - rally-tox-py36
@@ -99,6 +100,7 @@
               docker_image_version: latest
     gate:
       jobs:
+        - rally-tox-cover
         - rally-tox-docs
         - rally-tox-pep8
         - rally-tox-py36
