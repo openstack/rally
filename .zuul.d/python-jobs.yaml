@@ -88,6 +88,16 @@
       tox_env: py38
 
 - job:
+    name: rally-tox-samples
+    parent: rally-tox-base
+    description: |
+      Run unit test for rally project.
+
+      Uses tox with the ``samples`` environment.
+    vars:
+      tox_env: samples
+
+- job:
     name: rally-tox-cover
     parent: tox-cover
     description: |
