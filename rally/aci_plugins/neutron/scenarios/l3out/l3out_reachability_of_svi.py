@@ -17,7 +17,7 @@ from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
 
 class L3OutReachabilityofSVI(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_utils.NovaScenario, scenario.OpenStackScenario):
 
-    def run(self, access_network, nat_network, image, flavor, username, password):
+    def run(self, access_network, nat_network, image, flavor, username, password, access_router_ip, nat_router_ip, router_username):
         
         acc_net = self.clients("neutron").show_network(access_network)
         nat_net = self.clients("neutron").show_network(nat_network)              
@@ -68,7 +68,7 @@ class L3OutReachabilityofSVI(vcpe_utils.vCPEScenario, neutron_utils.NeutronScena
                     "script_inline": "ping -c 10 " + fip2
                 }
 
-        self._remote_command_wo_server('noiro', password, '10.108.1.5', command1)
+        self._remote_command_wo_server(router_username, password, access_router_ip, command1)
         print "\nVerifying the traffic from nat-router...\n"
-        self._remote_command_wo_server('noiro', password, '10.108.1.6', command2)
+        self._remote_command_wo_server(router_username, password, nat_router_ip, command2)
 

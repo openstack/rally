@@ -17,9 +17,9 @@ from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
 
 class TrunkScale(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_utils.NovaScenario, scenario.OpenStackScenario):
    
-    def run(self, image, flavor, public_net, username, password, scale):
+    def run(self, image, flavor, public_network, username, password, scale):
 
-        public_network = self.clients("neutron").show_network(public_net)
+        public_net = self.clients("neutron").show_network(public_network)
         secgroup = self.context.get("user", {}).get("secgroup")
         key_name=self.context["user"]["keypair"]["name"]
 
@@ -29,9 +29,9 @@ class TrunkScale(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_ut
 
         port_create_args = {}
         port_create_args["security_groups"] = [secgroup.get('id')]
-        pf1 = self._create_port(public_network, port_create_args)
+        pf1 = self._create_port(public_net, port_create_args)
         pf1_id = pf1.get('port', {}).get('id')
-        pf2 = self._create_port(public_network, port_create_args)
+        pf2 = self._create_port(public_net, port_create_args)
         pf2_id = pf2.get('port', {}).get('id')
         port_create_args = {}
         port_create_args.update({"port_security_enabled": "false"})
@@ -86,12 +86,12 @@ class TrunkScale(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_ut
 
         command1 = {
                     "interpreter": "/bin/sh",
-                    "script_file": "/root/.rally/plugins/orchest/orchest_trunk_scale_vm1.sh"
+                    "script_file": "/usr/local/lib/python2.7/dist-packages/rally/aci_plugins/orchest/orchest_trunk_scale_vm1.sh"
                 }
 
         command2 = {
                     "interpreter": "/bin/sh",
-                    "script_file": "/root/.rally/plugins/orchest/orchest_trunk_scale_vm2.sh"
+                    "script_file": "/usr/local/lib/python2.7/dist-packages/rally/aci_plugins/orchest/orchest_trunk_scale_vm2.sh"
                 }
         
         print "\nAdding sub-interfaces into the VM1...\n"

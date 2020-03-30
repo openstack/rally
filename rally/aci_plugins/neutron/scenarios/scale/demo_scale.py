@@ -18,11 +18,16 @@ from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
 
 class DemoScale(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_utils.NovaScenario, scenario.OpenStackScenario):
 
-    def run(self, access_network, nat_network, bras_image, nat_image, service_image1, flavor, username, password, access_router_ip, scale):
+    def run(self, bras_image, nat_image, service_image1, flavor, username, password, access_router_ip, scale):
          
-        acc_net = self.clients("neutron").show_network(access_network)
-        nat_net = self.clients("neutron").show_network(nat_network)              
-        
+        acc_net = self._admin_create_network('ACCESS', {"shared": True, "apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": "1010", "apic:distinguished_names": {"ExternalNetwork": "uni/tn-common/out-Access-Out/instP-data_ext_pol"}})
+        acc_sub = self._admin_create_subnet(acc_net, {"cidr": '172.168.0.0/24'}, None)
+        self._create_svi_ports(acc_net, acc_sub, '172.168.0')
+
+        nat_net = self._admin_create_network('INTERNET', {"shared": True, "apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": "1020", "apic:distinguished_names": {"ExternalNetwork": "uni/tn-common/out-Internet-Out/instP-data_ext_pol"}})
+        nat_sub = self._admin_create_subnet(nat_net, {"cidr": '173.168.0.0/24'}, None)
+        self._create_svi_ports(nat_net, nat_sub, '173.168.0')
+
         port_create_args = {}
         port_create_args.update({"port_security_enabled": "false"})
         pfip1 = self._admin_create_port(acc_net, port_create_args)
@@ -57,20 +62,23 @@ class DemoScale(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_uti
         fc = []
         pc = []
         dic = []
+        net = []
         for i in range(0, int(scale)):
             dic.append(i)
         dic.append(0)
         for i in range(1, int(scale)+1):
+            
             hex_i = hex(int(i))[2:]
             router = self._create_router({}, False)
-            net, sub = self._create_network_and_subnets({"apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": 1000+i },{"cidr": '192.168.0.0/24'}, 1, None)
-        
-            net_id = net.get('network', {}).get('id')
-            self._create_svi_ports(net, sub, "192.168.0")
-            self._add_interface_router(sub[0].get("subnet"), router.get("router"))
+            net.append(self._create_network({"apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": 1000+i }))
+            sub = self._create_subnet(net[i-1],{"cidr": '192.168.0.0/24'},  None)
+            
+            net_id = net[i-1]["network"]["id"]
+            self._create_svi_ports(net[i-1], sub, "192.168.0")
+            self._add_interface_router(sub.get("subnet"), router.get("router"))
         
             port_create_args["mac_address"] = 'fa:16:3e:bc:d5:' + hex_i
-            subp1 = self._create_port(net, port_create_args)
+            subp1 = self._create_port(net[i-1], port_create_args)
             subp1_id = subp1.get('port', {}).get('id')
             subport_payload = [{"port_id": subp1["port"]["id"],
                                 "segmentation_type": "vlan",
@@ -80,7 +88,7 @@ class DemoScale(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_uti
             port_create_args = {}
             port_create_args.update({"port_security_enabled": "false"})
             port_create_args["mac_address"] = 'fa:16:3e:1b:a1:' + hex_i
-            subp2 = self._create_port(net, port_create_args)
+            subp2 = self._create_port(net[i-1], port_create_args)
             subp2_id = subp2.get('port', {}).get('id')
             subport_payload = [{"port_id": subp2["port"]["id"],
                                 "segmentation_type": "vlan",
@@ -122,7 +130,7 @@ class DemoScale(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_uti
 
         command2 = {
                     "interpreter": "/bin/sh",
-                    "script_file": "/root/.rally/plugins/orchest/orchest_demo_scale_bras.sh"
+                    "script_file": "/usr/local/lib/python2.7/dist-packages/rally/aci_plugins/orchest/orchest_demo_scale_bras.sh"
                 }
 
         command3 = {
@@ -132,7 +140,7 @@ class DemoScale(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_uti
 
         command4 = {
                     "interpreter": "/bin/sh",
-                    "script_file": "/root/.rally/plugins/orchest/orchest_demo_scale_nat.sh"
+                    "script_file": "/usr/local/lib/python2.7/dist-packages/rally/aci_plugins/orchest/orchest_demo_scale_nat.sh"
                 }
         
      	print "\nConfiguring the BRAS-VM and running Bird init...\n"
@@ -188,6 +196,7 @@ class DemoScale(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_uti
             self._delete_flow_classifier(fc[i])
             self._delete_port_pair_group(ppg[i])
             self._delete_port_pair(pp[i])
+            self._delete_svi_ports(net[i])
 
         self._delete_server(bras_vm)
         self._delete_server(nat_vm)
@@ -195,4 +204,5 @@ class DemoScale(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_uti
         self._admin_delete_trunk(trunk_nat)
         self._admin_delete_port(pfip1)
         self._admin_delete_port(pfip2)
-
+        self._admin_delete_network(acc_net)
+        self._admin_delete_network(nat_net)

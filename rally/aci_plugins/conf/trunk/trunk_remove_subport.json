@@ -5,9 +5,9 @@
                 "cidr1": "192.168.0.0/24",
                 "cidr2": "192.168.10.0/24",
                 "cidr3": "192.168.20.0/24",
-                "image" : "ab560709-588c-4573-8934-bdb4c71c1e7b",
+                "image" : {{bras_image}},
                 "flavor": "small",
-                "public_net": "219269de-40ca-4dfa-875b-5c332add62df",
+                "public_net": {{access_network}},
                 "username" : "root",
                 "password" : "noir0123"
                 },
