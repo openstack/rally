@@ -2,9 +2,9 @@
     "ScenarioPlugin.svi_scale": [
         {
             "args": {
-                "image" : "d8b5060a-ef63-4b01-8b79-083ae8866aaf",
+                "image" : {{bras_image}},
                 "flavor": "small",
-                "public_net": "219269de-40ca-4dfa-875b-5c332add62df",
+                "public_network": {{access_network}},
                 "username" : "root",
                 "password" : "noir0123",
                 "scale" : "5"

@@ -4,16 +4,16 @@
             "args": {
                 "src_cidr": "192.168.100.0/24",
                 "dest_cidr": "192.168.200.0/24",
-                "vm_image": "d8b5060a-ef63-4b01-8b79-083ae8866aaf",
-                "service_image1": "4a634c5f-9006-418b-b569-db178e47744a",
-                "service_image2" : "f361e500-fde6-421a-bd79-6e883374783a",
-                "service_image3" : "6a0b502d-b0c1-4788-bc0e-a66c7c16b3c8",
+                "vm_image": {{bras_image}},
+                "service_image1" : {{service_image1}},
+                "service_image2" : {{service_image2}},
+                "service_image3" : {{service_image3}},
                 "flavor": "tiny",
-                "public_net": "219269de-40ca-4dfa-875b-5c332add62df",
+                "public_network": {{access_network}},
                 "username" : "root",
                 "password" : "noir0123",
                 "x" : "3",
-                "y" : "5"
+                "y" : "2"
             },
             "runner": {
                 "type": "serial",
