@@ -1,0 +1,542 @@
+{
+    "ScenarioPlugin.simple_sfc": [
+        {
+            "args": {
+                "src_cidr": "192.168.100.0/24",
+                "dest_cidr": "192.168.200.0/24",
+                "image": {{bras_image}},
+                "flavor": "tiny"
+            },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+    "ScenarioPlugin.verify_sfc_api": [
+        {
+            "args": {
+                "src_cidr": "192.168.100.0/24",
+                "dest_cidr": "192.168.200.0/24",
+                "image": {{cirros_image}},
+                "flavor": "tiny"
+            },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+    "ScenarioPlugin.sfc_block_traffic": [
+        {
+            "args": {
+                "src_cidr": "192.168.100.0/24",
+                "dest_cidr": "192.168.200.0/24",
+                "vm_image": {{bras_image}},
+                "service_image": {{cirros_image}},
+                "public_network": {{access_network}},
+                "flavor": "tiny",
+                "username" : "root",
+                "password" : "noir0123"
+            },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+    "ScenarioPlugin.sfc_allow_traffic": [
+        {
+            "args": {
+                "src_cidr": "192.168.100.0/24",
+                "dest_cidr": "192.168.200.0/24",
+                "vm_image": {{bras_image}},
+                "service_image1" : {{service_image1}},
+                "flavor": "tiny",
+                "public_network": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123"
+            },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+    "ScenarioPlugin.sfc_single_parallel": [
+        {
+            "args": {
+                "src_cidr": "192.168.100.0/24",
+                "dest_cidr": "192.168.200.0/24",
+                "vm_image": {{bras_image}},
+                "service_image1" : {{service_image1}},
+                "flavor": "tiny",
+                "public_network": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123"
+            },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+    "ScenarioPlugin.sfc_multi_parallel": [
+        {
+            "args": {
+                "src_cidr": "192.168.100.0/24",
+                "dest_cidr": "192.168.200.0/24",
+                "vm_image": {{bras_image}},
+                "service_image1": {{service_image1}},
+                "service_image2": {{service_image2}},
+                "service_image3": {{service_image3}},
+                "flavor": "tiny",
+                "public_network": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123"
+            },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+    "ScenarioPlugin.sfc_multi_series": [
+        {
+            "args": {
+                "src_cidr": "192.168.100.0/24",
+                "dest_cidr": "192.168.200.0/24",
+                "vm_image":{{bras_image}},
+                "service_image1": {{service_image1}},
+                "service_image2": {{service_image2}},
+                "service_image3": {{service_image3}},
+                "flavor": "tiny",
+                "public_network": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123"
+            },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+    "ScenarioPlugin.sfc_add_flowclassifier": [
+        {
+            "args": {
+                "src_cidr": "192.168.100.0/24",
+                "dest_cidr": "192.168.200.0/24",
+                "vm_image": {{bras_image}},
+                "service_image1": {{service_image1}},
+                "flavor": "tiny",
+                "public_network": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123"
+            },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+    "ScenarioPlugin.sfc_add_portpair": [
+        {
+            "args": {
+                "src_cidr": "192.168.100.0/24",
+                "dest_cidr": "192.168.200.0/24",
+                "vm_image": {{bras_image}},
+                "service_image1": {{service_image1}},
+                "flavor": "tiny",
+                "public_network": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123"
+            },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+    "ScenarioPlugin.sfc_add_service": [
+        {
+            "args": {
+                "src_cidr": "192.168.100.0/24",
+                "dest_cidr": "192.168.200.0/24",
+                "vm_image": {{bras_image}},
+                "service_image1": {{service_image1}},
+                "service_image2": {{service_image2}},
+                "flavor": "tiny",
+                "public_network": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123"
+            },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+    "ScenarioPlugin.sfc_remove_flowclassifier": [
+        {
+            "args": {
+                "src_cidr": "192.168.100.0/24",
+                "dest_cidr": "192.168.200.0/24",
+                "vm_image": {{bras_image}},
+                "service_image1": {{service_image1}},
+                "flavor": "tiny",
+                "public_network": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123"
+            },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ], 
+    "ScenarioPlugin.sfc_remove_portpair": [
+        {
+            "args": {
+                "src_cidr": "192.168.100.0/24",
+                "dest_cidr": "192.168.200.0/24",
+                "vm_image": {{bras_image}},
+                "service_image1": {{service_image1}},
+                "flavor": "tiny",
+                "public_network": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123"
+            },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+    "ScenarioPlugin.sfc_remove_service": [
+        {
+            "args": {
+                "src_cidr": "192.168.100.0/24",
+                "dest_cidr": "192.168.200.0/24",
+                "vm_image": {{bras_image}},
+                "service_image1": {{service_image1}},
+                "service_image2": {{service_image2}},
+                "flavor": "tiny",
+                "public_network": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123"
+            },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+    "ScenarioPlugin.simple_trunk": [
+        {
+            "args": {
+                "cidr1": "192.168.0.0/24",
+                "cidr2": "192.168.10.0/24",
+                "cidr3": "192.168.20.0/24",
+                "image" : {{bras_image}},
+                "flavor": "small",
+                "public_net": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123"
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+    "ScenarioPlugin.trunk_add_subport": [
+        {
+            "args": {
+                "cidr1": "192.168.0.0/24",
+                "cidr2": "192.168.10.0/24",
+                "cidr3": "192.168.20.0/24",
+                "image" : {{bras_image}},
+                "flavor": "small",
+                "public_net": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123"
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+    "ScenarioPlugin.trunk_inter_vlan_traffic": [
+        {
+            "args": {
+                "cidr1": "192.168.0.0/24",
+                "cidr2": "192.168.10.0/24",
+                "cidr3": "192.168.20.0/24",
+                "image" : {{bras_image}},
+                "flavor": "small",
+                "public_net": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123"
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+    "ScenarioPlugin.trunk_intra_vlan_traffic": [
+        {
+            "args": {
+                "cidr1": "192.168.0.0/24",
+                "cidr2": "192.168.10.0/24",
+                "cidr3": "192.168.20.0/24",
+                "image" : {{bras_image}},
+                "flavor": "small",
+                "public_net": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123"
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+    "ScenarioPlugin.trunk_native_vlan_traffic": [
+        {
+            "args": {
+                "cidr1": "192.168.0.0/24",
+                "cidr2": "192.168.10.0/24",
+                "cidr3": "192.168.20.0/24",
+                "image" : {{bras_image}},
+                "flavor": "small",
+                "public_net": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123"
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+        "ScenarioPlugin.trunk_remove_subport": [
+        {
+            "args": {
+                "cidr1": "192.168.0.0/24",
+                "cidr2": "192.168.10.0/24",
+                "cidr3": "192.168.20.0/24",
+                "image" : {{bras_image}},
+                "flavor": "small",
+                "public_net": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123"
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+    "ScenarioPlugin.svi_reachability_bw_vms": [
+        {
+            "args": {
+                "cidr1": "192.168.10.0/24",
+                "cidr2": "192.168.20.0/24",
+                "image" : {{bras_image}},
+                "flavor": "small",
+                "public_net": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123"
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+    "ScenarioPlugin.svi_bgp_connectivity": [
+        {
+            "args": {
+                "cidr1": "192.168.10.0/24",
+                "cidr2": "192.168.20.0/24",
+                "image" : {{bras_image}},
+                "flavor": "small",
+                "public_net": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123"
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+        "ScenarioPlugin.svi_reachability_of_bgp_route": [
+        {
+            "args": {
+                "cidr1": "192.168.10.0/24",
+                "cidr2": "192.168.20.0/24",
+                "image" : {{bras_image}},
+                "flavor": "small",
+                "public_net": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123"
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+    "ScenarioPlugin.l3out_reachability_of_svi": [
+        {
+            "args": {
+                "access_network": {{access_network}},
+                "nat_network": {{nat_network}},
+                "image" : {{bras_image}},
+                "flavor": "small",
+                "username" : "root",
+                "password" : "noir0123",
+                "access_router_ip" : {{access_router_ip}},
+                "nat_router_ip" : {{nat_router_ip}},
+                "router_username" : {{router_username}}
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+    "ScenarioPlugin.l3out_bgp_connectivity": [
+        {
+            "args": {
+                "access_network": {{access_network}},
+                "nat_network": {{nat_network}},
+                "image" : {{bras_image}},
+                "flavor": "small",
+                "username" : "root",
+                "password" : "noir0123"
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+    "ScenarioPlugin.l3out_reachability_of_bgp_route": [
+        {
+            "args": {
+                "access_network": {{access_network}},
+                "nat_network": {{nat_network}},
+                "image" : {{bras_image}},
+                "flavor": "small",
+                "username" : "root",
+                "password" : "noir0123",
+                "access_router_ip" : {{access_router_ip}},
+                "nat_router_ip" : {{nat_router_ip}},
+                "router_username" : {{router_username}}
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+    "ScenarioPlugin.sfc_scale_series": [
+        {
+            "args": {
+                "src_cidr": "192.168.100.0/24",
+                "dest_cidr": "192.168.200.0/24",
+                "vm_image": {{bras_image}},
+                "service_image1": {{service_image1}},
+                "service_image2" : {{service_image2}},
+                "service_image3" : {{service_image3}},
+                "flavor": "tiny",
+                "public_network": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123",
+                "scale" : "3"
+            },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+    "ScenarioPlugin.sfc_scale_parallel": [
+        {
+            "args": {
+                "src_cidr": "192.168.100.0/24",
+                "dest_cidr": "192.168.200.0/24",
+                "vm_image": {{bras_image}},
+                "service_image1": {{service_image1}},
+                "flavor": "tiny",
+                "public_network": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123",
+                "scale" : "5"
+            },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+    "ScenarioPlugin.sfc_scale_two_dimension": [
+        {
+            "args": {
+                "src_cidr": "192.168.100.0/24",
+                "dest_cidr": "192.168.200.0/24",
+                "vm_image": {{bras_image}},
+                "service_image1" : {{service_image1}},
+                "service_image2" : {{service_image2}},
+                "service_image3" : {{service_image3}},
+                "flavor": "tiny",
+                "public_network": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123",
+                "x" : "3",
+                "y" : "2"
+            },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+    "ScenarioPlugin.trunk_scale": [
+        {
+            "args": {
+                "image" : {{bras_image}},
+                "flavor": "small",
+                "public_network": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123",
+                "scale" : "5"
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+    "ScenarioPlugin.svi_scale": [
+        {
+            "args": {
+                "image" : {{bras_image}},
+                "flavor": "small",
+                "public_network": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123",
+                "scale" : "5"
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ]
+}
+

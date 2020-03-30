@@ -1,0 +1,90 @@
+{
+    "ScenarioPlugin.single_customer_single_sfc": [
+        {
+            "args": {
+                "bras_image" : {{bras_image}},
+                "nat_image" : {{nat_image}},
+                "service_image1" : {{service_image1}},
+                "flavor": "small",
+                "username" : "root",
+                "password" : "noir0123",
+                "access_router_ip" : {{access_router_ip}}
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+    "ScenarioPlugin.single_customer_multiple_sfc": [
+        {
+            "args": {
+                "bras_image" : {{bras_image}},
+                "nat_image" : {{nat_image}},
+                "service_image1" : {{service_image1}},
+                "service_image2" : {{service_image2}},
+                "service_image3" : {{service_image3}},
+                "flavor": "small",
+                "username" : "root",
+                "password" : "noir0123",
+                "access_router_ip" : {{access_router_ip}}
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+    "ScenarioPlugin.single_customer_two_sites_single_sfc": [
+        {
+            "args": {
+                "bras_image" : {{bras_image}},
+                "nat_image" : {{nat_image}},
+                "service_image1" : {{service_image1}},
+                "flavor": "small",
+                "username" : "root",
+                "password" : "noir0123",
+                "access_router_ip" : {{access_router_ip}}
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+    "ScenarioPlugin.two_customer_single_sfc": [
+        {
+            "args": {
+                "bras_image" : {{bras_image}},
+                "nat_image" : {{nat_image}},
+                "service_image1" : {{service_image1}},
+                "flavor": "small",
+                "username" : "root",
+                "password" : "noir0123",
+                "access_router_ip" : {{access_router_ip}}
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+    "ScenarioPlugin.demo_scale": [
+        {
+            "args": {
+                "bras_image" : {{bras_image}},
+                "nat_image" : {{nat_image}},
+                "service_image1" : {{service_image1}},
+                "flavor": "small",
+                "username" : "root",
+                "password" : "noir0123",
+                "access_router_ip" : {{access_router_ip}},
+                "scale" : "3"
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ]
+}
