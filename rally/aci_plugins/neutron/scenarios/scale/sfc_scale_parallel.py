@@ -17,9 +17,9 @@ from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
 
 class SFCScaleParallel(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_utils.NovaScenario, scenario.OpenStackScenario):
 
-    def run(self, src_cidr, dest_cidr, vm_image, service_image1, flavor, public_net, username, password, scale):
+    def run(self, src_cidr, dest_cidr, vm_image, service_image1, flavor, public_network, username, password, scale):
         
-        public_network = self.clients("neutron").show_network(public_net)        
+        public_net = self.clients("neutron").show_network(public_network)        
         secgroup = self.context.get("user", {}).get("secgroup")
 
         net1, sub1 = self._create_network_and_subnets({},{"cidr": src_cidr}, 1, None)
@@ -38,8 +38,12 @@ class SFCScaleParallel(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, n
         
         port_create_args = {}
         port_create_args["security_groups"] = [secgroup.get('id')]
-        p1 = self._create_port(public_network, port_create_args)
+        p1 = self._create_port(public_net, port_create_args)
         p1_id = p1.get('port', {}).get('id')
+        p2 = self._create_port(public_net, port_create_args)
+        p2_id = p2.get('port', {}).get('id')
+        port_create_args = {}
+        port_create_args.update({"port_security_enabled": "false"})
         psrc = self._create_port(net1, port_create_args)
         psrc_id = psrc.get('port', {}).get('id')
         nics = [{"port-id": p1_id},{"port-id": psrc_id}]
@@ -49,21 +53,29 @@ class SFCScaleParallel(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, n
         
         pdest = self._create_port(net2, port_create_args)
         pdest_id = pdest.get('port', {}).get('id')
-        nics = [{"port-id": pdest_id}]
+        nics = [{"port-id": p2_id},{"port-id": pdest_id}]
         kwargs = {}
         kwargs.update({'nics': nics})
         dest_vm = self._boot_server(vm_image, flavor, False, **kwargs)
         self.sleep_between(30, 40)
-
-        fip = p1.get('port', {}).get('fixed_ips')[0].get('ip_address')
-        pdest_add = pdest.get('port', {}).get('fixed_ips')[0].get('ip_address')
-        command = {
-                    "interpreter": "/bin/sh",
-                    "script_inline": "ping -c 10 " + pdest_add 
-                } 
         
+        fip1 = p1.get('port', {}).get('fixed_ips')[0].get('ip_address')
+        fip2 = p2.get('port', {}).get('fixed_ips')[0].get('ip_address')
+
+        print "\nConfiguring destination-vm for traffic verification..\n"
+        command1 = {
+                    "interpreter": "/bin/sh",
+                    "script_inline": "ip address add 192.168.200.101/24 dev eth1;ip address add 192.168.200.102/24 dev eth1;ip address add 192.168.200.103/24 dev eth1;route add default gw 192.168.200.1 eth1"
+                }
+        self._remote_command(username, password, fip2, command1, dest_vm)
+
+        command2 = {
+                    "interpreter": "/bin/sh",
+                    "script_inline": "ping -c 5 192.168.200.101;ping -c 5 192.168.200.102;ping -c 5 192.168.200.103"
+                }
+
         print "\nTraffic verification before SFC\n"
-        self._remote_command(username, password, fip, command, src_vm)
+        self._remote_command(username, password, fip1, command2, src_vm)
 
         print "\nCreating parallel service function chain\n"
         pp = []
@@ -86,7 +98,7 @@ class SFCScaleParallel(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, n
         self.sleep_between(30, 40)
 
         print "\nTraffic verification after creating SFC\n"
-        self._remote_command(username, password, fip, command, src_vm)
+        self._remote_command(username, password, fip1, command2, src_vm)
 
         self._delete_port_chain(pc)
         self._delete_port_pair_group(ppg)

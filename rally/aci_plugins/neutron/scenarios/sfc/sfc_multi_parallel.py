@@ -17,9 +17,9 @@ from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
 
 class SFCMultiParallel(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_utils.NovaScenario, scenario.OpenStackScenario):
 
-    def run(self, src_cidr, dest_cidr, image, flavor, public_net, username, password):
+    def run(self, src_cidr, dest_cidr, vm_image, service_image1, service_image2, service_image3, flavor, public_network, username, password):
 
-        public_network = self.clients("neutron").show_network(public_net)        
+        public_net = self.clients("neutron").show_network(public_network)        
         secgroup = self.context.get("user", {}).get("secgroup")
         key_name=self.context["user"]["keypair"]["name"]
 
@@ -48,25 +48,27 @@ class SFCMultiParallel(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, n
 
         port_create_args = {}
         port_create_args["security_groups"] = [secgroup.get('id')]
-        p1 = self._create_port(public_network, port_create_args)
+        p1 = self._create_port(public_net, port_create_args)
         p1_id = p1.get('port', {}).get('id')
+        p2 = self._create_port(public_net, port_create_args)
+        p2_id = p2.get('port', {}).get('id')
+        port_create_args = {}
+        port_create_args.update({"port_security_enabled": "false"})
         psrc = self._create_port(net1, port_create_args)
         psrc_id = psrc.get('port', {}).get('id')
         nics = [{"port-id": p1_id},{"port-id": psrc_id}]
         kwargs = {}
         kwargs.update({'nics': nics})
         kwargs.update({'key_name': key_name})
-        src_vm = self._boot_server(image, flavor, False, **kwargs)
+        src_vm = self._boot_server(vm_image, flavor, False, **kwargs)
         
         pdest = self._create_port(net2, port_create_args)
         pdest_id = pdest.get('port', {}).get('id')
-        nics = [{"port-id": pdest_id}]
+        nics = [{"port-id": p2_id},{"port-id": pdest_id}]
         kwargs = {}
         kwargs.update({'nics': nics})
-        dest_vm = self._boot_server(image, flavor, False, **kwargs)
+        dest_vm = self._boot_server(vm_image, flavor, False, **kwargs)
         
-        port_create_args = {}
-        port_create_args.update({"port_security_enabled": "false"})
         pin1 = self._create_port(left1, port_create_args)
         pout1 = self._create_port(right1, port_create_args)
         kwargs = {}
@@ -75,7 +77,7 @@ class SFCMultiParallel(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, n
         nics = [{"port-id": pin1_id}, {"port-id": pout1_id}]
         kwargs.update({'nics': nics})
         kwargs.update({'key_name': key_name})
-        service_vm1 = self._boot_server(image, flavor, False, **kwargs)
+        service_vm1 = self._boot_server(service_image1, flavor, False, **kwargs)
         
         pin21 = self._create_port(left2, port_create_args)
         pout21 = self._create_port(right2, port_create_args)
@@ -85,7 +87,7 @@ class SFCMultiParallel(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, n
         nics = [{"port-id": pin21_id}, {"port-id": pout21_id}]
         kwargs.update({'nics': nics})
         kwargs.update({'key_name': key_name})
-        service_vm21 = self._boot_server(image, flavor, False, **kwargs)
+        service_vm21 = self._boot_server(service_image2, flavor, False, **kwargs)
 
         pin22 = self._create_port(left2, port_create_args)
         pout22 = self._create_port(right2, port_create_args)
@@ -95,7 +97,7 @@ class SFCMultiParallel(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, n
         nics = [{"port-id": pin22_id}, {"port-id": pout22_id}]
         kwargs.update({'nics': nics})
         kwargs.update({'key_name': key_name})
-        service_vm22 = self._boot_server(image, flavor, False, **kwargs)
+        service_vm22 = self._boot_server(service_image2, flavor, False, **kwargs)
 
         pin23 = self._create_port(left2, port_create_args)
         pout23 = self._create_port(right2, port_create_args)
@@ -105,7 +107,7 @@ class SFCMultiParallel(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, n
         nics = [{"port-id": pin23_id}, {"port-id": pout23_id}]
         kwargs.update({'nics': nics})
         kwargs.update({'key_name': key_name})
-        service_vm23 = self._boot_server(image, flavor, False, **kwargs)
+        service_vm23 = self._boot_server(service_image2, flavor, False, **kwargs)
 
         pin3 = self._create_port(left3, port_create_args)
         pout3 = self._create_port(right3, port_create_args)
@@ -115,19 +117,28 @@ class SFCMultiParallel(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, n
         nics = [{"port-id": pin3_id}, {"port-id": pout3_id}]
         kwargs.update({'nics': nics})
         kwargs.update({'key_name': key_name})
-        service_vm3 = self._boot_server(image, flavor, False, **kwargs)
+        service_vm3 = self._boot_server(service_image3, flavor, False, **kwargs)
         self.sleep_between(30, 40) 
-        
-        fip = p1.get('port', {}).get('fixed_ips')[0].get('ip_address')
-        pdest_add = pdest.get('port', {}).get('fixed_ips')[0].get('ip_address')
-        command = {
+      
+        fip1 = p1.get('port', {}).get('fixed_ips')[0].get('ip_address')
+        fip2 = p2.get('port', {}).get('fixed_ips')[0].get('ip_address')
+
+        print "\nConfiguring destination-vm for traffic verification..\n"
+        command1 = {
                     "interpreter": "/bin/sh",
-                    "script_inline": "ping -c 10 " + pdest_add 
-                } 
+                    "script_inline": "ip address add 192.168.200.101/24 dev eth1;ip address add 192.168.200.102/24 dev eth1;ip address add 192.168.200.103/24 dev eth1;ip address add 192.168.200.104/24 dev eth1;ip address add 192.168.200.105/24 dev eth1;route add default gw 192.168.200.1 eth1"
+                }
+        self._remote_command(username, password, fip2, command1, dest_vm)
+
+        command2 = {
+                    "interpreter": "/bin/sh",
+                    "script_inline": "ping -c 5 192.168.200.101;ping -c 5 192.168.200.102;ping -c 5 192.168.200.103;ping -c 5 192.168.200.104;ping -c 5 192.168.200.105"
+                }
          
         print "\nTraffic verification before SFC\n"
-        self._remote_command(username, password, fip, command, src_vm)
-
+        self._remote_command(username, password, fip1, command2, src_vm)
+        
+        print "\nCreating a parallel multi service function chain...\n"
         pp1 = self._create_port_pair(pin1, pout1)
         ppg1 = self._create_port_pair_group([pp1])
         pp21 = self._create_port_pair(pin21, pout21)
@@ -141,7 +152,7 @@ class SFCMultiParallel(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, n
         self.sleep_between(50, 60)
 
         print "\nTraffic verification after creating SFC\n"
-        self._remote_command(username, password, fip, command, src_vm)
+        self._remote_command(username, password, fip1, command2, src_vm)
 
         self._delete_port_chain(pc)
         self._delete_port_pair_group(ppg1)

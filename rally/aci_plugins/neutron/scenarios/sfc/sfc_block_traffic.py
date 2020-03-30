@@ -17,9 +17,9 @@ from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
 
 class SFCBlockTraffic(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_utils.NovaScenario, scenario.OpenStackScenario):
    
-    def run(self, src_cidr, dest_cidr, vm_image, service_image, flavor, public_net, username, password):
+    def run(self, src_cidr, dest_cidr, vm_image, service_image, public_network, flavor, username, password):
         
-        public_network = self.clients("neutron").show_network(public_net)        
+        public_net = self.clients("neutron").show_network(public_network)
         secgroup = self.context.get("user", {}).get("secgroup")
         key_name=self.context["user"]["keypair"]["name"]
 
@@ -39,7 +39,7 @@ class SFCBlockTraffic(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, no
 
         port_create_args = {}
         port_create_args["security_groups"] = [secgroup.get('id')]
-        p1 = self._create_port(public_network, port_create_args)
+        p1 = self._create_port(public_net, port_create_args)
         p1_id = p1.get('port', {}).get('id')
         psrc = self._create_port(net1, port_create_args)
         psrc_id = psrc.get('port', {}).get('id')
@@ -79,6 +79,7 @@ class SFCBlockTraffic(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, no
         print "\nTraffic verification before SFC\n"
         self._remote_command(username, password, fip, command, src_vm)
 
+        print "\nCreating a single service function chain...\n"
         pp = self._create_port_pair(pin, pout)
         ppg = self._create_port_pair_group([pp])
         fc = self._create_flow_classifier(src_cidr, '0.0.0.0/0', net1_id, net2_id)

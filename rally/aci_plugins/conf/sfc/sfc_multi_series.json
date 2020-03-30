@@ -4,9 +4,12 @@
             "args": {
                 "src_cidr": "192.168.100.0/24",
                 "dest_cidr": "192.168.200.0/24",
-                "image": "83210423-382a-49c2-8cb5-a19875bf00f9",
+                "vm_image":{{bras_image}}, 
+                "service_image1": {{service_image1}},
+                "service_image2": {{service_image2}},
+                "service_image3": {{service_image3}},
                 "flavor": "tiny",
-                "public_net": "219269de-40ca-4dfa-875b-5c332add62df",
+                "public_network": {{access_network}},
                 "username" : "root",
                 "password" : "noir0123"
             },
@@ -17,4 +20,3 @@
         }
     ]
 }
-

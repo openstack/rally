@@ -257,26 +257,37 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
 
     @atomic.action_timer("create_svi_ports")
     def _create_svi_ports(self, network, subnet, prefix):
-        
-        port_list = self._list_ports()
-        for item in port_list:
-            if item['network_id'] == network["network"]["id"]:
-                self._delete_port({"port": item})
-
+              
         port_create_args = {}
         port_create_args["device_owner"] = 'apic:svi'
         port_create_args["name"] = 'apic-svi-port:node-102'
         port_create_args["network_id"] = network["network"]["id"]
-        port_create_args.update({"fixed_ips": [{"subnet_id": subnet[0].get("subnet", {}).get("id"), "ip_address": prefix+".200"}]})
-        self.clients("neutron").create_port({"port": port_create_args})
-         
+        port_create_args.update({"fixed_ips": [{"subnet_id": subnet.get("subnet", {}).get("id"), "ip_address": prefix+".200"}]})
+        p2 = self.admin_clients("neutron").create_port({"port": port_create_args})
+        p2_id = p2.get('port', {}).get('id')
+        self.sleep_between(10,15) 
+
+        port_list = self.admin_clients("neutron").list_ports()["ports"]
+        for port in port_list:
+            if (port['network_id'] == network["network"]["id"]) and (port["id"] != p2_id):
+                self.admin_clients("neutron").delete_port(port["id"])
+
         port_create_args = {}
         port_create_args["device_owner"] = 'apic:svi'
         port_create_args["name"] = 'apic-svi-port:node-101'
         port_create_args["network_id"] = network["network"]["id"]
-        port_create_args.update({"fixed_ips": [{"subnet_id": subnet[0].get("subnet", {}).get("id"), "ip_address": prefix+".199"}]})
-        self.clients("neutron").create_port({"port": port_create_args})
+        port_create_args.update({"fixed_ips": [{"subnet_id": subnet.get("subnet", {}).get("id"), "ip_address": prefix+".199"}]})
+        self.admin_clients("neutron").create_port({"port": port_create_args})
   
+    @atomic.action_timer("admin_delete_svi_ports")
+    def _delete_svi_ports(self, network):
+
+        port_list = self.admin_clients("neutron").list_ports()["ports"]
+        for port in port_list:
+            if port['network_id'] == network["network"]["id"] and port['name'].startswith("apic-svi-port"):
+                self.admin_clients("neutron").delete_port(port["id"])
+
+
     @atomic.action_timer("nova.admin_boot_server")
     def _admin_boot_server(self, image, flavor,
                  auto_assign_nic=False, **kwargs):
@@ -300,6 +311,35 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
             check_interval=CONF.openstack.nova_server_boot_poll_interval
         )
         return server
+
+    @atomic.action_timer("neutron.admin_create_network")
+    def _admin_create_network(self, name, network_create_args):
+       
+        network_create_args["name"] = name
+        return self.admin_clients("neutron").create_network(
+            {"network": network_create_args})
+
+    @atomic.action_timer("neutron.admin_delete_network")
+    def _admin_delete_network(self, network):
+       
+        self.admin_clients("neutron").delete_network(network["network"]["id"])
+
+    @atomic.action_timer("neutron.admin_create_subnet")
+    def _admin_create_subnet(self, network, subnet_create_args, start_cidr=None):
+        
+        network_id = network["network"]["id"]
+
+        if not subnet_create_args.get("cidr"):
+            start_cidr = start_cidr or "10.2.0.0/24"
+            subnet_create_args["cidr"] = (
+                network_wrapper.generate_cidr(start_cidr=start_cidr))
+
+        subnet_create_args["network_id"] = network_id
+        subnet_create_args["name"] = self.generate_random_name()
+        subnet_create_args.setdefault("ip_version", self.SUBNET_IP_VERSION)
+
+        return self.admin_clients("neutron").create_subnet(
+            {"subnet": subnet_create_args})
 
     @atomic.action_timer("neutron.admin_create_port")
     def _admin_create_port(self, network, port_create_args):

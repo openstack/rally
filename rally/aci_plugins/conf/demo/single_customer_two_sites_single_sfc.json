@@ -2,15 +2,13 @@
     "ScenarioPlugin.single_customer_two_sites_single_sfc": [
         {
             "args": {
-                "access_network": "219269de-40ca-4dfa-875b-5c332add62df",
-                "nat_network": "fb3803b3-6ecc-4c6a-bf10-55d8b3218357",
-                "bras_image" : "d8b5060a-ef63-4b01-8b79-083ae8866aaf",
-                "nat_image" : "ff54e7d0-fdb2-4b39-8713-1e9e4521e849",
-                "service_image1" : "4a634c5f-9006-418b-b569-db178e47744a",
+                "bras_image" : {{bras_image}},
+                "nat_image" : {{nat_image}},
+                "service_image1" : {{service_image1}},
                 "flavor": "small",
                 "username" : "root",
                 "password" : "noir0123",
-                "access_router_ip" : "10.108.1.5"
+                "access_router_ip" : {{access_router_ip}}
                 },
             "runner": {
                 "type": "serial",

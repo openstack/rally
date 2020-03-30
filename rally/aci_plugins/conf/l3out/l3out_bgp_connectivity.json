@@ -2,9 +2,9 @@
     "ScenarioPlugin.l3out_bgp_connectivity": [
         {
             "args": {
-                "access_network": "219269de-40ca-4dfa-875b-5c332add62df",
-                "nat_network": "fb3803b3-6ecc-4c6a-bf10-55d8b3218357",
-                "image" : "d8b5060a-ef63-4b01-8b79-083ae8866aaf",
+                "access_network": {{access_network}},
+                "nat_network": {{nat_network}},
+                "image" : {{bras_image}},
                 "flavor": "small",
                 "username" : "root",
                 "password" : "noir0123"
