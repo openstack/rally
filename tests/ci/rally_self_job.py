@@ -60,7 +60,7 @@ class Rally(object):
         p = subprocess.Popen(
             final_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
         )
-        for line in iter(p.stdout.readline, b''):
+        for line in iter(p.stdout.readline, b""):
             print(line.rstrip().decode("utf-8"))
         p.wait()
         if p.returncode != 0:

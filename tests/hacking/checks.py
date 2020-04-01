@@ -28,6 +28,7 @@ import functools
 import re
 import tokenize
 
+from hacking import core
 
 re_assert_equal_end_with_true_or_false = re.compile(
     r"assertEqual\(.*?, \s+(True|False)\)$")
@@ -79,12 +80,12 @@ re_log_warn = re.compile(r"(.)*LOG\.(warn)\(\s*('|\"|_)")
 def skip_ignored_lines(func):
 
     @functools.wraps(func)
-    def wrapper(logical_line, physical_line, filename):
+    def wrapper(physical_line, logical_line, filename):
         line = physical_line.strip()
         if not line or line.startswith("#") or line.endswith("# noqa"):
             return
         try:
-            for res in func(logical_line, physical_line, filename):
+            for res in func(physical_line, logical_line, filename):
                 yield res
         except StopIteration:
             return
@@ -105,8 +106,9 @@ def _parse_assert_mock_str(line):
         return None, None, None
 
 
+@core.flake8ext
 @skip_ignored_lines
-def check_assert_methods_from_mock(logical_line, physical_line, filename):
+def check_assert_methods_from_mock(physical_line, logical_line, filename):
     """Ensure that ``assert_*`` methods from ``mock`` library is used correctly
 
     N301 - base error number
@@ -158,15 +160,16 @@ def check_assert_methods_from_mock(logical_line, physical_line, filename):
                     "custom_msg": custom_msg})
 
 
+@core.flake8ext
 @skip_ignored_lines
-def check_import_of_logging(logical_line, physical_line, filename):
+def check_import_of_logging(physical_line, logical_line, filename):
     """Check correctness import of logging module
 
     N310
     """
 
     excluded_files = ["./rally/common/logging.py",
-                      "./tests/unit/test_logging.py",
+                      "./tests/unit/common/test_logging.py",
                       "./tests/ci/rally_verify.py",
                       "./tests/ci/sync_requirements.py"]
 
@@ -181,8 +184,9 @@ def check_import_of_logging(logical_line, physical_line, filename):
                           "use `rally.common.logging` instead.")
 
 
+@core.flake8ext
 @skip_ignored_lines
-def check_import_of_config(logical_line, physical_line, filename):
+def check_import_of_config(physical_line, logical_line, filename):
     """Check correctness import of config module
 
     N311
@@ -200,8 +204,9 @@ def check_import_of_config(logical_line, physical_line, filename):
                           "use `rally.common.cfg` instead.")
 
 
+@core.flake8ext
 @skip_ignored_lines
-def no_use_conf_debug_check(logical_line, physical_line, filename):
+def no_use_conf_debug_check(physical_line, logical_line, filename):
     """Check for "cfg.CONF.debug"
 
     Rally has two DEBUG level:
@@ -220,8 +225,9 @@ def no_use_conf_debug_check(logical_line, physical_line, filename):
                       "should be used instead.")
 
 
+@core.flake8ext
 @skip_ignored_lines
-def assert_true_instance(logical_line, physical_line, filename):
+def assert_true_instance(physical_line, logical_line, filename):
     """Check for assertTrue(isinstance(a, b)) sentences
 
     N320
@@ -231,8 +237,9 @@ def assert_true_instance(logical_line, physical_line, filename):
                   "you should use assertIsInstance(a, b) instead.")
 
 
+@core.flake8ext
 @skip_ignored_lines
-def assert_equal_type(logical_line, physical_line, filename):
+def assert_equal_type(physical_line, logical_line, filename):
     """Check for assertEqual(type(A), B) sentences
 
     N321
@@ -242,8 +249,9 @@ def assert_equal_type(logical_line, physical_line, filename):
                   "you should use assertIsInstance(a, b) instead.")
 
 
+@core.flake8ext
 @skip_ignored_lines
-def assert_equal_none(logical_line, physical_line, filename):
+def assert_equal_none(physical_line, logical_line, filename):
     """Check for assertEqual(A, None) or assertEqual(None, A) sentences
 
     N322
@@ -256,8 +264,9 @@ def assert_equal_none(logical_line, physical_line, filename):
                   "instead.")
 
 
+@core.flake8ext
 @skip_ignored_lines
-def assert_true_or_false_with_in(logical_line, physical_line, filename):
+def assert_true_or_false_with_in(physical_line, logical_line, filename):
     """Check assertTrue/False(A in/not in B) with collection contents
 
     Check for assertTrue/False(A in B), assertTrue/False(A not in B),
@@ -275,8 +284,9 @@ def assert_true_or_false_with_in(logical_line, physical_line, filename):
                   " instead.")
 
 
+@core.flake8ext
 @skip_ignored_lines
-def assert_equal_in(logical_line, physical_line, filename):
+def assert_equal_in(physical_line, logical_line, filename):
     """Check assertEqual(A in/not in B, True/False) with collection contents
 
     Check for assertEqual(A in B, True/False), assertEqual(True/False, A in B),
@@ -293,8 +303,9 @@ def assert_equal_in(logical_line, physical_line, filename):
                   "collection contents.")
 
 
+@core.flake8ext
 @skip_ignored_lines
-def assert_not_equal_none(logical_line, physical_line, filename):
+def assert_not_equal_none(physical_line, logical_line, filename):
     """Check for assertNotEqual(A, None) or assertEqual(None, A) sentences
 
     N325
@@ -307,8 +318,9 @@ def assert_not_equal_none(logical_line, physical_line, filename):
                   "instead.")
 
 
+@core.flake8ext
 @skip_ignored_lines
-def assert_equal_true_or_false(logical_line, physical_line, filename):
+def assert_equal_true_or_false(physical_line, logical_line, filename):
     """Check for assertEqual(A, True/False) sentences
 
     Check for assertEqual(A, True/False) sentences or
@@ -324,8 +336,9 @@ def assert_equal_true_or_false(logical_line, physical_line, filename):
                   "you should use assertTrue(A) or assertFalse(A) instead.")
 
 
+@core.flake8ext
 @skip_ignored_lines
-def check_no_direct_rally_objects_import(logical_line, physical_line,
+def check_no_direct_rally_objects_import(physical_line, logical_line,
                                          filename):
     """Check if rally.common.objects are properly imported.
 
@@ -347,8 +360,9 @@ def check_no_direct_rally_objects_import(logical_line, physical_line,
                   "After that you can use directly objects e.g. objects.Task")
 
 
+@core.flake8ext
 @skip_ignored_lines
-def check_no_oslo_deprecated_import(logical_line, physical_line, filename):
+def check_no_oslo_deprecated_import(physical_line, logical_line, filename):
     """Check if oslo.foo packages are not imported instead of oslo_foo ones.
 
     Libraries from oslo.foo namespace are deprecated because of namespace
@@ -363,8 +377,9 @@ def check_no_oslo_deprecated_import(logical_line, physical_line, filename):
                   "instead")
 
 
+@core.flake8ext
 @skip_ignored_lines
-def check_quotes(logical_line, physical_line, filename):
+def check_quotes(physical_line, logical_line, filename):
     """Check that single quotation marks are not used
 
     N350
@@ -416,8 +431,9 @@ def check_quotes(logical_line, physical_line, filename):
         yield i, "N350 Remove Single quotes"
 
 
+@core.flake8ext
 @skip_ignored_lines
-def check_no_constructor_data_struct(logical_line, physical_line, filename):
+def check_no_constructor_data_struct(physical_line, logical_line, filename):
     """Check that data structs (lists, dicts) are declared using literals
 
     N351
@@ -431,6 +447,7 @@ def check_no_constructor_data_struct(logical_line, physical_line, filename):
         yield 0, "N351 Remove list() construct and use literal []"
 
 
+@core.flake8ext
 def check_dict_formatting_in_string(logical_line, tokens):
     """Check that strings do not use dict-formatting with a single replacement
 
@@ -482,7 +499,7 @@ def check_dict_formatting_in_string(logical_line, tokens):
                     format_keys.add(match.group(1))
                 if len(format_keys) == 1:
                     yield (0,
-                           "N353 Do not use mapping key string formatting "
+                           "N352 Do not use mapping key string formatting "
                            "with a single key")
             if text != ")":
                 # NOTE(stpierre): You can have a parenthesized string
@@ -498,8 +515,9 @@ def check_dict_formatting_in_string(logical_line, tokens):
                 current_string = ""
 
 
+@core.flake8ext
 @skip_ignored_lines
-def check_using_unicode(logical_line, physical_line, filename):
+def check_using_unicode(physical_line, logical_line, filename):
     """Check crosspython unicode usage
 
     N353
@@ -510,7 +528,8 @@ def check_using_unicode(logical_line, physical_line, filename):
                   "use 'str' instead.")
 
 
-def check_raises(logical_line, physical_line, filename):
+@core.flake8ext
+def check_raises(physical_line, logical_line, filename):
     """Check raises usage
 
     N354
@@ -524,8 +543,9 @@ def check_raises(logical_line, physical_line, filename):
                       "in docstrings.")
 
 
+@core.flake8ext
 @skip_ignored_lines
-def check_old_type_class(logical_line, physical_line, filename):
+def check_old_type_class(physical_line, logical_line, filename):
     """Use new-style Python classes
 
     N355
@@ -537,8 +557,9 @@ def check_old_type_class(logical_line, physical_line, filename):
                   "``object`` or another new-style class.")
 
 
+@core.flake8ext
 @skip_ignored_lines
-def check_datetime_alias(logical_line, physical_line, filename):
+def check_datetime_alias(physical_line, logical_line, filename):
     """Ensure using ``dt`` as alias for ``datetime``
 
     N356
@@ -547,8 +568,9 @@ def check_datetime_alias(logical_line, physical_line, filename):
         yield 0, "N356 Please use ``dt`` as alias for ``datetime``."
 
 
+@core.flake8ext
 @skip_ignored_lines
-def check_db_imports_in_cli(logical_line, physical_line, filename):
+def check_db_imports_in_cli(physical_line, logical_line, filename):
     """Ensure that CLI modules do not use ``rally.common.db``
 
     N360
@@ -561,8 +583,9 @@ def check_db_imports_in_cli(logical_line, physical_line, filename):
                   "`rally.common.db``.")
 
 
+@core.flake8ext
 @skip_ignored_lines
-def check_objects_imports_in_cli(logical_line, physical_line, filename):
+def check_objects_imports_in_cli(physical_line, logical_line, filename):
     """Ensure that CLI modules do not use ``rally.common.objects``
 
     N361
@@ -574,14 +597,16 @@ def check_objects_imports_in_cli(logical_line, physical_line, filename):
                   "`rally.common.objects``.")
 
 
+@core.flake8ext
 @skip_ignored_lines
-def check_log_warn(logical_line, physical_line, filename):
+def check_log_warn(physical_line, logical_line, filename):
     if re_log_warn.search(logical_line):
         yield 0, "N313 LOG.warn is deprecated, please use LOG.warning"
 
 
+@core.flake8ext
 @skip_ignored_lines
-def check_opts_import_path(logical_line, physical_line, filename):
+def check_opts_import_path(physical_line, logical_line, filename):
     """Ensure that we load opts from correct paths only
 
      N342
@@ -598,29 +623,3 @@ def check_opts_import_path(logical_line, physical_line, filename):
                 yield (0, "N342 All options should be loaded from correct "
                           "paths only. For 'openstack' "
                           "its './rally/plugin/openstack/cfg'")
-
-
-def factory(register):
-    register(check_assert_methods_from_mock)
-    register(check_import_of_logging)
-    register(check_import_of_config)
-    register(no_use_conf_debug_check)
-    register(assert_true_instance)
-    register(assert_equal_type)
-    register(assert_equal_none)
-    register(assert_true_or_false_with_in)
-    register(assert_equal_in)
-    register(assert_equal_true_or_false)
-    register(check_no_direct_rally_objects_import)
-    register(check_no_oslo_deprecated_import)
-    register(check_quotes)
-    register(check_no_constructor_data_struct)
-    register(check_dict_formatting_in_string)
-    register(check_using_unicode)
-    register(check_raises)
-    register(check_datetime_alias)
-    register(check_db_imports_in_cli)
-    register(check_objects_imports_in_cli)
-    register(check_old_type_class)
-    register(check_log_warn)
-    register(check_opts_import_path)
