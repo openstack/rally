@@ -1,0 +1,81 @@
+{
+    "ScenarioPlugin.l3out_reachability_of_svi": [
+        {
+            "args": {
+                "access_network": {{access_network}},
+                "nat_network": {{nat_network}},
+                "image" : {{bras_image}},
+                "flavor": "small",
+                "username" : "root",
+                "password" : "noir0123",
+                "access_router_ip" : {{access_router_ip}},
+                "nat_router_ip" : {{nat_router_ip}},
+                "router_username" : {{router_username}}
+                },
+            "runner": {
+                "type": "constant",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
+            }
+
+        }
+    ],
+    "ScenarioPlugin.l3out_bgp_connectivity": [
+        {
+            "args": {
+                "access_network": {{access_network}},
+                "nat_network": {{nat_network}},
+                "image" : {{bras_image}},
+                "flavor": "small",
+                "username" : "root",
+                "password" : "noir0123"
+                },
+            "runner": {
+                "type": "constant",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
+            }
+
+        }
+    ],
+    "ScenarioPlugin.l3out_reachability_of_bgp_route": [
+        {
+            "args": {
+                "access_network": {{access_network}},
+                "nat_network": {{nat_network}},
+                "image" : {{bras_image}},
+                "flavor": "small",
+                "username" : "root",
+                "password" : "noir0123",
+                "access_router_ip" : {{access_router_ip}},
+                "nat_router_ip" : {{nat_router_ip}},
+                "router_username" : {{router_username}}
+                },
+            "runner": {
+                "type": "constant",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
+            }
+
+        }
+    ]
+}
+

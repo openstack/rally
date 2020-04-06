@@ -148,27 +148,73 @@ class SingleCustomerSingleSFC(vcpe_utils.vCPEScenario, neutron_utils.NeutronScen
         fc = self._create_flow_classifier('10.0.1.0/24', '0.0.0.0/0', net1_id, net1_id)
         pc = self._create_port_chain([ppg], [fc])
         self.sleep_between(30, 40)
+ 
+        clean = [bras_vm, nat_vm, trunk1, trunk2, pfip1, pfip2, acc_net, nat_net, pc, ppg, fc, pp, service_vm, router, sub1[0], sub2[0], sub3[0], net1, left, right]
+        try:
+            print "\nTraffic verification after creating SFC\n"
+            command8 = {
+                    "interpreter": "/bin/sh",
+                    "script_inline": "sudo ip netns exec cats ping -c 5 10.1.1.1"
+                }
+            self._remote_command_wo_server('noiro', password, access_router_ip, command8)
+            
+            command9 = {
+                    "interpreter": "/bin/sh",
+                    "script_inline": "sudo ip netns exec cats ping -c 5 8.8.8.1"
+                }
+            self._remote_command_wo_server('noiro', password, access_router_ip, command9)
+            
+            command10 = {
+                    "interpreter": "/bin/sh",
+                    "script_inline": "sudo ip netns exec cats ping -c 5 8.8.8.2"
+                }
+            self._remote_command_validate('noiro', password, access_router_ip, command10)
+            
+            command11 = {
+                    "interpreter": "/bin/sh",
+                    "script_inline": "sudo ip netns exec cats ping -c 5 8.8.8.3"
+                }
+            self._remote_command_validate('noiro', password, access_router_ip, command11)
         
-        print "\nTraffic verification after creating SFC\n"
-        self._remote_command_wo_server('noiro', password, access_router_ip, command7)
-        
+        except:
+            print "\nTraffic verification failed\n"
+            print "\nCleaning up ACCESS-router after traffic verification...\n"
+            command12 = {
+                        "interpreter": "/bin/sh",
+                        "script_inline": "sudo /usr/local/bin/orchest_single_customer.sh delsites"
+                    }
+            self._remote_command_wo_server('noiro', password, access_router_ip, command12)
+            self.cleanup(clean)
+
         print "\nCleaning up ACCESS-router...\n"
         command8 = {
                     "interpreter": "/bin/sh",
                     "script_inline": "sudo /usr/local/bin/orchest_single_customer.sh delsites"
                 }
         self._remote_command_wo_server('noiro', password, access_router_ip, command8)
+        self.cleanup(clean)
 
-        self._delete_server(bras_vm)
-        self._delete_server(nat_vm)
-        self._admin_delete_trunk(trunk1)
-        self._admin_delete_trunk(trunk2)
-        self._admin_delete_port(pfip1)
-        self._admin_delete_port(pfip2)
-        self._delete_port_chain(pc)
-        self._delete_port_pair_group(ppg)
-        self._delete_flow_classifier(fc)
-        self._delete_port_pair(pp)
-        self._delete_svi_ports(net1)
-        self._admin_delete_network(acc_net)
-        self._admin_delete_network(nat_net)
+    def cleanup(self, clean):
+        self._delete_server(clean[0])
+        self._delete_server(clean[1])
+        self._admin_delete_trunk(clean[2])
+        self._admin_delete_trunk(clean[3])
+        self._admin_delete_port(clean[4])
+        self._admin_delete_port(clean[5])
+        self._admin_delete_network(clean[6])
+        self._admin_delete_network(clean[7])
+        self._delete_port_chain(clean[8])
+        self._delete_port_pair_group(clean[9])
+        self._delete_flow_classifier(clean[10])
+        self._delete_port_pair(clean[11])
+        self._delete_server(clean[12])
+        self._admin_remove_interface_router(clean[14], clean[13])
+        self._admin_remove_interface_router(clean[15], clean[13])
+        self._admin_remove_interface_router(clean[16], clean[13])
+        self._admin_delete_router(clean[13])
+        self._delete_all_ports(clean[17])
+        self._admin_delete_network(clean[17])
+        self._delete_all_ports(clean[18])
+        self._admin_delete_network(clean[18])
+        self._delete_all_ports(clean[19])
+        self._admin_delete_network(clean[19])

@@ -1,0 +1,14 @@
+{
+    "access_network": "7eb08fb8-dbfd-47a6-9efc-9df6c1cfc78e",
+    "nat_network": "d3fbc9d3-a633-409d-bc48-5dfed1786618",
+    "bras_image": "d8b5060a-ef63-4b01-8b79-083ae8866aaf",
+    "nat_image": "ff54e7d0-fdb2-4b39-8713-1e9e4521e849",
+    "service_image1": "2ecc6733-c01a-444a-99cf-ae1b32b4dd12",
+    "service_image2": "769aae31-35b8-45a3-b43c-60d21eb9f264",
+    "service_image3": "996720eb-cbd1-496b-9d5e-e16146e8264d",
+    "cirros_image": "cba4a0c9-e22a-402e-bc62-67376e34e31b",
+    "access_router_ip": "10.108.1.5",
+    "nat_router_ip": "10.108.1.6",
+    "router_username": "noiro"
+
+}

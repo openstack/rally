@@ -11,8 +11,15 @@
                 "access_router_ip" : {{access_router_ip}}
                 },
             "runner": {
-                "type": "serial",
-                "times": 1
+                "type": "constant",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
             }
         }
     ],
@@ -30,9 +37,17 @@
                 "access_router_ip" : {{access_router_ip}}
                 },
             "runner": {
-                "type": "serial",
-                "times": 1
+                "type": "constant",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
             }
+
         }
     ],
     "ScenarioPlugin.single_customer_two_sites_single_sfc": [
@@ -47,8 +62,15 @@
                 "access_router_ip" : {{access_router_ip}}
                 },
             "runner": {
-                "type": "serial",
-                "times": 1
+                "type": "constant",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
             }
         }
     ],
@@ -64,7 +86,7 @@
                 "access_router_ip" : {{access_router_ip}}
                 },
             "runner": {
-                "type": "serial",
+                "type": "constant",
                 "times": 1
             }
         }
@@ -79,12 +101,13 @@
                 "username" : "root",
                 "password" : "noir0123",
                 "access_router_ip" : {{access_router_ip}},
-                "scale" : "3"
+                "scale" : "10"
                 },
             "runner": {
-                "type": "serial",
+                "type": "constant",
                 "times": 1
             }
         }
     ]
 }
+

@@ -48,8 +48,6 @@ class SFCScaleSeries(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nov
         kwargs.update({'nics': nics})
         src_vm = self._boot_server(vm_image, flavor, False, **kwargs)
         
-        p2 = self._create_port(public_network, port_create_args)
-        p2_id = p2.get('port', {}).get('id')
         pdest = self._create_port(net2, port_create_args)
         pdest_id = pdest.get('port', {}).get('id')
         nics = [{"port-id": p2_id},{"port-id": pdest_id}]

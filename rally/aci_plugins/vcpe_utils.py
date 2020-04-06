@@ -30,8 +30,7 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
             
             print out
 
-            text_area_output = ["StdErr: %s" % (err or "(none)"),
-                                "StdOut:"]
+            text_area_output = ["StdOut:"]
 
             if code:
                 print exceptions.ScriptError(
@@ -279,12 +278,20 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
         port_create_args.update({"fixed_ips": [{"subnet_id": subnet.get("subnet", {}).get("id"), "ip_address": prefix+".199"}]})
         self.admin_clients("neutron").create_port({"port": port_create_args})
   
-    @atomic.action_timer("admin_delete_svi_ports")
+    @atomic.action_timer("delete_svi_ports")
     def _delete_svi_ports(self, network):
 
         port_list = self.admin_clients("neutron").list_ports()["ports"]
         for port in port_list:
             if port['network_id'] == network["network"]["id"] and port['name'].startswith("apic-svi-port"):
+                self.admin_clients("neutron").delete_port(port["id"])
+
+    @atomic.action_timer("delete_all_ports")
+    def _delete_all_ports(self, network):
+
+        port_list = self.admin_clients("neutron").list_ports()["ports"]
+        for port in port_list:
+            if port['network_id'] == network["network"]["id"]:
                 self.admin_clients("neutron").delete_port(port["id"])
 
 
@@ -353,6 +360,16 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
        
         self.admin_clients("neutron").delete_port(port["port"]["id"])
 
+    @atomic.action_timer("neutron.delete_router")
+    def _admin_delete_router(self, router):
+        
+        self.admin_clients("neutron").delete_router(router["router"]["id"])
+
+    @atomic.action_timer("neutron.admin_remove_interface_router")
+    def _admin_remove_interface_router(self, subnet, router):
+        
+        self.admin_clients("neutron").remove_interface_router(
+            router["router"]["id"], {"subnet_id": subnet["subnet"]["id"]})
 
     @atomic.action_timer("neutron.admin_create_trunk")
     def _admin_create_trunk(self, trunk_payload):
@@ -371,6 +388,7 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
         return self.admin_clients("neutron").trunk_add_subports(
             trunk["trunk"]["id"], {"sub_ports": subports})
 
+    @atomic.action_timer("run_remote_command_wo_server")
     def _remote_command_wo_server(self, username, password, fip, command, **kwargs):
 
         port=22
@@ -386,8 +404,7 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
 
             print out
 
-            text_area_output = ["StdErr: %s" % (err or "(none)"),
-                                "StdOut:"]
+            text_area_output = ["StdOut:"]
 
             if code:
                 print exceptions.ScriptError(
@@ -397,10 +414,30 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
                 print "------------------------------"
             else:
                 print "------------------------------"
+            # Let's try to load output data
+            try:
+                data = json.loads(out)
+                if not isinstance(data, dict):
+                    raise ValueError
+            except ValueError:
+                # It's not a JSON, probably it's 'script_inline' result
+                data = []
         except (exceptions.TimeoutException,
                 exceptions.SSHTimeout):
             raise
 
+        if isinstance(data, dict) and set(data) == {"additive", "complete"}:
+            for chart_type, charts in data.items():
+                for chart in charts:
+                    self.add_output(**{chart_type: chart})
+        else:
+            # it's a dict with several unknown lines
+            text_area_output.extend(out.split("\n"))
+            self.add_output(complete={"title": "Script Output",
+                                      "chart_plugin": "TextArea",
+                                      "data": text_area_output})
+
+    @atomic.action_timer("change_user")
     def _change_client(self, pos, context=None, admin_clients=None, clients=None):
         super(scenario.OpenStackScenario, self).__init__(context)
         
@@ -431,3 +468,148 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
             self._clients = clients
 
         self._init_profiler(context)
+
+
+    @atomic.action_timer("run_remote_command_validate")
+    def _remote_command_validate(self, username, password, fip, command, **kwargs):
+
+        port=22
+        wait_for_ping=True
+        max_log_length=None
+
+        try:
+            if wait_for_ping:
+                self._wait_for_ping(fip)
+
+            code, out, err = self._run_command(
+                fip, port, username, password, command=command)
+            
+            text_area_output = ["StdOut:"]
+
+            print out
+
+            if code:
+                raise exceptions.ScriptError(
+                    "Error running command %(command)s. "
+                    "Error %(code)s: %(error)s" % {
+                        "command": command, "code": code, "error": err})
+            # Let's try to load output data
+            try:
+                data = json.loads(out)
+                # 'echo 42' produces very json-compatible result
+                #  - check it here
+                if not isinstance(data, dict):
+                    raise ValueError
+            except ValueError:
+                # It's not a JSON, probably it's 'script_inline' result
+                data = []
+        except (exceptions.TimeoutException,
+                exceptions.SSHTimeout):
+            raise
+
+        if isinstance(data, dict) and set(data) == {"additive", "complete"}:
+            for chart_type, charts in data.items():
+                for chart in charts:
+                    self.add_output(**{chart_type: chart})
+        else:
+            # it's a dict with several unknown lines
+            text_area_output.extend(out.split("\n"))
+            self.add_output(complete={"title": "Script Output",
+                                      "chart_plugin": "TextArea",
+                                      "data": text_area_output})
+
+    def _get_domain_id(self, domain_name_or_id):
+
+        domains = self._admin_clients.keystone("3").domains.list(
+                name=domain_name_or_id)
+        
+        return domains[0].id
+
+    @atomic.action_timer("keystone_v3.create_project")
+    def _create_project(self, project_name, domain_name):
+
+        project_name = project_name or self.generate_random_name()
+        domain_id = self._get_domain_id(domain_name)
+        
+        return self._admin_clients.keystone("3").projects.create(name=project_name,
+                                                           domain=domain_id)
+
+    @atomic.action_timer("keystone_v3.delete_project")
+    def _delete_project(self, project_id):
+
+        self._admin_clients.keystone("3").projects.delete(project_id)
+
+    @atomic.action_timer("keystone_v3.add_role")
+    def _add_role(self, role_name, user_id, project_id):
+        
+        role_id = self._clients.keystone("3").roles.list(name=role_name)[0].id
+        self._admin_clients.keystone("3").roles.grant(role=role_id,
+                                                user=user_id,
+                                                project=project_id)
+
+    @atomic.action_timer("keystone_v3.create_user")
+    def _create_user(self, username, password, project_id, domain_name, enabled=True,
+                    default_role="Admin"):
+        
+        domain_id = self._get_domain_id(domain_name)
+        username = username or self.generate_random_name()
+        user = self._admin_clients.keystone("3").users.create(
+            name=username, password=password, default_project=project_id,
+            domain=domain_id, enabled=enabled)
+
+        limit = len(self._admin_clients.keystone("3").users.list())
+        for i in range(0, limit):
+            if self._admin_clients.keystone("3").users.list()[i].name == 'admin' :
+                admin_id = self._admin_clients.keystone("3").users.list()[i].id
+
+        if project_id:
+            # we can't setup role without project_id
+
+            self._add_role(default_role, user_id=user.id,
+                                  project_id=project_id)
+            self._add_role(default_role, user_id=admin_id, project_id=project_id)
+        return user
+
+    @atomic.action_timer("keystone_v3.delete_user")
+    def _delete_user(self, user):
+        
+        self._admin_clients.keystone("3").users.delete(user)
+
+    @atomic.action_timer("nova.user_boot_server")
+    def _user_boot_server(self, image, flavor,
+                 auto_assign_nic=False, **kwargs):
+
+        server_name = self.generate_random_name()
+
+        if auto_assign_nic and not kwargs.get("nics", False):
+            nic = self._pick_random_nic()
+            if nic:
+                kwargs["nics"] = nic
+
+        server = self.clients("nova").servers.create(
+            server_name, image, flavor, **kwargs)
+
+        self.sleep_between(CONF.openstack.nova_server_boot_prepoll_delay)
+        server = utils.wait_for_status(
+            server,
+            ready_statuses=["ACTIVE"],
+            update_resource=utils.get_from_manager(),
+            timeout=CONF.openstack.nova_server_boot_timeout,
+            check_interval=CONF.openstack.nova_server_boot_poll_interval
+        )
+        return server
+
+    @atomic.action_timer("vm.attach_floating_ip")
+    def _attach_floating_ip(self, server, floating_network):
+        internal_network = list(server.networks)[0]
+        fixed_ip = server.addresses[internal_network][0]["addr"]
+
+        with atomic.ActionTimer(self, "neutron.create_floating_ip"):
+            fip = network_wrapper.wrap(self.clients, self).create_floating_ip(
+                ext_network=floating_network,
+                tenant_id=server.tenant_id, fixed_ip=fixed_ip)
+
+        self._associate_floating_ip(server, fip, fixed_address=fixed_ip)
+
+        return fip
+

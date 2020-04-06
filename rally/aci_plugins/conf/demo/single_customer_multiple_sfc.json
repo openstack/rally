@@ -13,9 +13,17 @@
                 "access_router_ip" : {{access_router_ip}}
                 },
             "runner": {
-                "type": "serial",
-                "times": 1
+                "type": "constant",
+                "times": 3,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 3,
+                    "users_per_tenant": 1
+                 }
             }
+
         }
     ]
 }

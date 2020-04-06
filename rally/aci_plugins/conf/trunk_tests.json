@@ -1,0 +1,175 @@
+{
+    "ScenarioPlugin.simple_trunk": [
+        {
+            "args": {
+                "cidr1": "192.168.0.0/24",
+                "cidr2": "192.168.10.0/24",
+                "cidr3": "192.168.20.0/24",
+                "image" : {{bras_image}},
+                "flavor": "small",
+                "public_net": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123"
+                },
+            "runner": {
+                "type": "constant",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
+            }
+        }
+    ],
+    "ScenarioPlugin.trunk_add_subport": [
+        {
+            "args": {
+                "cidr1": "192.168.0.0/24",
+                "cidr2": "192.168.10.0/24",
+                "cidr3": "192.168.20.0/24",
+                "image" : {{bras_image}},
+                "flavor": "small",
+                "public_net": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123"
+                },
+            "runner": {
+                "type": "constant",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
+            }
+        }
+    ],
+    "ScenarioPlugin.trunk_inter_vlan_traffic": [
+        {
+            "args": {
+                "cidr1": "192.168.0.0/24",
+                "cidr2": "192.168.10.0/24",
+                "cidr3": "192.168.20.0/24",
+                "image" : {{bras_image}},
+                "flavor": "small",
+                "public_net": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123"
+                },
+            "runner": {
+                "type": "constant",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
+            }
+        }
+    ],
+    "ScenarioPlugin.trunk_intra_vlan_traffic": [
+        {
+            "args": {
+                "cidr1": "192.168.0.0/24",
+                "cidr2": "192.168.10.0/24",
+                "cidr3": "192.168.20.0/24",
+                "image" : {{bras_image}},
+                "flavor": "small",
+                "public_net": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123"
+                },
+            "runner": {
+                "type": "constant",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
+            }
+        }
+    ],
+    "ScenarioPlugin.trunk_native_vlan_traffic": [
+        {
+            "args": {
+                "cidr1": "192.168.0.0/24",
+                "cidr2": "192.168.10.0/24",
+                "cidr3": "192.168.20.0/24",
+                "image" : {{bras_image}},
+                "flavor": "small",
+                "public_net": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123"
+                },
+            "runner": {
+                "type": "constant",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
+            }
+        }
+    ],
+    "ScenarioPlugin.trunk_remove_subport": [
+        {
+            "args": {
+                "cidr1": "192.168.0.0/24",
+                "cidr2": "192.168.10.0/24",
+                "cidr3": "192.168.20.0/24",
+                "image" : {{bras_image}},
+                "flavor": "small",
+                "public_net": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123"
+                },
+            "runner": {
+                "type": "constant",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
+            }
+        }
+    ],
+    "ScenarioPlugin.trunk_scale": [
+        {
+            "args": {
+                "image" : {{bras_image}},
+                "flavor": "small",
+                "public_network": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123",
+                "scale" : "5"
+                },
+            "runner": {
+                "type": "constant",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
+            }
+        }
+    ]
+}
