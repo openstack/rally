@@ -206,34 +206,82 @@ class SingleCustomerMultipleSFC(vcpe_utils.vCPEScenario, neutron_utils.NeutronSc
         ppg3 = self._create_port_pair_group([pp3])
         pc = self._create_port_chain([ppg1, ppg2, ppg3], [fc])
         self.sleep_between(30,40)
-        
-        print "\nTraffic verification after creating SFC\n"
-        self._remote_command_wo_server('noiro', password, access_router_ip, command7)
        
-        command8 = {
+        clean = [bras_vm, nat_vm, trunk1, trunk2, pfip1, pfip2, pc, ppg1, ppg2, ppg3, fc, pp1, pp21, pp22, pp23, pp3, net1, acc_net, nat_net]
+        try:
+            print "\nTraffic verification after creating SFC\n"
+            command8 = {
                     "interpreter": "/bin/sh",
-                    "script_inline": "sudo /usr/local/bin/orchest_single_customer.sh delsites"
+                    "script_inline": "sudo ip netns exec cats ping -c 5 10.1.1.1"
                 }
+            self._remote_command_wo_server('noiro', password, access_router_ip, command8)
+            
+            command9 = {
+                    "interpreter": "/bin/sh",
+                    "script_inline": "sudo ip netns exec cats ping -c 5 8.8.8.1"
+                }
+            self._remote_command_wo_server('noiro', password, access_router_ip, command9)
+            
+            command10 = {
+                    "interpreter": "/bin/sh",
+                    "script_inline": "sudo ip netns exec cats ping -c 5 8.8.8.2"
+                }
+            self._remote_command_wo_server('noiro', password, access_router_ip, command10)
+            
+            command11 = {
+                    "interpreter": "/bin/sh",
+                    "script_inline": "sudo ip netns exec cats ping -c 5 8.8.8.3"
+                }
+            self._remote_command_wo_server('noiro', password, access_router_ip, command11)
+            
+            command12 = {
+                    "interpreter": "/bin/sh",
+                    "script_inline": "sudo ip netns exec cats ping -c 5 8.8.8.4"
+                }
+            self._remote_command_validate('noiro', password, access_router_ip, command12)
+            
+            command13 = {
+                    "interpreter": "/bin/sh",
+                    "script_inline": "sudo ip netns exec cats ping -c 5 8.8.8.5"
+                }
+            self._remote_command_validate('noiro', password, access_router_ip, command13)
+
+        except:
+            command14 = {
+                        "interpreter": "/bin/sh",
+                        "script_inline": "sudo /usr/local/bin/orchest_single_customer.sh delsites"
+                    }
+
+            print "\nCleaning up ACCESS-router after traffic verification...\n"
+            self._remote_command_wo_server('noiro', password, access_router_ip, command14)
+            self.cleanup(clean)
+
+        command14 = {
+                        "interpreter": "/bin/sh",
+                        "script_inline": "sudo /usr/local/bin/orchest_single_customer.sh delsites"
+                    }
 
         print "\nCleaning up ACCESS-router after traffic verification...\n"
-        self._remote_command_wo_server('noiro', password, access_router_ip, command8)
+        self._remote_command_wo_server('noiro', password, access_router_ip, command14)
+        self.cleanup(clean)
 
-        self._delete_server(bras_vm)
-        self._delete_server(nat_vm)
-        self._admin_delete_trunk(trunk1)
-        self._admin_delete_trunk(trunk2)
-        self._admin_delete_port(pfip1)
-        self._admin_delete_port(pfip2)
-        self._delete_port_chain(pc)
-        self._delete_port_pair_group(ppg1)
-        self._delete_port_pair_group(ppg2)
-        self._delete_port_pair_group(ppg3)
-        self._delete_flow_classifier(fc)
-        self._delete_port_pair(pp1)
-        self._delete_port_pair(pp21)
-        self._delete_port_pair(pp22)
-        self._delete_port_pair(pp23)
-        self._delete_port_pair(pp3)
-        self._delete_svi_ports(net1)
-        self._admin_delete_network(acc_net)
-        self._admin_delete_network(nat_net)
+    def cleanup(self, clean):
+        self._delete_server(clean[0])
+        self._delete_server(clean[1])
+        self._admin_delete_trunk(clean[2])
+        self._admin_delete_trunk(clean[3])
+        self._admin_delete_port(clean[4])
+        self._admin_delete_port(clean[5])
+        self._delete_port_chain(clean[6])
+        self._delete_port_pair_group(clean[7])
+        self._delete_port_pair_group(clean[8])
+        self._delete_port_pair_group(clean[9])
+        self._delete_flow_classifier(clean[10])
+        self._delete_port_pair(clean[11])
+        self._delete_port_pair(clean[12])
+        self._delete_port_pair(clean[13])
+        self._delete_port_pair(clean[14])
+        self._delete_port_pair(clean[15])
+        self._delete_svi_ports(clean[16])
+        self._admin_delete_network(clean[17])
+        self._admin_delete_network(clean[18])

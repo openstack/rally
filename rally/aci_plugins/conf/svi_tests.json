@@ -1,0 +1,97 @@
+{
+    "ScenarioPlugin.svi_reachability_bw_vms": [
+        {
+            "args": {
+                "cidr1": "192.168.10.0/24",
+                "cidr2": "192.168.20.0/24",
+                "image" : {{bras_image}},
+                "flavor": "small",
+                "public_net": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123"
+                },
+            "runner": {
+                "type": "constant",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
+            }
+        }
+    ],
+    "ScenarioPlugin.svi_bgp_connectivity": [
+        {
+            "args": {
+                "cidr1": "192.168.10.0/24",
+                "cidr2": "192.168.20.0/24",
+                "image" : {{bras_image}},
+                "flavor": "small",
+                "public_net": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123"
+                },
+            "runner": {
+                "type": "constant",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
+            }
+        }
+    ],
+    "ScenarioPlugin.svi_reachability_of_bgp_route": [
+        {
+            "args": {
+                "cidr1": "192.168.10.0/24",
+                "cidr2": "192.168.20.0/24",
+                "image" : {{bras_image}},
+                "flavor": "small",
+                "public_net": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123"
+                },
+            "runner": {
+                "type": "constant",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
+            }
+        }
+    ],
+    "ScenarioPlugin.svi_scale": [
+        {
+            "args": {
+                "image" : {{bras_image}},
+                "flavor": "small",
+                "public_network": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123",
+                "scale" : "5"
+                },
+            "runner": {
+                "type": "constant",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
+            }
+        }
+    ]
+}
