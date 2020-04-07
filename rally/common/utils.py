@@ -19,8 +19,10 @@ import copy
 import ctypes
 import heapq
 import inspect
+import io
 import multiprocessing
 import os
+import queue as queue_m
 import random
 import re
 import shutil
@@ -29,8 +31,6 @@ import sys
 import tempfile
 import time
 import uuid
-
-from six import moves
 
 from rally.common.io import junit
 from rally.common import logging
@@ -53,7 +53,7 @@ class ImmutableMixin(object):
 
 class EnumMixin(object):
     def __iter__(self):
-        for k, v in moves.map(lambda x: (x, getattr(self, x)), dir(self)):
+        for k, v in map(lambda x: (x, getattr(self, x)), dir(self)):
             if not k.startswith("_"):
                 yield v
 
@@ -63,7 +63,7 @@ class StdOutCapture(object):
         self.stdout = sys.stdout
 
     def __enter__(self):
-        sys.stdout = moves.StringIO()
+        sys.stdout = io.StringIO()
         return sys.stdout
 
     def __exit__(self, type, value, traceback):
@@ -75,7 +75,7 @@ class StdErrCapture(object):
         self.stderr = sys.stderr
 
     def __enter__(self):
-        sys.stderr = moves.StringIO()
+        sys.stderr = io.StringIO()
         return sys.stderr
 
     def __exit__(self, type, value, traceback):
@@ -525,7 +525,7 @@ def interruptable_sleep(sleep_time, atomic_delay=0.1):
         if sleep_time < 1:
             return time.sleep(sleep_time)
 
-        for x in moves.xrange(int(sleep_time / atomic_delay)):
+        for x in range(int(sleep_time / atomic_delay)):
             time.sleep(atomic_delay)
 
         left = sleep_time - (int(sleep_time / atomic_delay)) * atomic_delay
@@ -573,7 +573,7 @@ def timeout_thread(queue):
         try:
             next_thread = queue.get(timeout=timeout)
             all_threads.append(next_thread)
-        except (moves.queue.Empty, ValueError):
+        except (queue_m.Empty, ValueError):
             # NOTE(rvasilets) Empty means that timeout was occurred.
             # ValueError means that timeout lower than 0.
             if thread.is_alive():
