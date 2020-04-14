@@ -1,25 +1,4 @@
 {
-    "ScenarioPlugin.verify_sfc_api": [
-        {
-            "args": {
-                "src_cidr": "192.168.100.0/24",
-                "dest_cidr": "192.168.200.0/24",
-                "image": {{cirros_image}},
-                "flavor": "tiny"
-            },
-            "runner": {
-                "type": "constant",
-                "times": 1,
-                "concurrency": 1
-            },
-            "context": {
-                "users": {
-                    "tenants": 1,
-                    "users_per_tenant": 1
-                 }
-            }
-        }
-    ],
     "ScenarioPlugin.simple_sfc": [
         {
             "args": {
@@ -29,17 +8,24 @@
                 "flavor": "tiny"
             },
             "runner": {
-                "type": "constant",
-                "times": 1,
-                "concurrency": 1
-            },
-            "context": {
-                "users": {
-                    "tenants": 1,
-                    "users_per_tenant": 1
-                 }
+                "type": "serial",
+                "times": 1
             }
-       }
+        }
+    ],
+    "ScenarioPlugin.verify_sfc_api": [
+        {
+            "args": {
+                "src_cidr": "192.168.100.0/24",
+                "dest_cidr": "192.168.200.0/24",
+                "image": {{cirros_image}},
+                "flavor": "tiny"
+            },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
     ],
     "ScenarioPlugin.sfc_block_traffic": [
         {
@@ -54,15 +40,8 @@
                 "password" : "noir0123"
             },
             "runner": {
-                "type": "constant",
-                "times": 1,
-                "concurrency": 1
-            },
-            "context": {
-                "users": {
-                    "tenants": 1,
-                    "users_per_tenant": 1
-                 }
+                "type": "serial",
+                "times": 1
             }
         }
     ],
@@ -79,15 +58,8 @@
                 "password" : "noir0123"
             },
             "runner": {
-                "type": "constant",
-                "times": 1,
-                "concurrency": 1
-            },
-            "context": {
-                "users": {
-                    "tenants": 1,
-                    "users_per_tenant": 1
-                 }
+                "type": "serial",
+                "times": 1
             }
         }
     ],
@@ -104,42 +76,8 @@
                 "password" : "noir0123"
             },
             "runner": {
-                "type": "constant",
-                "times": 1,
-                "concurrency": 1
-            },
-            "context": {
-                "users": {
-                    "tenants": 1,
-                    "users_per_tenant": 1
-                 }
-            }
-        }
-    ],
-    "ScenarioPlugin.sfc_multi_series": [
-        {
-            "args": {
-                "src_cidr": "192.168.100.0/24",
-                "dest_cidr": "192.168.200.0/24",
-                "vm_image":{{bras_image}},
-                "service_image1": {{service_image1}},
-                "service_image2": {{service_image2}},
-                "service_image3": {{service_image3}},
-                "flavor": "tiny",
-                "public_network": {{access_network}},
-                "username" : "root",
-                "password" : "noir0123"
-            },
-            "runner": {
-                "type": "constant",
-                "times": 1,
-                "concurrency": 1
-            },
-            "context": {
-                "users": {
-                    "tenants": 1,
-                    "users_per_tenant": 1
-                 }
+                "type": "serial",
+                "times": 1
             }
         }
     ],
@@ -158,15 +96,28 @@
                 "password" : "noir0123"
             },
             "runner": {
-                "type": "constant",
-                "times": 1,
-                "concurrency": 1
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ],
+    "ScenarioPlugin.sfc_multi_series": [
+        {
+            "args": {
+                "src_cidr": "192.168.100.0/24",
+                "dest_cidr": "192.168.200.0/24",
+                "vm_image":{{bras_image}},
+                "service_image1": {{service_image1}},
+                "service_image2": {{service_image2}},
+                "service_image3": {{service_image3}},
+                "flavor": "tiny",
+                "public_network": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123"
             },
-            "context": {
-                "users": {
-                    "tenants": 1,
-                    "users_per_tenant": 1
-                 }
+            "runner": {
+                "type": "serial",
+                "times": 1
             }
         }
     ],
@@ -183,15 +134,8 @@
                 "password" : "noir0123"
             },
             "runner": {
-                "type": "constant",
-                "times": 1,
-                "concurrency": 1
-            },
-            "context": {
-                "users": {
-                    "tenants": 1,
-                    "users_per_tenant": 1
-                 }
+                "type": "serial",
+                "times": 1
             }
         }
     ],
@@ -208,15 +152,8 @@
                 "password" : "noir0123"
             },
             "runner": {
-                "type": "constant",
-                "times": 1,
-                "concurrency": 1
-            },
-            "context": {
-                "users": {
-                    "tenants": 1,
-                    "users_per_tenant": 1
-                 }
+                "type": "serial",
+                "times": 1
             }
         }
     ],
@@ -234,15 +171,8 @@
                 "password" : "noir0123"
             },
             "runner": {
-                "type": "constant",
-                "times": 1,
-                "concurrency": 1
-            },
-            "context": {
-                "users": {
-                    "tenants": 1,
-                    "users_per_tenant": 1
-                 }
+                "type": "serial",
+                "times": 1
             }
         }
     ],
@@ -259,18 +189,11 @@
                 "password" : "noir0123"
             },
             "runner": {
-                "type": "constant",
-                "times": 1,
-                "concurrency": 1
-            },
-            "context": {
-                "users": {
-                    "tenants": 1,
-                    "users_per_tenant": 1
-                 }
+                "type": "serial",
+                "times": 1
             }
         }
-    ],
+    ], 
     "ScenarioPlugin.sfc_remove_portpair": [
         {
             "args": {
@@ -284,15 +207,8 @@
                 "password" : "noir0123"
             },
             "runner": {
-                "type": "constant",
-                "times": 1,
-                "concurrency": 1
-            },
-            "context": {
-                "users": {
-                    "tenants": 1,
-                    "users_per_tenant": 1
-                 }
+                "type": "serial",
+                "times": 1
             }
         }
     ],
@@ -310,18 +226,11 @@
                 "password" : "noir0123"
             },
             "runner": {
-                "type": "constant",
-                "times": 1,
-                "concurrency": 1
-            },
-            "context": {
-                "users": {
-                    "tenants": 1,
-                    "users_per_tenant": 1
-                 }
+                "type": "serial",
+                "times": 1
             }
         }
-    ],
+    ], 
     "ScenarioPlugin.sfc_scale_parallel": [
         {
             "args": {
@@ -337,14 +246,7 @@
             },
             "runner": {
                 "type": "constant",
-                "times": 1,
-                "concurrency": 1
-            },
-            "context": {
-                "users": {
-                    "tenants": 1,
-                    "users_per_tenant": 1
-                 }
+                "times": 1
             }
         }
     ],
@@ -365,14 +267,7 @@
             },
             "runner": {
                 "type": "constant",
-                "times": 1,
-                "concurrency": 1
-            },
-            "context": {
-                "users": {
-                    "tenants": 1,
-                    "users_per_tenant": 1
-                 }
+                "times": 1
             }
         }
     ],
@@ -394,14 +289,7 @@
             },
             "runner": {
                 "type": "constant",
-                "times": 1,
-                "concurrency": 1
-            },
-            "context": {
-                "users": {
-                    "tenants": 1,
-                    "users_per_tenant": 1
-                 }
+                "times": 1
             }
         }
     ]
