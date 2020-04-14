@@ -13,17 +13,9 @@
                 "router_username" : {{router_username}}
                 },
             "runner": {
-                "type": "constant",
-                "times": 1,
-                "concurrency": 1
-            },
-            "context": {
-                "users": {
-                    "tenants": 1,
-                    "users_per_tenant": 1
-                 }
+                "type": "serial",
+                "times": 1
             }
-
         }
     ],
     "ScenarioPlugin.l3out_bgp_connectivity": [
@@ -37,17 +29,9 @@
                 "password" : "noir0123"
                 },
             "runner": {
-                "type": "constant",
-                "times": 1,
-                "concurrency": 1
-            },
-            "context": {
-                "users": {
-                    "tenants": 1,
-                    "users_per_tenant": 1
-                 }
+                "type": "serial",
+                "times": 1
             }
-
         }
     ],
     "ScenarioPlugin.l3out_reachability_of_bgp_route": [
@@ -64,18 +48,10 @@
                 "router_username" : {{router_username}}
                 },
             "runner": {
-                "type": "constant",
-                "times": 1,
-                "concurrency": 1
-            },
-            "context": {
-                "users": {
-                    "tenants": 1,
-                    "users_per_tenant": 1
-                 }
+                "type": "serial",
+                "times": 1
             }
-
         }
-    ]
+    ] 
 }
 

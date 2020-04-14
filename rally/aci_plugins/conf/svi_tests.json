@@ -11,15 +11,8 @@
                 "password" : "noir0123"
                 },
             "runner": {
-                "type": "constant",
-                "times": 1,
-                "concurrency": 1
-            },
-            "context": {
-                "users": {
-                    "tenants": 1,
-                    "users_per_tenant": 1
-                 }
+                "type": "serial",
+                "times": 1
             }
         }
     ],
@@ -35,15 +28,8 @@
                 "password" : "noir0123"
                 },
             "runner": {
-                "type": "constant",
-                "times": 1,
-                "concurrency": 1
-            },
-            "context": {
-                "users": {
-                    "tenants": 1,
-                    "users_per_tenant": 1
-                 }
+                "type": "serial",
+                "times": 1
             }
         }
     ],
@@ -59,18 +45,11 @@
                 "password" : "noir0123"
                 },
             "runner": {
-                "type": "constant",
-                "times": 1,
-                "concurrency": 1
-            },
-            "context": {
-                "users": {
-                    "tenants": 1,
-                    "users_per_tenant": 1
-                 }
+                "type": "serial",
+                "times": 1
             }
         }
-    ],
+    ], 
     "ScenarioPlugin.svi_scale": [
         {
             "args": {
@@ -83,14 +62,7 @@
                 },
             "runner": {
                 "type": "constant",
-                "times": 1,
-                "concurrency": 1
-            },
-            "context": {
-                "users": {
-                    "tenants": 1,
-                    "users_per_tenant": 1
-                 }
+                "times": 1
             }
         }
     ]
