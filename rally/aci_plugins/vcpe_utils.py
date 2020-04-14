@@ -598,18 +598,3 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
             check_interval=CONF.openstack.nova_server_boot_poll_interval
         )
         return server
-
-    @atomic.action_timer("vm.attach_floating_ip")
-    def _attach_floating_ip(self, server, floating_network):
-        internal_network = list(server.networks)[0]
-        fixed_ip = server.addresses[internal_network][0]["addr"]
-
-        with atomic.ActionTimer(self, "neutron.create_floating_ip"):
-            fip = network_wrapper.wrap(self.clients, self).create_floating_ip(
-                ext_network=floating_network,
-                tenant_id=server.tenant_id, fixed_ip=fixed_ip)
-
-        self._associate_floating_ip(server, fip, fixed_address=fixed_ip)
-
-        return fip
-
