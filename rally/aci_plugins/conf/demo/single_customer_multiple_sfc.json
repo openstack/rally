@@ -14,12 +14,12 @@
                 },
             "runner": {
                 "type": "constant",
-                "times": 3,
+                "times": 1,
                 "concurrency": 1
             },
             "context": {
                 "users": {
-                    "tenants": 3,
+                    "tenants": 1,
                     "users_per_tenant": 1
                  }
             }
