@@ -1,3 +1,0 @@
-docker_repository: xrally/xrally
-docker_image_version: "{{ zuul.tag }}"
-docker_image_tag: "{{ docker_repository }}:{{ docker_image_version }}"
