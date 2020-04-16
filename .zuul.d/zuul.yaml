@@ -1,28 +1,28 @@
 - secret:
-    name: dockerhub_credentials
+    name: rally-dockerhub-credentials
     data:
       username: !encrypted/pkcs1-oaep
-        - k7GCjmH8P2DqliVc5ihbr+yYwVeylzShrmoP3qIMb1jx4Mkgn8YDY54vf84HT5xEDAuJw
-          y/ndAtvVY/4WF0MsRZ/p4ZaAZx1FyV90ZgNXKNAgizMmvBIZoVEbFN5gimJn8DVnvcm5R
-          vIezNzsgWQoNiOOuxwB3j6Fq+40K6mBg2k1ceuvqX/DAKqXgNdX/V5SPxBYek4WkofxUs
-          gDFdHt3aMIty+Gd/fW4D/ufGAurW4CUbFmiAVyZagXzq8NKXCKUOGFeNvL/tftXhT2bd1
-          PczUz8Nhur1Z7nYeqc5K1TnN35OlNP0IT4KG8vst33nX4ycSkFOpbkdvflnchlysEvn/+
-          Z1NMFKLxQvi/k4rMa2jBv7O6xs9y1LOZMSHwG0Y2U8lV6m1FqrDyi9h22fcBGEtOyp0KV
-          V9DmSFRCNb7lhd7v7vaztzL8yqrGlezrJYELodUvYLy2AwZi+FnkUVFw7dB4D5m/fjMCf
-          ej/LRO4XiUpVpLUL0BOxLNXVHqqrbROwPkp2ekJL3WxMwhAGSxlAuMwvPU1KZzRhrdnG7
-          Ysm12YV5qgd6b6XZ8X7vELxAiqZPCjSN+66FPZW+Q6I5UVX+IxIgndgxgkoHJOgg9Wjwb
-          kKDgYM8EE5Ks4/Rv9jfNXxXvH/cQFqWIMHHbsZfmV6QcLfJxYXDRZ98r6KTzwA=
+        - IOewkAChKmlkgrYeX+Lk+sjpGj99dswA6b0vXQBio0dUngRspAtXR3VJAxyZAyYwXbUPU
+          HHq7qHDlesVfBl/RCPVfbFt4+79L7h4NSCo2NIR3DPKIVIXBfVGsmHvRglY3c6E+ji2Bm
+          VOk/jsEW+b+k+SZy6rQ4J35HGVBJUzyJzVB7l/2lJ3Wmf0b2MyTBz3tApK8+dP+GAa6Hd
+          UTY6140pxTPS010kit7/8s5B2zlt/ky3raTjclLuCmQHR5J98/7Mxd02HYjz71VSmDOjZ
+          d0fWYGVLQb0XxcdaLHYNYQhY0BIq3qa0p9diavz131OzJ5maQI0RKDXcz0BTsBP6bQfcM
+          etdB7L9geqTjIoA8dlJgM4ZQNer5UFrfeOTf8XpjPtM+U03T9GE4wKtEu1S8iinN9CB/g
+          dQdcrel9V0HkKBvJTJdlHFngp4lGx2JG+sDGIIgUru2GH4mi3fndAkqth/m22SgDq14TG
+          Zksbd3pBtoirt93H1hk557EM1FbfNpxGXkIo4No+LzuCuDymDga2ntHF2EcuGGUDlE+Pn
+          vmEvD4/dkXyyNJAqaHhwnTHy8clTYu0xEwTDvUL+Ss86McIxotw6Vv0XPeL1JUB0Ewfdu
+          QG3mgGXWqnoaixZpxjtLnmvA/syB5BEj9qcw4aXfU0ACytTU5H+pGHiwah0ST0=
       password: !encrypted/pkcs1-oaep
-        - JxlQJhxRBxgyqfHyUPVbS4pagJxkA6sdJyPf5p84iWFa1nWbIDTbpzhGYhYBqMt1YrXFf
-          NWGHzs7rJ/hp4MXSRHWVG4lEi5O6RFx/KEWiru+rGJwr7CyIfyyVORlRGlnABrc/LYyAe
-          LoSsQ5GM98Q1wERbhiZq7zsKSf0xIazFDmf34+bIx6Q9r4nlWdCQuQJ9N07UT4aRsl3WS
-          hOlUp8ekxBiQRtS9lRUPLUmJ8OzHTzXjJ6V0fM3MhDGA3YnH0Tj9r1D7cmwhsTy5ZT36k
-          bt2WCknxJ9tiJND5/NMvzo9T82apgoqeH8HCWDjE6PEdmJdYLiiW4aCk22D2M6a0+qvQI
-          fD8ZeEbrlJLvf58ldGgCJfl1Rpql0FspgnERBkCL4xSlyMQa8+S5R2S/SN6hAsbLRm/jZ
-          zUt3C4n8pJJvBDUBGEK+lqersyJtx5jEiz6xh0FVDVzFxBn/fUbNvQQH+zJAe4V1j1hHw
-          MBu4V2p20Qpjv2+wF2yzwT+tnrCkaeyuBfBLGRVdn4nCz630X1eaOwqh0hu1ZPDiwNBs4
-          hNv/EV7oaaTlk4VftYRwYocdK/pvj1Mi0QCea+hC01vuoqJE8EK05oOD1KThOTrbwXQX5
-          CDzBLc/Vyd4tFnAXPwEJDEKFNo25R7nmDBYTQIuiHSOSZHJis+r5UwvHfbuJPk=
+        - VU7F2XHpVSvqfco6B6F3iXhTdy1/5Rv+8UiT/Sk2SuQd+ZHLV2mVSncdYQRpuAt3/z3Al
+          1BaoCFBYXPiaGOb1zW2s6kvwhn9jWOWHc20M2QAWMia45HNfS9qtMsBW4djlFFW4TTsSy
+          zCZXor3ulVhlBaLOKGrhjWTBi/EDCslLJEH4quOjmP5/RXqph7Z62RyueSbm6F1+JcWgE
+          zI+nJ+X7q4winKrAndSkP7lDr3IU1OK8gmPwfvPO4Tvwrec6RMWb5DlICp9YDP/H35Fb9
+          PdR+aapd++UOxsZPKc0nUroxjmENpOcqrIYuwtS7oAitoK3QuAsQ/M8d6WHwmoa4/I6DB
+          rBDEJV9goxu9qAzYLNKiqsV/IIcpud52j9HVlKLTvqeAN7qCSqxlhVlS8lXCmYhiNrscy
+          LTa+uM+6EKQC46eFaYos/2bChKR1c6wya2Y1Dj0Qj27CgQtp+WiAHTT+NgxGo7d3Jqk2z
+          UakGoIOovwcV7HpfFHQDijDBz/+6DR4iD+MSbOrG2QRzrjSix9kSk2b7t2liUZ0ODEPWe
+          DvlbYngfxXRzxdh/lxQ8AvCXtdRQNYrahyhhCsruBtQTptUgjxnPRe/tZyYAAKXILadZM
+          1cA3UecdfuFWhah/ffS1wWC0TvP+UPcJ/dNw3Xlurjt2USJfdyw0MueN7Wsj3Q=
 
 - job:
     name: rally-install-base
@@ -55,7 +55,6 @@
     post-run: tests/ci/playbooks/fetch-html-and-json-reports.yaml
     timeout: 1800
 
-
 - job:
     name: rally-docker-build-and-push
     parent: build-docker-image
@@ -65,7 +64,7 @@
     timeout: 1800
     secrets:
       name: docker_credentials
-      secret: dockerhub_credentials
+      secret: rally-dockerhub-credentials
       pass-to-parent: false
 
 - job:
