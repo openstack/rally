@@ -107,15 +107,3 @@
     vars:
       coverage_output_src: '{{ zuul.project.src_dir }}/cover/'
       zuul_executor_dest: '{{ zuul.executor.log_root }}/coverage/'
-
-# TODO(andreykurilin): Remove these jobs definitions as soon as
-#   rally-openstack project stops using them
-- job:
-    name: rally-tox-py27
-    parent: rally-tox-base
-    description: |
-      Run unit test for rally project.
-
-      Uses tox with the ``py27`` environment.
-    vars:
-      tox_env: py27
