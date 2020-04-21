@@ -17,6 +17,17 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
+[unreleased]
+------------
+
+Fixed
+~~~~~
+
+* [verification component] Failure while parsing subunit v2 stream in case of
+  unwanted test_id
+
+  `Launchpad-bug #1871406 <https://launchpad.net/bugs/1871406>`_
+
 [3.0.0] - 2020-03-23
 --------------------
 

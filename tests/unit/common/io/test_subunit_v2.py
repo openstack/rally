@@ -98,7 +98,7 @@ RuntimeError: broken setUp method
 
         @subunit_v2.prepare_input_args
         def some_a(self_, test_id, test_status, timestamp, test_tags,
-                   file_name, file_bytes, worker, mime_type, charset):
+                   file_name, file_bytes, worker, mime_type):
             some_mock(test_id, test_tags)
 
         some_a("", "setUpClass (some_test[tag1,tag2])")

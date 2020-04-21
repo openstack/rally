@@ -20,13 +20,18 @@ from rally.common import logging
 from rally.utils import encodeutils
 
 
+_IGNORE_LIST = [
+    "subunit.parser"
+]
+
+
 def prepare_input_args(func):
     # NOTE(andreykurilin): Variables 'runnable', 'eof', 'route_code' are not
     # used in parser.
     def inner(self, test_id=None, test_status=None, timestamp=None,
               file_name=None, file_bytes=None, mime_type=None, test_tags=None,
               runnable=True, eof=False, route_code=None):
-        if not test_id:
+        if not test_id or test_id in _IGNORE_LIST:
             return
 
         if (test_id.startswith("setUpClass (")
@@ -35,14 +40,8 @@ def prepare_input_args(func):
 
         tags = _parse_test_tags(test_id)
 
-        if mime_type:
-            mime_type, charset = mime_type.split("; ")[:2]
-            charset = charset.split("=")[1]
-        else:
-            charset = None
-
         func(self, test_id, test_status, timestamp, tags,
-             file_name, file_bytes, test_tags, mime_type, charset)
+             file_name, file_bytes, test_tags, mime_type)
 
     return inner
 
@@ -161,8 +160,7 @@ class SubunitV2StreamResult(object):
 
     @prepare_input_args
     def status(self, test_id=None, test_status=None, timestamp=None, tags=None,
-               file_name=None, file_bytes=None, worker=None, mime_type=None,
-               charset=None):
+               file_name=None, file_bytes=None, worker=None, mime_type=None):
         if timestamp:
             if not self._first_timestamp:
                 self._first_timestamp = timestamp
