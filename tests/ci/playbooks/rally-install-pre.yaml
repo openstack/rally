@@ -46,7 +46,7 @@
           # NOTE(pabelanger): We run apt-get update to ensure we dont have a stale
           # package cache in the gate.
           sudo apt-get update
-          sudo apt-get install python3.6-dev
+          sudo apt-get install --yes python3.6-dev
 
     - name: Install bindep
       shell:
