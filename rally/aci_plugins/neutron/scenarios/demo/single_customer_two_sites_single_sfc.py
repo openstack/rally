@@ -17,15 +17,19 @@ from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
 
 class SingleCustomerTwoSitesSingleSFC(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_utils.NovaScenario, scenario.OpenStackScenario):
 
-    def run(self, bras_image, nat_image, service_image1, flavor, username, password, access_router_ip):
+    def run(self, access_network, access_network_bgp_asn, nat_network, nat_network_bgp_asn, bras_image, nat_image, service_image1, flavor, username, password, access_router_ip):
         
-        acc_net = self._admin_create_network('ACCESS', {"shared": True, "apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": "1010", "apic:distinguished_names": {"ExternalNetwork": "uni/tn-common/out-Access-Out/instP-data_ext_pol"}})
-        acc_sub = self._admin_create_subnet(acc_net, {"cidr": '172.168.0.0/24'}, None)
-        self._create_svi_ports(acc_net, acc_sub, '172.168.0')
+        try:
+            acc_net = self.clients("neutron").show_network(access_network)
+            nat_net = self.clients("neutron").show_network(nat_network)       
+        except:
+            acc_net = self._admin_create_network('ACCESS', {"shared": True, "apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": access_network_bgp_asn, "apic:distinguished_names": {"ExternalNetwork": "uni/tn-common/out-Access-Out/instP-data_ext_pol"}})
+            acc_sub = self._admin_create_subnet(acc_net, {"cidr": '172.168.0.0/24'}, None)
+            self._create_svi_ports(acc_net, acc_sub, '172.168.0')
 
-        nat_net = self._admin_create_network('INTERNET', {"shared": True, "apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": "1020", "apic:distinguished_names": {"ExternalNetwork": "uni/tn-common/out-Internet-Out/instP-data_ext_pol"}})
-        nat_sub = self._admin_create_subnet(nat_net, {"cidr": '173.168.0.0/24'}, None)
-        self._create_svi_ports(nat_net, nat_sub, '173.168.0')
+            nat_net = self._admin_create_network('INTERNET', {"shared": True, "apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": nat_network_bgp_asn, "apic:distinguished_names": {"ExternalNetwork": "uni/tn-common/out-Internet-Out/instP-data_ext_pol"}})
+            nat_sub = self._admin_create_subnet(nat_net, {"cidr": '173.168.0.0/24'}, None)
+            self._create_svi_ports(nat_net, nat_sub, '173.168.0')
 
         port_create_args = {}
         port_create_args.update({"port_security_enabled": "false"})
@@ -118,10 +122,10 @@ class SingleCustomerTwoSitesSingleSFC(vcpe_utils.vCPEScenario, neutron_utils.Neu
                     "script_inline": "/usr/local/bin/orchest_nat.sh " + subp3_mac + ";/usr/local/bin/run_bird"
                 }
         
-     	print "\nConfiguring the BRAS-VM-1 and running Bird init...\n"
+     	print "\nConfiguring the BRAS-VM1 and running Bird init...\n"
         self._remote_command(username, password, fip1, command1, bras_vm1)
         self._remote_command(username, password, fip1, command2, bras_vm1)
-        print "\nConfiguring the BRAS-VM-1 and running Bird init...\n"
+        print "\nConfiguring the BRAS-VM2 and running Bird init...\n"
         self._remote_command(username, password, fip2, command3, bras_vm2)
         self._remote_command(username, password, fip2, command4, bras_vm2)
         print "\nConfiguring the NAT-VM and running Bird init...\n"
@@ -129,14 +133,14 @@ class SingleCustomerTwoSitesSingleSFC(vcpe_utils.vCPEScenario, neutron_utils.Neu
         self._remote_command(username, password, fip3, command6, nat_vm)
         self.sleep_between(30,40)
 
-        print "\nValidating BGP session from BRAS1-VM...\n"
+        print "\nValidating BGP session from BRAS-VM1...\n"
         command7 = {
                     "interpreter": "/bin/sh",
                     "script_inline": "birdc show protocol;birdc show route;birdc -s /tmp/sock-cats show protocol;birdc -s /tmp/sock-cats show route" 
                 }
 
         self._remote_command(username, password, fip1, command7, bras_vm1)
-        print "\nValidating BGP session from BRAS2-VM...\n"
+        print "\nValidating BGP session from BRAS-VM2...\n"
         self._remote_command(username, password, fip2, command7, bras_vm2)
         print "\nValidating BGP session from NAT-VM...\n"
         self._remote_command(username, password, fip3, command7, nat_vm)
@@ -187,7 +191,7 @@ class SingleCustomerTwoSitesSingleSFC(vcpe_utils.vCPEScenario, neutron_utils.Neu
         pc = self._create_port_chain([ppg], [fc1, fc2])
         self.sleep_between(30, 40)
    
-        clean = [bras_vm1, bras_vm2, nat_vm, trunk_bras1, trunk_bras2, trunk_nat, pfip1, pfip2, pfip3, pc, ppg, fc1, fc2, pp, net1, acc_net, nat_net]
+        clean = [bras_vm1, bras_vm2, nat_vm, trunk_bras1, trunk_bras2, trunk_nat, pfip1, pfip2, pfip3, pc, ppg, fc1, fc2, pp, net1]
         try:
             print "\nTraffic verification from site-1 after creating SFC\n"
             command11 = {
@@ -273,5 +277,3 @@ class SingleCustomerTwoSitesSingleSFC(vcpe_utils.vCPEScenario, neutron_utils.Neu
         self._delete_flow_classifier(clean[12])
         self._delete_port_pair(clean[13])
         self._delete_svi_ports(clean[14])
-        self._admin_delete_network(clean[15])
-        self._admin_delete_network(clean[16])

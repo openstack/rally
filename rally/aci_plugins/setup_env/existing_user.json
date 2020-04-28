@@ -1,0 +1,21 @@
+{
+    "openstack": {
+        "auth_url": "http://10.108.1.67:5000/v3",
+        "region_name": "RegionOne",
+        "endpoint_type": "public",
+        "admin": {
+            "username": "admin",
+            "password": "noir0123",
+            "user_domain_name": "admin_domain",
+            "project_name": "admin",
+            "project_domain_name": "admin_domain"
+        },
+        "users": [
+            {
+                "username": "rally",
+                "password": "noir0123",
+                "tenant_name": "rally"
+            }
+        ]
+    }
+}

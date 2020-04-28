@@ -17,16 +17,20 @@ from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
 
 class SingleCustomerSingleSFC(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_utils.NovaScenario, scenario.OpenStackScenario):
 
-    def run(self, bras_image, nat_image, service_image1, flavor, username, password, access_router_ip):
+    def run(self, access_network, access_network_bgp_asn, nat_network, nat_network_bgp_asn, bras_image, nat_image, service_image1, flavor, username, password, access_router_ip):
         
-        acc_net = self._admin_create_network('ACCESS', {"shared": True, "apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": "1010", "apic:distinguished_names": {"ExternalNetwork": "uni/tn-common/out-Access-Out/instP-data_ext_pol"}})
-        acc_sub = self._admin_create_subnet(acc_net, {"cidr": '172.168.0.0/24'}, None)
-        self._create_svi_ports(acc_net, acc_sub, '172.168.0')
+        try:
+            acc_net = self.clients("neutron").show_network(access_network)
+            nat_net = self.clients("neutron").show_network(nat_network)       
+        except:
+            acc_net = self._admin_create_network('ACCESS', {"shared": True, "apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": access_network_bgp_asn, "apic:distinguished_names": {"ExternalNetwork": "uni/tn-common/out-Access-Out/instP-data_ext_pol"}})
+            acc_sub = self._admin_create_subnet(acc_net, {"cidr": '172.168.0.0/24'}, None)
+            self._create_svi_ports(acc_net, acc_sub, '172.168.0')
 
-        nat_net = self._admin_create_network('INTERNET', {"shared": True, "apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": "1020", "apic:distinguished_names": {"ExternalNetwork": "uni/tn-common/out-Internet-Out/instP-data_ext_pol"}})
-        nat_sub = self._admin_create_subnet(nat_net, {"cidr": '173.168.0.0/24'}, None)
-        self._create_svi_ports(nat_net, nat_sub, '173.168.0')
- 
+            nat_net = self._admin_create_network('INTERNET', {"shared": True, "apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": nat_network_bgp_asn, "apic:distinguished_names": {"ExternalNetwork": "uni/tn-common/out-Internet-Out/instP-data_ext_pol"}})
+            nat_sub = self._admin_create_subnet(nat_net, {"cidr": '173.168.0.0/24'}, None)
+            self._create_svi_ports(nat_net, nat_sub, '173.168.0')
+
         port_create_args = {}
         port_create_args.update({"port_security_enabled": "false"})
         pfip1 = self._admin_create_port(acc_net, port_create_args)
@@ -148,8 +152,8 @@ class SingleCustomerSingleSFC(vcpe_utils.vCPEScenario, neutron_utils.NeutronScen
         fc = self._create_flow_classifier('10.0.1.0/24', '0.0.0.0/0', net1_id, net1_id)
         pc = self._create_port_chain([ppg], [fc])
         self.sleep_between(30, 40)
- 
-        clean = [bras_vm, nat_vm, trunk1, trunk2, pfip1, pfip2, acc_net, nat_net, pc, ppg, fc, pp, service_vm, router, sub1[0], sub2[0], sub3[0], net1, left, right]
+         
+        clean = [bras_vm, nat_vm, trunk1, trunk2, pfip1, pfip2, pc, ppg, fc, pp, service_vm, router, sub1[0], sub2[0], sub3[0], net1, left, right]
         try:
             print "\nTraffic verification after creating SFC\n"
             command8 = {
@@ -201,20 +205,18 @@ class SingleCustomerSingleSFC(vcpe_utils.vCPEScenario, neutron_utils.NeutronScen
         self._admin_delete_trunk(clean[3])
         self._admin_delete_port(clean[4])
         self._admin_delete_port(clean[5])
-        self._admin_delete_network(clean[6])
-        self._admin_delete_network(clean[7])
-        self._delete_port_chain(clean[8])
-        self._delete_port_pair_group(clean[9])
-        self._delete_flow_classifier(clean[10])
-        self._delete_port_pair(clean[11])
-        self._delete_server(clean[12])
-        self._admin_remove_interface_router(clean[14], clean[13])
-        self._admin_remove_interface_router(clean[15], clean[13])
-        self._admin_remove_interface_router(clean[16], clean[13])
-        self._admin_delete_router(clean[13])
+        self._delete_port_chain(clean[6])
+        self._delete_port_pair_group(clean[7])
+        self._delete_flow_classifier(clean[8])
+        self._delete_port_pair(clean[9])
+        self._delete_server(clean[10])
+        self._admin_remove_interface_router(clean[12], clean[11])
+        self._admin_remove_interface_router(clean[13], clean[11])
+        self._admin_remove_interface_router(clean[14], clean[11])
+        self._admin_delete_router(clean[11])
+        self._delete_all_ports(clean[15])
+        self._admin_delete_network(clean[15])
+        self._delete_all_ports(clean[16])
+        self._admin_delete_network(clean[16])
         self._delete_all_ports(clean[17])
         self._admin_delete_network(clean[17])
-        self._delete_all_ports(clean[18])
-        self._admin_delete_network(clean[18])
-        self._delete_all_ports(clean[19])
-        self._admin_delete_network(clean[19])
