@@ -17,15 +17,19 @@ from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
 
 class SingleCustomerMultipleSFC(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_utils.NovaScenario, scenario.OpenStackScenario):
 
-    def run(self, bras_image, nat_image, service_image1, service_image2, service_image3, flavor, username, password, access_router_ip):
+    def run(self, access_network, access_network_bgp_asn, nat_network, nat_network_bgp_asn, bras_image, nat_image, service_image1, service_image2, service_image3, flavor, username, password, access_router_ip):
         
-        acc_net = self._admin_create_network('ACCESS', {"shared": True, "apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": "1010", "apic:distinguished_names": {"ExternalNetwork": "uni/tn-common/out-Access-Out/instP-data_ext_pol"}})
-        acc_sub = self._admin_create_subnet(acc_net, {"cidr": '172.168.0.0/24'}, None)
-        self._create_svi_ports(acc_net, acc_sub, '172.168.0')
+        try:
+            acc_net = self.clients("neutron").show_network(access_network)
+            nat_net = self.clients("neutron").show_network(nat_network)       
+        except:
+            acc_net = self._admin_create_network('ACCESS', {"shared": True, "apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": access_network_bgp_asn, "apic:distinguished_names": {"ExternalNetwork": "uni/tn-common/out-Access-Out/instP-data_ext_pol"}})
+            acc_sub = self._admin_create_subnet(acc_net, {"cidr": '172.168.0.0/24'}, None)
+            self._create_svi_ports(acc_net, acc_sub, '172.168.0')
 
-        nat_net = self._admin_create_network('INTERNET', {"shared": True, "apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": "1020", "apic:distinguished_names": {"ExternalNetwork": "uni/tn-common/out-Internet-Out/instP-data_ext_pol"}})
-        nat_sub = self._admin_create_subnet(nat_net, {"cidr": '173.168.0.0/24'}, None)
-        self._create_svi_ports(nat_net, nat_sub, '173.168.0')
+            nat_net = self._admin_create_network('INTERNET', {"shared": True, "apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": nat_network_bgp_asn, "apic:distinguished_names": {"ExternalNetwork": "uni/tn-common/out-Internet-Out/instP-data_ext_pol"}})
+            nat_sub = self._admin_create_subnet(nat_net, {"cidr": '173.168.0.0/24'}, None)
+            self._create_svi_ports(nat_net, nat_sub, '173.168.0')
 
         port_create_args = {}
         port_create_args.update({"port_security_enabled": "false"})
@@ -207,7 +211,7 @@ class SingleCustomerMultipleSFC(vcpe_utils.vCPEScenario, neutron_utils.NeutronSc
         pc = self._create_port_chain([ppg1, ppg2, ppg3], [fc])
         self.sleep_between(30,40)
        
-        clean = [bras_vm, nat_vm, trunk1, trunk2, pfip1, pfip2, pc, ppg1, ppg2, ppg3, fc, pp1, pp21, pp22, pp23, pp3, net1, acc_net, nat_net]
+        clean = [bras_vm, nat_vm, trunk1, trunk2, pfip1, pfip2, pc, ppg1, ppg2, ppg3, fc, pp1, pp21, pp22, pp23, pp3, net1]
         try:
             print "\nTraffic verification after creating SFC\n"
             command8 = {
@@ -283,5 +287,3 @@ class SingleCustomerMultipleSFC(vcpe_utils.vCPEScenario, neutron_utils.NeutronSc
         self._delete_port_pair(clean[14])
         self._delete_port_pair(clean[15])
         self._delete_svi_ports(clean[16])
-        self._admin_delete_network(clean[17])
-        self._admin_delete_network(clean[18])

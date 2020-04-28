@@ -2,10 +2,14 @@
     "ScenarioPlugin.single_customer_single_sfc": [
         {
             "args": {
+                "access_network" : {{access_network}},
+                "access_network_bgp_asn" : {{access_network_bgp_asn}},
+                "nat_network" : {{nat_network}},
+                "nat_network_bgp_asn" : {{nat_network_bgp_asn}},
                 "bras_image" : {{bras_image}},
                 "nat_image" : {{nat_image}},
                 "service_image1" : {{service_image1}},
-                "flavor": "small",
+                "flavor": "tiny",
                 "username" : "root",
                 "password" : "noir0123",
                 "access_router_ip" : {{access_router_ip}}

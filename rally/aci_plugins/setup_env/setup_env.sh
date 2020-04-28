@@ -21,3 +21,10 @@ echo "Creating a user for testing..."
 openstack user create --domain admin_domain --project rally --password noir0123 --description "Created for rally testing" --enable rally
 openstack role add --project rally --user rally Admin
 openstack role add --project rally --user admin Member
+
+echo "Creating access-network and nat-network for testing..."
+./admin.sh
+
+echo "Generating args.json file for testing..."
+./generate_args_json_file.sh
+echo "Please copy the generated args.json file into the testing directory"
