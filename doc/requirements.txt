@@ -1,2 +1,5 @@
 # we are using theme from it
 oslosphinx
+
+# Rally plugins
+rally-openstack

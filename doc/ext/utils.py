@@ -22,15 +22,17 @@ from docutils.parsers import rst
 from docutils import utils
 import string
 
-import six
-
 
 def parse_text(text):
     parser = rst.Parser()
     settings = frontend.OptionParser(
         components=(rst.Parser,)).get_default_values()
     document = utils.new_document(text, settings)
-    parser.parse(text, document)
+    try:
+        parser.parse(text, document)
+    except Exception as e:
+        print(f"WARNING: {e}")
+        return []
     return document.children
 
 
@@ -51,7 +53,7 @@ def make_definition(term, ref, descriptions):
         {"ref": ref, "term": term})
     for descr in descriptions:
         if descr:
-            if isinstance(descr, (six.text_type, six.binary_type)):
+            if isinstance(descr, (str, bytes)):
                 if descr[0] not in string.ascii_uppercase:
                     descr = descr.capitalize()
                 descr = paragraph("  %s" % descr)
