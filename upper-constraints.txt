@@ -13,3 +13,7 @@ PyYAML===5.1.2
 six===1.13.0
 SQLAlchemy===1.3.13
 virtualenv===16.7.7
+# see https://github.com/datadriventests/ddt/pull/84 and
+#  https://github.com/datadriventests/ddt/pull/82 for more details
+ddt===1.3.1
+

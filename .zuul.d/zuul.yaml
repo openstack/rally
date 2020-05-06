@@ -21,13 +21,6 @@
     parent: rally-install-base
     nodeset: centos-8
 
-- job:
-    name: rally-database-migration
-    parent: base
-    nodeset: ubuntu-bionic
-    run: tests/ci/playbooks/rally-database-migration-run.yaml
-    timeout: 1800
-
 - project:
     templates:
       - docs-on-readthedocs
@@ -45,7 +38,6 @@
         - rally-tox-functional
         - rally-tox-functional-py38
         - rally-tox-self
-        - rally-database-migration
         - rally-install-ubuntu-bionic
         - rally-install-centos-7
         - rally-install-centos-8
@@ -60,7 +52,6 @@
         - rally-tox-py38
         - rally-tox-functional
         - rally-tox-self
-        - rally-database-migration
         - rally-install-ubuntu-bionic
         - rally-install-centos-7
         - rally-install-centos-8
