@@ -294,10 +294,10 @@ class RestrictedParametersValidator(validation.Validator):
     def validate(self, context, config, plugin_cls, plugin_cfg):
         restricted_params = []
         for param_name in self.params:
-            args = config.get("args", {})
-            a_dict, a_key = (args, self.subdict) if self.subdict else (
-                config, "args")
-            if param_name in a_dict.get(a_key, {}):
+            source = config.get("args", {})
+            if self.subdict:
+                source = source.get(self.subdict) or {}
+            if param_name in source:
                 restricted_params.append(param_name)
         if restricted_params:
             self.fail("You can't specify parameters '%s' in '%s'" % (
