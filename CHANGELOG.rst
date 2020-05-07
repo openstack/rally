@@ -20,6 +20,12 @@ Changelog
 [unreleased]
 ------------
 
+Changed
+~~~~~~~
+
+* Validator for scenario arguments do not initialize scenario class anymore for
+  discovering argument spec of the *run* method.
+
 Fixed
 ~~~~~
 
