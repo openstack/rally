@@ -43,11 +43,14 @@ class ArgsValidator(validation.Validator):
         name = scenario.get_name()
         platform = scenario.get_platform()
 
-        args_spec = inspect.signature(scenario().run).parameters
+        args_spec = inspect.signature(scenario.run).parameters
         missed_args = [
-            p.name for p in args_spec.values()
-            if p.default == inspect.Parameter.empty
-            and p.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD]
+            p.name
+            for i, p in enumerate(args_spec.values())
+            if (i != 0  # first argument is self-argument, i.e instance of cls
+                and p.default == inspect.Parameter.empty
+                and p.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD)
+        ]
 
         hint_msg = (" Use `rally plugin show --name %s --platform %s` "
                     "to display scenario description." % (name, platform))
