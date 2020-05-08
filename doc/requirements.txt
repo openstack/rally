@@ -1,5 +1,9 @@
-# we are using theme from it
-oslosphinx
+# main dependencies
+-r ../requirements.txt
+sphinx!=1.6.6,!=1.6.7,!=2.1.0                          # BSD
 
-# Rally plugins
+# we are using theme from this package
+oslosphinx                                             # Apache Software License
+
+# plugins
 rally-openstack
