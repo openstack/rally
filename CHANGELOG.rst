@@ -17,14 +17,16 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
-[unreleased]
-------------
+[3.1.0] - 2020-05-08
+--------------------
 
 Changed
 ~~~~~~~
 
 * Validator for scenario arguments do not initialize scenario class anymore for
   discovering argument spec of the *run* method.
+
+* Docker image includes the latest setuptools
 
 Fixed
 ~~~~~
