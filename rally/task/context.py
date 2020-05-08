@@ -31,8 +31,11 @@ CONF = cfg.CONF
 CONF_OPTS = [
     cfg.StrOpt(
         "context_resource_name_format",
-        help="Template is used to generate random names of resources. X is "
-             "replaced with random latter, amount of X can be adjusted")
+        help="A mktemp(1)-like format string that will be used to pattern "
+             "the generated random string. It must contain two separate "
+             "segments of at least three 'X's; the first one will be replaced "
+             "by a portion of the owner ID (i.e task/subtask ID), and the "
+             "second will be replaced with a random string.")
 ]
 CONF.register_opts(CONF_OPTS)
 
