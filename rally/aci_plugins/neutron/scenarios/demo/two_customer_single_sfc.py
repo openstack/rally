@@ -18,7 +18,7 @@ from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
 
 class TwoCustomerSingleSFC(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_utils.NovaScenario, scenario.OpenStackScenario):
 
-    def run(self, access_network, access_network_bgp_asn, nat_network, nat_network_bgp_asn, bras_image, nat_image, service_image1, flavor, username, password, access_router_ip):
+    def run(self, access_network, access_network_bgp_asn, nat_network, nat_network_bgp_asn, svi_scale, bras_image, nat_image, service_image1, flavor, username, password, access_router_ip):
 
         try:
             acc_net = self.clients("neutron").show_network(access_network)
@@ -26,11 +26,11 @@ class TwoCustomerSingleSFC(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenari
         except:
             acc_net = self._admin_create_network('ACCESS', {"shared": True, "apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": access_network_bgp_asn, "apic:distinguished_names": {"ExternalNetwork": "uni/tn-common/out-Access-Out/instP-data_ext_pol"}})
             acc_sub = self._admin_create_subnet(acc_net, {"cidr": '172.168.0.0/24'}, None)
-            self._create_svi_ports(acc_net, acc_sub, '172.168.0')
+            self._create_svi_ports(acc_net, acc_sub, '172.168.0', svi_scale)
 
             nat_net = self._admin_create_network('INTERNET', {"shared": True, "apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": nat_network_bgp_asn, "apic:distinguished_names": {"ExternalNetwork": "uni/tn-common/out-Internet-Out/instP-data_ext_pol"}})
             nat_sub = self._admin_create_subnet(nat_net, {"cidr": '173.168.0.0/24'}, None)
-            self._create_svi_ports(nat_net, nat_sub, '173.168.0')
+            self._create_svi_ports(nat_net, nat_sub, '173.168.0', svi_scale)
 
         port_create_args = {}
         port_create_args.update({"port_security_enabled": "false"})
@@ -65,7 +65,7 @@ class TwoCustomerSingleSFC(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenari
         net1, sub1 = self._create_network_and_subnets({"apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": "2010"},{"cidr": '192.168.0.0/24'}, 1, None)
 
         net1_id = net1.get('network', {}).get('id')
-        self._create_svi_ports(net1, sub1[0], "192.168.0")
+        self._create_svi_ports(net1, sub1[0], "192.168.0", svi_scale)
         self._add_interface_router(sub1[0].get("subnet"), router1.get("router"))
 
         port_create_args = {}
@@ -134,7 +134,7 @@ class TwoCustomerSingleSFC(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenari
         net2, sub2 = self._create_network_and_subnets({"apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": "3010"},{"cidr": '192.168.0.0/24'}, 1, None)
 
         net2_id = net2.get('network', {}).get('id')
-        self._create_svi_ports(net2, sub2[0], "192.168.0")
+        self._create_svi_ports(net2, sub2[0], "192.168.0", svi_scale)
         self._add_interface_router(sub2[0].get("subnet"), router2.get("router"))
 
         port_create_args = {}

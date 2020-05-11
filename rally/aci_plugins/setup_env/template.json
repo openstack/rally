@@ -3,6 +3,7 @@
     "access_network_bgp_asn": "1010",
     "nat_network": "p2",
     "nat_network_bgp_asn": "1020",
+    "svi_scale": "2",
     "bras_image": "p3",
     "nat_image": "p4",
     "service_image1": "p5",

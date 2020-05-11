@@ -7,6 +7,7 @@
                 "image" : {{bras_image}},
                 "flavor": "small",
                 "public_net": {{access_network}},
+                "svi_scale" : {{svi_scale}},
                 "username" : "root",
                 "password" : "noir0123"
                 },
@@ -24,6 +25,7 @@
                 "image" : {{bras_image}},
                 "flavor": "small",
                 "public_net": {{access_network}},
+                "svi_scale" : {{svi_scale}},
                 "username" : "root",
                 "password" : "noir0123"
                 },
@@ -41,6 +43,7 @@
                 "image" : {{bras_image}},
                 "flavor": "small",
                 "public_net": {{access_network}},
+                "svi_scale" : {{svi_scale}},
                 "username" : "root",
                 "password" : "noir0123"
                 },
@@ -56,6 +59,7 @@
                 "image" : {{bras_image}},
                 "flavor": "small",
                 "public_network": {{access_network}},
+                "svi_scale" : {{svi_scale}},
                 "username" : "root",
                 "password" : "noir0123",
                 "scale" : "5"
