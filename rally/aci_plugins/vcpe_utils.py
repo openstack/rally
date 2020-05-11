@@ -255,7 +255,7 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
 
 
     @atomic.action_timer("create_svi_ports")
-    def _create_svi_ports(self, network, subnet, prefix):
+    def _create_svi_ports(self, network, subnet, prefix, svi_scale):
               
         port_create_args = {}
         port_create_args["device_owner"] = 'apic:svi'
@@ -277,7 +277,16 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
         port_create_args["network_id"] = network["network"]["id"]
         port_create_args.update({"fixed_ips": [{"subnet_id": subnet.get("subnet", {}).get("id"), "ip_address": prefix+".199"}]})
         self.admin_clients("neutron").create_port({"port": port_create_args})
-  
+        
+        for i in range(1, int(svi_scale)-1):
+
+            port_create_args = {}
+            port_create_args["device_owner"] = 'apic:svi'
+            port_create_args["name"] = 'apic-svi-port:node-10' + str(i+2)
+            port_create_args["network_id"] = network["network"]["id"]
+            port_create_args.update({"fixed_ips": [{"subnet_id": subnet.get("subnet", {}).get("id"), "ip_address": prefix+"."+str(200+i)}]})
+            self.admin_clients("neutron").create_port({"port": port_create_args})
+
     @atomic.action_timer("delete_svi_ports")
     def _delete_svi_ports(self, network):
 
@@ -598,3 +607,18 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
             check_interval=CONF.openstack.nova_server_boot_poll_interval
         )
         return server
+
+    @atomic.action_timer("vm.attach_floating_ip")
+    def _attach_floating_ip(self, server, floating_network):
+        internal_network = list(server.networks)[0]
+        fixed_ip = server.addresses[internal_network][0]["addr"]
+
+        with atomic.ActionTimer(self, "neutron.create_floating_ip"):
+            fip = network_wrapper.wrap(self.clients, self).create_floating_ip(
+                ext_network=floating_network,
+                tenant_id=server.tenant_id, fixed_ip=fixed_ip)
+
+        self._associate_floating_ip(server, fip, fixed_address=fixed_ip)
+
+        return fip
+

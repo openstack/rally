@@ -6,6 +6,7 @@
                 "access_network_bgp_asn" : {{access_network_bgp_asn}},
                 "nat_network" : {{nat_network}},
                 "nat_network_bgp_asn" : {{nat_network_bgp_asn}},
+                "svi_scale" : {{svi_scale}},
                 "bras_image" : {{bras_image}},
                 "nat_image" : {{nat_image}},
                 "service_image1" : {{service_image1}},

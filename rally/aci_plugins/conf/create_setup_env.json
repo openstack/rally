@@ -1,0 +1,17 @@
+{
+    "ScenarioPlugin.create_setup_env": [
+        {
+            "args": {
+                "access_network" : {{access_network}},
+                "access_network_bgp_asn" : {{access_network_bgp_asn}},
+                "nat_network" : {{nat_network}},
+                "nat_network_bgp_asn" : {{nat_network_bgp_asn}},
+                "svi_scale" : {{svi_scale}}
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            }
+        }
+    ]
+}
