@@ -17,6 +17,17 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
+[unreleased]
+------------
+
+Fixed
+~~~~~
+
+* [verification component] Make config parser case sensitivity in
+  configure-verifier
+
+  `Launchpad-bug #1877930 <https://launchpad.net/bugs/1877930>`_
+
 [3.1.0] - 2020-05-08
 --------------------
 

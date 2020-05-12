@@ -80,11 +80,14 @@ class UtilsTestCase(test.TestCase):
     def test_add_extra_options(self):
         conf = configparser.ConfigParser()
         extra_options = {"section": {"foo": "bar"},
-                         "section2": {"option": "value"}}
+                         "section2": {"option": "value"},
+                         "section3": {"CamelCaseOption": "CamelCaseValue"}}
 
         conf = utils.add_extra_options(extra_options, conf)
 
-        expected = {"section": ("foo", "bar"), "section2": ("option", "value")}
+        expected = {"section": ("foo", "bar"),
+                    "section2": ("option", "value"),
+                    "section3": ("CamelCaseOption", "CamelCaseValue")}
         for section, option in expected.items():
             result = conf.items(section)
             self.assertIn(option, result)

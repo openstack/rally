@@ -73,6 +73,7 @@ def create_dir(dir_path):
 
 def extend_configfile(extra_options, conf_path):
     conf_object = configparser.ConfigParser()
+    conf_object.optionxform = str
     conf_object.read(conf_path)
 
     conf_object = add_extra_options(extra_options, conf_object)
@@ -86,6 +87,7 @@ def extend_configfile(extra_options, conf_path):
 
 
 def add_extra_options(extra_options, conf_object):
+    conf_object.optionxform = str
     for section in extra_options:
         if section not in (conf_object.sections() + ["DEFAULT"]):
             conf_object.add_section(section)

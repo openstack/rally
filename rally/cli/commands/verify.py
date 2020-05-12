@@ -333,6 +333,7 @@ class VerifyCommands(object):
             if extra_options:
                 if os.path.isfile(extra_options):
                     conf = configparser.ConfigParser()
+                    conf.optionxform = str
                     conf.read(extra_options)
                     extra_options = dict(conf._sections)
                     for s in extra_options:
