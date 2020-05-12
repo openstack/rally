@@ -173,7 +173,7 @@ class _Deployment(APIGroup):
                     #   includes Exception cls with a message. By parsing it,
                     #   we can get etype.
                     trace = res["traceback"].split("\n")
-                    last_line = [l for l in trace if l][-1]
+                    last_line = [line for line in trace if line][-1]
                     etype, _msg = last_line.split(":", 1)
                 else:
                     etype = "n/a"

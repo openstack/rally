@@ -124,7 +124,7 @@ def main():
     results_dir = args.results_dir
     rally(f"task report --html-static --out {results_dir}/self_report.html")
     rally(f"task report --json --out {results_dir}/self_report.json")
-    rally(f"task sla-check")
+    rally("task sla-check")
 
 
 if __name__ == "__main__":

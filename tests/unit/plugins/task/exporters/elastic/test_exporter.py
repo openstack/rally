@@ -383,7 +383,7 @@ class ElasticSearchExporterTestCase(test.TestCase):
             # the should be always empty line in the end
             self.assertEqual("", data[-1])
 
-        data = [json.loads(l) for l in exporter._report]
+        data = [json.loads(line) for line in exporter._report]
         self.assertIsInstance(data, list)
         expected = [
             {

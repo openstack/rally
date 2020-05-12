@@ -57,7 +57,7 @@ def trim(docstring):
 
 
 def reindent(string):
-    return "\n".join(l.strip() for l in string.strip().split("\n"))
+    return "\n".join(line.strip() for line in string.strip().split("\n"))
 
 
 def parse_docstring(docstring):
