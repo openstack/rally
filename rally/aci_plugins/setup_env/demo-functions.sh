@@ -313,12 +313,19 @@ function create_svi_ports {
     local NET_ID=$2
     local SUB_ID=$3
     local PREFIX=$4
+    local SVI_SCALE=$5
     local PROJECT_ID=$(get_project_id $ADMIN)
 
     create_port $ADMIN "apic-svi-port:node-102" $NET_ID "--device-owner apic:svi --fixed-ip subnet=${SUB_ID},ip-address=$PREFIX.200"; SWITCH_PORT_ID=${CREATED_PORTS[-1]}
     to_delete=$(neutron port-list --tenant-id $PROJECT_ID -c id -c network_id -c name -f value | grep $NET_ID | grep -v $SWITCH_PORT_ID | awk '{print $1}')
     delete_ports "${to_delete[@]}"
     create_port $ADMIN "apic-svi-port:node-101" $NET_ID "--device-owner apic:svi --fixed-ip subnet=${SUB_ID},ip-address=$PREFIX.199"
+
+    for ((i=1; i < (($SVI_SCALE-1)); i++)); do
+	    iter=$(($i+2))
+	    ip=$(($i+200))
+	    create_port $ADMIN "apic-svi-port:node-10${iter}" $NET_ID "--device-owner apic:svi --fixed-ip subnet=${SUB_ID},ip-address=$PREFIX.$ip"
+    done
 }
 
 function neutron_list {
