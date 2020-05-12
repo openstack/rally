@@ -23,6 +23,7 @@ openstack role add --project rally --user rally Admin
 openstack role add --project rally --user admin Member
 
 echo "Creating access-network and nat-network for testing..."
+echo "For scaling svi, change SVI_SCALE parameter in admin.sh create_svi_ports()"
 ./admin.sh
 
 echo "Generating args.json file for testing..."
