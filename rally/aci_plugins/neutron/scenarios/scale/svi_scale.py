@@ -17,7 +17,7 @@ from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
 
 class SVIScale(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_utils.NovaScenario, scenario.OpenStackScenario):
 
-    def run(self, image, flavor, public_network, svi_scale, username, password, scale):
+    def run(self, image, flavor, public_network, aci_nodes, username, password, scale):
         
         router = self._create_router({}, False)
         public_net = self.clients("neutron").show_network(public_network)     
@@ -35,7 +35,7 @@ class SVIScale(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_util
             fip.append(pfip.get('port', {}).get('fixed_ips')[0].get('ip_address'))
 
             net, sub = self._create_network_and_subnets({"apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": i},{"cidr": "192.168."+str(i)+".0/24"}, 1, None)
-            self._create_svi_ports(net, sub[0], "192.168."+str(i), svi_scale)
+            self._create_svi_ports(net, sub[0], "192.168."+str(i), aci_nodes)
             self._add_interface_router(sub[0].get("subnet"), router.get("router"))
             port_create_args = {}
             port_create_args.update({"port_security_enabled": "false"})
