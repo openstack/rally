@@ -17,7 +17,7 @@ from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
 
 class SVIReachabilityBetweenVMs(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_utils.NovaScenario, scenario.OpenStackScenario):
 
-    def run(self, cidr1, cidr2, image, flavor, public_net, svi_scale, username, password):
+    def run(self, cidr1, cidr2, image, flavor, public_net, aci_nodes, username, password):
          
         router = self._create_router({}, False)
         public_network = self.clients("neutron").show_network(public_net)        
@@ -27,8 +27,8 @@ class SVIReachabilityBetweenVMs(vcpe_utils.vCPEScenario, neutron_utils.NeutronSc
         net1, sub1 = self._create_network_and_subnets({"apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": "10"},{"cidr": cidr1}, 1, None)
         net2, sub2 = self._create_network_and_subnets({"apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": "20"},{"cidr": cidr2}, 1, None)
  
-        self._create_svi_ports(net1, sub1[0], "192.168.10", svi_scale)
-        self._create_svi_ports(net2, sub2[0], "192.168.20", svi_scale)
+        self._create_svi_ports(net1, sub1[0], "192.168.10", aci_nodes)
+        self._create_svi_ports(net2, sub2[0], "192.168.20", aci_nodes)
         self.sleep_between(50, 60)
 
         self._add_interface_router(sub1[0].get("subnet"), router.get("router"))
