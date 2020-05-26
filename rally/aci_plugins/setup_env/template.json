@@ -1,17 +1,16 @@
 {
-    "access_network": "p1",
-    "access_network_bgp_asn": "1010",
-    "nat_network": "p2",
-    "nat_network_bgp_asn": "1020",
-    "aci_nodes": [node-101, node-102],
-    "bras_image": "p3",
-    "nat_image": "p4",
-    "service_image1": "p5",
-    "service_image2": "p6",
-    "service_image3": "p7",
-    "cirros_image": "p8",
-    "access_router_ip": "10.108.1.5",
-    "nat_router_ip": "10.108.1.6",
-    "router_username": "noiro"
-
+    "access_network": "par1",
+    "access_network_bgp_asn": "argu1",
+    "nat_network": "par2",
+    "nat_network_bgp_asn": "argu2",
+    "aci_nodes": argu3,
+    "bras_image": "par3",
+    "nat_image": "par4",
+    "service_image1": "par5",
+    "service_image2": "par6",
+    "service_image3": "par7",
+    "cirros_image": "par8",
+    "access_router_ip": "argu4",
+    "nat_router_ip": "argu5",
+    "router_username": "argu6"
 }
