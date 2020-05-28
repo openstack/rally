@@ -1,0 +1,6 @@
+access_network_bgp_asn=1010
+nat_network_bgp_asn=1020
+aci_nodes=[node-101, node-102]
+access_router_ip=10.108.1.5
+nat_router_ip=10.108.1.6
+router_username=noiro
