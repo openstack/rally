@@ -1,25 +1,3 @@
-- job:
-    name: rally-install-base
-    parent: base
-    pre-run: tests/ci/playbooks/rally-install-pre.yaml
-    run: tests/ci/playbooks/rally-install-run.yaml
-    post-run: tests/ci/playbooks/fetch-html-and-json-reports.yaml
-    timeout: 1800
-
-- job:
-    name: rally-install-ubuntu-bionic
-    parent: rally-install-base
-    nodeset: ubuntu-bionic
-
-- job:
-    name: rally-install-centos-7
-    parent: rally-install-base
-    nodeset: centos-7
-
-- job:
-    name: rally-install-centos-8
-    parent: rally-install-base
-    nodeset: centos-8
 
 - project:
     templates:
@@ -39,6 +17,7 @@
         - rally-tox-functional-py38
         - rally-tox-self
         - rally-install-ubuntu-bionic
+        - rally-install-ubuntu-focal
         - rally-install-centos-7
         - rally-install-centos-8
         - rally-docker-build
@@ -53,6 +32,7 @@
         - rally-tox-functional
         - rally-tox-self
         - rally-install-ubuntu-bionic
+        - rally-install-ubuntu-focal
         - rally-install-centos-7
         - rally-install-centos-8
     post:

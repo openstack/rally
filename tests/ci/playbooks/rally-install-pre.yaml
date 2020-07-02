@@ -1,29 +1,12 @@
 - hosts: all
   name: Prepare host to install Rally
   tasks:
-    - name: Check whether apt is available
-      shell:
-        cmd: "apt-get --version"
-        executable: /bin/sh
-      register: apt_get_installed
-      ignore_errors: True
-
-    - name: Check whether dnf is available
-      shell:
-        cmd: "dnf --version"
-        executable: /bin/sh
-      register: dnf_installed
-      ignore_errors: True
-
-    - name: Check whether yum is available
-      shell:
-        cmd: "yum --version"
-        executable: /bin/sh
-      register: yum_installed
-      ignore_errors: True
+    - name: Set Apache URL
+      set_fact:
+        os_distro: '{{ ansible_distribution }} {{ ansible_distribution_version }}'
 
     - name: Install required packages (Centos-7)
-      when: yum_installed.rc == 0
+      when: os_distro == "CentOS 7"
       shell:
         cmd: |
           sudo yum remove -y python-crypto || true
@@ -35,18 +18,33 @@
           sudo yum install -y https://centos7.iuscommunity.org/ius-release.rpm
           sudo yum install -y python36u python36u-devel
 
-          curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py
-          sudo python3 /tmp/get-pip.py
-
-    - name: Install required packages (Ubuntu)
-      when: apt_get_installed.rc == 0
+    - name: Install required packages (Ubuntu-Bionic)
+      when: os_distro == "Ubuntu 18.04"
       shell:
         chdir: '{{ zuul.project.src_dir }}'
         cmd: |
           # NOTE(pabelanger): We run apt-get update to ensure we dont have a stale
           # package cache in the gate.
-          sudo apt-get update
-          sudo apt-get install --yes python3.6-dev
+          sudo apt update
+          sudo apt install --yes python3.6-dev
+
+    - name: Install required packages (Ubuntu-Focal)
+      when: os_distro == "Ubuntu 20.04"
+      shell:
+        chdir: '{{ zuul.project.src_dir }}'
+        cmd: |
+          # NOTE(pabelanger): We run apt-get update to ensure we dont have a stale
+          # package cache in the gate.
+          sudo apt update
+          sudo apt install --yes python3.8-dev
+
+    - name: Install pip3 if needed
+      when: os_distro == "CentOS 7" or os_distro == "Ubuntu 18.04" or os_distro == "Ubuntu 20.04"
+      shell:
+        chdir: '{{ zuul.project.src_dir }}'
+        cmd: |
+          curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py
+          sudo python3 /tmp/get-pip.py
 
     - name: Install bindep
       shell:

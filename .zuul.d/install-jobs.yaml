@@ -1,0 +1,27 @@
+- job:
+    name: rally-install-base
+    parent: base
+    pre-run: tests/ci/playbooks/rally-install-pre.yaml
+    run: tests/ci/playbooks/rally-install-run.yaml
+    post-run: tests/ci/playbooks/fetch-html-and-json-reports.yaml
+    timeout: 1800
+
+- job:
+    name: rally-install-ubuntu-bionic
+    parent: rally-install-base
+    nodeset: ubuntu-bionic
+
+- job:
+    name: rally-install-ubuntu-focal
+    parent: rally-install-base
+    nodeset: ubuntu-focal
+
+- job:
+    name: rally-install-centos-7
+    parent: rally-install-base
+    nodeset: centos-7
+
+- job:
+    name: rally-install-centos-8
+    parent: rally-install-base
+    nodeset: centos-8
