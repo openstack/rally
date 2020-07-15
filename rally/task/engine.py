@@ -448,10 +448,13 @@ class TaskEngine(object):
                   corresponding benchmark test launches
         """
         self.task.update_status(consts.TaskStatus.RUNNING)
-
+        self.task_workloads_count = 0
+        self.task_workload_index = 0
+        for subtask in self.config.subtasks:
+            self.task_workloads_count += len(subtask["workloads"])
         try:
-            for subtask in self.config.subtasks:
-                self._run_subtask(subtask)
+            for index, subtask in enumerate(self.config.subtasks, 1):
+                self._run_subtask(subtask, index)
         except TaskAborted:
             LOG.info("Received aborting signal.")
             self.task.update_status(consts.TaskStatus.ABORTED)
@@ -460,15 +463,26 @@ class TaskEngine(object):
                     self.task["uuid"]) != consts.TaskStatus.ABORTED:
                 self.task.update_status(consts.TaskStatus.FINISHED)
 
-    def _run_subtask(self, subtask):
+    def _run_subtask(self, subtask, subtask_position):
         subtask_obj = self.task.add_subtask(title=subtask["title"],
                                             description=subtask["description"],
                                             contexts=subtask["contexts"])
 
         try:
             # TODO(astudenov): add subtask context here
-            for workload in subtask["workloads"]:
+            workloads_count = len(subtask["workloads"])
+            for index, workload in enumerate(subtask["workloads"], 1):
                 self._run_workload(subtask_obj, workload)
+                self.task_workload_index += 1
+                LOG.info("Finished workload %(index)d/%(count)d"
+                         " of subtask %(subtask)d "
+                         " (completed %(t_index)d of %(t_count)d "
+                         "in general)." % {
+                             "index": index,
+                             "count": workloads_count,
+                             "subtask": subtask_position,
+                             "t_index": self.task_workload_index,
+                             "t_count": self.task_workloads_count})
         except TaskAborted:
             subtask_obj.update_status(consts.SubtaskStatus.ABORTED)
             raise
