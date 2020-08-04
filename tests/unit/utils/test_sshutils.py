@@ -119,6 +119,15 @@ class SSHTestCase(test.TestCase):
         m_client.close.assert_called_once_with()
         self.assertFalse(self.ssh._client)
 
+    def test_close_context_manager_enter(self):
+        self.assertEqual(self.ssh, self.ssh.__enter__())
+
+    def test_close_context_manager_exit(self):
+        with mock.patch.object(self.ssh, "_client") as m_client:
+            self.ssh.__exit__()
+        m_client.close.assert_called_once_with()
+        self.assertFalse(self.ssh._client)
+
     @mock.patch("rally.utils.sshutils.io.StringIO")
     def test_execute(self, mock_string_io):
         mock_string_io.side_effect = stdio = [mock.Mock(), mock.Mock()]

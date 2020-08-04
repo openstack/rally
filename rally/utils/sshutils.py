@@ -95,6 +95,13 @@ class SSH(object):
         self.key_filename = key_filename
         self._client = False
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        if self._client:
+            self.close()
+
     def _get_pkey(self, key):
         if isinstance(key, str):
             key = io.StringIO(key)
