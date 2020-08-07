@@ -23,14 +23,14 @@ class SFCMultiParallel(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, n
         secgroup = self.context.get("user", {}).get("secgroup")
         key_name=self.context["user"]["keypair"]["name"]
 
-        net1, sub1 = self._create_network_and_subnets({},{"cidr": src_cidr}, 1, None)
-        net2, sub2 = self._create_network_and_subnets({},{"cidr": dest_cidr}, 1, None)
-        left1, sub3 = self._create_network_and_subnets({},{"cidr": "1.1.0.0/24", 'host_routes': [{'destination': src_cidr, 'nexthop': '1.1.0.1'}]}, 1, None)
-        right1, sub4 = self._create_network_and_subnets({},{"cidr": "2.2.0.0/24", 'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '2.2.0.1'}, {'destination': '128.0.0.0/1', 'nexthop': '2.2.0.1'}]}, 1, None)
-        left2, sub5 = self._create_network_and_subnets({},{"cidr": "3.3.0.0/24", 'host_routes': [{'destination': src_cidr, 'nexthop': '3.3.0.1'}]}, 1, None)
-        right2, sub6 = self._create_network_and_subnets({},{"cidr": "4.4.0.0/24", 'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '4.4.0.1'}, {'destination': '128.0.0.0/1', 'nexthop': '4.4.0.1'}]}, 1, None)
-        left3, sub7 = self._create_network_and_subnets({},{"cidr": "5.5.0.0/24", 'host_routes': [{'destination': src_cidr, 'nexthop': '5.5.0.1'}]}, 1, None)
-        right3, sub8 = self._create_network_and_subnets({},{"cidr": "6.6.0.0/24", 'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '6.6.0.1'}, {'destination': '128.0.0.0/1', 'nexthop': '6.6.0.1'}]}, 1, None)
+        net1, sub1 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": src_cidr}, 1, None)
+        net2, sub2 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": dest_cidr}, 1, None)
+        left1, sub3 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "1.1.0.0/24", 'host_routes': [{'destination': src_cidr, 'nexthop': '1.1.0.1'}]}, 1, None)
+        right1, sub4 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "2.2.0.0/24", 'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '2.2.0.1'}, {'destination': '128.0.0.0/1', 'nexthop': '2.2.0.1'}]}, 1, None)
+        left2, sub5 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "3.3.0.0/24", 'host_routes': [{'destination': src_cidr, 'nexthop': '3.3.0.1'}]}, 1, None)
+        right2, sub6 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "4.4.0.0/24", 'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '4.4.0.1'}, {'destination': '128.0.0.0/1', 'nexthop': '4.4.0.1'}]}, 1, None)
+        left3, sub7 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "5.5.0.0/24", 'host_routes': [{'destination': src_cidr, 'nexthop': '5.5.0.1'}]}, 1, None)
+        right3, sub8 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "6.6.0.0/24", 'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '6.6.0.1'}, {'destination': '128.0.0.0/1', 'nexthop': '6.6.0.1'}]}, 1, None)
 
 
         router = self._create_router({}, False)
@@ -147,7 +147,7 @@ class SFCMultiParallel(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, n
         ppg2 = self._create_port_pair_group([pp21, pp22, pp23])
         pp3 = self._create_port_pair(pin3, pout3)
         ppg3 = self._create_port_pair_group([pp3])
-        fc = self._create_flow_classifier(src_cidr, '0.0.0.0/0', net1_id, net2_id)
+        fc = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
         pc = self._create_port_chain([ppg1, ppg2, ppg3], [fc])
         self.sleep_between(50, 60)
 

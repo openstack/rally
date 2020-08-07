@@ -24,11 +24,11 @@ class DemoScale(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_uti
             acc_net = self.clients("neutron").show_network(access_network)
             nat_net = self.clients("neutron").show_network(nat_network)
         except:
-            acc_net = self._admin_create_network('ACCESS', {"shared": True, "apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": access_network_bgp_asn, "apic:distinguished_names": {"ExternalNetwork": "uni/tn-common/out-Access-Out/instP-data_ext_pol"}})
+            acc_net = self._admin_create_network('ACCESS', {"provider:network_type": "vlan", "shared": True, "apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": access_network_bgp_asn, "apic:distinguished_names": {"ExternalNetwork": "uni/tn-common/out-Access-Out/instP-data_ext_pol"}})
             acc_sub = self._admin_create_subnet(acc_net, {"cidr": '172.168.0.0/24'}, None)
             self._create_svi_ports(acc_net, acc_sub, '172.168.0', aci_nodes)
 
-            nat_net = self._admin_create_network('INTERNET', {"shared": True, "apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": nat_network_bgp_asn, "apic:distinguished_names": {"ExternalNetwork": "uni/tn-common/out-Internet-Out/instP-data_ext_pol"}})
+            nat_net = self._admin_create_network('INTERNET', {"provider:network_type": "vlan", "shared": True, "apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": nat_network_bgp_asn, "apic:distinguished_names": {"ExternalNetwork": "uni/tn-common/out-Internet-Out/instP-data_ext_pol"}})
             nat_sub = self._admin_create_subnet(nat_net, {"cidr": '173.168.0.0/24'}, None)
             self._create_svi_ports(nat_net, nat_sub, '173.168.0', aci_nodes)
         
@@ -87,7 +87,7 @@ class DemoScale(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_uti
                 
             hex_i = hex(int(i))[2:]
             router.append(self._create_router({}, False))
-            net.append(self._create_network({"apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": 1000+i }))
+            net.append(self._create_network({"provider:network_type": "vlan", "apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": 1000+i }))
             sub.append(self._create_subnet(net[i-1],{"cidr": '192.168.0.0/24'},  None))
             
             net_id = net[i-1]["network"]["id"]
@@ -114,9 +114,9 @@ class DemoScale(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_uti
 
             print "\nCreating a single service function chain for customer-" + str(i)
 
-            left.append(self._create_network({})) 
+            left.append(self._create_network({"provider:network_type": "vlan"})) 
             left_sub.append(self._create_subnet(left[i-1], {"cidr": "1.1.0.0/24", 'host_routes': [{'destination': '10.0.0.0/16', 'nexthop': '1.1.0.1'}]}, None))
-            right.append(self._create_network({})) 
+            right.append(self._create_network({"provider:network_type": "vlan"})) 
             right_sub.append(self._create_subnet(right[i-1], {"cidr": "2.2.0.0/24", 'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '2.2.0.1'}, {'destination': '128.0.0.0/1', 'nexthop': '2.2.0.1'}]}, None))
 
             self._add_interface_router(left_sub[i-1].get("subnet"), router[i-1].get("router"))
@@ -135,7 +135,7 @@ class DemoScale(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_uti
         
             pp.append(self._create_port_pair(pin, pout))
             ppg.append(self._create_port_pair_group([pp[i-1]]))
-            fc.append(self._create_flow_classifier('10.0.1.0/24', '0.0.0.0/0', net_id, net_id))
+            fc.append(self._create_flow_classifier('10.0.1.0/24', '8.8.8.0/24', net_id, net_id))
             pc.append(self._create_port_chain([ppg[i-1]], [fc[i-1]]))            
         self.sleep_between(30, 40)
 
@@ -176,7 +176,7 @@ class DemoScale(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_uti
                     "script_inline": "birdc -s /tmp/sock-Customer-" + str(i) +" show protocol;birdc -s /tmp/sock-Customer-" + str(i) +" show route"
                 }
             self._remote_command(username, password, fip1, command6, bras_vm)
-
+        
         print "\nValidating BGP session from NAT-VM...\n"
         self._remote_command(username, password, fip2, command5, nat_vm)
         for i in range(1, int(scale)+1):
@@ -185,6 +185,7 @@ class DemoScale(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_uti
                     "script_inline": "birdc -s /tmp/sock-Customer-" + str(i) +" show protocol;birdc -s /tmp/sock-Customer-" + str(i) +" show route"
                 }
             self._remote_command(username, password, fip2, command6, nat_vm)
+            self.sleep_between(20, 30)
 
         clean = [bras_vm, nat_vm, trunk_bras, trunk_nat, pfip1, pfip2, pc, fc, ppg, pp, service_vm, router, sub, left_sub, right_sub, net, left, right, pro, user]
 
@@ -215,9 +216,9 @@ class DemoScale(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_uti
                         "script_inline": "sudo ip netns exec Customer-"+str(i)+" ping -c 5 8.8.8.3"
                     }
                 self._remote_command_validate('noiro', password, access_router_ip, command10)
+                self.sleep_between(25, 30)
 
-        except:
-            print "\nTraffic verification failed\n"
+        finally:
             print "\nCleaning up ACCESS-ROUTER after traffic verification...\n"
             command11 = {
                         "interpreter": "/bin/sh",
@@ -225,15 +226,6 @@ class DemoScale(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_uti
                     }
             self._remote_command_wo_server('noiro', password, access_router_ip, command11)
             self.cleanup(clean, scale)
-
-
-        print "\nCleaning up ACCESS-ROUTER after traffic verification...\n"
-        command11 = {
-                    "interpreter": "/bin/sh",
-                    "script_inline": "sudo /usr/local/bin/scale-orchest-access-router.sh -d " + str(scale)
-                }
-        self._remote_command_wo_server('noiro', password, access_router_ip, command11)
-        self.cleanup(clean, scale)
 
     def cleanup(self, clean, scale):
 

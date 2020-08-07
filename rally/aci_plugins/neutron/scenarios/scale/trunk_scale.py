@@ -23,7 +23,7 @@ class TrunkScale(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_ut
         secgroup = self.context.get("user", {}).get("secgroup")
         key_name=self.context["user"]["keypair"]["name"]
 
-        net0, sub0 = self._create_network_and_subnets({}, {"cidr": '192.168.0.0/24'}, 1, None)
+        net0, sub0 = self._create_network_and_subnets({"provider:network_type": "vlan"}, {"cidr": '192.168.0.0/24'}, 1, None)
         router = self._create_router({}, False)
         self._add_interface_router(sub0[0].get("subnet"), router.get("router"))
 
@@ -57,7 +57,7 @@ class TrunkScale(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_ut
 
         for i in range(101, 101+int(scale)):
             hex_i = hex(int(i))[2:]
-            net, sub = self._create_network_and_subnets({}, {"cidr": "192.168."+str(i)+".0/24"}, 1, None)
+            net, sub = self._create_network_and_subnets({"provider:network_type": "vlan"}, {"cidr": "192.168."+str(i)+".0/24"}, 1, None)
             self._add_interface_router(sub[0].get("subnet"), router.get("router"))
             port_create_args = {}
             port_create_args.update({"port_security_enabled": "false"})

@@ -17,10 +17,10 @@ class VerifySFCAPI(neutron_utils.NeutronScenario, vcpe_utils.vCPEScenario, nova_
 
     def run(self, src_cidr, dest_cidr, image, flavor):
         
-        net1, sub1 = self._create_network_and_subnets({},{"cidr": src_cidr}, 1, None)
-        net2, sub2 = self._create_network_and_subnets({},{"cidr": dest_cidr}, 1, None)
-        net3, sub3 = self._create_network_and_subnets({},{"cidr": "1.1.0.0/24"}, 1, None)
-        net4, sub4 = self._create_network_and_subnets({},{"cidr": "2.2.0.0/24"}, 1, None)
+        net1, sub1 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": src_cidr}, 1, None)
+        net2, sub2 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": dest_cidr}, 1, None)
+        net3, sub3 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "1.1.0.0/24"}, 1, None)
+        net4, sub4 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "2.2.0.0/24"}, 1, None)
 
         router = self._create_router({}, False)
         self._add_interface_router(sub1[0].get("subnet"), router.get("router"))
@@ -45,7 +45,7 @@ class VerifySFCAPI(neutron_utils.NeutronScenario, vcpe_utils.vCPEScenario, nova_
     
         pp = self._create_port_pair(pin, pout)
         ppg = self._create_port_pair_group([pp])
-        fc = self._create_flow_classifier(src_cidr, '0.0.0.0/0', net1_id, net2_id)
+        fc = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
         pc = self._create_port_chain([ppg], [fc])
         
         self._list_port_pairs()

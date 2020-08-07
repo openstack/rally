@@ -24,11 +24,11 @@ class TwoCustomerSingleSFC(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenari
             acc_net = self.clients("neutron").show_network(access_network)
             nat_net = self.clients("neutron").show_network(nat_network)       
         except:
-            acc_net = self._admin_create_network('ACCESS', {"shared": True, "apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": access_network_bgp_asn, "apic:distinguished_names": {"ExternalNetwork": "uni/tn-common/out-Access-Out/instP-data_ext_pol"}})
+            acc_net = self._admin_create_network('ACCESS', {"provider:network_type": "vlan", "shared": True, "apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": access_network_bgp_asn, "apic:distinguished_names": {"ExternalNetwork": "uni/tn-common/out-Access-Out/instP-data_ext_pol"}})
             acc_sub = self._admin_create_subnet(acc_net, {"cidr": '172.168.0.0/24'}, None)
             self._create_svi_ports(acc_net, acc_sub, '172.168.0', aci_nodes)
 
-            nat_net = self._admin_create_network('INTERNET', {"shared": True, "apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": nat_network_bgp_asn, "apic:distinguished_names": {"ExternalNetwork": "uni/tn-common/out-Internet-Out/instP-data_ext_pol"}})
+            nat_net = self._admin_create_network('INTERNET', {"provider:network_type": "vlan", "shared": True, "apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": nat_network_bgp_asn, "apic:distinguished_names": {"ExternalNetwork": "uni/tn-common/out-Internet-Out/instP-data_ext_pol"}})
             nat_sub = self._admin_create_subnet(nat_net, {"cidr": '173.168.0.0/24'}, None)
             self._create_svi_ports(nat_net, nat_sub, '173.168.0', aci_nodes)
 
@@ -62,7 +62,7 @@ class TwoCustomerSingleSFC(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenari
         self._change_client(1, self.context, None, None)
 
         router1 = self._create_router({}, False)
-        net1, sub1 = self._create_network_and_subnets({"apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": "2010"},{"cidr": '192.168.0.0/24'}, 1, None)
+        net1, sub1 = self._create_network_and_subnets({"provider:network_type": "vlan", "apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": "2010"},{"cidr": '192.168.0.0/24'}, 1, None)
 
         net1_id = net1.get('network', {}).get('id')
         self._create_svi_ports(net1, sub1[0], "192.168.0", aci_nodes)
@@ -98,8 +98,8 @@ class TwoCustomerSingleSFC(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenari
 
         print "\nCreating a single service function chain for customer-1...\n"
 
-        left1, left1_sub = self._create_network_and_subnets({},{"cidr": "1.1.0.0/24", 'host_routes': [{'destination': '10.0.0.0/16', 'nexthop': '1.1.0.1'}]}, 1, None)
-        right1, right1_sub = self._create_network_and_subnets({},{"cidr": "2.2.0.0/24", 'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '2.2.0.1'}, {'destination': '128.0.0.0/1', 'nexthop': '2.2.0.1'}]}, 1, None)
+        left1, left1_sub = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "1.1.0.0/24", 'host_routes': [{'destination': '10.0.0.0/16', 'nexthop': '1.1.0.1'}]}, 1, None)
+        right1, right1_sub = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "2.2.0.0/24", 'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '2.2.0.1'}, {'destination': '128.0.0.0/1', 'nexthop': '2.2.0.1'}]}, 1, None)
 
         self._add_interface_router(left1_sub[0].get("subnet"), router1.get("router"))
         self._add_interface_router(right1_sub[0].get("subnet"), router1.get("router"))
@@ -117,7 +117,7 @@ class TwoCustomerSingleSFC(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenari
 
         pp1 = self._create_port_pair(pin1, pout1)
         ppg1 = self._create_port_pair_group([pp1])
-        fc1 = self._create_flow_classifier('10.0.1.0/24', '0.0.0.0/0', net1_id, net1_id)
+        fc1 = self._create_flow_classifier('10.0.1.0/24', '8.8.8.0/24', net1_id, net1_id)
         pc1 = self._create_port_chain([ppg1], [fc1])
 
         print "\nCreating a single service function chain for customer-2...\n"
@@ -131,7 +131,7 @@ class TwoCustomerSingleSFC(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenari
         self._change_client(2, self.context, None, None)
 
         router2 = self._create_router({}, False)
-        net2, sub2 = self._create_network_and_subnets({"apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": "3010"},{"cidr": '192.168.0.0/24'}, 1, None)
+        net2, sub2 = self._create_network_and_subnets({"provider:network_type": "vlan", "apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": "3010"},{"cidr": '192.168.0.0/24'}, 1, None)
 
         net2_id = net2.get('network', {}).get('id')
         self._create_svi_ports(net2, sub2[0], "192.168.0", aci_nodes)
@@ -155,8 +155,8 @@ class TwoCustomerSingleSFC(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenari
         self._admin_add_subports_to_trunk(trunk_nat, subport_payload)
         subp4_mac = subp4.get('port', {}).get('mac_address')
 
-        left2, left2_sub = self._create_network_and_subnets({},{"cidr": "1.1.0.0/24", 'host_routes': [{'destination': '10.0.0.0/16', 'nexthop': '1.1.0.1'}]}, 1, None)
-        right2, right2_sub = self._create_network_and_subnets({},{"cidr": "2.2.0.0/24", 'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '2.2.0.1'}, {'destination': '128.0.0.0/1', 'nexthop': '2.2.0.1'}]}, 1, None)
+        left2, left2_sub = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "1.1.0.0/24", 'host_routes': [{'destination': '10.0.0.0/16', 'nexthop': '1.1.0.1'}]}, 1, None)
+        right2, right2_sub = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "2.2.0.0/24", 'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '2.2.0.1'}, {'destination': '128.0.0.0/1', 'nexthop': '2.2.0.1'}]}, 1, None)
 
         self._add_interface_router(left2_sub[0].get("subnet"), router2.get("router"))
         self._add_interface_router(right2_sub[0].get("subnet"), router2.get("router"))
@@ -174,7 +174,7 @@ class TwoCustomerSingleSFC(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenari
 
         pp2 = self._create_port_pair(pin2, pout2)
         ppg2 = self._create_port_pair_group([pp2])
-        fc2 = self._create_flow_classifier('10.0.1.0/24', '0.0.0.0/0', net2_id, net2_id)
+        fc2 = self._create_flow_classifier('10.0.1.0/24', '8.8.8.0/24', net2_id, net2_id)
         pc2 = self._create_port_chain([ppg2], [fc2])
         self.sleep_between(30, 40)
 
@@ -266,23 +266,14 @@ class TwoCustomerSingleSFC(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenari
                 }
             self._remote_command_validate('noiro', password, access_router_ip, command14)
 
-        except:
+        finally:
             print "\nCleaning up ACCESS-ROUTER after traffic verification...\n"
             command15 = {
-                    "interpreter": "/bin/sh",
-                    "script_inline": "sudo /home/noiro/oc/orchest_two_customer.sh delsites"
-                }
+                        "interpreter": "/bin/sh",
+                        "script_inline": "sudo /home/noiro/oc/orchest_two_customer.sh delsites"
+                    }
             self._remote_command_wo_server('noiro', password, access_router_ip, command15)
             self.cleanup(clean)
-
-
-        print "\nCleaning up ACCESS-ROUTER after traffic verification...\n"
-        command15 = {
-                    "interpreter": "/bin/sh",
-                    "script_inline": "sudo /home/noiro/oc/orchest_two_customer.sh delsites"
-                }
-        self._remote_command_wo_server('noiro', password, access_router_ip, command15)
-        self.cleanup(clean)
 
 
     def cleanup(self, clean):
