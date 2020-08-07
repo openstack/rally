@@ -23,10 +23,10 @@ class SFCAddService(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova
         secgroup = self.context.get("user", {}).get("secgroup")
         key_name=self.context["user"]["keypair"]["name"]
 
-        net1, sub1 = self._create_network_and_subnets({},{"cidr": src_cidr}, 1, None)
-        net2, sub2 = self._create_network_and_subnets({},{"cidr": dest_cidr}, 1, None)
-        left, sub3 = self._create_network_and_subnets({},{"cidr": "1.1.0.0/24", 'host_routes': [{'destination': src_cidr, 'nexthop': '1.1.0.1'}]}, 1, None)
-        right, sub4 = self._create_network_and_subnets({},{"cidr": "2.2.0.0/24", 'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '2.2.0.1'}, {'destination': '128.0.0.0/1', 'nexthop': '2.2.0.1'}]}, 1, None)
+        net1, sub1 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": src_cidr}, 1, None)
+        net2, sub2 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": dest_cidr}, 1, None)
+        left, sub3 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "1.1.0.0/24", 'host_routes': [{'destination': src_cidr, 'nexthop': '1.1.0.1'}]}, 1, None)
+        right, sub4 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "2.2.0.0/24", 'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '2.2.0.1'}, {'destination': '128.0.0.0/1', 'nexthop': '2.2.0.1'}]}, 1, None)
 
         router = self._create_router({}, False)
         self._add_interface_router(sub1[0].get("subnet"), router.get("router"))
@@ -95,8 +95,8 @@ class SFCAddService(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova
         self._remote_command(username, password, fip1, command2, src_vm)
         
         print "Adding a new function to the chain..."
-        left2, sub5 = self._create_network_and_subnets({},{"cidr": "3.3.0.0/24", 'host_routes': [{'destination': src_cidr, 'nexthop': '3.3.0.1'}]}, 1, None)
-        right2, sub6 = self._create_network_and_subnets({},{"cidr": "4.4.0.0/24", 'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '4.4.0.1'}, {'destination': '128.0.0.0/1', 'nexthop': '4.4.0.1'}]}, 1, None)
+        left2, sub5 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "3.3.0.0/24", 'host_routes': [{'destination': src_cidr, 'nexthop': '3.3.0.1'}]}, 1, None)
+        right2, sub6 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "4.4.0.0/24", 'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '4.4.0.1'}, {'destination': '128.0.0.0/1', 'nexthop': '4.4.0.1'}]}, 1, None)
         self._add_interface_router(sub5[0].get("subnet"), router.get("router"))
         self._add_interface_router(sub6[0].get("subnet"), router.get("router"))
         pin2 = self._create_port(left2, port_create_args)

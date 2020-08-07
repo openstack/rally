@@ -23,9 +23,9 @@ class TrunkIntervlanTraffic(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenar
         secgroup = self.context.get("user", {}).get("secgroup")
         key_name=self.context["user"]["keypair"]["name"]
 
-        net1, sub1 = self._create_network_and_subnets({}, {"cidr": cidr1}, 1, None)
-        net2, sub2 =self._create_network_and_subnets({}, {"cidr": cidr2}, 1, None)
-        net3, sub3 = self._create_network_and_subnets({}, {"cidr": cidr3}, 1, None)
+        net1, sub1 = self._create_network_and_subnets({"provider:network_type": "vlan"}, {"cidr": cidr1}, 1, None)
+        net2, sub2 = self._create_network_and_subnets({"provider:network_type": "vlan"}, {"cidr": cidr2}, 1, None)
+        net3, sub3 = self._create_network_and_subnets({"provider:network_type": "vlan"}, {"cidr": cidr3}, 1, None)
 
         router = self._create_router({}, False)
         self._add_interface_router(sub1[0].get("subnet"), router.get("router"))

@@ -24,8 +24,8 @@ class SFCScaleSeries(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nov
         service_image = [service_image1, service_image2, service_image3]
         for x in range(0, int(scale)-3):service_image.append(service_image[2])
 
-        net1, sub_net1 = self._create_network_and_subnets({},{"cidr": src_cidr}, 1, None)
-        net2, sub_net2 = self._create_network_and_subnets({},{"cidr": dest_cidr}, 1, None)
+        net1, sub_net1 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": src_cidr}, 1, None)
+        net2, sub_net2 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": dest_cidr}, 1, None)
         router = self._create_router({}, False)
         self._add_interface_router(sub_net1[0].get("subnet"), router.get("router"))
         self._add_interface_router(sub_net2[0].get("subnet"), router.get("router"))
@@ -81,8 +81,8 @@ class SFCScaleSeries(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nov
         ppg = []
          
         for x in range(0, int(scale)):
-            left, sub_left = self._create_network_and_subnets({},{"cidr": "1.1."+str(x)+".0/24", 'host_routes': [{'destination': src_cidr, 'nexthop': '1.1.'+str(x)+'.1'}]}, 1, None)
-            right, sub_right = self._create_network_and_subnets({},{"cidr": "2.2."+str(x)+".0/24", 'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '2.2.'+str(x)+'.1'}, {'destination': '128.0.0.0/1', 'nexthop': '2.2.'+str(x)+'.1'}]}, 1, None)           
+            left, sub_left = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "1.1."+str(x)+".0/24", 'host_routes': [{'destination': src_cidr, 'nexthop': '1.1.'+str(x)+'.1'}]}, 1, None)
+            right, sub_right = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "2.2."+str(x)+".0/24", 'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '2.2.'+str(x)+'.1'}, {'destination': '128.0.0.0/1', 'nexthop': '2.2.'+str(x)+'.1'}]}, 1, None)           
             self._add_interface_router(sub_left[0].get("subnet"), router.get("router"))
             self._add_interface_router(sub_right[0].get("subnet"), router.get("router"))
             pin = self._create_port(left, port_create_args)
@@ -96,7 +96,7 @@ class SFCScaleSeries(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nov
             pp.append(self._create_port_pair(pin, pout))
             ppg.append(self._create_port_pair_group([pp[x]]))
         
-        fc = self._create_flow_classifier(src_cidr, '0.0.0.0/0', net1_id, net2_id)
+        fc = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
         pc = self._create_port_chain(ppg, [fc])
         self.sleep_between(30, 40)
 

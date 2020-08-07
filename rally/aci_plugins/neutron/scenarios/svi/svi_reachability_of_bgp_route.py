@@ -24,8 +24,8 @@ class SVIReachabilityofBGProute(vcpe_utils.vCPEScenario, neutron_utils.NeutronSc
         secgroup = self.context.get("user", {}).get("secgroup")
         key_name=self.context["user"]["keypair"]["name"]
 
-        net1, sub1 = self._create_network_and_subnets({"apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": "10"},{"cidr": cidr1}, 1, None)
-        net2, sub2 = self._create_network_and_subnets({"apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": "20"},{"cidr": cidr2}, 1, None)
+        net1, sub1 = self._create_network_and_subnets({"provider:network_type": "vlan", "apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": "10"},{"cidr": cidr1}, 1, None)
+        net2, sub2 = self._create_network_and_subnets({"provider:network_type": "vlan", "apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": "20"},{"cidr": cidr2}, 1, None)
 
         self._create_svi_ports(net1, sub1[0], "192.168.10", aci_nodes)
         self._create_svi_ports(net2, sub2[0], "192.168.20", aci_nodes)

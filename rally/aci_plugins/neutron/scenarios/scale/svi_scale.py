@@ -34,7 +34,7 @@ class SVIScale(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_util
             pfip_id = pfip.get('port', {}).get('id')
             fip.append(pfip.get('port', {}).get('fixed_ips')[0].get('ip_address'))
 
-            net, sub = self._create_network_and_subnets({"apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": i},{"cidr": "192.168."+str(i)+".0/24"}, 1, None)
+            net, sub = self._create_network_and_subnets({"provider:network_type": "vlan", "apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": i},{"cidr": "192.168."+str(i)+".0/24"}, 1, None)
             self._create_svi_ports(net, sub[0], "192.168."+str(i), aci_nodes)
             self._add_interface_router(sub[0].get("subnet"), router.get("router"))
             port_create_args = {}

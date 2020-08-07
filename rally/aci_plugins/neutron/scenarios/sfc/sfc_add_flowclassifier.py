@@ -23,11 +23,11 @@ class SFCAddFlowclassifier(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenari
         secgroup = self.context.get("user", {}).get("secgroup")
         key_name=self.context["user"]["keypair"]["name"]
 
-        net1, sub1 = self._create_network_and_subnets({},{"cidr": src_cidr}, 1, None)
-        net2, sub2 = self._create_network_and_subnets({},{"cidr": dest_cidr}, 1, None)
-        left, sub3 = self._create_network_and_subnets({},{"cidr": "1.1.0.0/24", 'host_routes': [{'destination': src_cidr, 'nexthop': '1.1.0.1'}]}, 1, None)
-        right, sub4 = self._create_network_and_subnets({},{"cidr": "2.2.0.0/24", 'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '2.2.0.1'}, {'destination': '128.0.0.0/1', 'nexthop': '2.2.0.1'}]}, 1, None)
-        test_net, sub5 = self._create_network_and_subnets({},{"cidr": '192.168.0.0/24'}, 1, None)
+        net1, sub1 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": src_cidr}, 1, None)
+        net2, sub2 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": dest_cidr}, 1, None)
+        left, sub3 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "1.1.0.0/24", 'host_routes': [{'destination': src_cidr, 'nexthop': '1.1.0.1'}]}, 1, None)
+        right, sub4 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "2.2.0.0/24", 'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '2.2.0.1'}, {'destination': '128.0.0.0/1', 'nexthop': '2.2.0.1'}]}, 1, None)
+        test_net, sub5 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": '192.168.0.0/24'}, 1, None)
 
         router = self._create_router({}, False)
         self._add_interface_router(sub1[0].get("subnet"), router.get("router"))
@@ -99,7 +99,7 @@ class SFCAddFlowclassifier(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenari
         self._remote_command(username, password, fip1, command2, src_vm)
         
         print "Adding a new flow classifier to the chain..."
-        fc2 = self._create_flow_classifier(src_cidr, '0.0.0.0/0', net1_id, net2_id)
+        fc2 = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
         self._update_port_chain(pc, [ppg], [fc1, fc2])
         self.sleep_between(30, 40)
 
