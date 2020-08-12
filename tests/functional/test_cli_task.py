@@ -1050,6 +1050,52 @@ class TaskTestCase(testtools.TestCase):
             " ".join(task_uuids), html_report))
         self.assertTrue(os.path.exists(html_report))
 
+    def test_restart(self):
+        rally = utils.Rally()
+        deployment_id = utils.get_global("RALLY_DEPLOYMENT", rally.env)
+        cfg = self._get_sample_task_config()
+        config = utils.TaskConfig(cfg)
+        output = rally(("task start --task %(task_file)s "
+                        "--deployment %(deployment_id)s") %
+                       {"task_file": config.filename,
+                        "deployment_id": deployment_id})
+
+        output = rally("task restart")
+        result = re.search(
+            r"(?P<task_id>[0-9a-f\-]{36}): started", output)
+        self.assertIsNotNone(result)
+
+    def test_restart_with_scenario(self):
+        rally = utils.Rally()
+        deployment_id = utils.get_global("RALLY_DEPLOYMENT", rally.env)
+        cfg = self._get_sample_task_config()
+        config = utils.TaskConfig(cfg)
+        output = rally(("task start --task %(task_file)s "
+                        "--deployment %(deployment_id)s") %
+                       {"task_file": config.filename,
+                        "deployment_id": deployment_id})
+
+        output = rally(
+            "task restart --scenario Dummy.dummy_random_fail_in_atomic")
+        result = re.search(
+            r"(?P<task_id>[0-9a-f\-]{36}): started", output)
+        self.assertIsNotNone(result)
+        result = re.search(
+            r"test scenario Dummy\.dummy_random_fail_in_atomic", output)
+        self.assertIsNotNone(result)
+
+    def test_restart_with_fake_scenario(self):
+        rally = utils.Rally()
+        deployment_id = utils.get_global("RALLY_DEPLOYMENT", rally.env)
+        cfg = self._get_sample_task_config()
+        config = utils.TaskConfig(cfg)
+        rally(("task start --task %(task_file)s "
+               "--deployment %(deployment_id)s") %
+              {"task_file": config.filename,
+               "deployment_id": deployment_id})
+        self.assertRaises(utils.RallyCliError, rally,
+                          "task restart --scenario fake.fake_scenario")
+
 
 class SLATestCase(testtools.TestCase):
 

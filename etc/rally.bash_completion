@@ -50,6 +50,7 @@ _rally()
     OPTS["task_import"]="--file --deployment --tag"
     OPTS["task_list"]="--deployment --all-deployments --status --tag --uuids-only"
     OPTS["task_report"]="--out --open --html --html-static --json --uuid --deployment"
+    OPTS["task_restart"]="--deployment --uuid --scenario --tag --no-use --abort-on-sla-failure"
     OPTS["task_results"]="--uuid"
     OPTS["task_sla-check"]="--uuid --json"
     OPTS["task_start"]="--deployment --task --task-args --task-args-file --tag --no-use --abort-on-sla-failure"

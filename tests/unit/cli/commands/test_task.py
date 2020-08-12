@@ -322,6 +322,67 @@ class TaskCommandsTestCase(test.TestCase):
 
         self.assertFalse(mock__detailed.called)
 
+    @mock.patch("rally.cli.commands.task.TaskCommands._start_task")
+    @ddt.data({"scenario": None},
+              {"scenario": "scenario_name"},
+              {"scenario": "none_name"})
+    @ddt.unpack
+    def test_restart(self, mock__start_task, scenario):
+        self.fake_api.task.get.return_value = {
+            "status": "finished",
+            "title": "fake_task",
+            "description": "this is a test",
+            "tags": [],
+            "subtasks": [
+                {"title": "subtask", "description": "",
+                 "workloads": [
+                     {
+                         "name": "scenario_name",
+                         "args": {},
+                         "contexts": {},
+                         "runner": {"times": 20, "concurrency": 5},
+                         "runner_type": "constant",
+                         "hooks": [],
+                         "sla": {}
+                     }]}
+            ]
+        }
+        if scenario == "none_name":
+            self.assertEqual(
+                1,
+                self.task.restart(self.fake_api, "deployment_uuid",
+                                  "task_uuid", scenarios=scenario)
+            )
+        else:
+            self.assertEqual(
+                mock__start_task.return_value,
+                self.task.restart(self.fake_api, "deployment_uuid",
+                                  "task_uuid", scenarios=scenario)
+            )
+        self.fake_api.task.get.assert_called_once_with(task_id="task_uuid",
+                                                       detailed=True)
+
+    def test_restart_by_crashed_task(self):
+        self.fake_api.task.get.return_value = {
+            "uuid": "task_uuid",
+            "status": "crashed",
+            "title": "fake_task",
+            "description": "this is a test",
+            "tags": [],
+            "subtasks": [],
+            "validation_result": {
+                "trace": {},
+                "etype": "",
+                "msg": ""
+            }
+        }
+        self.assertEqual(
+            1,
+            self.task.restart(self.fake_api, "deployment_uuid", "task_uuid")
+        )
+        self.fake_api.task.get.assert_called_once_with(task_id="task_uuid",
+                                                       detailed=True)
+
     def test_abort(self):
         test_uuid = "17860c43-2274-498d-8669-448eff7b073f"
         self.task.abort(self.fake_api, test_uuid)

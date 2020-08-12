@@ -201,6 +201,12 @@ class TaskCommands(object):
                                                   args_file=task_args_file)
         print("Running Rally version", version.version_string())
 
+        return self._start_task(api, deployment, task_config=input_task,
+                                tags=tags, do_use=do_use,
+                                abort_on_sla_failure=abort_on_sla_failure)
+
+    def _start_task(self, api, deployment, task_config, tags=None,
+                    do_use=False, abort_on_sla_failure=False):
         try:
             task_instance = api.task.create(deployment=deployment, tags=tags)
             tags = "[tags: '%s']" % "', '".join(tags) if tags else ""
@@ -215,7 +221,7 @@ class TaskCommands(object):
             if do_use:
                 self.use(api, task_instance["uuid"])
 
-            api.task.start(deployment=deployment, config=input_task,
+            api.task.start(deployment=deployment, config=task_config,
                            task=task_instance["uuid"],
                            abort_on_sla_failure=abort_on_sla_failure)
 
@@ -226,6 +232,72 @@ class TaskCommands(object):
         if self._detailed(api, task_id=task_instance["uuid"]):
             return 2
         return 0
+
+    @cliutils.args("--deployment", dest="deployment", type=str,
+                   metavar="<uuid>", required=False,
+                   help="UUID or name of a deployment.")
+    @cliutils.args("--uuid", type=str, dest="task_id", help="UUID of task.")
+    @cliutils.args("--scenario", type=str, dest="scenarios", nargs="+",
+                   help="scenario name of workload")
+    @cliutils.args("--tag", nargs="+", dest="tags", type=str, required=False,
+                   help="Mark the task with a tag or a few tags.")
+    @cliutils.args("--no-use", action="store_false", dest="do_use",
+                   help="Don't set new task as default for future operations.")
+    @cliutils.args("--abort-on-sla-failure", action="store_true",
+                   dest="abort_on_sla_failure",
+                   help="Abort the execution of a task when any SLA check "
+                        "for it fails for subtask or workload.")
+    @envutils.with_default_deployment(cli_arg_name="deployment")
+    @envutils.with_default_task_id
+    @plugins.ensure_plugins_are_loaded
+    def restart(self, api, deployment=None, task_id=None, scenarios=None,
+                tags=None, do_use=False, abort_on_sla_failure=False):
+        """Restart a task or some scenarios in workloads of task."""
+        if scenarios is not None:
+            scenarios = (isinstance(scenarios, list) and scenarios
+                         or [scenarios])
+        task = api.task.get(task_id=task_id, detailed=True)
+        if task["status"] == consts.TaskStatus.CRASHED or task["status"] == (
+                consts.TaskStatus.VALIDATION_FAILED):
+            print("-" * 80)
+            print("\nUnable to restart task.")
+            validation = task["validation_result"]
+            if logging.is_debug():
+                print(yaml.safe_load(validation["trace"]))
+            else:
+                print(validation["etype"])
+                print(validation["msg"])
+                print("\nFor more details run:\nrally -d task detailed %s"
+                      % task["uuid"])
+            return 1
+        retask = {"version": 2, "title": task["title"],
+                  "description": task["description"],
+                  "tags": task["tags"], "subtasks": []}
+        for subtask in task["subtasks"]:
+            workloads = []
+            for workload in subtask["workloads"]:
+                if scenarios is None or workload["name"] in scenarios:
+                    workloads.append({
+                        "scenario": {workload["name"]: workload["args"]},
+                        "contexts": workload["contexts"],
+                        "runner": {
+                            workload["runner_type"]: workload["runner"]},
+                        "hooks": workload["hooks"],
+                        "sla": workload["sla"]
+                    })
+            if workloads:
+                retask["subtasks"].append({
+                    "title": subtask["title"],
+                    "description": subtask["description"],
+                    "workloads": workloads})
+
+        if retask["subtasks"]:
+            return self._start_task(api, deployment, retask, tags=tags,
+                                    do_use=do_use,
+                                    abort_on_sla_failure=abort_on_sla_failure)
+        else:
+            print("Not Found matched scenario.")
+            return 1
 
     @cliutils.args("--uuid", type=str, dest="task_id", help="UUID of task.")
     @envutils.with_default_task_id
