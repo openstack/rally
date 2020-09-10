@@ -1,3 +1,4 @@
+import copy
 import json
 from rally import exceptions
 from rally.task import utils
@@ -80,7 +81,7 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
     @atomic.action_timer("neutron.list_port_pairs")
     def _list_port_pairs(self):
 
-        return self.clients("neutron").list_sfc_port_pairs()["port_pairs"]
+        return self.admin_clients("neutron").list_sfc_port_pairs()["port_pairs"]
 
 
     @atomic.action_timer("neutron.show_port_pair")
@@ -116,7 +117,7 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
     @atomic.action_timer("neutron.list_port_pair_groups")
     def _list_port_pair_groups(self):
 
-        return self.clients("neutron").list_sfc_port_pair_groups()["port_pair_groups"]
+        return self.admin_clients("neutron").list_sfc_port_pair_groups()["port_pair_groups"]
 
 
     @atomic.action_timer("neutron.show_port_pair_group")
@@ -155,7 +156,7 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
     @atomic.action_timer("neutron.list_flow_classifiers")
     def _list_flow_classifiers(self):
 
-        return self.clients("neutron").list_sfc_flow_classifiers()["flow_classifiers"]
+        return self.admin_clients("neutron").list_sfc_flow_classifiers()["flow_classifiers"]
 
 
     @atomic.action_timer("neutron.show_flow_classifier")
@@ -191,7 +192,7 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
     @atomic.action_timer("neutron.list_port_chains")
     def _list_port_chains(self):
 
-        return self.clients("neutron").list_sfc_port_chains()["port_chains"]
+        return self.admin_clients("neutron").list_sfc_port_chains()["port_chains"]
 
 
     @atomic.action_timer("neutron.show_port_chain")
@@ -214,6 +215,31 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
     def _delete_port_chain(self, port_chain):
 
         self.admin_clients("neutron").delete_sfc_port_chain(port_chain["port_chain"]["id"])
+    
+    @atomic.action_timer("cleanup_sfc_resources")
+    def cleanup_sfc(self):
+        
+        print "Deleting sfc resources\n"
+        try:
+            pc_list = self._list_port_chains()
+            if len(pc_list):
+                for pc in pc_list:
+                    self._delete_port_chain({"port_chain":pc})
+            fc_list = self._list_flow_classifiers()
+            if len(fc_list):
+                for fc in fc_list:
+                    self._delete_flow_classifier({"flow_classifier":fc})
+            ppg_list = self._list_port_pair_groups()
+            if len(ppg_list):
+                for ppg in ppg_list:
+                    self._delete_port_pair_group({"port_pair_group":ppg})
+            pp_list = self._list_port_pairs()
+            if len(pp_list):
+                for pp in pp_list:
+                    self._delete_port_pair({"port_pair":pp})
+        except Exception as e:
+		print "Exception in Cleanup == ", repr(e)
+		pass
 
     @atomic.action_timer("neutron.delete_trunk")
     def _delete_trunk(self, trunk_port):
@@ -448,7 +474,6 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
 
     @atomic.action_timer("change_user")
     def _change_client(self, pos, context=None, admin_clients=None, clients=None):
-        super(scenario.OpenStackScenario, self).__init__(context)
         
         if context:
             api_info = {}
@@ -475,9 +500,6 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
 
         if clients:
             self._clients = clients
-
-        self._init_profiler(context)
-
 
     @atomic.action_timer("run_remote_command_validate")
     def _remote_command_validate(self, username, password, fip, command, **kwargs):
@@ -551,7 +573,7 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
     @atomic.action_timer("keystone_v3.add_role")
     def _add_role(self, role_name, user_id, project_id):
         
-        role_id = self._clients.keystone("3").roles.list(name=role_name)[0].id
+        role_id = self._admin_clients.keystone("3").roles.list(name=role_name)[0].id
         self._admin_clients.keystone("3").roles.grant(role=role_id,
                                                 user=user_id,
                                                 project=project_id)

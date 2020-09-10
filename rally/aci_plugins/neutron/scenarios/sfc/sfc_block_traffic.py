@@ -80,21 +80,23 @@ class SFCBlockTraffic(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, no
         self._remote_command(username, password, fip, command, src_vm)
 
         print "\nCreating a single service function chain...\n"
-        pp = self._create_port_pair(pin, pout)
-        ppg = self._create_port_pair_group([pp])
-        fc = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
-        pc = self._create_port_chain([ppg], [fc])
-        self.sleep_between(30, 40)
-        
-        print "\nTraffic verification after creating SFC\n"
-        self._remote_command(username, password, fip, command, src_vm)
+        try:
+            pp = self._create_port_pair(pin, pout)
+            ppg = self._create_port_pair_group([pp])
+            fc = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
+            pc = self._create_port_chain([ppg], [fc])
+            self.sleep_between(30, 40)
+            
+            print "\nTraffic verification after creating SFC\n"
+            self._remote_command(username, password, fip, command, src_vm)
 
-        self._delete_port_chain(pc)
-        self.sleep_between(30, 40)
-        
-        print "\nTraffic verification after deleting SFC\n"
-        self._remote_command(username, password, fip, command, src_vm)
-
-        self._delete_port_pair_group(ppg)
-        self._delete_flow_classifier(fc)
-        self._delete_port_pair(pp)
+            self._delete_port_chain(pc)
+            self.sleep_between(30, 40)
+            
+            print "\nTraffic verification after deleting SFC\n"
+            self._remote_command(username, password, fip, command, src_vm)
+        except Exception as e:
+                print "Exception in service function creation\n", repr(e)
+                pass
+        finally:
+            self.cleanup_sfc()

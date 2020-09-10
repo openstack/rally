@@ -84,44 +84,42 @@ class SFCAddService(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova
                     "interpreter": "/bin/sh",
                     "script_inline": "ping -c 5 192.168.200.101;ping -c 5 192.168.200.102;ping -c 5 192.168.200.103"
                 }
-                    
-        pp1 = self._create_port_pair(pin1, pout1)
-        ppg1 = self._create_port_pair_group([pp1])
-        fc = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
-        pc = self._create_port_chain([ppg1], [fc])
-        self.sleep_between(30, 40)
 
-        print "\nTraffic verification with a single SFC\n"
-        self._remote_command(username, password, fip1, command2, src_vm)
-        
-        print "Adding a new function to the chain..."
-        left2, sub5 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "3.3.0.0/24", 'host_routes': [{'destination': src_cidr, 'nexthop': '3.3.0.1'}]}, 1, None)
-        right2, sub6 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "4.4.0.0/24", 'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '4.4.0.1'}, {'destination': '128.0.0.0/1', 'nexthop': '4.4.0.1'}]}, 1, None)
-        self._add_interface_router(sub5[0].get("subnet"), router.get("router"))
-        self._add_interface_router(sub6[0].get("subnet"), router.get("router"))
-        pin2 = self._create_port(left2, port_create_args)
-        pout2 = self._create_port(right2, port_create_args)
-        kwargs = {}
-        pin2_id = pin2.get('port', {}).get('id')
-        pout2_id = pout2.get('port', {}).get('id')
-        nics = [{"port-id": pin2_id}, {"port-id": pout2_id}]
-        kwargs.update({'nics': nics})
-        kwargs.update({'key_name': key_name})
-        service_vm2 = self._boot_server(service_image2, flavor, False, **kwargs)
-        self.sleep_between(10, 20)
+        try:
+            pp1 = self._create_port_pair(pin1, pout1)
+            ppg1 = self._create_port_pair_group([pp1])
+            fc = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
+            pc = self._create_port_chain([ppg1], [fc])
+            self.sleep_between(30, 40)
 
-        pp2 = self._create_port_pair(pin2, pout2)
-        ppg2 = self._create_port_pair_group([pp2])
-        self._update_port_chain(pc, [ppg1, ppg2], [fc])
-        self.sleep_between(30, 40)
+            print "\nTraffic verification with a single SFC\n"
+            self._remote_command(username, password, fip1, command2, src_vm)
+            
+            print "Adding a new function to the chain..."
+            left2, sub5 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "3.3.0.0/24", 'host_routes': [{'destination': src_cidr, 'nexthop': '3.3.0.1'}]}, 1, None)
+            right2, sub6 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "4.4.0.0/24", 'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '4.4.0.1'}, {'destination': '128.0.0.0/1', 'nexthop': '4.4.0.1'}]}, 1, None)
+            self._add_interface_router(sub5[0].get("subnet"), router.get("router"))
+            self._add_interface_router(sub6[0].get("subnet"), router.get("router"))
+            pin2 = self._create_port(left2, port_create_args)
+            pout2 = self._create_port(right2, port_create_args)
+            kwargs = {}
+            pin2_id = pin2.get('port', {}).get('id')
+            pout2_id = pout2.get('port', {}).get('id')
+            nics = [{"port-id": pin2_id}, {"port-id": pout2_id}]
+            kwargs.update({'nics': nics})
+            kwargs.update({'key_name': key_name})
+            service_vm2 = self._boot_server(service_image2, flavor, False, **kwargs)
+            self.sleep_between(10, 20)
 
-        print "\nTraffic verification after adding a new function\n"
-        self._remote_command(username, password, fip1, command2, src_vm)
+            pp2 = self._create_port_pair(pin2, pout2)
+            ppg2 = self._create_port_pair_group([pp2])
+            self._update_port_chain(pc, [ppg1, ppg2], [fc])
+            self.sleep_between(30, 40)
 
-        self._delete_port_chain(pc)
-        self._delete_port_pair_group(ppg1)
-        self._delete_port_pair_group(ppg2)
-        self._delete_flow_classifier(fc)
-        self._delete_port_pair(pp1)
-        self._delete_port_pair(pp2)
-
+            print "\nTraffic verification after adding a new function\n"
+            self._remote_command(username, password, fip1, command2, src_vm)
+        except Exception as e:
+		print "Exception in service function creation\n", repr(e)
+		pass
+        finally:
+            self.cleanup_sfc()

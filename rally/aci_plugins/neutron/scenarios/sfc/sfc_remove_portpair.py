@@ -108,28 +108,27 @@ class SFCRemovePortpair(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, 
                     "script_inline": "ping -c 5 192.168.200.101;ping -c 5 192.168.200.102;ping -c 5 192.168.200.103"
                 }
 
-        pp1 = self._create_port_pair(pin1, pout1)
-        pp2 = self._create_port_pair(pin2, pout2)
-        pp3 = self._create_port_pair(pin3, pout3)
-        ppg = self._create_port_pair_group([pp1, pp2, pp3])
-        fc = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
-        pc = self._create_port_chain([ppg], [fc])
-        self.sleep_between(30, 40)
+        try:
+            pp1 = self._create_port_pair(pin1, pout1)
+            pp2 = self._create_port_pair(pin2, pout2)
+            pp3 = self._create_port_pair(pin3, pout3)
+            ppg = self._create_port_pair_group([pp1, pp2, pp3])
+            fc = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
+            pc = self._create_port_chain([ppg], [fc])
+            self.sleep_between(30, 40)
 
-        print "\nTraffic verification with existing SFC\n"
-        self._remote_command(username, password, fip1, command2, src_vm)
+            print "\nTraffic verification with existing SFC\n"
+            self._remote_command(username, password, fip1, command2, src_vm)
 
-        print "Removing a port pair from the chain..."
-        self._update_port_pair_group(ppg, [pp1, pp2])
-        self._delete_port_pair(pp3)
-        self.sleep_between(30, 40)
+            print "Removing a port pair from the chain..."
+            self._update_port_pair_group(ppg, [pp1, pp2])
+            self._delete_port_pair(pp3)
+            self.sleep_between(30, 40)
 
-        print "\nTraffic verification after removing a port pair from the chain\n"
-        self._remote_command(username, password, fip1, command2, src_vm)
-
-        self._delete_port_chain(pc)
-        self._delete_port_pair_group(ppg)
-        self._delete_flow_classifier(fc)
-        self._delete_port_pair(pp1)
-        self._delete_port_pair(pp2)
-
+            print "\nTraffic verification after removing a port pair from the chain\n"
+            self._remote_command(username, password, fip1, command2, src_vm)
+        except Exception as e:
+                print "Exception in service function creation\n", repr(e)
+                pass
+        finally:
+            self.cleanup_sfc()

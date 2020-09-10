@@ -81,28 +81,27 @@ class SFCScaleParallel(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, n
         pp = []
         port_create_args = {}
         port_create_args.update({"port_security_enabled": "false"})   
-        for x in range(0,int(scale)):
-            pin = self._create_port(left, port_create_args)
-            pout = self._create_port(right, port_create_args)
-            pin_id = pin.get('port', {}).get('id')
-            pout_id = pout.get('port', {}).get('id')
-            nics = [{"port-id": pin_id}, {"port-id": pout_id}]
-            kwargs = {}
-            kwargs.update({'nics': nics})
-            service_vm = self._boot_server(service_image1, flavor, False, **kwargs)    
-            pp.append( self._create_port_pair(pin, pout))
+        try:
+            for x in range(0,int(scale)):
+                pin = self._create_port(left, port_create_args)
+                pout = self._create_port(right, port_create_args)
+                pin_id = pin.get('port', {}).get('id')
+                pout_id = pout.get('port', {}).get('id')
+                nics = [{"port-id": pin_id}, {"port-id": pout_id}]
+                kwargs = {}
+                kwargs.update({'nics': nics})
+                service_vm = self._boot_server(service_image1, flavor, False, **kwargs)    
+                pp.append( self._create_port_pair(pin, pout))
 
-        ppg = self._create_port_pair_group(pp)
-        fc = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
-        pc = self._create_port_chain([ppg], [fc])
-        self.sleep_between(30, 40)
+            ppg = self._create_port_pair_group(pp)
+            fc = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
+            pc = self._create_port_chain([ppg], [fc])
+            self.sleep_between(30, 40)
 
-        print "\nTraffic verification after creating SFC\n"
-        self._remote_command(username, password, fip1, command2, src_vm)
-
-        self._delete_port_chain(pc)
-        self._delete_port_pair_group(ppg)
-        self._delete_flow_classifier(fc)
-        for x in range(0,int(scale)):
-            self._delete_port_pair(pp[x])
-        
+            print "\nTraffic verification after creating SFC\n"
+            self._remote_command(username, password, fip1, command2, src_vm)
+        except Exception as e:
+                print "Exception in service function creation\n", repr(e)
+                pass
+        finally:
+            self.cleanup_sfc()
