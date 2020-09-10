@@ -16,8 +16,7 @@ from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
 class SimpleSFC(neutron_utils.NeutronScenario, vcpe_utils.vCPEScenario, nova_utils.NovaScenario, scenario.OpenStackScenario):
     
     def run(self, src_cidr, dest_cidr, image, flavor):
-
-        
+ 
         net1, sub1 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": src_cidr}, 1, None)
         net2, sub2 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": dest_cidr}, 1, None)
         left, sub3 = self._create_network_and_subnets({"provider:network_type": "vlan"},{'cidr': '1.1.0.0/24', 'host_routes': [{'destination': src_cidr, 'nexthop': '1.1.0.1'}]}, 1, None)
@@ -56,14 +55,15 @@ class SimpleSFC(neutron_utils.NeutronScenario, vcpe_utils.vCPEScenario, nova_uti
         nics = [{"port-id": pin_id}, {"port-id": pout_id}]
         kwargs.update({'nics': nics})
         service_vm = self._boot_server(image, flavor, False, **kwargs)
-        
-        pp = self._create_port_pair(pin, pout)
-        ppg = self._create_port_pair_group([pp])
-        fc = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
-        pc = self._create_port_chain([ppg], [fc])
-        
-        self._delete_port_chain(pc)
-        self._delete_port_pair_group(ppg)
-        self._delete_flow_classifier(fc)
-        self._delete_port_pair(pp)
-
+       
+        try:
+            pp = self._create_port_pair(pin, pout)
+            ppg = self._create_port_pair_group([pp])
+            fc = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
+            pc = self._create_port_chain([ppg], [fc])
+            self.sleep_between(20, 30)
+        except Exception as e:
+                print "Exception in service function creation\n", repr(e)
+                pass
+        finally:
+            self.cleanup_sfc()

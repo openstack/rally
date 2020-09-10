@@ -102,28 +102,28 @@ class SFCRemoveService(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, n
                     "script_inline": "ping -c 5 192.168.200.101;ping -c 5 192.168.200.102;ping -c 5 192.168.200.103"
                 }
 
-        pp1 = self._create_port_pair(pin1, pout1)
-        ppg1 = self._create_port_pair_group([pp1])
-        pp2 = self._create_port_pair(pin2, pout2)
-        ppg2 = self._create_port_pair_group([pp2])
-        fc = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
-        pc = self._create_port_chain([ppg1, ppg2], [fc])
-        self.sleep_between(30, 40)
- 
-        print "\nTraffic verification with multi chain service function\n"
-        self._remote_command(username, password, fip1, command2, src_vm)
-        
-        print "Removing a function from the chain..."
-        self._update_port_chain(pc, [ppg1], [fc])
-        self._delete_port_pair_group(ppg2)
-        self._delete_port_pair(pp2)
-        self.sleep_between(30, 40)
+        try:
+            pp1 = self._create_port_pair(pin1, pout1)
+            ppg1 = self._create_port_pair_group([pp1])
+            pp2 = self._create_port_pair(pin2, pout2)
+            ppg2 = self._create_port_pair_group([pp2])
+            fc = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
+            pc = self._create_port_chain([ppg1, ppg2], [fc])
+            self.sleep_between(30, 40)
+     
+            print "\nTraffic verification with multi chain service function\n"
+            self._remote_command(username, password, fip1, command2, src_vm)
+            
+            print "Removing a function from the chain..."
+            self._update_port_chain(pc, [ppg1], [fc])
+            self._delete_port_pair_group(ppg2)
+            self._delete_port_pair(pp2)
+            self.sleep_between(30, 40)
 
-        print "\nTraffic verification after removing a function\n"
-        self._remote_command(username, password, fip1, command2, src_vm)
-
-        self._delete_port_chain(pc)
-        self._delete_port_pair_group(ppg1)
-        self._delete_flow_classifier(fc)
-        self._delete_port_pair(pp1)
-
+            print "\nTraffic verification after removing a function\n"
+            self._remote_command(username, password, fip1, command2, src_vm)
+        except Exception as e:
+                print "Exception in service function creation\n", repr(e)
+                pass
+        finally:
+            self.cleanup_sfc()

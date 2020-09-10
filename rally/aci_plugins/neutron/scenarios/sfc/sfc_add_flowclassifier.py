@@ -89,25 +89,25 @@ class SFCAddFlowclassifier(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenari
                     "script_inline": "ping -c 5 192.168.200.101;ping -c 5 192.168.200.102;ping -c 5 192.168.200.103"
                 }
         print "\nCreating a single service function chain...\n"
-        pp = self._create_port_pair(pin, pout)
-        ppg = self._create_port_pair_group([pp])
-        fc1 = self._create_flow_classifier(src_cidr, '192.168.0.0/24', net1_id, testnet_id)
-        pc = self._create_port_chain([ppg], [fc1])
-        self.sleep_between(30, 40)
+        try:
+            pp = self._create_port_pair(pin, pout)
+            ppg = self._create_port_pair_group([pp])
+            fc1 = self._create_flow_classifier(src_cidr, '192.168.0.0/24', net1_id, testnet_id)
+            pc = self._create_port_chain([ppg], [fc1])
+            self.sleep_between(30, 40)
          
-        print "\nTraffic verification with existing flow classifier\n"
-        self._remote_command(username, password, fip1, command2, src_vm)
+            print "\nTraffic verification with existing flow classifier\n"
+            self._remote_command(username, password, fip1, command2, src_vm)
         
-        print "Adding a new flow classifier to the chain..."
-        fc2 = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
-        self._update_port_chain(pc, [ppg], [fc1, fc2])
-        self.sleep_between(30, 40)
+            print "Adding a new flow classifier to the chain..."
+            fc2 = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
+            self._update_port_chain(pc, [ppg], [fc1, fc2])
+            self.sleep_between(30, 40)
 
-        print "\nTraffic verification with a new flow classifier\n"
-        self._remote_command(username, password, fip1, command2, src_vm)
-
-        self._delete_port_chain(pc)
-        self._delete_port_pair_group(ppg)
-        self._delete_flow_classifier(fc1)
-        self._delete_flow_classifier(fc2)
-        self._delete_port_pair(pp)
+            print "\nTraffic verification with a new flow classifier\n"
+            self._remote_command(username, password, fip1, command2, src_vm)
+        except Exception as e:
+		print "Exception in service function creation \n", repr(e)
+		pass
+        finally:
+            self.cleanup_sfc()

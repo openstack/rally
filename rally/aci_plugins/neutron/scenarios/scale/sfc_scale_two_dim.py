@@ -80,36 +80,34 @@ class SFCScaleTwoDimension(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenari
         print "\nCreating two-dimensional service function chain...\n"
         ppg = []
         pp = [[0 for i in range(int(y))] for j in range(int(x))]
-        for i in range(0, int(x)):
-            left, sub_left = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "1.1."+str(i)+".0/24", 'host_routes': [{'destination': src_cidr, 'nexthop': '1.1.'+str(i)+'.1'}]}, 1, None)
-            right, sub_right = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "2.2."+str(i)+".0/24", 'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '2.2.'+str(i)+'.1'}, {'destination': '128.0.0.0/1', 'nexthop': '2.2.'+str(i)+'.1'}]}, 1, None)
-            self._add_interface_router(sub_left[0].get("subnet"), router.get("router"))
-            self._add_interface_router(sub_right[0].get("subnet"), router.get("router"))
-            ppl = []
-            for j in range(0, int(y)):
-                pin = self._create_port(left, port_create_args)
-                pout = self._create_port(right, port_create_args)
-                kwargs = {}
-                pin_id = pin.get('port', {}).get('id')
-                pout_id = pout.get('port', {}).get('id')
-                nics = [{"port-id": pin_id}, {"port-id": pout_id}]
-                kwargs.update({'nics': nics})
-                service_vm = self._boot_server(service_image[i], flavor, False, **kwargs)
-                pp[i][j] = self._create_port_pair(pin, pout)
-                ppl.append(pp[i][j])
-            ppg.append(self._create_port_pair_group(ppl))
-         
-        fc = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
-        pc = self._create_port_chain(ppg, [fc])
-        self.sleep_between(30, 40)
+        try:
+            for i in range(0, int(x)):
+                left, sub_left = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "1.1."+str(i)+".0/24", 'host_routes': [{'destination': src_cidr, 'nexthop': '1.1.'+str(i)+'.1'}]}, 1, None)
+                right, sub_right = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "2.2."+str(i)+".0/24", 'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '2.2.'+str(i)+'.1'}, {'destination': '128.0.0.0/1', 'nexthop': '2.2.'+str(i)+'.1'}]}, 1, None)
+                self._add_interface_router(sub_left[0].get("subnet"), router.get("router"))
+                self._add_interface_router(sub_right[0].get("subnet"), router.get("router"))
+                ppl = []
+                for j in range(0, int(y)):
+                    pin = self._create_port(left, port_create_args)
+                    pout = self._create_port(right, port_create_args)
+                    kwargs = {}
+                    pin_id = pin.get('port', {}).get('id')
+                    pout_id = pout.get('port', {}).get('id')
+                    nics = [{"port-id": pin_id}, {"port-id": pout_id}]
+                    kwargs.update({'nics': nics})
+                    service_vm = self._boot_server(service_image[i], flavor, False, **kwargs)
+                    pp[i][j] = self._create_port_pair(pin, pout)
+                    ppl.append(pp[i][j])
+                ppg.append(self._create_port_pair_group(ppl))
+             
+            fc = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
+            pc = self._create_port_chain(ppg, [fc])
+            self.sleep_between(30, 40)
 
-        print "\nTraffic verification after creating SFC\n"
-        self._remote_command(username, password, fip1, command2, src_vm)
-        
-        self._delete_port_chain(pc)
-        self._delete_flow_classifier(fc)
-        for i in range(0, int(x)):
-            self._delete_port_pair_group(ppg[i])
-        for i in range(0, int(x)):
-            for j in range(0, int(y)):
-                self._delete_port_pair(pp[i][j])
+            print "\nTraffic verification after creating SFC\n"
+            self._remote_command(username, password, fip1, command2, src_vm)
+        except Exception as e:
+                print "Exception in service function creation\n", repr(e)
+                pass
+        finally:
+            self.cleanup_sfc()

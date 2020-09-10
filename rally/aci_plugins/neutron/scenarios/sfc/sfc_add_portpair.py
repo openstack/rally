@@ -108,39 +108,37 @@ class SFCAddPortpair(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nov
                     "script_inline": "ping -c 5 192.168.200.101;ping -c 5 192.168.200.102;ping -c 5 192.168.200.103"
                 }
 
-        pp1 = self._create_port_pair(pin1, pout1)
-        pp2 = self._create_port_pair(pin2, pout2)
-        pp3 = self._create_port_pair(pin3, pout3)
-        ppg = self._create_port_pair_group([pp1, pp2, pp3])
-        fc = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
-        pc = self._create_port_chain([ppg], [fc])
-        self.sleep_between(30, 40)
+        try:
+            pp1 = self._create_port_pair(pin1, pout1)
+            pp2 = self._create_port_pair(pin2, pout2)
+            pp3 = self._create_port_pair(pin3, pout3)
+            ppg = self._create_port_pair_group([pp1, pp2, pp3])
+            fc = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
+            pc = self._create_port_chain([ppg], [fc])
+            self.sleep_between(30, 40)
 
-        print "\nTraffic verification with existing SFC\n"
-        self._remote_command(username, password, fip1, command2, src_vm)
+            print "\nTraffic verification with existing SFC\n"
+            self._remote_command(username, password, fip1, command2, src_vm)
 
-        print "Adding a new port pair to the existing chain..."
-        pin4 = self._create_port(left, port_create_args)
-        pout4 = self._create_port(right, port_create_args)
-        kwargs = {}
-        pin4_id = pin4.get('port', {}).get('id')
-        pout4_id = pout4.get('port', {}).get('id')
-        nics = [{"port-id": pin4_id}, {"port-id": pout4_id}]
-        kwargs.update({'nics': nics})
-        kwargs.update({'key_name': key_name})
-        service_vm14 = self._boot_server(service_image1, flavor, False, **kwargs)
-        self.sleep_between(10, 20)
-        pp4 = self._create_port_pair(pin4, pout4)
-        self._update_port_pair_group(ppg, [pp1, pp2, pp3, pp4])
-        self.sleep_between(30, 40)
+            print "Adding a new port pair to the existing chain..."
+            pin4 = self._create_port(left, port_create_args)
+            pout4 = self._create_port(right, port_create_args)
+            kwargs = {}
+            pin4_id = pin4.get('port', {}).get('id')
+            pout4_id = pout4.get('port', {}).get('id')
+            nics = [{"port-id": pin4_id}, {"port-id": pout4_id}]
+            kwargs.update({'nics': nics})
+            kwargs.update({'key_name': key_name})
+            service_vm14 = self._boot_server(service_image1, flavor, False, **kwargs)
+            self.sleep_between(10, 20)
+            pp4 = self._create_port_pair(pin4, pout4)
+            self._update_port_pair_group(ppg, [pp1, pp2, pp3, pp4])
+            self.sleep_between(30, 40)
 
-        print "\nTraffic verification after adding a new port pair\n"
-        self._remote_command(username, password, fip1, command2, src_vm)
-
-        self._delete_port_chain(pc)
-        self._delete_port_pair_group(ppg)
-        self._delete_flow_classifier(fc)
-        self._delete_port_pair(pp1)
-        self._delete_port_pair(pp2)
-        self._delete_port_pair(pp3)
-        self._delete_port_pair(pp4)
+            print "\nTraffic verification after adding a new port pair\n"
+            self._remote_command(username, password, fip1, command2, src_vm)
+        except Exception as e:
+		print "Exception in service function creation \n", repr(e)
+		pass
+        finally:
+            self.cleanup_sfc() 
