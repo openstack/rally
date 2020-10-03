@@ -4,7 +4,7 @@ RUN sed -i s/^deb-src.*// /etc/apt/sources.list
 
 RUN apt-get update && apt-get install --yes sudo python3-dev python3-pip vim git-core && \
     apt clean && \
-    pip3 install --upgrade pip setuptools && \
+    pip3 --no-cache-dir install --upgrade pip setuptools && \
     useradd -u 65500 -m rally && \
     usermod -aG sudo rally && \
     echo "rally ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/00-rally-user && \
