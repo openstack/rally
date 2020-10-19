@@ -6,6 +6,7 @@ from rally.task import validation
 from rally.common import validation
 from rally.aci_plugins import vcpe_utils
 from rally.plugins.openstack import scenario
+from rally.aci_plugins import create_ostack_resources
 from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
 
@@ -15,7 +16,8 @@ from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
                              "keypair@openstack": {},
                              "allow_ssh@openstack": None}, platform="openstack")
 
-class SFCMultiParallel(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_utils.NovaScenario, scenario.OpenStackScenario):
+class SFCMultiParallel(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_utils.NovaScenario, 
+        scenario.OpenStackScenario):
 
     def run(self, src_cidr, dest_cidr, vm_image, service_image1, service_image2, service_image3, flavor, public_network, username, password):
 
@@ -23,123 +25,62 @@ class SFCMultiParallel(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, n
         secgroup = self.context.get("user", {}).get("secgroup")
         key_name=self.context["user"]["keypair"]["name"]
 
-        net1, sub1 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": src_cidr}, 1, None)
-        net2, sub2 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": dest_cidr}, 1, None)
-        left1, sub3 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "1.1.0.0/24", 'host_routes': [{'destination': src_cidr, 'nexthop': '1.1.0.1'}]}, 1, None)
-        right1, sub4 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "2.2.0.0/24", 'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '2.2.0.1'}, {'destination': '128.0.0.0/1', 'nexthop': '2.2.0.1'}]}, 1, None)
+        net_list, sub_list = self.create_net_sub_for_sfc(src_cidr, dest_cidr)
         left2, sub5 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "3.3.0.0/24", 'host_routes': [{'destination': src_cidr, 'nexthop': '3.3.0.1'}]}, 1, None)
         right2, sub6 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "4.4.0.0/24", 'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '4.4.0.1'}, {'destination': '128.0.0.0/1', 'nexthop': '4.4.0.1'}]}, 1, None)
         left3, sub7 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "5.5.0.0/24", 'host_routes': [{'destination': src_cidr, 'nexthop': '5.5.0.1'}]}, 1, None)
         right3, sub8 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "6.6.0.0/24", 'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '6.6.0.1'}, {'destination': '128.0.0.0/1', 'nexthop': '6.6.0.1'}]}, 1, None)
 
-
         router = self._create_router({}, False)
-        self._add_interface_router(sub1[0].get("subnet"), router.get("router"))
-        self._add_interface_router(sub2[0].get("subnet"), router.get("router"))
-        self._add_interface_router(sub3[0].get("subnet"), router.get("router"))
-        self._add_interface_router(sub4[0].get("subnet"), router.get("router"))
+        self.add_interface_to_router(router, sub_list)
         self._add_interface_router(sub5[0].get("subnet"), router.get("router"))
         self._add_interface_router(sub6[0].get("subnet"), router.get("router"))
         self._add_interface_router(sub7[0].get("subnet"), router.get("router"))
         self._add_interface_router(sub8[0].get("subnet"), router.get("router"))
 
-        net1_id = net1.get('network', {}).get('id')
-        net2_id = net2.get('network', {}).get('id')
+        net1_id = net_list[0].get('network', {}).get('id')
+        net2_id = net_list[1].get('network', {}).get('id')
 
-        port_create_args = {}
-        port_create_args["security_groups"] = [secgroup.get('id')]
-        p1 = self._create_port(public_net, port_create_args)
-        p1_id = p1.get('port', {}).get('id')
-        p2 = self._create_port(public_net, port_create_args)
-        p2_id = p2.get('port', {}).get('id')
+        p1, p2, src_vm, dest_vm = self.create_vms_for_sfc_test(secgroup, public_net, net_list[0], net_list[1],
+                                                           vm_image, flavor, key_name)
         port_create_args = {}
         port_create_args.update({"port_security_enabled": "false"})
-        psrc = self._create_port(net1, port_create_args)
-        psrc_id = psrc.get('port', {}).get('id')
-        nics = [{"port-id": p1_id},{"port-id": psrc_id}]
-        kwargs = {}
-        kwargs.update({'nics': nics})
-        kwargs.update({'key_name': key_name})
-        src_vm = self._boot_server(vm_image, flavor, False, **kwargs)
-        
-        pdest = self._create_port(net2, port_create_args)
-        pdest_id = pdest.get('port', {}).get('id')
-        nics = [{"port-id": p2_id},{"port-id": pdest_id}]
-        kwargs = {}
-        kwargs.update({'nics': nics})
-        dest_vm = self._boot_server(vm_image, flavor, False, **kwargs)
-        
-        pin1 = self._create_port(left1, port_create_args)
-        pout1 = self._create_port(right1, port_create_args)
-        kwargs = {}
-        pin1_id = pin1.get('port', {}).get('id')
-        pout1_id = pout1.get('port', {}).get('id')
-        nics = [{"port-id": pin1_id}, {"port-id": pout1_id}]
-        kwargs.update({'nics': nics})
-        kwargs.update({'key_name': key_name})
-        service_vm1 = self._boot_server(service_image1, flavor, False, **kwargs)
-        
-        pin21 = self._create_port(left2, port_create_args)
-        pout21 = self._create_port(right2, port_create_args)
-        kwargs = {}
-        pin21_id = pin21.get('port', {}).get('id')
-        pout21_id = pout21.get('port', {}).get('id')
-        nics = [{"port-id": pin21_id}, {"port-id": pout21_id}]
-        kwargs.update({'nics': nics})
-        kwargs.update({'key_name': key_name})
-        service_vm21 = self._boot_server(service_image2, flavor, False, **kwargs)
+        service_vm1, pin1, pout1 = self.boot_server(net_list[2], port_create_args, service_image1, flavor,
+                                                    net2=net_list[3], service_vm=True, key_name=key_name)
+        service_vm21, pin21, pout21 = self.boot_server(left2, port_create_args, service_image2, flavor,
+                                                    net2=right2, service_vm=True, key_name=key_name)
+        service_vm22, pin22, pout22 = self.boot_server(left2, port_create_args, service_image2, flavor,
+                                                       net2=right2, service_vm=True, key_name=key_name)
+        service_vm23, pin23, pout23 = self.boot_server(left2, port_create_args, service_image2, flavor,
+                                                       net2=right2, service_vm=True, key_name=key_name)
+        service_vm3, pin3, pout3 = self.boot_server(left3, port_create_args, service_image3, flavor,
+                                                       net2=right3, service_vm=True, key_name=key_name)
 
-        pin22 = self._create_port(left2, port_create_args)
-        pout22 = self._create_port(right2, port_create_args)
-        kwargs = {}
-        pin22_id = pin22.get('port', {}).get('id')
-        pout22_id = pout22.get('port', {}).get('id')
-        nics = [{"port-id": pin22_id}, {"port-id": pout22_id}]
-        kwargs.update({'nics': nics})
-        kwargs.update({'key_name': key_name})
-        service_vm22 = self._boot_server(service_image2, flavor, False, **kwargs)
-
-        pin23 = self._create_port(left2, port_create_args)
-        pout23 = self._create_port(right2, port_create_args)
-        kwargs = {}
-        pin23_id = pin23.get('port', {}).get('id')
-        pout23_id = pout23.get('port', {}).get('id')
-        nics = [{"port-id": pin23_id}, {"port-id": pout23_id}]
-        kwargs.update({'nics': nics})
-        kwargs.update({'key_name': key_name})
-        service_vm23 = self._boot_server(service_image2, flavor, False, **kwargs)
-
-        pin3 = self._create_port(left3, port_create_args)
-        pout3 = self._create_port(right3, port_create_args)
-        kwargs = {}
-        pin3_id = pin3.get('port', {}).get('id')
-        pout3_id = pout3.get('port', {}).get('id')
-        nics = [{"port-id": pin3_id}, {"port-id": pout3_id}]
-        kwargs.update({'nics': nics})
-        kwargs.update({'key_name': key_name})
-        service_vm3 = self._boot_server(service_image3, flavor, False, **kwargs)
-        self.sleep_between(30, 40) 
-      
         fip1 = p1.get('port', {}).get('fixed_ips')[0].get('ip_address')
         fip2 = p2.get('port', {}).get('fixed_ips')[0].get('ip_address')
 
         print "\nConfiguring destination-vm for traffic verification..\n"
         command1 = {
                     "interpreter": "/bin/sh",
-                    "script_inline": "ip address add 192.168.200.101/24 dev eth1;ip address add 192.168.200.102/24 dev eth1;ip address add 192.168.200.103/24 dev eth1;ip address add 192.168.200.104/24 dev eth1;ip address add 192.168.200.105/24 dev eth1;route add default gw 192.168.200.1 eth1"
+                    "script_inline": "ip address add 192.168.200.101/24 dev eth1;\
+                                     ip address add 192.168.200.102/24 dev eth1;\
+                                     ip address add 192.168.200.103/24 dev eth1;\
+                                     ip address add 192.168.200.104/24 dev eth1;\
+                                     ip address add 192.168.200.105/24 dev eth1;\
+                                     route add default gw 192.168.200.1 eth1"
                 }
         self._remote_command(username, password, fip2, command1, dest_vm)
 
         command2 = {
                     "interpreter": "/bin/sh",
-                    "script_inline": "ping -c 5 192.168.200.101;ping -c 5 192.168.200.102;ping -c 5 192.168.200.103;ping -c 5 192.168.200.104;ping -c 5 192.168.200.105"
+                    "script_inline": "ping -c 5 192.168.200.101;ping -c 5 192.168.200.102;\
+                    ping -c 5 192.168.200.103;ping -c 5 192.168.200.104;ping -c 5 192.168.200.105"
                 }
          
         print "\nTraffic verification before SFC\n"
         self._remote_command(username, password, fip1, command2, src_vm)
-        
-        print "\nCreating a parallel multi service function chain...\n"
         try:
+            print"Creating a parallel multi service function chain..."
             pp1 = self._create_port_pair(pin1, pout1)
             ppg1 = self._create_port_pair_group([pp1])
             pp21 = self._create_port_pair(pin21, pout21)
@@ -152,10 +93,10 @@ class SFCMultiParallel(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, n
             pc = self._create_port_chain([ppg1, ppg2, ppg3], [fc])
             self.sleep_between(50, 60)
 
-            print "\nTraffic verification after creating SFC\n"
+            print"Traffic verification after creating SFC\n"
             self._remote_command(username, password, fip1, command2, src_vm)
         except Exception as e:
-                print "Exception in service function creation\n", repr(e)
-                pass
+            raise e
         finally:
             self.cleanup_sfc()
+

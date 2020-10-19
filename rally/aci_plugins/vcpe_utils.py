@@ -219,7 +219,7 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
     @atomic.action_timer("cleanup_sfc_resources")
     def cleanup_sfc(self):
         
-        print "Deleting sfc resources\n"
+        print "Deleting sfc resources"
         try:
             pc_list = self._list_port_chains()
             if len(pc_list):
@@ -238,8 +238,7 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
                 for pp in pp_list:
                     self._delete_port_pair({"port_pair":pp})
         except Exception as e:
-		print "Exception in Cleanup == ", repr(e)
-		pass
+            raise e
 
     @atomic.action_timer("neutron.delete_trunk")
     def _delete_trunk(self, trunk_port):
@@ -630,4 +629,12 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
         )
         return server
 
+    def create_rally_client(self, pro_name, username, context):
 
+        pro = self._create_project(pro_name, 'admin_domain')
+        user = self._create_user(username, 'noir0123', pro.id, "admin_domain", True, "Admin")
+        dic = copy.deepcopy(context)
+        new_user = dic.get("users")[0]
+        new_user.get("credential").update({'username': username, 'tenant_name': username, 'password': 'noir0123'})
+        
+        return pro, user, new_user

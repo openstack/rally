@@ -1,11 +1,9 @@
 from rally import consts
 from rally import exceptions
-from rally.task import utils
-from rally.task import atomic
-from rally.task import validation
 from rally.common import validation
 from rally.aci_plugins import vcpe_utils
 from rally.plugins.openstack import scenario
+from rally.aci_plugins import create_ostack_resources
 from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
 
@@ -14,8 +12,8 @@ from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
 @scenario.configure(name="ScenarioPlugin.svi_scale", context={"cleanup@openstack": ["nova", "neutron"],
                              "keypair@openstack": {},
                              "allow_ssh@openstack": None}, platform="openstack")
-
-class SVIScale(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_utils.NovaScenario, scenario.OpenStackScenario):
+class SVIScale(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario,
+               nova_utils.NovaScenario, scenario.OpenStackScenario):
 
     def run(self, image, flavor, public_network, aci_nodes, username, password, scale):
         
@@ -27,32 +25,26 @@ class SVIScale(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_util
         fip = []
         vm = []
         for i in range(101, 101+int(scale)):
-
             port_create_args = {}
             port_create_args["security_groups"] = [secgroup.get('id')]
-            pfip = self._create_port(public_net, port_create_args)
-            pfip_id = pfip.get('port', {}).get('id')
+            pfip, pfip_id = self.create_port(public_net, port_create_args)
             fip.append(pfip.get('port', {}).get('fixed_ips')[0].get('ip_address'))
 
             net, sub = self._create_network_and_subnets({"provider:network_type": "vlan", "apic:svi": True, "apic:bgp_enable": True, "apic:bgp_asn": i},{"cidr": "192.168."+str(i)+".0/24"}, 1, None)
             self._create_svi_ports(net, sub[0], "192.168."+str(i), aci_nodes)
             self._add_interface_router(sub[0].get("subnet"), router.get("router"))
+            
             port_create_args = {}
             port_create_args.update({"port_security_enabled": "false"})
-            port_create_args.update({"fixed_ips": [{"ip_address": "192.168."+str(i)+".101"}]})      
-            p = self._create_port(net, port_create_args)
-            p_id = p.get('port', {}).get('id')
-            nics = [{"port-id": pfip_id},{"port-id": p_id}]
-            kwargs = {}
-            kwargs.update({'nics': nics})
-            kwargs.update({'key_name': key_name})
-            vm.append(self._boot_server(image, flavor, False, **kwargs))    
+            port_create_args.update({"fixed_ips": [{"ip_address": "192.168."+str(i)+".101"}]})
+            p, p_id = self.create_port(net, port_create_args)
+            vm.append(self.boot_vm([pfip_id, p_id], image, flavor, key_name=key_name))
         self.sleep_between(30, 40)
         
         prefix = []
         for i in range(101, 101+int(scale)):
             prefix.append(i)
-            print "\nConfiguring the VM-"+str(i%100)+"...\n"
+            print("Configuring the VM-"+str(i%100)+"...")
             command1 = {
                         "interpreter": "/bin/sh",
                         "script_file": "/usr/local/lib/python2.7/dist-packages/rally/aci_plugins/orchest/orchest_svi_scale.sh"
@@ -64,7 +56,7 @@ class SVIScale(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_util
             self._remote_command(username, password, fip[i%101], command1, vm[i%101])
             self._remote_command(username, password, fip[i%101], command2, vm[i%101])
             
-            print "\nRunning bird in the VM-"+str(i%100)+"...\n"
+            print("Running bird in the VM-"+str(i%100)+"...")
             command3 = {
                         "interpreter": "/bin/sh",
                         "script_inline": "bird -c /etc/bird/bird_svi_scale.conf"
@@ -72,7 +64,7 @@ class SVIScale(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_util
             self._remote_command(username, password, fip[i%101], command3, vm[i%101])
             self.sleep_between(10, 20)
 
-            print "\nValidating BGP session from VM-"+str(i%100)+"...\n"
+            print("Validating BGP session from VM-"+str(i%100)+"...")
             command4 = {
                         "interpreter": "/bin/sh",
                         "script_inline": "birdc show protocol;birdc show route"
@@ -80,7 +72,7 @@ class SVIScale(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_util
             self._remote_command(username, password, fip[i%101], command4, vm[i%101])
         
         for i in range(101, 101+int(scale)):
-            print "\nVerify traffic from the VM-"+str(i%100)+"...\n"
+            print("Verify traffic from the VM-"+str(i%100)+"...")
             ping = []
             ping.extend(prefix)
             ping.pop(i%101)
