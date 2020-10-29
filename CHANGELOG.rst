@@ -20,6 +20,14 @@ Changelog
 [unreleased]
 ------------
 
+Added
+~~~~~
+
+* Extend CI for checking installation on Ubuntu Focal environment.
+* Extend ``rally task start`` command output with the progress of finishing
+  workloads
+* Introduce ``rally task restart`` command.
+
 Fixed
 ~~~~~
 
