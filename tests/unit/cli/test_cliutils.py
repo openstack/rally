@@ -314,137 +314,256 @@ class CliUtilsTestCase(test.TestCase):
         aOrB = 3  # mixed case field
 
     @ddt.data(
-        {"args": [[TestObj()], ["x", "y"]],
-         "kwargs": {"print_header": True,
-                    "print_border": True,
-                    "sortby_index": None},
-         "expected": ("+---+---+\n"
-                      "| x | y |\n"
-                      "+---+---+\n"
-                      "| 1 | 2 |\n"
-                      "+---+---+")},
-        {"args": [[TestObj()], ["z"]],
-         "kwargs": {"print_header": True,
-                    "print_border": True,
-                    "sortby_index": None,
-                    "formatters": {"z": cliutils.pretty_float_formatter("z",
-                                                                        5)}},
-         "expected": ("+---------+\n"
-                      "| z       |\n"
-                      "+---------+\n"
-                      "| 3.14286 |\n"
-                      "+---------+")},
-        {"args": [[TestObj()], ["x"]],
-         "kwargs": {"print_header": True,
-                    "print_border": True},
-         "expected": ("+---+\n"
-                      "| x |\n"
-                      "+---+\n"
-                      "| 1 |\n"
-                      "+---+")},
-        {"args": [[TestObj()], ["x", "y"]],
-         "kwargs": {"print_header": True,
-                    "print_border": True},
-         "expected": ("+---+---+\n"
-                      "| x | y |\n"
-                      "+---+---+\n"
-                      "| 1 | 2 |\n"
-                      "+---+---+")},
-        {"args": [[TestObj()], ["x"]],
-         "kwargs": {"print_header": False,
-                    "print_border": False},
-         "expected": "1"},
-        {"args": [[TestObj()], ["x", "y"]],
-         "kwargs": {"print_header": False,
-                    "print_border": False},
-         "expected": "1 2"},
-        {"args": [[TestObj()], ["x"]],
-         "kwargs": {"print_header": True,
-                    "print_border": False},
-         "expected": "x \n1"},
-        {"args": [[TestObj()], ["x", "y"]],
-         "kwargs": {"print_header": True,
-                    "print_border": False},
-         "expected": "x y \n1 2"},
-        {"args": [[TestObj()], ["x"]],
-         "kwargs": {"print_header": False,
-                    "print_border": True},
-         "expected": ("+--+\n"
-                      "|1 |\n"
-                      "+--+")},
-        {"args": [[TestObj()], ["x", "y"]],
-         "kwargs": {"print_header": False,
-                    "print_border": True},
-         "expected": ("+--+--+\n"
-                      "|1 |2 |\n"
-                      "+--+--+")},
-        {"args": [[TestObj()], ["aOrB"]],
-         "kwargs": {"print_header": True,
-                    "print_border": True,
-                    "mixed_case_fields": ["aOrB"]},
-         "expected": ("+------+\n"
-                      "| aOrB |\n"
-                      "+------+\n"
-                      "| 3    |\n"
-                      "+------+")},
-        {"args": [[TestObj()], ["aOrB"]],
-         "kwargs": {"print_header": False,
-                    "print_border": True,
-                    "mixed_case_fields": ["aOrB"]},
-         "expected": ("+--+\n"
-                      "|3 |\n"
-                      "+--+")},
-        {"args": [[TestObj()], ["aOrB"]],
-         "kwargs": {"print_header": True,
-                    "print_border": False,
-                    "mixed_case_fields": ["aOrB"]},
-         "expected": "aOrB \n3"},
-        {"args": [[TestObj()], ["aOrB"]],
-         "kwargs": {"print_header": False,
-                    "print_border": False,
-                    "mixed_case_fields": ["aOrB"]},
-         "expected": "3"},
-        {"args": [[{"x": 1, "y": 2}], ["x", "y"]],
-         "kwargs": {"print_header": True,
-                    "print_border": True,
-                    "sortby_index": None},
-         "expected": ("+---+---+\n"
-                      "| x | y |\n"
-                      "+---+---+\n"
-                      "| 1 | 2 |\n"
-                      "+---+---+")},
-        {"args": [[{"z": 3.142857142857143}], ["z"]],
-         "kwargs": {"print_header": True,
-                    "print_border": True,
-                    "sortby_index": None,
-                    "formatters": {"z": cliutils.pretty_float_formatter("z",
-                                                                        5)}},
-         "expected": ("+---------+\n"
-                      "| z       |\n"
-                      "+---------+\n"
-                      "| 3.14286 |\n"
-                      "+---------+")},
-        {"args": [[{"x": 1}], ["x"]],
-         "kwargs": {"print_header": True,
-                    "print_border": True},
-         "expected": ("+---+\n"
-                      "| x |\n"
-                      "+---+\n"
-                      "| 1 |\n"
-                      "+---+")},
-        {"args": [[{"x": 1, "y": 2}], ["x", "y"]],
-         "kwargs": {"print_header": True,
-                    "print_border": True},
-         "expected": ("+---+---+\n"
-                      "| x | y |\n"
-                      "+---+---+\n"
-                      "| 1 | 2 |\n"
-                      "+---+---+")})
+        {
+            "input": {
+                "objs": [TestObj()],
+                "fields": ["x", "y"],
+                "print_header": True,
+                "print_border": True,
+                "sortby_index": None
+            },
+            "expected": (
+                "+---+---+\n"
+                "| x | y |\n"
+                "+---+---+\n"
+                "| 1 | 2 |\n"
+                "+---+---+")
+        },
+        {
+            "input": {
+                "objs": [TestObj()],
+                "fields": ["z"],
+                "print_header": True,
+                "print_border": True,
+                "sortby_index": None,
+                "formatters": {"z": cliutils.pretty_float_formatter("z", 5)}
+            },
+            "expected": (
+                "+---------+\n"
+                "| z       |\n"
+                "+---------+\n"
+                "| 3.14286 |\n"
+                "+---------+")
+        },
+        {
+            "input": {
+                "objs": [TestObj()],
+                "fields": ["x"],
+                "print_header": True,
+                "print_border": True
+            },
+            "expected": (
+                "+---+\n"
+                "| x |\n"
+                "+---+\n"
+                "| 1 |\n"
+                "+---+")
+        },
+        {
+            "input": {
+                "objs": [TestObj()],
+                "fields": ["x", "y"],
+                "print_header": True,
+                "print_border": True
+            },
+            "expected": (
+                "+---+---+\n"
+                "| x | y |\n"
+                "+---+---+\n"
+                "| 1 | 2 |\n"
+                "+---+---+")
+        },
+        {
+            "input": {
+                "objs": [TestObj()],
+                "fields": ["x"],
+                "print_header": False,
+                "print_border": False
+            },
+            "expected": "1"
+        },
+        {
+            "input": {
+                "objs": [TestObj()],
+                "fields": ["x", "y"],
+                "print_header": False,
+                "print_border": False
+            },
+            "expected": "1 2"
+        },
+        {
+            "input": {
+                "objs": [TestObj()],
+                "fields": ["x"],
+                "print_header": True,
+                "print_border": False
+            },
+            "expected": "x \n1"
+        },
+        {
+            "input": {
+                "objs": [TestObj()],
+                "fields": ["x", "y"],
+                "print_header": True,
+                "print_border": False
+            },
+            "expected": "x y \n1 2"
+        },
+        {
+            "input": {
+                "objs": [TestObj()],
+                "fields": ["x"],
+                "print_header": False,
+                "print_border": True
+            },
+            "expected": (
+                "+--+\n"
+                "|1 |\n"
+                "+--+")
+        },
+        {
+            "input": {
+                "objs": [TestObj()],
+                "fields": ["x", "y"],
+                "print_header": False,
+                "print_border": True
+            },
+            "expected": (
+                "+--+--+\n"
+                "|1 |2 |\n"
+                "+--+--+")
+        },
+        {
+            "input": {
+                "objs": [TestObj()],
+                "fields": ["aOrB"],
+                "print_header": True,
+                "print_border": True,
+                "mixed_case_fields": ["aOrB"]
+            },
+            "expected": (
+                "+------+\n"
+                "| aOrB |\n"
+                "+------+\n"
+                "| 3    |\n"
+                "+------+")
+        },
+        {
+            "input": {
+                "objs": [TestObj()],
+                "fields": ["aOrB"],
+                "print_header": False,
+                "print_border": True,
+                "mixed_case_fields": ["aOrB"]
+            },
+            "expected": (
+                "+--+\n"
+                "|3 |\n"
+                "+--+")
+        },
+        {
+            "input": {
+                "objs": [TestObj()],
+                "fields": ["aOrB"],
+                "print_header": True,
+                "print_border": False,
+                "mixed_case_fields": ["aOrB"]
+            },
+            "expected": "aOrB \n3"
+        },
+        {
+            "input": {
+                "objs": [TestObj()],
+                "fields": ["aOrB"],
+                "print_header": False,
+                "print_border": False,
+                "mixed_case_fields": ["aOrB"]
+            },
+            "expected": "3"
+        },
+        {
+            "input": {
+                "objs": [{"x": 1, "y": 2}],
+                "fields": ["x", "y"],
+                "print_header": True,
+                "print_border": True,
+                "sortby_index": None
+            },
+            "expected": (
+                "+---+---+\n"
+                "| x | y |\n"
+                "+---+---+\n"
+                "| 1 | 2 |\n"
+                "+---+---+")
+        },
+        {
+            "input": {
+                "objs": [{"z": 3.142857142857143}],
+                "fields": ["z"],
+                "print_header": True,
+                "print_border": True,
+                "sortby_index": None,
+                "formatters": {"z": cliutils.pretty_float_formatter("z", 5)}
+            },
+            "expected": (
+                "+---------+\n"
+                "| z       |\n"
+                "+---------+\n"
+                "| 3.14286 |\n"
+                "+---------+")
+        },
+        {
+            "input": {
+                "objs": [{"x": 1}],
+                "fields": ["x"],
+                "print_header": True,
+                "print_border": True
+            },
+            "expected": (
+                "+---+\n"
+                "| x |\n"
+                "+---+\n"
+                "| 1 |\n"
+                "+---+")
+        },
+        {
+            "input": {
+                "objs": [{"x": 1, "y": 2}],
+                "fields": ["x", "y"],
+                "print_header": True,
+                "print_border": True
+            },
+            "expected": (
+                "+---+---+\n"
+                "| x | y |\n"
+                "+---+---+\n"
+                "| 1 | 2 |\n"
+                "+---+---+")
+        },
+        {
+            "input": {
+                "objs": [{"x": 1, "y": 2}, {"x": 2, "y": 3}],
+                "fields": ["x", "y"],
+                "print_header": True,
+                "print_border": True,
+                "print_row_border": True
+            },
+            "expected": (
+                "+---+---+\n"
+                "| x | y |\n"
+                "+===+===+\n"
+                "| 1 | 2 |\n"
+                "+---+---+\n"
+                "| 2 | 3 |\n"
+                "+---+---+"
+            )
+        }
+    )
     @ddt.unpack
-    def test_print_list(self, args, kwargs, expected):
+    def test_print_list(self, input, expected):
         out = io.StringIO()
-        kwargs["out"] = out
-        cliutils.print_list(*args, **kwargs)
+        input["out"] = out
+        cliutils.print_list(**input)
         self.assertEqual(expected, out.getvalue().strip())
 
     def test_print_list_raises(self):
