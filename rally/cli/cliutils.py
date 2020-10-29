@@ -80,6 +80,7 @@ def print_list(objs, fields, formatters=None, sortby_index=0,
                mixed_case_fields=None, field_labels=None,
                normalize_field_names=False,
                table_label=None, print_header=True, print_border=True,
+               print_row_border=False,
                out=sys.stdout):
     """Print a list or objects as a table, one row per object.
 
@@ -97,6 +98,7 @@ def print_list(objs, fields, formatters=None, sortby_index=0,
     :param table_label: Label to use as header for the whole table.
     :param print_header: print table header.
     :param print_border: print table border.
+    :param print_row_border: use border between rows
     :param out: stream to write output to.
 
     """
@@ -108,10 +110,15 @@ def print_list(objs, fields, formatters=None, sortby_index=0,
                          " elements than fields list %(fields)s"
                          % {"labels": field_labels, "fields": fields})
 
-    if sortby_index is None:
-        kwargs = {}
-    else:
+    kwargs = {}
+    if sortby_index is not None:
         kwargs = {"sortby": field_labels[sortby_index]}
+
+    if print_border and print_row_border:
+        headers_horizontal_char = "="
+        kwargs["hrules"] = prettytable.ALL
+    else:
+        headers_horizontal_char = "-"
     pt = prettytable.PrettyTable(field_labels)
     pt.align = "l"
 
@@ -143,12 +150,17 @@ def print_list(objs, fields, formatters=None, sortby_index=0,
     table_body = pt.get_string(header=print_header,
                                border=print_border,
                                **kwargs) + "\n"
+    if print_border and print_row_border:
+        table_body = table_body.split("\n", 3)
+        table_body[2] = table_body[2].replace("-", headers_horizontal_char)
+        table_body = "\n".join(table_body)
 
     table_header = ""
 
     if table_label:
         table_width = table_body.index("\n")
-        table_header = make_table_header(table_label, table_width)
+        table_header = make_table_header(
+            table_label, table_width, horizontal_char=headers_horizontal_char)
         table_header += "\n"
 
     if table_header:
