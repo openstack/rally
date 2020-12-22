@@ -1,0 +1,29 @@
+{
+    "ScenarioPlugin.simple_qos": [
+        {
+            "args": {
+                "imageid": {{imageid}},
+                "flavorid": {{flavor}},
+                "apic": {{apic}},
+                "leaf1": {{leaf1}},
+                "leaf2": {{leaf2}},
+                "compute1": {{compute1}},
+                "compute2": {{compute2}},
+                "user": {{user}},
+                "password": {{password}}
+            },
+            "runner": {
+                "type": "constant",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
+            }
+       }
+    ]
+}
+
