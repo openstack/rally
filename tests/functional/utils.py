@@ -39,9 +39,6 @@ class RallyCliError(Exception):
     def __str__(self):
         return self.msg
 
-    def __unicode__(self):
-        return self.msg
-
 
 class JsonTempFile(object):
 
