@@ -21,6 +21,7 @@ import time
 from unittest import mock
 
 import ddt
+import pytest
 import testtools
 
 from rally.common import utils
@@ -437,6 +438,7 @@ class MergeTestCase(test.TestCase):
 
 
 class TimeoutThreadTestCase(test.TestCase):
+    @pytest.mark.filterwarnings("ignore")
     def test_timeout_thread(self):
         """Create and kill thread by timeout.
 
@@ -465,7 +467,7 @@ class TimeoutThreadTestCase(test.TestCase):
         killer_thread.join()
         time_elapsed = end_time - start_time
         # NOTE(sskripnick): Killing thread with PyThreadState_SetAsyncExc
-        # works with sinificant delay. Make sure this delay is less
+        # works with significant delay. Make sure this delay is less
         # than 10 seconds.
         self.assertLess(time_elapsed, 11,
                         "Thread killed too late (%s seconds)" % time_elapsed)

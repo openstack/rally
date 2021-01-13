@@ -67,7 +67,8 @@ class TaskCommands(object):
         print(cliutils.make_header("Preparing input task"))
 
         try:
-            input_task = open(task_file).read()
+            with open(task_file) as f:
+                input_task = f.read()
         except IOError as err:
             raise FailedToLoadTask(
                 source="--task",
@@ -78,16 +79,20 @@ class TaskCommands(object):
         task_args = {}
         if args_file:
             try:
-                task_args.update(yaml.safe_load(open(args_file).read()))
+                with open(args_file) as f:
+                    args_data = f.read()
+            except IOError as err:
+                raise FailedToLoadTask(
+                    source="--task-args-file",
+                    msg="Error reading %s: %s" % (args_file, err))
+
+            try:
+                task_args.update(yaml.safe_load(args_data))
             except yaml.ParserError as e:
                 raise FailedToLoadTask(
                     source="--task-args-file",
                     msg="File '%s' has to be YAML or JSON. Details:\n\n%s"
                     % (args_file, e))
-            except IOError as err:
-                raise FailedToLoadTask(
-                    source="--task-args-file",
-                    msg="Error reading %s: %s" % (args_file, err))
 
         if raw_args:
             try:

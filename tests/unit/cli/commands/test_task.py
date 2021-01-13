@@ -87,7 +87,9 @@ class TaskCommandsTestCase(test.TestCase):
 
         def open_return_value(filename):
             if filename == "in_task":
-                return mock.Mock()
+                m = mock.MagicMock()
+                m.__enter__.return_value = mock.Mock(read=lambda: "{}")
+                return m
             else:
                 raise IOError()
 

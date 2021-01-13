@@ -21,6 +21,7 @@ import time
 from unittest import mock
 
 import jsonschema
+import pytest
 import testtools
 
 from rally import api
@@ -287,7 +288,8 @@ class TaskTestCase(testtools.TestCase):
                                "Copyright (c) 2010-2015, Michael Bostock"]
         external_signatures = ["<script type=\"text/javascript\" src=",
                                "<link rel=\"stylesheet\" href="]
-        html = open(file_path).read()
+        with open(file_path) as f:
+            html = f.read()
         result_embedded = all([sig in html for sig in embedded_signatures])
         result_external = all([sig in html for sig in external_signatures])
         self.assertEqual(expected, result_embedded)
@@ -385,7 +387,8 @@ class TaskTestCase(testtools.TestCase):
         self._assert_html_report_libs_are_embedded(html_report)
 
     def _assert_json_report(self, file_path):
-        results = json.loads(open(file_path).read())
+        with open(file_path) as f:
+            results = json.loads(f.read())
         self.assertIn("info", results)
         self.assertIn("tasks", results)
         for task in results["tasks"]:
@@ -929,6 +932,7 @@ class TaskTestCase(testtools.TestCase):
                 time.sleep(0.5)
         return task, uuid
 
+    @pytest.mark.filterwarnings("ignore")
     def test_abort(self):
         RUNNER_TIMES = 10
         cfg = {

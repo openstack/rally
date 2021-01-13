@@ -16,6 +16,7 @@
 """Tests for the Test engine."""
 
 import collections
+import itertools
 import threading
 from unittest import mock
 
@@ -663,10 +664,6 @@ class ResultConsumerTestCase(test.TestCase):
     def test_consume_results_sla_failure_abort(
             self, mock_sla_checker, mock_result_consumer_wait_and_abort,
             mock_task_get_status):
-        mock_sla_instance = mock.MagicMock()
-        mock_sla_checker.return_value = mock_sla_instance
-        mock_sla_instance.add_iteration.side_effect = [True, True, False,
-                                                       False]
         workload_cfg = {"fake": 2, "hooks": []}
         task = mock.MagicMock()
         subtask = mock.Mock(spec=objects.Subtask)
@@ -676,6 +673,14 @@ class ResultConsumerTestCase(test.TestCase):
         runner.result_queue = collections.deque(
             [[{"duration": 1, "timestamp": 1},
               {"duration": 2, "timestamp": 2}]] * 4)
+        iteration_count = len(list(
+            itertools.chain(*runner.result_queue)
+        ))
+        mock_sla_instance = mock.MagicMock()
+        mock_sla_checker.return_value = mock_sla_instance
+        mock_sla_instance.add_iteration.side_effect = [
+            i < 3 for i in range(iteration_count)
+        ]
         ctx_manager = mock.MagicMock()
 
         with engine.ResultConsumer(workload_cfg, task=task, subtask=subtask,
