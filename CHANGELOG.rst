@@ -17,6 +17,14 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
+[x.x.x] - 202x-xx-xx
+--------------------
+
+Changed
+~~~~~
+
+* ``rally verify`` returns 0 on success, 1, 2 or 3 depending on detected issue.
+
 [3.2.0] - 2020-10-30
 --------------------
 

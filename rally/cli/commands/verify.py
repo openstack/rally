@@ -526,6 +526,13 @@ class VerifyCommands(object):
         else:
             print("Verification UUID: %s." % verification_uuid)
 
+        if results["totals"]["unexpected_success"] > 0:
+            return 2
+        if results["totals"]["failures"] > 0:
+            return 3
+
+        return 0
+
     @cliutils.help_group("verification")
     @cliutils.args("--uuid", dest="verification_uuid", type=str, required=True,
                    help="Verification UUID. " + LIST_VERIFICATIONS_HINT)
