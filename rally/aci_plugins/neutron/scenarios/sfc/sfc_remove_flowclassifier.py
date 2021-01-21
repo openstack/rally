@@ -15,17 +15,21 @@ from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
 class SFCRemoveFlowclassifier(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario,
                               nova_utils.NovaScenario, scenario.OpenStackScenario):
 
-    def run(self, src_cidr, dest_cidr, vm_image, service_image1, flavor, public_network, username, password):
+    def run(self, src_cidr, dest_cidr, vm_image, service_image1, flavor, public_network, username, password,
+            ipv6_cidr, ipv6_dest_cidr, dualstack):
         
         public_net = self.clients("neutron").show_network(public_network)
         secgroup = self.context.get("user", {}).get("secgroup")
         key_name=self.context["user"]["keypair"]["name"]
         
-        net_list, sub_list = self.create_net_sub_for_sfc(src_cidr, dest_cidr)
+        #net_list, sub_list = self.create_net_sub_for_sfc(src_cidr, dest_cidr)
+        net_list, sub_list = self.create_net_sub_for_sfc(src_cidr, dest_cidr, dualstack=dualstack,
+                                                         ipv6_src_cidr=ipv6_cidr, ipv6_dest_cidr=ipv6_dest_cidr)
         test_net, sub5 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": '192.168.0.0/24'}, 1, None)
 
         router = self._create_router({}, False)
-        self.add_interface_to_router(router, sub_list)
+        #self.add_interface_to_router(router, sub_list)
+        self.add_interface_to_router(router, sub_list, dualstack)
         self._add_interface_router(sub5[0].get("subnet"), router.get("router"))
 
         net1_id = net_list[0].get('network', {}).get('id')
@@ -44,19 +48,32 @@ class SFCRemoveFlowclassifier(create_ostack_resources.CreateOstackResources, vcp
         fip2 = p2.get('port', {}).get('fixed_ips')[0].get('ip_address')
 
         print "\nConfiguring destination-vm for traffic verification..\n"
-        command1 = {
+        if dualstack:
+            command1 = {
                     "interpreter": "/bin/sh",
-                    "script_inline": "ip address add 192.168.200.101/24 dev eth1;\
-                    ip address add 192.168.200.102/24 dev eth1;\
-                    ip address add 192.168.200.103/24 dev eth1;\
-                    route add default gw 192.168.200.1 eth1"
+                    "script_inline": "ip address add 192.168.200.101/24 dev eth1;ip address add 192.168.200.102/24 dev eth1;\
+                    ip address add 192.168.200.103/24 dev eth1;route add default gw 192.168.200.1 eth1; \
+                    ip -6 addr add  2001:d8::101/32 dev eth1; ip -6 addr add 2001:d8::102/32 dev eth1; \
+                    ip -6 addr add 2001:d8::103/32 dev eth1; ip -6 route add 2001:d8::1 dev eth1"
+                    }
+            command2 = {
+                    "interpreter": "/bin/sh",
+                    "script_inline": "ping -c 5 192.168.200.101;ping -c 5 192.168.200.102;ping -c 5 192.168.200.103; \
+                    ping6 -c 5 2001:d8::101;ping6 -c 5 2001:d8::102;ping6 -c 5 2001:d8::103"
                 }
-        self._remote_command(username, password, fip2, command1, dest_vm)
 
-        command2 = {
+        else:
+            command1 = {
+                    "interpreter": "/bin/sh",
+                    "script_inline": "ip address add 192.168.200.101/24 dev eth1;ip address add 192.168.200.102/24 dev eth1;\
+                    ip address add 192.168.200.103/24 dev eth1;route add default gw 192.168.200.1 eth1"
+                }
+            command2 = {
                     "interpreter": "/bin/sh",
                     "script_inline": "ping -c 5 192.168.200.101;ping -c 5 192.168.200.102;ping -c 5 192.168.200.103"
                 }
+
+        self._remote_command(username, password, fip2, command1, dest_vm)
         try:
             pp = self._create_port_pair(pin, pout)
             ppg = self._create_port_pair_group([pp])

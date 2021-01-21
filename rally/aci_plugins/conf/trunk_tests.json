@@ -9,11 +9,22 @@
                 "flavor": "small",
                 "public_net": {{access_network}},
                 "username" : "root",
-                "password" : "noir0123"
+                "password" : "noir0123",
+                "dualstack": {{dualstack}},
+                "v6cidr1": "2001:a0::/64",
+                "v6cidr2": "2001:a10::/64",
+                "v6cidr3": "2001:a20::/64"
                 },
             "runner": {
                 "type": "serial",
-                "times": 1
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
             }
         }
     ],
@@ -27,11 +38,22 @@
                 "flavor": "small",
                 "public_net": {{access_network}},
                 "username" : "root",
-                "password" : "noir0123"
+                "password" : "noir0123",
+                "dualstack": {{dualstack}},
+                "v6cidr1": "2001:a0::/64",
+                "v6cidr2": "2001:a10::/64",
+                "v6cidr3": "2001:a20::/64"
                 },
             "runner": {
                 "type": "serial",
-                "times": 1
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
             }
         }
     ],
@@ -45,11 +67,22 @@
                 "flavor": "small",
                 "public_net": {{access_network}},
                 "username" : "root",
-                "password" : "noir0123"
+                "password" : "noir0123",
+                "dualstack": {{dualstack}},
+                "v6cidr1": "2001:a0::/64",
+                "v6cidr2": "2001:a10::/64",
+                "v6cidr3": "2001:a20::/64"
                 },
             "runner": {
                 "type": "serial",
-                "times": 1
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
             }
         }
     ],
@@ -63,11 +96,22 @@
                 "flavor": "small",
                 "public_net": {{access_network}},
                 "username" : "root",
-                "password" : "noir0123"
+                "password" : "noir0123",
+                "dualstack": {{dualstack}},
+                "v6cidr1": "2001:a0::/64",
+                "v6cidr2": "2001:a10::/64",
+                "v6cidr3": "2001:a20::/64"
                 },
             "runner": {
                 "type": "serial",
-                "times": 1
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
             }
         }
     ],
@@ -81,11 +125,22 @@
                 "flavor": "small",
                 "public_net": {{access_network}},
                 "username" : "root",
-                "password" : "noir0123"
+                "password" : "noir0123",
+                "dualstack": {{dualstack}},
+                "v6cidr1": "2001:a0::/64",
+                "v6cidr2": "2001:a10::/64",
+                "v6cidr3": "2001:a20::/64"
                 },
             "runner": {
                 "type": "serial",
-                "times": 1
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
             }
         }
     ],
@@ -99,14 +154,25 @@
                 "flavor": "small",
                 "public_net": {{access_network}},
                 "username" : "root",
-                "password" : "noir0123"
+                "password" : "noir0123",
+                "dualstack": {{dualstack}},
+                "v6cidr1": "2001:a0::/64",
+                "v6cidr2": "2001:a10::/64",
+                "v6cidr3": "2001:a20::/64"
                 },
             "runner": {
                 "type": "serial",
-                "times": 1
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
             }
         }
-    ], 
+    ],
     "ScenarioPlugin.trunk_scale": [
         {
             "args": {
@@ -115,11 +181,19 @@
                 "public_network": {{access_network}},
                 "username" : "root",
                 "password" : "noir0123",
-                "scale" : "5"
+                "scale" : "2",
+                "dualstack": {{dualstack}}
                 },
             "runner": {
-                "type": "constant",
-                "times": 1
+                "type": "serial",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
             }
         }
     ]

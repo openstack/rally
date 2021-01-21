@@ -1,5 +1,6 @@
 import copy
 import json
+import itertools
 from rally import exceptions
 from rally.task import utils
 from rally.common import cfg
@@ -9,6 +10,7 @@ from rally.common import sshutils
 from rally.plugins.openstack import osclients
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.vm import utils as vm_utils
+from rally.plugins.openstack.wrappers import network as network_wrapper
 
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
@@ -143,12 +145,14 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
 
 
     @atomic.action_timer("neutron.create_flow_classifier")
-    def _create_flow_classifier(self, source_ip, dest_ip, log_src_net, log_dest_net, **flow_classifier_create_args):
+    def _create_flow_classifier(self, source_ip, dest_ip, log_src_net, log_dest_net, ethertype=None, **flow_classifier_create_args):
 
     	flow_classifier_create_args = {}
         flow_classifier_create_args["source_ip_prefix"] = source_ip
         flow_classifier_create_args["destination_ip_prefix"] = dest_ip
         flow_classifier_create_args["l7_parameters"] = {"logical_source_network": log_src_net, "logical_destination_network": log_dest_net}
+        if ethertype:
+            flow_classifier_create_args["ethertype"] = ethertype
         flow_classifier_create_args["name"] = self.generate_random_name()
         return self.clients("neutron").create_sfc_flow_classifier({"flow_classifier": flow_classifier_create_args})
 
@@ -280,13 +284,17 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
 
 
     @atomic.action_timer("create_svi_ports")
-    def _create_svi_ports(self, network, subnet, prefix, nodes):
+    def _create_svi_ports(self, network, subnet, prefix, nodes, dualstack=False, v6sub=None, v6prefix=None):
               
         port_create_args = {}
         port_create_args["device_owner"] = 'apic:svi'
         port_create_args["name"] = 'apic-svi-port:' + str(nodes[1])
         port_create_args["network_id"] = network["network"]["id"]
-        port_create_args.update({"fixed_ips": [{"subnet_id": subnet.get("subnet", {}).get("id"), "ip_address": prefix+".200"}]})
+        if dualstack:
+            port_create_args.update({"fixed_ips": [{"subnet_id": subnet.get("subnet", {}).get("id"), "ip_address": prefix+".200"}, \
+                    {"subnet_id": v6sub.get("subnet", {}).get("id"), "ip_address": v6prefix+"::c8"}]})
+        else:
+            port_create_args.update({"fixed_ips": [{"subnet_id": subnet.get("subnet", {}).get("id"), "ip_address": prefix+".200"}]})
         p2 = self.admin_clients("neutron").create_port({"port": port_create_args})
         p2_id = p2.get('port', {}).get('id')
         self.sleep_between(10,15) 
@@ -300,7 +308,11 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
         port_create_args["device_owner"] = 'apic:svi'
         port_create_args["name"] = 'apic-svi-port:' + str(nodes[0])
         port_create_args["network_id"] = network["network"]["id"]
-        port_create_args.update({"fixed_ips": [{"subnet_id": subnet.get("subnet", {}).get("id"), "ip_address": prefix+".199"}]})
+        if dualstack:
+            port_create_args.update({"fixed_ips": [{"subnet_id": subnet.get("subnet", {}).get("id"), "ip_address": prefix+".199"}, \
+                    {"subnet_id": v6sub.get("subnet", {}).get("id"), "ip_address": v6prefix+"::c7"}]})
+        else:
+            port_create_args.update({"fixed_ips": [{"subnet_id": subnet.get("subnet", {}).get("id"), "ip_address": prefix+".199"}]})
         self.admin_clients("neutron").create_port({"port": port_create_args})
         
         for i in range(1, len(nodes)-1):
@@ -638,3 +650,154 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
         new_user.get("credential").update({'username': username, 'tenant_name': username, 'password': 'noir0123'})
         
         return pro, user, new_user
+
+    def create_network_and_subnets_dual(self,
+                                    network_create_args=None,
+                                    subnet_create_args=None,
+                                    subnets_per_network=1,
+                                    subnet_cidr_start="1.0.0.0/24",
+                                    dualstack = False,
+                                    ipv6_subnet_args=None,
+                                    subnet_ipv6_cidr_start="2001:db::/64"):
+        network = self._create_network(network_create_args or {})
+        subnets = self.create_subnets_dual(network, subnet_create_args,
+                                       subnet_cidr_start, subnets_per_network,
+                                       dualstack, ipv6_subnet_args, subnet_ipv6_cidr_start)
+        return network, subnets
+
+    def create_subnets_dual(self, network,
+                        subnet_create_args=None,
+                        subnet_cidr_start=None,
+                        subnets_per_network=1,
+                        dualstack = False,
+                        ipv6_subnet_args=None,
+                        subnet_ipv6_cidr_start="2001:db::/64"):
+        
+        return [self.create_subnet_dual(network, subnet_create_args or {},
+                                    subnet_cidr_start, dualstack, ipv6_subnet_args,
+                                    subnet_ipv6_cidr_start)
+                for i in range(subnets_per_network)]
+
+    def create_subnet_dual(self, network, subnet_create_args, start_cidr=None,
+            dualstack=False, ipv6_subnet_args=None, subnet_ipv6_cidr_start=None):
+        network_id = network["network"]["id"]
+        subnets = []
+        subnets_num = 2 if dualstack else 1
+        ip_versions = itertools.cycle(
+            [self.SUBNET_IP_VERSION, "6"]
+            if dualstack else [self.SUBNET_IP_VERSION])
+        for i in range(subnets_num):
+            ip_version = next(ip_versions)
+            if ip_version == "6":
+                subnet_create_args = ipv6_subnet_args
+            if not subnet_create_args.get("cidr"):
+                if ip_version == 6:
+                    start_cidr = subnet_ipv6_cidr_start or "2001:db::/64"
+                else:
+                    start_cidr = start_cidr or "10.2.0.0/24"
+                subnet_create_args["cidr"] = (
+                        network_wrapper.generate_cidr(start_cidr=start_cidr))
+            subnet_create_args["network_id"] = network_id
+            subnet_create_args["ip_version"] = ip_version
+            subnet_create_args["name"] = self.generate_random_name()
+            subnet = self.clients("neutron").create_subnet({"subnet": subnet_create_args})
+            subnets.append(subnet)
+
+        return subnets
+
+    def admin_create_subnets_dual(self, network,
+                        subnet_create_args=None,
+                        subnet_cidr_start=None,
+                        subnets_per_network=1,
+                        dualstack = False,
+                        ipv6_subnet_args=None,
+                        subnet_ipv6_cidr_start="2001:db::/64"):
+
+        return [self.admin_create_subnet_dual(network, subnet_create_args or {},
+                                    subnet_cidr_start, dualstack, ipv6_subnet_args,
+                                    subnet_ipv6_cidr_start)
+                for i in range(subnets_per_network)]
+
+    def admin_create_subnet_dual(self, network, subnet_create_args, start_cidr=None,
+            dualstack=False, ipv6_subnet_args=None, subnet_ipv6_cidr_start=None):
+
+        network_id = network["network"]["id"]
+        subnets = []
+        subnets_num = 2 if dualstack else 1
+        ip_versions = itertools.cycle(
+            [self.SUBNET_IP_VERSION, "6"]
+            if dualstack else [self.SUBNET_IP_VERSION])
+        for i in range(subnets_num):
+            ip_version = next(ip_versions)
+            if ip_version == "6":
+                subnet_create_args = ipv6_subnet_args
+            if not subnet_create_args.get("cidr"):
+                if ip_version == 6:
+                    start_cidr = subnet_ipv6_cidr_start or "2001:db::/64"
+                else:
+                    start_cidr = start_cidr or "10.2.0.0/24"
+                subnet_create_args["cidr"] = (
+                        network_wrapper.generate_cidr(start_cidr=start_cidr))
+            subnet_create_args["network_id"] = network_id
+            subnet_create_args["ip_version"] = ip_version
+            subnet_create_args["name"] = self.generate_random_name()
+            subnet = self.admin_clients("neutron").create_subnet({"subnet": subnet_create_args})
+            subnets.append(subnet)
+
+        return subnets
+
+
+    @atomic.action_timer("neutron.create_address_scope")
+    def create_address_scope(self, name, ip_version, shared=False, admin=False, **kwargs):
+        """
+                Create an Address Scope
+                """
+        address_scope = {"name": name, "ip_version": ip_version, "shared": shared}
+        for arg, val in kwargs.items():
+            address_scope[arg] = val
+        body = {"address_scope": address_scope}
+        if admin:
+            return self.admin_clients("neutron").create_address_scope(body)
+        else:
+            return self.clients("neutron").create_address_scope(body)
+
+    @atomic.action_timer("neutron.delete_address_scope")
+    def delete_address_scope(self, addscope_id):
+
+        self.admin_clients("neutron").delete_address_scope(addscope_id)
+
+    @atomic.action_timer("neutron.create_subnet_pool")
+    def create_subnet_pool(self, name, add_scope, prefixes, def_prefixlen, shared=False, admin=False, **kwargs):
+        """
+                Create an Address Scope
+                """
+        subnet_pool = {"name": name, "address_scope_id": add_scope, "prefixes": [prefixes],
+                       "default_prefixlen": def_prefixlen, "shared": shared}
+        for arg, val in kwargs.items():
+            subnet_pool[arg] = val
+        body = {"subnetpool": subnet_pool}
+        if admin:
+            return self.admin_clients("neutron").create_subnetpool(body)
+        else:
+            return self.clients("neutron").create_subnetpool(body)
+
+    @atomic.action_timer("neutron.delete_subnet_pool")
+    def delete_subnet_pool(self, subpool_id):
+
+        self.admin_clients("neutron").delete_subnetpool(subpool_id)
+
+    def create_subnet_with_pool(self, network, subnet_create_args, start_cidr=None):
+
+        """Create neutron subnet from pool.
+        :param network: neutron network dict
+        :param subnet_create_args: POST /v2.0/subnets request options
+        :returns: neutron subnet dict
+        """
+        network_id = network["network"]["id"]
+
+        subnet_create_args["network_id"] = network_id
+        subnet_create_args["name"] = self.generate_random_name()
+
+        return self.clients("neutron").create_subnet(
+            {"subnet": subnet_create_args})
+

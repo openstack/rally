@@ -14,11 +14,13 @@ from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
 class SimpleSFC(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_utils.NovaScenario,
                 scenario.OpenStackScenario):
     
-    def run(self, src_cidr, dest_cidr, image, flavor):
+    def run(self, src_cidr, dest_cidr, image, flavor, ipv6_cidr, ipv6_dest_cidr, dualstack):
         
-        net_list, sub_list = self.create_net_sub_for_sfc(src_cidr, dest_cidr)
+        #net_list, sub_list = self.create_net_sub_for_sfc(src_cidr, dest_cidr)
+        net_list, sub_list = self.create_net_sub_for_sfc(src_cidr, dest_cidr, dualstack=dualstack, ipv6_src_cidr=ipv6_cidr, 
+                                                                        ipv6_dest_cidr=ipv6_dest_cidr)
         router = self._create_router({}, False)
-        self.add_interface_to_router(router, sub_list)
+        self.add_interface_to_router(router, sub_list, dualstack)
   
         net1_id = net_list[0].get('network', {}).get('id')
         net2_id = net_list[1].get('network', {}).get('id')
@@ -37,7 +39,11 @@ class SimpleSFC(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPESc
             pp = self._create_port_pair(pin, pout)
             ppg = self._create_port_pair_group([pp])
             fc = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
-            pc = self._create_port_chain([ppg], [fc])
+            if dualstack:
+                fc2 = self._create_flow_classifier(ipv6_cidr, ipv6_dest_cidr, net1_id, net2_id, ethertype="IPv6")
+                pc = self._create_port_chain([ppg], [fc, fc2])
+            else:
+                pc = self._create_port_chain([ppg], [fc])
         except Exception as e:
             raise e
         finally:

@@ -1,22 +1,4 @@
 {
-    "ScenarioPlugin.svi_reachability_bw_vms": [
-        {
-            "args": {
-                "cidr1": "192.168.10.0/24",
-                "cidr2": "192.168.20.0/24",
-                "image" : {{bras_image}},
-                "flavor": "small",
-                "public_net": {{access_network}},
-                "aci_nodes" : {{aci_nodes}},
-                "username" : "root",
-                "password" : "noir0123"
-                },
-            "runner": {
-                "type": "serial",
-                "times": 1
-            }
-        }
-    ],
     "ScenarioPlugin.svi_bgp_connectivity": [
         {
             "args": {
@@ -27,11 +9,49 @@
                 "public_net": {{access_network}},
                 "aci_nodes" : {{aci_nodes}},
                 "username" : "root",
-                "password" : "noir0123"
+                "password" : "noir0123",
+                "dualstack": {{dualstack}},
+                "v6cidr1": "2001:a10::/64",
+                "v6cidr2": "2001:a20::/64"
                 },
             "runner": {
                 "type": "serial",
-                "times": 1
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
+            }
+        }
+    ],
+    "ScenarioPlugin.svi_reachability_bw_vms": [
+        {
+            "args": {
+                "cidr1": "192.168.10.0/24",
+                "cidr2": "192.168.20.0/24",
+                "image" : {{bras_image}},
+                "flavor": "small",
+                "public_net": {{access_network}},
+                "aci_nodes" : {{aci_nodes}},
+                "username" : "root",
+                "password" : "noir0123",
+                "dualstack": {{dualstack}},
+                "v6cidr1": "2001:a10::/64",
+                "v6cidr2": "2001:a20::/64"
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
             }
         }
     ],
@@ -45,14 +65,24 @@
                 "public_net": {{access_network}},
                 "aci_nodes" : {{aci_nodes}},
                 "username" : "root",
-                "password" : "noir0123"
+                "password" : "noir0123",
+                "dualstack": {{dualstack}},
+                "v6cidr1": "2001:a10::/64",
+                "v6cidr2": "2001:a20::/64"
                 },
             "runner": {
                 "type": "serial",
-                "times": 1
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
             }
         }
-    ], 
+    ],
     "ScenarioPlugin.svi_scale": [
         {
             "args": {
@@ -62,11 +92,13 @@
                 "aci_nodes" : {{aci_nodes}},
                 "username" : "root",
                 "password" : "noir0123",
-                "scale" : "5"
+                "scale" : "5",
+                "dualstack" : {{dualstack}}
                 },
             "runner": {
-                "type": "constant",
-                "times": 1
+                "type": "serial",
+                "times": 1,
+                "concurrency": 1
             }
         }
     ]

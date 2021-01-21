@@ -18,14 +18,14 @@ class TrunkAddSubport(create_ostack_resources.CreateOstackResources, vcpe_utils.
 
     resources_created = {"vms": [], "trunks": []}
 
-    def run(self, cidr1, cidr2, cidr3, image, flavor, public_net, username, password):
+    def run(self, cidr1, cidr2, cidr3, image, flavor, public_net, username, password, dualstack, v6cidr1, v6cidr2, v6cidr3):
 
         try:
             public_network = self.clients("neutron").show_network(public_net)
             secgroup = self.context.get("user", {}).get("secgroup")
             key_name=self.context["user"]["keypair"]["name"]
 
-            net_list, router = self.create_sub_add_to_interfaces_for_trunk(cidr1, cidr2, cidr3)
+            net_list, router = self.create_sub_add_to_interfaces_for_trunk(cidr1, cidr2, cidr3, dualstack, v6cidr1, v6cidr2, v6cidr3)
 
             port_create_args = {}
             port_create_args["security_groups"] = [secgroup.get('id')]
@@ -54,7 +54,9 @@ class TrunkAddSubport(create_ostack_resources.CreateOstackResources, vcpe_utils.
 
             command = {
                         "interpreter": "/bin/sh",
-                        "script_inline": "ip netns add cats;ip link add link eth1 name subp1 type vlan id 10;ip link set subp1 netns cats;ip netns exec cats ifconfig subp1 hw ether " + subp1_mac + ";ip netns exec cats udhcpc -i subp1"
+                        "script_inline": "ip netns add cats;ip link add link eth1 name subp1 type vlan id 10;\
+                                ip link set subp1 netns cats;ip netns exec cats ifconfig subp1 hw ether " + subp1_mac + ";\
+                                ip netns exec cats udhcpc -i subp1"
                     }
 
             self._remote_command(username, password, fip, command, vm1)
@@ -64,18 +66,28 @@ class TrunkAddSubport(create_ostack_resources.CreateOstackResources, vcpe_utils.
             p2_add = p2.get('port', {}).get('fixed_ips')[0].get('ip_address')
             p3_add = p3.get('port', {}).get('fixed_ips')[0].get('ip_address')
 
-            command1 = {
-                        "interpreter": "/bin/sh",
-                        "script_inline": "ping -c 10 " + p1_add + ";ip netns exec cats ping -c 10 " + p2_add + ";\
-                        ip netns exec dogs ping -c 10 " + p3_add
-                    }
+            if dualstack:
+                p1v6_add = p1.get('port', {}).get('fixed_ips')[1].get('ip_address')
+                p2v6_add = p2.get('port', {}).get('fixed_ips')[1].get('ip_address')
+                p3v6_add = p3.get('port', {}).get('fixed_ips')[1].get('ip_address')
+                command1 = {
+                            "interpreter": "/bin/sh",
+                            "script_inline": "ping -c 5 " + p1_add + ";ping6 -c 5 " + p1v6_add + ";ip netns exec cats ping -c 5 " + p2_add + ";\
+                            ip netns exec cats ping6 -c 5 " + p2v6_add + ";ip netns exec dogs ping -c 5 " + p3_add +";ip netns exec dogs ping6 -c 5 " + p3v6_add
+                        }
+            else:
+                command1 = {
+                            "interpreter": "/bin/sh",
+                            "script_inline": "ping -c 5 " + p1_add + ";ip netns exec cats ping -c 5 " + p2_add + ";\
+                            ip netns exec dogs ping -c 5 " + p3_add
+                        }
 
             print "\nVerify traffic between the networks through trunk\n"
             self._remote_command(username, password, fip, command1, vm1)
 
             print "\nAdding a new subport into the trunk...\n"
             subp2_mac, sp2 = self.crete_port_and_add_trunk(net_list[2], port_create_args, trunk, seg_id=20)
-
+            
             command = {
                         "interpreter": "/bin/sh",
                         "script_inline": "ip netns add dogs;ip link add link eth1 name subp2 type vlan id 20;\

@@ -48,7 +48,6 @@ class CreateOstackResources(vcpe_utils.vCPEScenario, vm_utils.VMScenario, neutro
         return vm
 
     def boot_server(self, net, port_args, image, flavor, net2=None, service_vm=False, key_name=False, admin=False, user=False):
-        
         if service_vm:
             pin = self._create_port(net, port_args)
             pout = self._create_port(net2, port_args)
@@ -187,16 +186,32 @@ class CreateOstackResources(vcpe_utils.vCPEScenario, vm_utils.VMScenario, neutro
         }
         self._remote_command_wo_server(username, password, access_router_ip, command)
 
-    def create_service_vm(self, router, service_image1, flavor, cidr1, cidr2, src_cidr='10.0.0.0/16', resources=None, user=False):
-        
-        left, sub2 = self._create_network_and_subnets({"provider:network_type": "vlan"}, {"cidr": cidr1,
-            'host_routes': [{'destination': src_cidr, 'nexthop': cidr1[0:6] + '1'}]}, 1, None)
-        right, sub3 = self._create_network_and_subnets({"provider:network_type": "vlan"}, {"cidr": cidr2,
-            'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': cidr2[0:6] + '1'},
+    def create_service_vm(self, router, service_image1, flavor, cidr1, cidr2, src_cidr='10.0.0.0/16', resources=None, user=False, 
+                           dualstack=False, ipv6_src_cidr='', left_v6_cidr='', right_v6_cidr=''):
+        if dualstack:
+            left, sub2 = self.create_network_and_subnets_dual({"provider:network_type": "vlan"}, {"cidr": cidr1, 'host_routes': [
+                                                                  {'destination': src_cidr, 'nexthop': cidr1[0:6] + '1'}]}, 1, None, dualstack, 
+                                                                  {"cidr": left_v6_cidr, 'host_routes': [{'destination': ipv6_src_cidr, 
+                                                                  'nexthop': left_v6_cidr[0:5] + '1'}],
+                                                                  "ipv6_ra_mode": "dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
+            right, sub3 = self.create_network_and_subnets_dual({"provider:network_type": "vlan"}, {"cidr" :cidr2, 'host_routes': [{'destination': '0.0.0.0/1', 
+                                                               'nexthop': cidr2[0:6] + '1'}, {'destination': '128.0.0.0/1', 'nexthop': cidr2[0:6] + '1'}]}, 
+                                                                  1, None, dualstack, {"cidr": right_v6_cidr, 'host_routes': [
+                                                                      {'destination': '0:0::/1', 'nexthop': right_v6_cidr[0:5]+'1'}, 
+                                                                      {'destination': '::/1', 'nexthop': right_v6_cidr[0:5]+'1'}],
+                                                                      "ipv6_ra_mode":"dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
+            self._add_interface_router(sub2[0][0].get("subnet"), router.get("router"))
+            self._add_interface_router(sub2[0][1].get("subnet"), router.get("router"))
+            self._add_interface_router(sub3[0][0].get("subnet"), router.get("router"))
+            self._add_interface_router(sub3[0][1].get("subnet"), router.get("router"))
+        else:
+            left, sub2 = self._create_network_and_subnets({"provider:network_type": "vlan"}, {"cidr": cidr1,
+                'host_routes': [{'destination': src_cidr, 'nexthop': cidr1[0:6] + '1'}]}, 1, None)
+            right, sub3 = self._create_network_and_subnets({"provider:network_type": "vlan"}, {"cidr": cidr2,
+                'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': cidr2[0:6] + '1'},
                 {'destination': '128.0.0.0/1', 'nexthop': cidr2[0:6] + '1'}]}, 1, None)
-
-        self._add_interface_router(sub2[0].get("subnet"), router.get("router"))
-        self._add_interface_router(sub3[0].get("subnet"), router.get("router"))
+            self._add_interface_router(sub2[0].get("subnet"), router.get("router"))
+            self._add_interface_router(sub3[0].get("subnet"), router.get("router"))
         port_create_args = {}
         port_create_args.update({"port_security_enabled": "false"})
         print("Creating service vm")
@@ -209,15 +224,19 @@ class CreateOstackResources(vcpe_utils.vCPEScenario, vm_utils.VMScenario, neutro
             resources["vms"].append(service_vm)
         return service_vm, pin, pout
 
-    def create_access_vm_nat_vm(self,  acc_net, nat_net, port_create_args, image, flavor, key_name=None):
+    def create_access_vm_nat_vm(self,  acc_net, nat_net, port_create_args, dualstack, image, flavor, key_name=None):
         
         pfip1 = self._create_port(acc_net, port_create_args)
         pfip2 = self._create_port(nat_net, port_create_args)
         access_vm = self.boot_vm(pfip1.get('port', {}).get('id'), image, flavor, key_name=key_name)
         nat_vm = self.boot_vm(pfip2.get('port', {}).get('id'), image, flavor, key_name=key_name)
         self.sleep_between(30, 40)
-        fip1 = pfip1.get('port', {}).get('fixed_ips')[0].get('ip_address')
-        fip2 = pfip2.get('port', {}).get('fixed_ips')[0].get('ip_address')
+        if dualstack:
+            fip1 = [pfip1.get('port', {}).get('fixed_ips')[0].get('ip_address'), pfip1.get('port', {}).get('fixed_ips')[1].get('ip_address')]
+            fip2 = [pfip2.get('port', {}).get('fixed_ips')[0].get('ip_address'), pfip2.get('port', {}).get('fixed_ips')[1].get('ip_address')]
+        else:
+            fip1 = [pfip1.get('port', {}).get('fixed_ips')[0].get('ip_address')]
+            fip2 = [pfip2.get('port', {}).get('fixed_ips')[0].get('ip_address')]
         return access_vm, nat_vm, fip1, fip2
 
     def create_src_dest_vm(self, secgroup, public_net, net1, net2, vm_image, flavor, svi=False,
@@ -262,36 +281,74 @@ class CreateOstackResources(vcpe_utils.vCPEScenario, vm_utils.VMScenario, neutro
 
         return p1, p2, vms[0], vms[1]
     
-    def create_sub_add_to_interfaces_for_trunk(self, cidr1, cidr2, cidr3):
+    def create_sub_add_to_interfaces_for_trunk(self, cidr1, cidr2, cidr3, dualstack=False, v6cidr1=None, v6cidr2=None, v6cidr3=None):
 
-        net1, sub1 = self._create_network_and_subnets({"provider:network_type": "vlan"}, {"cidr": cidr1}, 1, None)
-        net2, sub2 = self._create_network_and_subnets({"provider:network_type": "vlan"}, {"cidr": cidr2}, 1, None)
-        net3, sub3 = self._create_network_and_subnets({"provider:network_type": "vlan"}, {"cidr": cidr3}, 1, None)
+        if dualstack:
+            net1, sub1 = self.create_network_and_subnets_dual({"provider:network_type": "vlan"}, {"cidr": cidr1}, 1, None, \
+                    dualstack, {"cidr": v6cidr1, "ipv6_ra_mode":"dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
+            net2, sub2 = self.create_network_and_subnets_dual({"provider:network_type": "vlan"}, {"cidr": cidr2}, 1, None, \
+                    dualstack, {"cidr": v6cidr2, "ipv6_ra_mode":"dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
+            net3, sub3 = self.create_network_and_subnets_dual({"provider:network_type": "vlan"}, {"cidr": cidr3}, 1, None, \
+                    dualstack, {"cidr": v6cidr3, "ipv6_ra_mode":"dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
+        else:
+            net1, sub1 = self._create_network_and_subnets({"provider:network_type": "vlan"}, {"cidr": cidr1}, 1, None)
+            net2, sub2 = self._create_network_and_subnets({"provider:network_type": "vlan"}, {"cidr": cidr2}, 1, None)
+            net3, sub3 = self._create_network_and_subnets({"provider:network_type": "vlan"}, {"cidr": cidr3}, 1, None)
 
         router = self._create_router({}, False)
-        self._add_interface_router(sub1[0].get("subnet"), router.get("router"))
-        self._add_interface_router(sub2[0].get("subnet"), router.get("router"))
-        self._add_interface_router(sub3[0].get("subnet"), router.get("router"))
+        if dualstack:
+            self._add_interface_router(sub1[0][0].get("subnet"), router.get("router"))
+            self._add_interface_router(sub2[0][0].get("subnet"), router.get("router"))
+            self._add_interface_router(sub3[0][0].get("subnet"), router.get("router"))
+            self._add_interface_router(sub1[0][1].get("subnet"), router.get("router"))
+            self._add_interface_router(sub2[0][1].get("subnet"), router.get("router"))
+            self._add_interface_router(sub3[0][1].get("subnet"), router.get("router"))
+        else:
+            self._add_interface_router(sub1[0].get("subnet"), router.get("router"))
+            self._add_interface_router(sub2[0].get("subnet"), router.get("router"))
+            self._add_interface_router(sub3[0].get("subnet"), router.get("router"))
         return [net1, net2, net3], router
     
-    def create_net_sub_for_sfc(self, src_cidr, dest_cidr):
-        
-        net1, sub1 = self._create_network_and_subnets({"provider:network_type": "vlan"}, {"cidr": src_cidr}, 1, None)
-        net2, sub2 = self._create_network_and_subnets({"provider:network_type": "vlan"}, {"cidr": dest_cidr}, 1, None)
-        left, sub3 = self._create_network_and_subnets({"provider:network_type": "vlan"}, {"cidr": "1.1.0.0/24",
+    def create_net_sub_for_sfc(self, src_cidr, dest_cidr, dualstack=False, ipv6_src_cidr=None, ipv6_dest_cidr=None):
+        if dualstack:
+            net1, sub1 = self.create_network_and_subnets_dual({"provider:network_type": "vlan"}, {"cidr": src_cidr}, 1, None, dualstack, {"cidr": ipv6_src_cidr, "ipv6_ra_mode":"slaac", "ipv6_address_mode": "slaac"}, None)
+            net2, sub2 = self.create_network_and_subnets_dual({"provider:network_type": "vlan"}, {"cidr": dest_cidr}, 1, None, dualstack, {"cidr": ipv6_dest_cidr, "ipv6_ra_mode":"slaac", "ipv6_address_mode": "slaac"}, None)
+            left, sub3 = self.create_network_and_subnets_dual({"provider:network_type": "vlan"}, {"cidr": "1.1.0.0/24",
+                                                                                          'host_routes': [{'destination': src_cidr, 'nexthop': '1.1.0.1'}]}, 1, None, 
+                                                                                     dualstack, {"cidr": 'a:a::/64', 'host_routes': [{
+                                                                                    'destination': ipv6_src_cidr, 'nexthop': 'a:a::1'}], 
+                                                                                    "ipv6_ra_mode":"dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
+            right, sub4 = self.create_network_and_subnets_dual({"provider:network_type": "vlan"}, {"cidr": "2.2.0.0/24",
+                                                               'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '2.2.0.1'},{'destination': '128.0.0.0/1', 
+                                                                'nexthop': '2.2.0.1'}]}, 1, None, dualstack, {"cidr":"b:b::/64", 
+                                                                'host_routes': [{'destination': '0:0::/1', 'nexthop': 'b:b::1'}, {'destination': '::/1', 
+                                                                'nexthop': 'b:b::1'}], "ipv6_ra_mode":"dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
+        else:
+            net1, sub1 = self._create_network_and_subnets({"provider:network_type": "vlan"}, {"cidr": src_cidr}, 1, None)
+            net2, sub2 = self._create_network_and_subnets({"provider:network_type": "vlan"}, {"cidr": dest_cidr}, 1, None)
+            left, sub3 = self._create_network_and_subnets({"provider:network_type": "vlan"}, {"cidr": "1.1.0.0/24",
                                                                                           'host_routes': [{'destination': src_cidr, 'nexthop': '1.1.0.1'}]}, 1, None)
-        right, sub4 = self._create_network_and_subnets({"provider:network_type": "vlan"}, {"cidr": "2.2.0.0/24",
+            right, sub4 = self._create_network_and_subnets({"provider:network_type": "vlan"}, {"cidr": "2.2.0.0/24",
                                                                                           'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '2.2.0.1'},
                                                                                               {'destination': '128.0.0.0/1', 'nexthop': '2.2.0.1'}]}, 1, None)
 
         return [net1, net2, left, right], [sub1, sub2, sub3, sub4]
 
-    def add_interface_to_router(self, router, sub_list):
-        
-        self._add_interface_router(sub_list[0][0].get("subnet"), router.get("router"))
-        self._add_interface_router(sub_list[1][0].get("subnet"), router.get("router"))
-        self._add_interface_router(sub_list[2][0].get("subnet"), router.get("router"))
-        self._add_interface_router(sub_list[3][0].get("subnet"), router.get("router"))
+    def add_interface_to_router(self, router, sub_list, dualstack=False):
+        if dualstack:
+            self._add_interface_router(sub_list[0][0][0].get("subnet"), router.get("router"))
+            self._add_interface_router(sub_list[0][0][1].get("subnet"), router.get("router"))
+            self._add_interface_router(sub_list[1][0][0].get("subnet"), router.get("router"))
+            self._add_interface_router(sub_list[1][0][1].get("subnet"), router.get("router"))
+            self._add_interface_router(sub_list[2][0][0].get("subnet"), router.get("router"))
+            self._add_interface_router(sub_list[2][0][1].get("subnet"), router.get("router"))
+            self._add_interface_router(sub_list[3][0][0].get("subnet"), router.get("router"))
+            self._add_interface_router(sub_list[3][0][1].get("subnet"), router.get("router"))
+        else:
+            self._add_interface_router(sub_list[0][0].get("subnet"), router.get("router"))
+            self._add_interface_router(sub_list[1][0].get("subnet"), router.get("router"))
+            self._add_interface_router(sub_list[2][0].get("subnet"), router.get("router"))
+            self._add_interface_router(sub_list[3][0].get("subnet"), router.get("router"))
         
     def create_vms_for_sfc_test(self, secgroup, public_net, net1, net2, vm_image, flavor, key_name=None, multi_sfc=False):
         
@@ -313,7 +370,7 @@ class CreateOstackResources(vcpe_utils.vCPEScenario, vm_utils.VMScenario, neutro
 
         return p1, p2, src_vm, dest_vm
     
-    def create_vms_for_svi_tests(self, secgroup, public_network, vm_image, flavor, key_name, networks=[], ips=[]):
+    def create_vms_for_svi_tests(self, secgroup, public_network, vm_image, flavor, key_name, dualstack, networks=[], ips=[], v6ips=None):
         
         port_create_args = {}
         port_create_args["security_groups"] = [secgroup.get('id')]
@@ -321,10 +378,11 @@ class CreateOstackResources(vcpe_utils.vCPEScenario, vm_utils.VMScenario, neutro
         pfip2, pfip2_id = self.create_port(public_network, port_create_args)
         ports = [pfip1_id, pfip2_id]
         vms = []
-        for (net, ip, port) in zip(networks, ips, ports):
+        for (net, ip, port, v6ip) in zip(networks, ips, ports, v6ips):
             port_create_args = {}
             port_create_args.update({"port_security_enabled": "false"})
-            port_create_args.update({"fixed_ips": [{"ip_address": ip}]})
+            if dualstack:port_create_args.update({"fixed_ips": [{"ip_address": ip}, {"ip_address": v6ip}]})
+            else:port_create_args.update({"fixed_ips": [{"ip_address": ip}]})
             p3, p3_id = self.create_port(net, port_create_args)
             vm1 = self.boot_vm([port, p3_id], vm_image, flavor, key_name=key_name)
             vms.append(vm1)
@@ -338,31 +396,33 @@ class CreateOstackResources(vcpe_utils.vCPEScenario, vm_utils.VMScenario, neutro
 
     def delete_servers(self, servers):
         
-        print("cleaning up servers..")
+        print("cleaning up servers...")
         for vm in servers:
             self._delete_server(vm)
 
     def delete_trunks(self, trunks):
         
-        print("deleting trunks")
+        print("deleting trunks...")
         for trunk in trunks:
             self._admin_delete_trunk(trunk)
 
     def delete_ports(self, ports):
         
-        print("Deleting ports")
+        print("Deleting ports...")
         for port in ports:
             self._admin_delete_port(port)
 
     def delete_router_interface(self, interfaces, router):
         
-        print("Deleting router interfaces")
+        print("Deleting router interfaces...")
         for subnet in interfaces:
             self._admin_remove_interface_router(subnet, router)
 
     def delete_network(self, networks):
-        
+       
+        print("Deleting networks...")
         for nw in networks:
             self._delete_all_ports(nw)
+            #self.sleep_between(0,2)
             self._admin_delete_network(nw)
 

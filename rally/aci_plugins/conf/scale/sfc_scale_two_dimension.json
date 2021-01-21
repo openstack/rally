@@ -13,18 +13,15 @@
                 "username" : "root",
                 "password" : "noir0123",
                 "x" : "3",
-                "y" : "2"
+                "y" : "2",
+                "ipv6_cidr": "2001:db::/64",
+                "ipv6_dest_cidr": "2001:d8::/64",
+                "dualstack": {{dualstack}}
             },
             "runner": {
-                "type": "constant",
+                "type": "serial",
                 "times": 1,
                 "concurrency": 1
-            },
-            "context": {
-                "users": {
-                    "tenants": 1,
-                    "users_per_tenant": 1
-                 }
             }
         }
     ]

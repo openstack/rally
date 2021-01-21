@@ -1,31 +1,51 @@
 {
-    "ScenarioPlugin.simple_sfc": [
-        {
-            "args": {
-                "src_cidr": "192.168.100.0/24",
-                "dest_cidr": "192.168.200.0/24",
-                "image": {{bras_image}},
-                "flavor": "tiny"
-            },
-            "runner": {
-                "type": "serial",
-                "times": 1
-            }
-        }
-    ],
     "ScenarioPlugin.verify_sfc_api": [
         {
             "args": {
                 "src_cidr": "192.168.100.0/24",
                 "dest_cidr": "192.168.200.0/24",
                 "image": {{cirros_image}},
-                "flavor": "tiny"
+                "flavor": "tiny",
+                "ipv6_cidr": "2001:db::/64",
+                "ipv6_dest_cidr": "2001:d8::/64",
+                "dualstack": {{dualstack}}
+            },
+            "runner": {
+                "type": "constant",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
+            }
+        }
+    ],
+    "ScenarioPlugin.simple_sfc": [
+        {
+            "args": {
+                "src_cidr": "192.168.100.0/24",
+                "dest_cidr": "192.168.200.0/24",
+                "image": {{bras_image}},
+                "flavor": "tiny",
+                "ipv6_cidr": "2001:db::/64",
+                "ipv6_dest_cidr": "2001:d8::/64",
+                "dualstack": {{dualstack}}
             },
             "runner": {
                 "type": "serial",
-                "times": 1
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
             }
-        }
+       }
     ],
     "ScenarioPlugin.sfc_block_traffic": [
         {
@@ -37,11 +57,22 @@
                 "public_network": {{access_network}},
                 "flavor": "tiny",
                 "username" : "root",
-                "password" : "noir0123"
+                "password" : "noir0123",
+                "ipv6_cidr": "2001:db::/64",
+                "ipv6_dest_cidr": "2001:d8::/64",
+                "dualstack": {{dualstack}}
+
             },
             "runner": {
                 "type": "serial",
-                "times": 1
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
             }
         }
     ],
@@ -55,11 +86,21 @@
                 "flavor": "tiny",
                 "public_network": {{access_network}},
                 "username" : "root",
-                "password" : "noir0123"
+                "password" : "noir0123",
+                "ipv6_cidr": "2001:db::/64",
+                "ipv6_dest_cidr": "2001:d8::/64",
+                "dualstack": {{dualstack}}
             },
             "runner": {
                 "type": "serial",
-                "times": 1
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
             }
         }
     ],
@@ -73,11 +114,21 @@
                 "flavor": "tiny",
                 "public_network": {{access_network}},
                 "username" : "root",
-                "password" : "noir0123"
+                "password" : "noir0123",
+                "ipv6_cidr": "2001:db::/64",
+                "ipv6_dest_cidr": "2001:d8::/64",
+                "dualstack": {{dualstack}}
             },
             "runner": {
                 "type": "serial",
-                "times": 1
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
             }
         }
     ],
@@ -93,11 +144,15 @@
                 "flavor": "tiny",
                 "public_network": {{access_network}},
                 "username" : "root",
-                "password" : "noir0123"
+                "password" : "noir0123",
+                "ipv6_cidr": "2001:db::/64",
+                "ipv6_dest_cidr": "2001:d8::/64",
+                "dualstack": {{dualstack}}
             },
             "runner": {
                 "type": "serial",
-                "times": 1
+                "times": 1,
+                "concurrency": 1
             }
         }
     ],
@@ -113,11 +168,15 @@
                 "flavor": "tiny",
                 "public_network": {{access_network}},
                 "username" : "root",
-                "password" : "noir0123"
+                "password" : "noir0123",
+                "ipv6_cidr": "2001:db::/64",
+                "ipv6_dest_cidr": "2001:d8::/64",
+                "dualstack": {{dualstack}}
             },
             "runner": {
                 "type": "serial",
-                "times": 1
+                "times": 1,
+                "concurrency": 1
             }
         }
     ],
@@ -131,11 +190,22 @@
                 "flavor": "tiny",
                 "public_network": {{access_network}},
                 "username" : "root",
-                "password" : "noir0123"
+                "password" : "noir0123",
+                "ipv6_cidr": "2001:db::/64",
+                "ipv6_dest_cidr": "2001:d8::/64",
+                "dualstack": {{dualstack}}
+
             },
             "runner": {
                 "type": "serial",
-                "times": 1
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
             }
         }
     ],
@@ -149,11 +219,22 @@
                 "flavor": "tiny",
                 "public_network": {{access_network}},
                 "username" : "root",
-                "password" : "noir0123"
+                "password" : "noir0123",
+                "ipv6_cidr": "2001:db::/64",
+                "ipv6_dest_cidr": "2001:d8::/64",
+                "dualstack": {{dualstack}}
+
             },
             "runner": {
-                "type": "serial",
-                "times": 1
+                "type": "constant",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
             }
         }
     ],
@@ -168,11 +249,15 @@
                 "flavor": "tiny",
                 "public_network": {{access_network}},
                 "username" : "root",
-                "password" : "noir0123"
+                "password" : "noir0123",
+                "ipv6_cidr": "2001:db::/64",
+                "ipv6_dest_cidr": "2001:d8::/64",
+                "dualstack": {{dualstack}}
             },
             "runner": {
                 "type": "serial",
-                "times": 1
+                "times": 1,
+                "concurrency": 1
             }
         }
     ],
@@ -186,14 +271,25 @@
                 "flavor": "tiny",
                 "public_network": {{access_network}},
                 "username" : "root",
-                "password" : "noir0123"
+                "password" : "noir0123",
+                "ipv6_cidr": "2001:db::/64",
+                "ipv6_dest_cidr": "2001:d8::/64",
+                "dualstack": {{dualstack}}
+
             },
             "runner": {
-                "type": "serial",
-                "times": 1
+                "type": "constant",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
             }
         }
-    ], 
+    ],
     "ScenarioPlugin.sfc_remove_portpair": [
         {
             "args": {
@@ -204,11 +300,21 @@
                 "flavor": "tiny",
                 "public_network": {{access_network}},
                 "username" : "root",
-                "password" : "noir0123"
+                "password" : "noir0123",
+                "ipv6_cidr": "2001:db::/64",
+                "ipv6_dest_cidr": "2001:d8::/64",
+                "dualstack": {{dualstack}}
             },
             "runner": {
-                "type": "serial",
-                "times": 1
+                "type": "constant",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
             }
         }
     ],
@@ -223,14 +329,24 @@
                 "flavor": "tiny",
                 "public_network": {{access_network}},
                 "username" : "root",
-                "password" : "noir0123"
+                "password" : "noir0123",
+                "ipv6_cidr": "2001:db::/64",
+                "ipv6_dest_cidr": "2001:d8::/64",
+                "dualstack": {{dualstack}}
             },
             "runner": {
-                "type": "serial",
-                "times": 1
+                "type": "constant",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
             }
         }
-    ], 
+    ],
     "ScenarioPlugin.sfc_scale_parallel": [
         {
             "args": {
@@ -242,11 +358,21 @@
                 "public_network": {{access_network}},
                 "username" : "root",
                 "password" : "noir0123",
+                "ipv6_cidr": "2001:db::/64",
+                "ipv6_dest_cidr": "2001:d8::/64",
+                "dualstack": {{dualstack}},
                 "scale" : "5"
             },
             "runner": {
                 "type": "constant",
-                "times": 1
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 }
             }
         }
     ],
@@ -263,11 +389,15 @@
                 "public_network": {{access_network}},
                 "username" : "root",
                 "password" : "noir0123",
+                "ipv6_cidr": "2001:db::/64",
+                "ipv6_dest_cidr": "2001:d8::/64",
+                "dualstack": {{dualstack}},
                 "scale" : "3"
             },
             "runner": {
-                "type": "constant",
-                "times": 1
+                "type": "serial",
+                "times": 1,
+                "concurrency": 1
             }
         }
     ],
@@ -285,11 +415,15 @@
                 "username" : "root",
                 "password" : "noir0123",
                 "x" : "3",
-                "y" : "2"
+                "y" : "2",
+                "ipv6_cidr": "2001:db::/64",
+                "ipv6_dest_cidr": "2001:d8::/64",
+                "dualstack": {{dualstack}}
             },
             "runner": {
-                "type": "constant",
-                "times": 1
+                "type": "serial",
+                "times": 1,
+                "concurrency": 1
             }
         }
     ]

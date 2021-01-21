@@ -18,14 +18,14 @@ class TrunkNativevlanTraffic(create_ostack_resources.CreateOstackResources, vcpe
 
     resources_created = {"vms": [], "trunks": []}
 
-    def run(self, cidr1, cidr2, cidr3, image, flavor, public_net, username, password):
+    def run(self, cidr1, cidr2, cidr3, image, flavor, public_net, username, password, dualstack, v6cidr1, v6cidr2, v6cidr3):
 
         try:
             public_network = self.clients("neutron").show_network(public_net)
             secgroup = self.context.get("user", {}).get("secgroup")
             key_name=self.context["user"]["keypair"]["name"]
 
-            net_list, router = self.create_sub_add_to_interfaces_for_trunk(cidr1, cidr2, cidr3)
+            net_list, router = self.create_sub_add_to_interfaces_for_trunk(cidr1, cidr2, cidr3, dualstack, v6cidr1, v6cidr2, v6cidr3)
 
             pf1, pf2, vm_tr1, vm_tr2, trunk1, trunk2, port_create_args = self.create_src_dest_vm(secgroup,
                                                                                                  public_network, net_list[0], net_list[0],
@@ -53,12 +53,20 @@ class TrunkNativevlanTraffic(create_ostack_resources.CreateOstackResources, vcpe
 
             command1 = {
                         "interpreter": "/bin/sh",
-                        "script_inline": "ip netns add cats;ip link add link eth1 name subp1 type vlan id 10;ip link set subp1 netns cats;ip netns exec cats ifconfig subp1 hw ether " + subp1_mac + ";ip netns exec cats udhcpc -i subp1;ip netns add dogs;ip link add link eth1 name subp2 type vlan id 20;ip link set subp2 netns dogs;ip netns exec dogs ifconfig subp2 hw ether " + subp3_mac + ";ip netns exec dogs udhcpc -i subp2"
+                        "script_inline": "ip netns add cats;ip link add link eth1 name subp1 type vlan id 10;\
+                                ip link set subp1 netns cats;ip netns exec cats ifconfig subp1 hw ether " + subp1_mac + ";\
+                                ip netns exec cats udhcpc -i subp1;ip netns add dogs;ip link add link eth1 name subp2 type vlan id 20;\
+                                ip link set subp2 netns dogs;ip netns exec dogs ifconfig subp2 hw ether " + subp3_mac + ";\
+                                ip netns exec dogs udhcpc -i subp2"
                     }
 
             command2 = {
                         "interpreter": "/bin/sh",
-                        "script_inline": "ip netns add cats;ip link add link eth1 name subp1 type vlan id 10;ip link set subp1 netns cats;ip netns exec cats ifconfig subp1 hw ether " + subp2_mac + ";ip netns exec cats udhcpc -i subp1;ip netns add dogs;ip link add link eth1 name subp2 type vlan id 20;ip link set subp2 netns dogs;ip netns exec dogs ifconfig subp2 hw ether " + subp4_mac + ";ip netns exec dogs udhcpc -i subp2"
+                        "script_inline": "ip netns add cats;ip link add link eth1 name subp1 type vlan id 10;\
+                                ip link set subp1 netns cats;ip netns exec cats ifconfig subp1 hw ether " + subp2_mac + ";\
+                                ip netns exec cats udhcpc -i subp1;ip netns add dogs;ip link add link eth1 name subp2 type vlan id 20;\
+                                ip link set subp2 netns dogs;ip netns exec dogs ifconfig subp2 hw ether " + subp4_mac + ";\
+                                ip netns exec dogs udhcpc -i subp2"
                     }
             print "\nAdding sub-interfaces into the VMs...\n"
             self._remote_command(username, password, fip1, command1, vm_tr1)
@@ -66,11 +74,18 @@ class TrunkNativevlanTraffic(create_ostack_resources.CreateOstackResources, vcpe
             self.sleep_between(30, 40)
             
             p1_add = p1.get('port', {}).get('fixed_ips')[0].get('ip_address')
-            command = {
+            if dualstack:
+                p1v6_add = p1.get('port', {}).get('fixed_ips')[1].get('ip_address')
+                command = {
                         "interpreter": "/bin/sh",
-                        "script_inline": "ping -c 10 " + p1_add
+                        "script_inline": "ping -c 5 " + p1_add +";ping6 -c 5 " + p1v6_add
                         }
-            
+            else:
+                command = {
+                            "interpreter": "/bin/sh",
+                            "script_inline": "ping -c 5 " + p1_add
+                            }
+                
             print "\nTraffic verification from VM1 default namespace\n"
             self._remote_command(username, password, fip1, command, vm_tr1)
             print "\nTraffic verification from VM2 default namespace\n"

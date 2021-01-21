@@ -1,5 +1,5 @@
 {
-    "ScenarioPlugin.svi_reachability_of_bgp_route": [
+    "ScenarioPlugin.svi_testing_with_asc": [
         {
             "args": {
                 "cidr1": "192.168.10.0/24",

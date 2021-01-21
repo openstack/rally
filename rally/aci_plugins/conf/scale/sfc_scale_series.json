@@ -12,18 +12,15 @@
                 "public_network": {{access_network}},
                 "username" : "root",
                 "password" : "noir0123",
+                "ipv6_cidr": "2001:db::/64",
+                "ipv6_dest_cidr": "2001:d8::/64",
+                "dualstack": {{dualstack}},
                 "scale" : "3"
             },
             "runner": {
-                "type": "constant",
+                "type": "serial",
                 "times": 1,
                 "concurrency": 1
-            },
-            "context": {
-                "users": {
-                    "tenants": 1,
-                    "users_per_tenant": 1
-                 }
             }
         }
     ]

@@ -14,7 +14,7 @@ from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
 class VerifySFCAPI(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario,
                    nova_utils.NovaScenario, scenario.OpenStackScenario):
 
-    def run(self, src_cidr, dest_cidr, image, flavor):
+    def run(self, src_cidr, dest_cidr, image, flavor, ipv6_cidr, ipv6_dest_cidr, dualstack):
         
         net_list, sub_list = self.create_net_sub_for_sfc(src_cidr, dest_cidr)
         router = self._create_router({}, False)

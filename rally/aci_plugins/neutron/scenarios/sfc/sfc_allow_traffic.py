@@ -16,22 +16,23 @@ from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
 class SFCAllowTraffic(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario,
                       nova_utils.NovaScenario, scenario.OpenStackScenario):
 
-    def run(self, src_cidr, dest_cidr, vm_image, service_image1, public_network, flavor, username, password):
+    def run(self, src_cidr, dest_cidr, vm_image, service_image1, public_network, flavor, username, password,
+                 ipv6_cidr, ipv6_dest_cidr, dualstack):
         
         public_net =  self.clients("neutron").show_network(public_network)
         secgroup = self.context.get("user", {}).get("secgroup")
         key_name=self.context["user"]["keypair"]["name"]
+        net_list, sub_list = self.create_net_sub_for_sfc(src_cidr, dest_cidr, dualstack=dualstack,
+                                                         ipv6_src_cidr=ipv6_cidr, ipv6_dest_cidr=ipv6_dest_cidr)
 
-        net_list, sub_list = self.create_net_sub_for_sfc(src_cidr, dest_cidr)
         router = self._create_router({}, False)
-        self.add_interface_to_router(router, sub_list)
+        self.add_interface_to_router(router, sub_list, dualstack)
 
         net1_id = net_list[0].get('network', {}).get('id')
         net2_id = net_list[1].get('network', {}).get('id')
         
         p1, p2, src_vm, dest_vm  = self.create_vms_for_sfc_test(secgroup, public_net, net_list[0], net_list[1],
                                                            vm_image, flavor, key_name)
-
         port_create_args = {}
         port_create_args.update({"port_security_enabled": "false"})
         service_vm, pin, pout = self.boot_server(net_list[2], port_create_args, service_image1, flavor,
@@ -41,31 +42,46 @@ class SFCAllowTraffic(create_ostack_resources.CreateOstackResources, vcpe_utils.
         fip2 = p2.get('port', {}).get('fixed_ips')[0].get('ip_address')
         
         print "\nConfiguring destination-vm for traffic verification..\n"
-        command1 = {
+        if dualstack:
+            command1 = {
+                    "interpreter": "/bin/sh",
+                    "script_inline": "ip address add 192.168.200.101/24 dev eth1;\
+                    ip address add 192.168.200.102/24 dev eth1;\
+                    ip address add 192.168.200.103/24 dev eth1;route add default gw 192.168.200.1 eth1\
+                    ip -6 addr add  2001:d8::101/32 dev eth1; ip -6 addr add 2001:d8::102/32 dev eth1;\
+                    ip -6 addr add 2001:d8::103/32 dev eth1; ip -6 route add 2001:d8::1 dev eth1"
+                }
+            command2 = {
+                    "interpreter": "/bin/sh",
+                    "script_inline": "ping -c 5 192.168.200.101;ping -c 5 192.168.200.102;ping -c 5 192.168.200.103;\
+                     ping6 -c 5 2001:d8::101;ping6 -c 5 2001:d8::102;ping6 -c 5 2001:d8::103"
+                }
+        else:
+            command1 = {
                     "interpreter": "/bin/sh",
                     "script_inline": "ip address add 192.168.200.101/24 dev eth1;\
                     ip address add 192.168.200.102/24 dev eth1;\
                     ip address add 192.168.200.103/24 dev eth1;route add default gw 192.168.200.1 eth1"
-                }
-        self._remote_command(username, password, fip2, command1, dest_vm)
-
-        command2 = {
+                    }
+            command2 = {
                     "interpreter": "/bin/sh",
                     "script_inline": "ping -c 5 192.168.200.101;ping -c 5 192.168.200.102;ping -c 5 192.168.200.103"
                 }
-
+        self._remote_command(username, password, fip2, command1, dest_vm)
         print "\nTraffic verification before SFC\n"
         self._remote_command(username, password, fip1, command2, src_vm)
         try:
-            print
-            "\nCreating a single service function chain...\n"
+            print "\nCreating a single service function chain...\n"
             pp = self._create_port_pair(pin, pout)
             ppg = self._create_port_pair_group([pp])
             fc = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
-            pc = self._create_port_chain([ppg], [fc])
+            if dualstack:
+                fc2 = self._create_flow_classifier(ipv6_cidr, ipv6_dest_cidr, net1_id, net2_id, ethertype="IPv6")
+                pc = self._create_port_chain([ppg], [fc, fc2])
+            else:
+                pc = self._create_port_chain([ppg], [fc])
             self.sleep_between(30, 40)
-            print
-            "\nTraffic verification after creating SFC\n"
+            print "\nTraffic verification after creating SFC\n"
             self._remote_command(username, password, fip1, command2, src_vm)
         except Exception as e:
             raise e
