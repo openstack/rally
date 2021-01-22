@@ -7,10 +7,11 @@
                 "public_network": {{access_network}},
                 "username" : "root",
                 "password" : "noir0123",
-                "scale" : "5"
+                "scale" : "2",
+                "dualstack": {{dualstack}}
                 },
             "runner": {
-                "type": "constant",
+                "type": "serial",
                 "times": 1,
                 "concurrency": 1
             },

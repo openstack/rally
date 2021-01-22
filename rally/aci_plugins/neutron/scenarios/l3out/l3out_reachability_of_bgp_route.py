@@ -17,7 +17,7 @@ class L3OutReachabilityofBGPRoute(create_ostack_resources.CreateOstackResources,
 
     resources_created = {"vms": [], "ports": []}
 
-    def run(self, access_network, nat_network, image, flavor, username, password, access_router_ip, nat_router_ip, router_username):
+    def run(self, access_network, nat_network, image, flavor, username, password, access_router_ip, nat_router_ip, router_username, dualstack):
         
         try:
             acc_net = self.clients("neutron").show_network(access_network)
@@ -39,25 +39,48 @@ class L3OutReachabilityofBGPRoute(create_ostack_resources.CreateOstackResources,
             fip1 = pfip1.get('port', {}).get('fixed_ips')[0].get('ip_address')
             fip2 = pfip2.get('port', {}).get('fixed_ips')[0].get('ip_address')
             
-            command1 = {
-                        "interpreter": "/bin/sh",
-                        "script_file": "/usr/local/lib/python2.7/dist-packages/rally/aci_plugins/orchest/l3out_orchest_access.sh"
-                    }
+            if dualstack:
+                fip1_6 = pfip1.get('port', {}).get('fixed_ips')[1].get('ip_address')
+                fip2_6 = pfip2.get('port', {}).get('fixed_ips')[1].get('ip_address')
+                command1 = {
+                            "interpreter": "/bin/sh",
+                            "script_file": "/usr/local/lib/python2.7/dist-packages/rally/aci_plugins/orchest/l3out_orchest_access_dual.sh"
+                        }
 
-            command2 = {
-                        "interpreter": "/bin/sh",
-                        "script_file": "/usr/local/lib/python2.7/dist-packages/rally/aci_plugins/orchest/l3out_orchest_nat.sh"
-                    }
+                command2 = {
+                            "interpreter": "/bin/sh",
+                            "script_file": "/usr/local/lib/python2.7/dist-packages/rally/aci_plugins/orchest/l3out_orchest_nat_dual.sh"
+                        }
 
-            command3 = {
-                        "interpreter": "/bin/sh",
-                        "script_inline": "chmod +x /root/create_bird.sh;/root/create_bird.sh " + fip1
-                    }
+                command3 = {
+                            "interpreter": "/bin/sh",
+                            "script_inline": "chmod +x /root/create_bird.sh;/root/create_bird.sh " + fip1 +" "+ fip1_6
+                        }
 
-            command4 = {
-                        "interpreter": "/bin/sh",
-                        "script_inline": "chmod +x /root/create_bird.sh;/root/create_bird.sh " + fip2
-                    }
+                command4 = {
+                            "interpreter": "/bin/sh",
+                            "script_inline": "chmod +x /root/create_bird.sh;/root/create_bird.sh " + fip2 +" "+ fip2_6
+                        }
+            else:
+                command1 = {
+                            "interpreter": "/bin/sh",
+                            "script_file": "/usr/local/lib/python2.7/dist-packages/rally/aci_plugins/orchest/l3out_orchest_access.sh"
+                        }
+
+                command2 = {
+                            "interpreter": "/bin/sh",
+                            "script_file": "/usr/local/lib/python2.7/dist-packages/rally/aci_plugins/orchest/l3out_orchest_nat.sh"
+                        }
+
+                command3 = {
+                            "interpreter": "/bin/sh",
+                            "script_inline": "chmod +x /root/create_bird.sh;/root/create_bird.sh " + fip1
+                        }
+
+                command4 = {
+                            "interpreter": "/bin/sh",
+                            "script_inline": "chmod +x /root/create_bird.sh;/root/create_bird.sh " + fip2
+                        }
             
             print("Configuring the VMs...")
             self._remote_command(username, password, fip1, command1, access_vm)
@@ -86,16 +109,28 @@ class L3OutReachabilityofBGPRoute(create_ostack_resources.CreateOstackResources,
             self._remote_command(username, password, fip2, command, nat_vm)
 
             print("Verifying the traffic from ACCESS-VM...")
-            command1 = {
-                        "interpreter": "/bin/sh",
-                        "script_inline": "ping -c 5 10.10.240.1;ping -c 5 10.10.240.2;\
-                        ping -c 5 -I 10.10.251.1 10.10.240.1;ping -c 5 -I 10.10.251.1 10.10.240.2"
-                    }
-            command2 = {
-                        "interpreter": "/bin/sh",
-                        "script_inline": "ping -c 5 10.10.241.1;ping -c 5 10.10.241.2;\
-                        ping -c 5 -I 10.10.251.1 10.10.241.1;ping -c 5 -I 10.10.251.1 10.10.241.2"
-                    }
+            if dualstack:
+                command1 = {
+                            "interpreter": "/bin/sh",
+                            "script_inline": "ping -c 5 10.10.240.1;ping -c 5 10.10.240.2;\
+                            ping -c 5 -I 10.10.251.1 10.10.240.1;ping -c 5 -I 10.10.251.1 10.10.240.2"
+                        }
+                command2 = {
+                            "interpreter": "/bin/sh",
+                            "script_inline": "ping -c 5 10.10.241.1;ping -c 5 10.10.241.2;\
+                            ping -c 5 -I 10.10.251.1 10.10.241.1;ping -c 5 -I 10.10.251.1 10.10.241.2"
+                        }
+            else:
+                command1 = {
+                            "interpreter": "/bin/sh",
+                            "script_inline": "ping -c 5 10.10.240.1;ping -c 5 10.10.240.2;\
+                            ping -c 5 -I 10.10.251.1 10.10.240.1;ping -c 5 -I 10.10.251.1 10.10.240.2"
+                        }
+                command2 = {
+                            "interpreter": "/bin/sh",
+                            "script_inline": "ping -c 5 10.10.241.1;ping -c 5 10.10.241.2;\
+                            ping -c 5 -I 10.10.251.1 10.10.241.1;ping -c 5 -I 10.10.251.1 10.10.241.2"
+                        }
 
             self._remote_command(username, password, fip1, command1, access_vm)
             print("Verifying the traffic from NAT-VM..")

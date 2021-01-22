@@ -74,6 +74,7 @@ class TrunkIntervlanTraffic(create_ostack_resources.CreateOstackResources, vcpe_
             self._remote_command(username, password, fip1, command1, vm_tr1)
             self._remote_command(username, password, fip2, command2, vm_tr2)
             self.sleep_between(30, 40)
+            import pdb;pdb.set_trace() 
             p1_add = p1.get('port', {}).get('fixed_ips')[0].get('ip_address')
             p2_add = p2.get('port', {}).get('fixed_ips')[0].get('ip_address')
             p3_add = p3.get('port', {}).get('fixed_ips')[0].get('ip_address')

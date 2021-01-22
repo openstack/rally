@@ -79,6 +79,7 @@ class SimpleTrunk(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPE
                             "interpreter": "/bin/sh",
                             "script_inline": "ping -c 5 " + p1_add
                         }
+            import pdb;pdb.set_trace()
 
             print "\nVerify traffic from the default namespace\n"
             self._remote_command(username, password, fip, command, vm1)

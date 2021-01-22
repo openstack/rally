@@ -8,19 +8,14 @@
                 "aci_nodes" : {{aci_nodes}},
                 "username" : "root",
                 "password" : "noir0123",
-                "scale" : "5"
+                "scale" : "2",
+                "dualstack" : {{dualstack}}
                 },
             "runner": {
-                "type": "constant",
+                "type": "serial",
                 "times": 1,
                 "concurrency": 1
-            },
-            "context": {
-                "users": {
-                    "tenants": 1,
-                    "users_per_tenant": 1
-                 }
-            }
+            } 
         }
     ]
 }

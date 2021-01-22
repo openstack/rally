@@ -26,6 +26,7 @@ class SVIReachabilityofBGProute(create_ostack_resources.CreateOstackResources, v
         networks=[]
         interfaces=[]
         vms=[]
+        import pdb;pdb.set_trace()
         try:
             if dualstack:
                 net1, sub1 = self.create_network_and_subnets_dual({"provider:network_type": "vlan", "apic:svi": True, "apic:bgp_enable": True, \
@@ -78,6 +79,7 @@ class SVIReachabilityofBGProute(create_ostack_resources.CreateOstackResources, v
             self.run_bird_conf(username, password, fip2, vm2, "bird_svi.conf")
             self.sleep_between(100, 120)
 
+            import pdb; pdb.set_trace()
             print("Validating BGP session from VM1...")
             self.validate_bgp_session(username, password, [fip1, fip2], [vm1, vm2], no_demo=True)
             

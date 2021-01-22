@@ -15,7 +15,7 @@ from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
 class L3OutReachabilityofSVI(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario,
                              nova_utils.NovaScenario, scenario.OpenStackScenario):
 
-    def run(self, access_network, nat_network, image, flavor, username, password, access_router_ip, nat_router_ip, router_username):
+    def run(self, access_network, nat_network, image, flavor, username, password, access_router_ip, nat_router_ip, router_username, dualstack):
         
         acc_net = self.clients("neutron").show_network(access_network)
         nat_net = self.clients("neutron").show_network(nat_network)              
@@ -24,28 +24,46 @@ class L3OutReachabilityofSVI(create_ostack_resources.CreateOstackResources, vcpe
 
         port_create_args = {}
         port_create_args["security_groups"] = [secgroup.get('id')]
-        access_vm, nat_vm, fip1, fip2 = self.create_access_vm_nat_vm(acc_net, nat_net, port_create_args,
-                                                                      image, flavor, key_name)
+        access_vm, nat_vm, fip1, fip2 = self.create_access_vm_nat_vm(acc_net, nat_net, port_create_args, dualstack, \
+                image, flavor, key_name)
 
-        command = {
-                    "interpreter": "/bin/sh",
-                    "script_inline": "ip link add veth11 type veth peer name veth12;\
-                    ip addr add 10.10.251.1/30 dev veth11;ip link set veth11 up"
-                }
+        if dualstack:
+            command = {
+                        "interpreter": "/bin/sh",
+                        "script_inline": "ip link add veth11 type veth peer name veth12;\
+                                ip addr add 10.10.251.1/30 dev veth11;ip -6 addr add 2001:251::1/128 dev veth11;ip link set veth11 up"
+                    }
+        else:
+            command = {
+                        "interpreter": "/bin/sh",
+                        "script_inline": "ip link add veth11 type veth peer name veth12;\
+                        ip addr add 10.10.251.1/30 dev veth11;ip link set veth11 up"
+                    }
         print("Configuring the VMs...")
-        self._remote_command(username, password, fip1, command, access_vm)
-        self._remote_command(username, password, fip2, command, nat_vm)
+        self._remote_command(username, password, fip1[0], command, access_vm)
+        self._remote_command(username, password, fip2[0], command, nat_vm)
 
         print("Verifying the traffic from access-router...")
-        command1 = {
-                    "interpreter": "/bin/sh",
-                    "script_inline": "ping -c 10 " + fip1 
-                }
+        if dualstack:
+            command1 = {
+                        "interpreter": "/bin/sh",
+                        "script_inline": "ping -c 5 " + fip1[0] +";ping6 -c 5 "+ fip1[1]
+                    }
 
-        command2 = {
-                    "interpreter": "/bin/sh",
-                    "script_inline": "ping -c 10 " + fip2
-                }
+            command2 = {
+                        "interpreter": "/bin/sh",
+                        "script_inline": "ping -c 5 " + fip2[0] +";ping6 -c 5 "+ fip2[1]
+                    }
+        else:
+            command1 = {
+                        "interpreter": "/bin/sh",
+                        "script_inline": "ping -c 10 " + fip1[0] 
+                    }
+
+            command2 = {
+                        "interpreter": "/bin/sh",
+                        "script_inline": "ping -c 10 " + fip2[0]
+                    }
 
         self._remote_command_wo_server(router_username, password, access_router_ip, command1)
         print("Verifying the traffic from nat-router...")

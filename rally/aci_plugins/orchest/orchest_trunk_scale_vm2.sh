@@ -1,11 +1,8 @@
 cat <<EOF >/usr/local/bin/orchest_trunk_scale.sh
 #
-
 set -x
-
 mknat() {
     ip route add 192.168.0.0/16 via 192.168.0.1
-
     NOOFVLANS=\$1
     VID=101
     VLANCOUNT=\$(expr "\$NOOFVLANS" + 100)
@@ -20,7 +17,6 @@ mknat() {
 	    VID=\$(expr "\$VID" + 1)
     done
 }
-
 # Execute from here
 if [ \$# -lt 1 ] ; then
     echo "\$0: NO_OF_CUSTOMERS <1-64>"
@@ -31,9 +27,7 @@ EOF
 chmod +x /usr/local/bin/orchest_trunk_scale.sh
 cat <<EOF >/root/traffic.sh
 #
-
 set -x
-
     NOOFVLANS=\$1
     VID=101
     VLANCOUNT=\$(expr "\$NOOFVLANS" + 100)

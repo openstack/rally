@@ -17,16 +17,22 @@ class TrunkScale(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPES
    
     resources_created = {"vms": [], "trunks": []}
 
-    def run(self, image, flavor, public_network, username, password, scale):
+    def run(self, image, flavor, public_network, username, password, scale, dualstack):
 
         try:
             public_net = self.clients("neutron").show_network(public_network)
             secgroup = self.context.get("user", {}).get("secgroup")
             key_name=self.context["user"]["keypair"]["name"]
 
-            net0, sub0 = self._create_network_and_subnets({"provider:network_type": "vlan"}, {"cidr": '192.168.0.0/24'}, 1, None)
             router = self._create_router({}, False)
-            self._add_interface_router(sub0[0].get("subnet"), router.get("router"))
+            if dualstack:
+                net0, sub0 = self.create_network_and_subnets_dual({"provider:network_type": "vlan"}, {"cidr": '192.168.0.0/24'}, 1, None, \
+                    dualstack, {"cidr": '2001:a0::/64', "ipv6_ra_mode":"dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
+                self._add_interface_router(sub0[0][0].get("subnet"), router.get("router"))
+                self._add_interface_router(sub0[0][1].get("subnet"), router.get("router"))
+            else:
+                net0, sub0 = self._create_network_and_subnets({"provider:network_type": "vlan"}, {"cidr": '192.168.0.0/24'}, 1, None)
+                self._add_interface_router(sub0[0].get("subnet"), router.get("router"))
 
             port_create_args = {}
             port_create_args["security_groups"] = [secgroup.get('id')]
@@ -51,32 +57,57 @@ class TrunkScale(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPES
 
             for i in range(101, 101+int(scale)):
                 hex_i = hex(int(i))[2:]
-                net, sub = self._create_network_and_subnets({"provider:network_type": "vlan"}, {"cidr": "192.168."+str(i)+".0/24"}, 1, None)
-                self._add_interface_router(sub[0].get("subnet"), router.get("router"))
+                if dualstack:
+                    net, sub = self.create_network_and_subnets_dual({"provider:network_type": "vlan"}, {"cidr": "192.168."+str(i)+".0/24"}, 1, None, \
+                            dualstack, {"cidr": '2001:'+hex_i+'::/64', "ipv6_ra_mode":"dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
+                    self._add_interface_router(sub[0][0].get("subnet"), router.get("router"))
+                    self._add_interface_router(sub[0][1].get("subnet"), router.get("router"))
+                else:
+                    net, sub = self._create_network_and_subnets({"provider:network_type": "vlan"}, {"cidr": "192.168."+str(i)+".0/24"}, 1, None)
+                    self._add_interface_router(sub[0].get("subnet"), router.get("router"))
+
                 port_create_args = {}
                 port_create_args.update({"port_security_enabled": "false"})
-                port_create_args.update({"fixed_ips": [{"ip_address": "192.168."+str(i)+".101"}]})
+                if dualstack:
+                    port_create_args.update({"fixed_ips": [{"ip_address": "192.168."+str(i)+".101"}, {"ip_address": "2001:"+hex_i+":0:0:0:0:0:0065"}]})
+                else:
+                    port_create_args.update({"fixed_ips": [{"ip_address": "192.168."+str(i)+".101"}]})
                 port_create_args["mac_address"] = 'fa:16:3e:bc:d5:' + hex_i
                 sub_mac1, sp1 = self.crete_port_and_add_trunk(net, port_create_args, trunk1, seg_id=i)
 
                 port_create_args = {}
                 port_create_args.update({"port_security_enabled": "false"})
-                port_create_args.update({"fixed_ips": [{"ip_address": "192.168."+str(i)+".102"}]})
+                if dualstack:
+                    port_create_args.update({"fixed_ips": [{"ip_address": "192.168."+str(i)+".102"}, {"ip_address": "2001:"+hex_i+":0:0:0:0:0:0066"}]})
+                else:
+                    port_create_args.update({"fixed_ips": [{"ip_address": "192.168."+str(i)+".102"}]})
                 port_create_args["mac_address"] = 'fa:16:3e:1b:a1:' + hex_i
                 sub_mac2, sp2 = self.crete_port_and_add_trunk(net, port_create_args, trunk2, seg_id=i)
 
             fip1 = pf1.get('port', {}).get('fixed_ips')[0].get('ip_address')
             fip2 = pf2.get('port', {}).get('fixed_ips')[0].get('ip_address')
 
-            command1 = {
-                        "interpreter": "/bin/sh",
-                        "script_file": "/usr/local/lib/python2.7/dist-packages/rally/aci_plugins/orchest/orchest_trunk_scale_vm1.sh"
-                    }
+            if dualstack:
+                command1 = {
+                            "interpreter": "/bin/sh",
+                            "script_file": "/usr/local/lib/python2.7/dist-packages/rally/aci_plugins/orchest/orchest_trunk_scale_vm1_dual.sh"
+                        }
 
-            command2 = {
-                        "interpreter": "/bin/sh",
-                        "script_file": "/usr/local/lib/python2.7/dist-packages/rally/aci_plugins/orchest/orchest_trunk_scale_vm2.sh"
-                    }
+                command2 = {
+                            "interpreter": "/bin/sh",
+                            "script_file": "/usr/local/lib/python2.7/dist-packages/rally/aci_plugins/orchest/orchest_trunk_scale_vm2_dual.sh"
+                        }
+            else:
+                command1 = {
+                            "interpreter": "/bin/sh",
+                            "script_file": "/usr/local/lib/python2.7/dist-packages/rally/aci_plugins/orchest/orchest_trunk_scale_vm1.sh"
+                        }
+
+                command2 = {
+                            "interpreter": "/bin/sh",
+                            "script_file": "/usr/local/lib/python2.7/dist-packages/rally/aci_plugins/orchest/orchest_trunk_scale_vm2.sh"
+                        }
+
             
             print("Adding sub-interfaces into the VM1...")
             self._remote_command(username, password, fip1, command1, vm_tr1)

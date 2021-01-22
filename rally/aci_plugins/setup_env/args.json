@@ -1,0 +1,17 @@
+{
+    "access_network": "6452cfa0-47ff-4ace-9328-780fda499d27",
+    "access_network_bgp_asn": "1010",
+    "nat_network": "eb37fa7f-7c4a-4232-a624-02e984a0d260",
+    "nat_network_bgp_asn": "1020",
+    "aci_nodes": [node-101, node-102],
+    "bras_image": "d3f8fa34-d6e6-48d4-85be-116af9180769",
+    "nat_image": "1d4edb09-4d2d-4807-a579-aed0e864a692",
+    "service_image1": " 0dfb42d1-44bd-4715-8423-a63e265faeb9 ",
+    "service_image2": " 8fbfaf14-e95b-4dd3-b1de-2198609bf89f ",
+    "service_image3": " f230ba6e-55bd-4806-956b-c0245d15817a ",
+    "cirros_image": " 0314cbdb-5893-41b8-9fe0-e5baed4bee5e ",
+    "access_router_ip": "10.108.1.5",
+    "nat_router_ip": "10.108.1.6",
+    "router_username": "noiro",
+    "dualstack": True
+}
