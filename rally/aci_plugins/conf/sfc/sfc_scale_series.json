@@ -1,0 +1,27 @@
+{
+    "ScenarioPlugin.sfc_scale_series": [
+        {
+            "args": {
+                "src_cidr": "192.168.100.0/24",
+                "dest_cidr": "192.168.200.0/24",
+                "vm_image": {{bras_image}},
+                "service_image1": {{service_image1}},
+                "service_image2" : {{service_image2}},
+                "service_image3" : {{service_image3}},
+                "flavor": "tiny",
+                "public_network": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123",
+                "ipv6_cidr": "2001:db::/64",
+                "ipv6_dest_cidr": "2001:d8::/64",
+                "dualstack": {{dualstack}},
+                "scale" : "3"
+            },
+            "runner": {
+                "type": "serial",
+                "times": 1,
+                "concurrency": 1
+            }
+        }
+    ]
+}

@@ -1,11 +1,19 @@
 {
-    "ScenarioPlugin.simple_sfc": [
+    "ScenarioPlugin.sfc_scale_two_dimension": [
         {
             "args": {
                 "src_cidr": "192.168.100.0/24",
                 "dest_cidr": "192.168.200.0/24",
-                "image": {{bras_image}},
+                "vm_image": {{bras_image}},
+                "service_image1" : {{service_image1}},
+                "service_image2" : {{service_image2}},
+                "service_image3" : {{service_image3}},
                 "flavor": "tiny",
+                "public_network": {{access_network}},
+                "username" : "root",
+                "password" : "noir0123",
+                "x" : "3",
+                "y" : "2",
                 "ipv6_cidr": "2001:db::/64",
                 "ipv6_dest_cidr": "2001:d8::/64",
                 "dualstack": {{dualstack}}
@@ -14,14 +22,7 @@
                 "type": "serial",
                 "times": 1,
                 "concurrency": 1
-            },
-            "context": {
-                "users": {
-                    "tenants": 1,
-                    "users_per_tenant": 1
-                 }
             }
-       }
+        }
     ]
 }
-

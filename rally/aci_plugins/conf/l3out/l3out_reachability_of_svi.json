@@ -10,7 +10,8 @@
                 "password" : "noir0123",
                 "access_router_ip" : {{access_router_ip}},
                 "nat_router_ip" : {{nat_router_ip}},
-                "router_username" : {{router_username}}
+                "router_username" : {{router_username}},
+                "dualstack" : {{dualstack}}
                 },
             "runner": {
                 "type": "constant",

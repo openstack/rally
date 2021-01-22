@@ -1,16 +1,17 @@
 {
-    "access_network": " 955ba5d0-2b24-446c-8423-a80d5a782ebf ",
+    "access_network": "932f094e-bf5a-4531-8a38-a357a7f8d7b1",
     "access_network_bgp_asn": "1010",
-    "nat_network": " 7f1f2805-0c8b-4d3a-81ad-67c774898fae ",
+    "nat_network": "e3b365ce-20c1-43cc-8c7b-65883cb2dae2",
     "nat_network_bgp_asn": "1020",
     "aci_nodes": [node-101, node-102],
-    "bras_image": " d8b5060a-ef63-4b01-8b79-083ae8866aaf ",
-    "nat_image": " ff54e7d0-fdb2-4b39-8713-1e9e4521e849 ",
-    "service_image1": " 2ecc6733-c01a-444a-99cf-ae1b32b4dd12 ",
-    "service_image2": " 769aae31-35b8-45a3-b43c-60d21eb9f264 ",
-    "service_image3": " 996720eb-cbd1-496b-9d5e-e16146e8264d ",
-    "cirros_image": " cba4a0c9-e22a-402e-bc62-67376e34e31b ",
+    "bras_image": "d3f8fa34-d6e6-48d4-85be-116af9180769",
+    "nat_image": "b7eae781-b137-4171-99be-7af84b066966",
+    "service_image1": " 223bb240-94aa-4711-96f6-02d48703d787 ",
+    "service_image2": " a0a21b68-fa51-4a8b-be1f-fe5c4d4ba442 ",
+    "service_image3": " b34fcdf1-c7b5-4d40-b805-3080e8976e1b ",
+    "cirros_image": " a5121869-3238-4f63-b018-b51517c6977c ",
     "access_router_ip": "10.108.1.5",
     "nat_router_ip": "10.108.1.6",
-    "router_username": "noiro"
+    "router_username": "noiro",
+    "dualstack": True
 }

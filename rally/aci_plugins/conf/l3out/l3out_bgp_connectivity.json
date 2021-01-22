@@ -7,10 +7,11 @@
                 "image" : {{bras_image}},
                 "flavor": "small",
                 "username" : "root",
-                "password" : "noir0123"
+                "password" : "noir0123",
+                "dualstack" : {{dualstack}}
                 },
             "runner": {
-                "type": "constant",
+                "type": "serial",
                 "times": 1,
                 "concurrency": 1
             },
