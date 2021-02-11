@@ -423,6 +423,6 @@ class CreateOstackResources(vcpe_utils.vCPEScenario, vm_utils.VMScenario, neutro
         print("Deleting networks...")
         for nw in networks:
             self._delete_all_ports(nw)
-            #self.sleep_between(0,2)
+            self._delete_svi_ports(nw)
             self._admin_delete_network(nw)
 
