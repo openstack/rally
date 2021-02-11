@@ -126,4 +126,5 @@ class SingleCustomerTwoSitesSingleSFC(create_ostack_resources.CreateOstackResour
         self.delete_trunks(self.resources_created["trunks"])
         self.delete_ports(self.resources_created["ports"])
         self.cleanup_sfc()
+        self.delete_network(self.resources_created["networks"])
 

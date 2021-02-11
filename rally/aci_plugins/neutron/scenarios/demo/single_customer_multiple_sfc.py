@@ -119,6 +119,7 @@ class SingleCustomerMultipleSFC(create_ostack_resources.CreateOstackResources, v
         self.delete_trunks(self.resources_created["trunks"])
         self.delete_ports(self.resources_created["ports"])
         self.cleanup_sfc()
+        self.delete_network(self.resources_created["networks"])
 
     def verify_multi_sfc_without_sfc(self, username, password, access_router_ip):
 

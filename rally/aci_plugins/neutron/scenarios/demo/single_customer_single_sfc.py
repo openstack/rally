@@ -37,6 +37,7 @@ class SingleCustomerSingleSFC(create_ostack_resources.CreateOstackResources, vcp
             nat_vm, trunk2, pfip2 = self.boot_server(nat_net, port_create_args, nat_image, flavor, admin=True)
             self.resources_created["vms"].extend([bras_vm, nat_vm])
             self.resources_created["trunks"].extend([trunk1, trunk2])
+            self.resources_created["ports"].extend([pfip1, pfip2])
 
             print("Creating network, subnet and subports...")
             router = self._create_router({}, False)
@@ -52,7 +53,6 @@ class SingleCustomerSingleSFC(create_ostack_resources.CreateOstackResources, vcp
 
             fip1 = pfip1.get('port', {}).get('fixed_ips')[0].get('ip_address')
             fip2 = pfip2.get('port', {}).get('fixed_ips')[0].get('ip_address')
-            self.resources_created["ports"].extend([pfip1, pfip2])
 
             print("Configuring BRAS-VM...")
             self.configure_bras_nat_vm(username, password, fip1, bras_vm, subp1_mac, "orchest_single_customer_bras.sh")
@@ -101,4 +101,4 @@ class SingleCustomerSingleSFC(create_ostack_resources.CreateOstackResources, vcp
         self.delete_trunks(self.resources_created["trunks"])
         self.delete_ports(self.resources_created["ports"])
         self.cleanup_sfc()
-
+        self.delete_network(self.resources_created["networks"])
