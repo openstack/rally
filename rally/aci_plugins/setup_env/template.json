@@ -12,5 +12,6 @@
     "cirros_image": "par8",
     "access_router_ip": "argu4",
     "nat_router_ip": "argu5",
-    "router_username": "argu6"
+    "router_username": "argu6",
+    "dualstack": False
 }

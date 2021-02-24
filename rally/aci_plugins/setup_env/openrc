@@ -5,4 +5,4 @@ export OS_PROJECT_NAME=admin
 export OS_PASSWORD=noir0123
 export OS_IDENTITY_API_VERSION=3
 
-export OS_AUTH_URL=http://10.108.1.40:5000/v3
+export OS_AUTH_URL=http://10.108.1.111:5000/v3

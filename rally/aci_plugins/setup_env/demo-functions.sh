@@ -81,7 +81,7 @@ function get_project_id {
     local PROJECT_ID
     PROJECT_ID=`openstack project list |grep -v b02be7|grep " $PROJECT_NAME " | head -n 1 | get_field 1`
     die_if_not_set $LINENO PROJECT_ID "Failure retrieving PROJECT_ID for $PROJECT_NAME"
-    echo "$PROJECT_ID"
+    echo "admin"
 }
 
 function create_network {
@@ -104,6 +104,20 @@ function create_subnet {
     PROJECT_ID=$(get_project_id $PROJECT)
     local SUBNET_ID
     SUBNET_ID=$(openstack subnet create --ip-version 4 --project $PROJECT_ID --gateway $GATEWAY \
+                --network $NET_ID --subnet-range $CIDR $EXTRA '' | grep ' id ' | awk '{print $4}' )
+    die_if_not_set $LINENO SUBNET_ID "Failure creating SUBNET_ID for $PROJECT_ID $NET_ID $CIDR"
+    CREATED_SUBNETS+=(${SUBNET_ID})
+}
+
+function create_v6subnet {
+    local PROJECT=$1
+    local NET_ID=$2
+    local GATEWAY=$3
+    local CIDR=$4
+    local EXTRA=$5
+    PROJECT_ID=$(get_project_id $PROJECT)
+    local SUBNET_ID
+    SUBNET_ID=$(openstack subnet create --ip-version 6 --project $PROJECT_ID --gateway $GATEWAY \
                 --network $NET_ID --subnet-range $CIDR $EXTRA '' | grep ' id ' | awk '{print $4}' )
     die_if_not_set $LINENO SUBNET_ID "Failure creating SUBNET_ID for $PROJECT_ID $NET_ID $CIDR"
     CREATED_SUBNETS+=(${SUBNET_ID})
@@ -312,14 +326,16 @@ function create_svi_ports {
     local ADMIN=$1
     local NET_ID=$2
     local SUB_ID=$3
-    local PREFIX=$4
-    local SVI_SCALE=$5
+    local SUBV6_ID=$4
+    local PREFIX=$5
+    local V6PREFIX=$6
+    local SVI_SCALE=$7
     local PROJECT_ID=$(get_project_id $ADMIN)
 
-    create_port $ADMIN "apic-svi-port:node-102" $NET_ID "--device-owner apic:svi --fixed-ip subnet=${SUB_ID},ip-address=$PREFIX.200"; SWITCH_PORT_ID=${CREATED_PORTS[-1]}
+    create_port $ADMIN "apic-svi-port:node-102" $NET_ID "--device-owner apic:svi --fixed-ip subnet=${SUB_ID},ip-address=$PREFIX.200 --fixed-ip subnet=${SUBV6_ID},ip-address=$V6PREFIX::c8"; SWITCH_PORT_ID=${CREATED_PORTS[-1]}
     to_delete=$(neutron port-list --tenant-id $PROJECT_ID -c id -c network_id -c name -f value | grep $NET_ID | grep -v $SWITCH_PORT_ID | awk '{print $1}')
     delete_ports "${to_delete[@]}"
-    create_port $ADMIN "apic-svi-port:node-101" $NET_ID "--device-owner apic:svi --fixed-ip subnet=${SUB_ID},ip-address=$PREFIX.199"
+    create_port $ADMIN "apic-svi-port:node-101" $NET_ID "--device-owner apic:svi --fixed-ip subnet=${SUB_ID},ip-address=$PREFIX.199 --fixed-ip subnet=${SUBV6_ID},ip-address=$V6PREFIX::c7"
 
     for ((i=1; i < (($SVI_SCALE-1)); i++)); do
 	    iter=$(($i+2))

@@ -53,3 +53,4 @@ mknat() {
 mknat "\$@"
 EOF
 chmod +x /usr/local/bin/orchest_nat.sh
+route add -net 0.0.0.0/0 gw 173.168.0.1 

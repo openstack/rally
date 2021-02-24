@@ -61,3 +61,4 @@ mkbras() {
 mkbras "\$@"
 EOF
 chmod +x /usr/local/bin/orchest_bras.sh
+route add -net 0.0.0.0/0 gw 172.168.0.1

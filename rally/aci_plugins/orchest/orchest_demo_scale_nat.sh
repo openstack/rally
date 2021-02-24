@@ -87,3 +87,4 @@ else
 fi
 EOF
 chmod +x /usr/local/bin/scale_run_bird.sh
+route add -net 0.0.0.0/0 gw 173.168.0.1 

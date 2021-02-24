@@ -10,8 +10,6 @@ openstack image create --container-format bare --disk-format raw --file openwrts
 openstack image create --container-format bare --disk-format raw --file cirros.img --public Cirros
 
 echo "Creating flavors required for testing..."
-openstack flavor create --ram 512 --disk 1 --vcpus 1 --public --id tiny tiny
-openstack flavor create --ram 1024 --disk 5 --vcpus 1 --public --id small small
 openstack flavor create --ram 1024 --disk 10 --vcpus 1 --public --id medium medium
 
 echo "Creating a project for testing..."

@@ -67,3 +67,4 @@ ip netns exec cats bird -c /etc/bird/bird-cats.conf -P /tmp/bird-cats.run -s /tm
 ip netns exec dogs bird -c /etc/bird/bird-dogs.conf -P /tmp/bird-dogs.run -s /tmp/sock-dogs
 EOF
 chmod +x /usr/local/bin/run_bird
+route add -net 0.0.0.0/0 gw 173.168.0.1 
