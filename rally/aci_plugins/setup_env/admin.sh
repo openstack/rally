@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source dual-demo-functions.sh
+source demo-functions.sh
 
     PROJECT="admin"
 

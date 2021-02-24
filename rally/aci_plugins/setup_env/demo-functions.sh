@@ -81,7 +81,7 @@ function get_project_id {
     local PROJECT_ID
     PROJECT_ID=`openstack project list |grep -v b02be7|grep " $PROJECT_NAME " | head -n 1 | get_field 1`
     die_if_not_set $LINENO PROJECT_ID "Failure retrieving PROJECT_ID for $PROJECT_NAME"
-    echo "admin"
+    echo "$PROJECT_ID"
 }
 
 function create_network {
