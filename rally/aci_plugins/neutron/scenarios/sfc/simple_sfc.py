@@ -16,7 +16,6 @@ class SimpleSFC(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPESc
     
     def run(self, src_cidr, dest_cidr, image, flavor, ipv6_cidr, ipv6_dest_cidr, dualstack):
         
-        #net_list, sub_list = self.create_net_sub_for_sfc(src_cidr, dest_cidr)
         net_list, sub_list = self.create_net_sub_for_sfc(src_cidr, dest_cidr, dualstack=dualstack, ipv6_src_cidr=ipv6_cidr, 
                                                                         ipv6_dest_cidr=ipv6_dest_cidr)
         router = self._create_router({}, False)

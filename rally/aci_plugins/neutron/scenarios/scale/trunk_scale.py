@@ -27,7 +27,8 @@ class TrunkScale(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPES
             router = self._create_router({}, False)
             if dualstack:
                 net0, sub0 = self.create_network_and_subnets_dual({"provider:network_type": "vlan"}, {"cidr": '192.168.0.0/24'}, 1, None, \
-                    dualstack, {"cidr": '2001:a0::/64', "ipv6_ra_mode":"dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
+                        dualstack, {"cidr": '2001:a0::/64', "gateway_ip": "2001:a0::1", "ipv6_ra_mode":"dhcpv6-stateful", \
+                    "ipv6_address_mode": "dhcpv6-stateful"}, None)
                 self._add_interface_router(sub0[0][0].get("subnet"), router.get("router"))
                 self._add_interface_router(sub0[0][1].get("subnet"), router.get("router"))
             else:
@@ -59,7 +60,7 @@ class TrunkScale(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPES
                 hex_i = hex(int(i))[2:]
                 if dualstack:
                     net, sub = self.create_network_and_subnets_dual({"provider:network_type": "vlan"}, {"cidr": "192.168."+str(i)+".0/24"}, 1, None, \
-                            dualstack, {"cidr": '2001:'+hex_i+'::/64', "ipv6_ra_mode":"dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
+                            dualstack, {"cidr": '2001:'+hex_i+'::/64', "gateway_ip": "2001:"+hex_i+"::1", "ipv6_ra_mode":"dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
                     self._add_interface_router(sub[0][0].get("subnet"), router.get("router"))
                     self._add_interface_router(sub[0][1].get("subnet"), router.get("router"))
                 else:

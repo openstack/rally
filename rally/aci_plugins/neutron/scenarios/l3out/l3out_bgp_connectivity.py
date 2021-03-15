@@ -25,7 +25,6 @@ class L3OutBGPConnectivity(create_ostack_resources.CreateOstackResources, vcpe_u
         port_create_args = {}
         port_create_args["security_groups"] = [secgroup.get('id')]
         
-        #import pdb; pdb.set_trace()
         access_vm, nat_vm, fip1, fip2 = self.create_access_vm_nat_vm(acc_net, nat_net, port_create_args, dualstack, \
                 image, flavor, key_name)
         if dualstack:

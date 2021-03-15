@@ -23,11 +23,9 @@ class SFCRemovePortpair(create_ostack_resources.CreateOstackResources, vcpe_util
         secgroup = self.context.get("user", {}).get("secgroup")
         key_name=self.context["user"]["keypair"]["name"]
 
-        #net_list, sub_list = self.create_net_sub_for_sfc(src_cidr, dest_cidr)
         net_list, sub_list = self.create_net_sub_for_sfc(src_cidr, dest_cidr, dualstack=dualstack,
                                                          ipv6_src_cidr=ipv6_cidr, ipv6_dest_cidr=ipv6_dest_cidr)
         router = self._create_router({}, False)
-        #self.add_interface_to_router(router, sub_list)
         self.add_interface_to_router(router, sub_list, dualstack)
         net1_id = net_list[0].get('network', {}).get('id')
         net2_id = net_list[1].get('network', {}).get('id')

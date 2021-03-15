@@ -660,6 +660,7 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
                                     ipv6_subnet_args=None,
                                     subnet_ipv6_cidr_start="2001:db::/64"):
         network = self._create_network(network_create_args or {})
+        self.sleep_between(5,10)
         subnets = self.create_subnets_dual(network, subnet_create_args,
                                        subnet_cidr_start, subnets_per_network,
                                        dualstack, ipv6_subnet_args, subnet_ipv6_cidr_start)
@@ -701,6 +702,7 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
             subnet_create_args["ip_version"] = ip_version
             subnet_create_args["name"] = self.generate_random_name()
             subnet = self.clients("neutron").create_subnet({"subnet": subnet_create_args})
+            self.sleep_between(10,15)
             subnets.append(subnet)
 
         return subnets

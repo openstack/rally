@@ -36,7 +36,7 @@ class SVIScale(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPESce
                 if dualstack:
                     net, sub = self.create_network_and_subnets_dual({"provider:network_type": "vlan", "apic:svi": True, "apic:bgp_enable": True, \
                             "apic:bgp_asn": i},{"cidr": "192.168."+str(i)+".0/24"}, 1, None, dualstack, {"cidr": "2001:a"+hex(i)[2:]+"::/64", \
-                            "ipv6_ra_mode":"dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
+                            "gateway_ip": "2001:a"+hex(i)[2:]+"::1", "ipv6_ra_mode":"dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
                     networks.append(net)
                     self._create_svi_ports(net, sub[0][0], "192.168."+str(i), aci_nodes, dualstack, sub[0][1], "2001:a"+hex(i)[2:])
                     self._add_interface_router(sub[0][0].get("subnet"), router.get("router"))
@@ -52,8 +52,10 @@ class SVIScale(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPESce
 
                 port_create_args = {}
                 port_create_args.update({"port_security_enabled": "false"})
-                if dualstack:port_create_args.update({"fixed_ips": [{"ip_address": "192.168."+str(i)+".101"}, {"ip_address": "2001:a"+hex(i)[2:]+"::65"}]})
-                else:port_create_args.update({"fixed_ips": [{"ip_address": "192.168."+str(i)+".101"}]})
+                if dualstack:
+                    port_create_args.update({"fixed_ips": [{"ip_address": "192.168."+str(i)+".101"}, {"ip_address": "2001:a"+hex(i)[2:]+"::65"}]})
+                else:
+                    port_create_args.update({"fixed_ips": [{"ip_address": "192.168."+str(i)+".101"}]})
                 p, p_id = self.create_port(net, port_create_args)
                 vms.append(self.boot_vm([pfip_id, p_id], image, flavor, key_name=key_name))
             self.sleep_between(30, 40)

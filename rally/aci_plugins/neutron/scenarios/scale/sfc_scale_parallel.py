@@ -14,8 +14,8 @@ from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
                                                                        "keypair@openstack": {},
                                                                        "allow_ssh@openstack": None},
                     platform="openstack")
-class SFCScaleParallel(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_utils.NovaScenario,
-                       scenario.OpenStackScenario):
+class SFCScaleParallel(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, 
+                       nova_utils.NovaScenario, scenario.OpenStackScenario):
 
     def run(self, src_cidr, dest_cidr, vm_image, service_image1, flavor, public_network, username, password, ipv6_cidr,
             ipv6_dest_cidr, dualstack, scale):
@@ -61,8 +61,8 @@ class SFCScaleParallel(create_ostack_resources.CreateOstackResources, vcpe_utils
                     "interpreter": "/bin/sh",
                     "script_inline": "ping -c 5 192.168.200.101;ping -c 5 192.168.200.102;ping -c 5 192.168.200.103"
                 }
-        self._remote_command(username, password, fip2, command1, dest_vm)
 
+        self._remote_command(username, password, fip2, command1, dest_vm)
         print("Traffic verification before SFC")
         self._remote_command(username, password, fip1, command2, src_vm)
         try:
@@ -82,7 +82,6 @@ class SFCScaleParallel(create_ostack_resources.CreateOstackResources, vcpe_utils
                 pc = self._create_port_chain([ppg], [fc, fc2])
             else:
                 pc = self._create_port_chain([ppg], [fc])
-
             self.sleep_between(30, 40)
 
             print("Traffic verification after creating SFC")

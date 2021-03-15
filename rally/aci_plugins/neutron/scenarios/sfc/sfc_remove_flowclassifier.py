@@ -22,15 +22,21 @@ class SFCRemoveFlowclassifier(create_ostack_resources.CreateOstackResources, vcp
         secgroup = self.context.get("user", {}).get("secgroup")
         key_name=self.context["user"]["keypair"]["name"]
         
-        #net_list, sub_list = self.create_net_sub_for_sfc(src_cidr, dest_cidr)
         net_list, sub_list = self.create_net_sub_for_sfc(src_cidr, dest_cidr, dualstack=dualstack,
                                                          ipv6_src_cidr=ipv6_cidr, ipv6_dest_cidr=ipv6_dest_cidr)
-        test_net, sub5 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": '192.168.0.0/24'}, 1, None)
+        if dualstack:
+            test_net, sub5 = self.create_network_and_subnets_dual({"provider:network_type": "vlan"},{"cidr": '192.168.0.0/24'}, 1, None, dualstack, \
+                  {"cidr": "2001:0::/64", "gateway_ip": "2001:0::1", "ipv6_ra_mode":"dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
+        else:
+            test_net, sub5 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": '192.168.0.0/24'}, 1, None)
 
         router = self._create_router({}, False)
-        #self.add_interface_to_router(router, sub_list)
         self.add_interface_to_router(router, sub_list, dualstack)
-        self._add_interface_router(sub5[0].get("subnet"), router.get("router"))
+        if dualstack:
+            self._add_interface_router(sub5[0][0].get("subnet"), router.get("router"))
+            self._add_interface_router(sub5[0][1].get("subnet"), router.get("router"))
+        else:
+            self._add_interface_router(sub5[0].get("subnet"), router.get("router"))
 
         net1_id = net_list[0].get('network', {}).get('id')
         net2_id = net_list[1].get('network', {}).get('id')
@@ -74,20 +80,29 @@ class SFCRemoveFlowclassifier(create_ostack_resources.CreateOstackResources, vcp
                 }
 
         self._remote_command(username, password, fip2, command1, dest_vm)
+        
         try:
             pp = self._create_port_pair(pin, pout)
             ppg = self._create_port_pair_group([pp])
             fc1 = self._create_flow_classifier(src_cidr, '192.168.0.0/24', net1_id, testnet_id)
             fc2 = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
-            pc = self._create_port_chain([ppg], [fc1, fc2])
+            if dualstack:
+                 fc3 = self._create_flow_classifier(ipv6_cidr, "2001:0::/64", net1_id, testnet_id, ethertype="IPv6")
+                 fc4 = self._create_flow_classifier(ipv6_cidr, ipv6_dest_cidr, net1_id, net2_id, ethertype="IPv6")
+                 pc = self._create_port_chain([ppg], [fc1, fc2, fc3, fc4])
+            else:
+                 pc = self._create_port_chain([ppg], [fc1, fc2])
             self.sleep_between(30, 40)
 
             print"Traffic verification with multiple flow classifiers"
             self._remote_command(username, password, fip1, command2, src_vm)
 
             print"Removing a flow classifier from the chain..."
-            self._update_port_chain(pc, [ppg], [fc1])
-            self.sleep_between(30, 40)
+            if dualstack:
+                self._update_port_chain(pc, [ppg], [fc1, fc3])
+            else:
+                self._update_port_chain(pc, [ppg], [fc1])
+            self.sleep_between(30,40)
 
             print"Traffic verification after removing a flow classifier\n"
             self._remote_command(username, password, fip1, command2, src_vm)

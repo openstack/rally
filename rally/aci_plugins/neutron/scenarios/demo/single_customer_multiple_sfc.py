@@ -65,7 +65,7 @@ class SingleCustomerMultipleSFC(create_ostack_resources.CreateOstackResources, v
             try:
                 self.configuring_router('noiro', password, access_router_ip, 'orchest_single_customer.sh')
 
-                self.verify_traffic_without_sfc('noiro', password, access_router_ip)
+                self.verify_multi_sfc_without_sfc('noiro', password, access_router_ip)
 
                 print("Creating a single service function chain...")
                 service_vm, pin1, pout1 = self.create_service_vm(router, service_image1, flavor, '1.1.0.0/24', '2.2.0.0/24',
@@ -96,12 +96,12 @@ class SingleCustomerMultipleSFC(create_ostack_resources.CreateOstackResources, v
                 self.sleep_between(30, 40)
 
                 print("Traffic verification after creating SFC...")
-                self.run_ping('noiro', password, access_router_ip, '10.1.1.1')
+                self.run_ping('noiro', password, access_router_ip, '10.1.1.1', True)
                 self.run_ping('noiro', password, access_router_ip, '8.8.8.1')
                 self.run_ping('noiro', password, access_router_ip, '8.8.8.2')
                 self.run_ping('noiro', password, access_router_ip, '8.8.8.3')
-                self.run_ping('noiro', password, access_router_ip, '8.8.8.4')
-                self.run_ping('noiro', password, access_router_ip, '8.8.8.5')
+                self.run_ping('noiro', password, access_router_ip, '8.8.8.4', True)
+                self.run_ping('noiro', password, access_router_ip, '8.8.8.5', True)
             except Exception as e:
                 raise e
             finally:
@@ -119,7 +119,8 @@ class SingleCustomerMultipleSFC(create_ostack_resources.CreateOstackResources, v
         self.delete_trunks(self.resources_created["trunks"])
         self.delete_ports(self.resources_created["ports"])
         self.cleanup_sfc()
-        self.delete_network(self.resources_created["networks"])
+        for nw in self.resources_created["networks"]:
+            self._delete_svi_ports(nw)
 
     def verify_multi_sfc_without_sfc(self, username, password, access_router_ip):
 
@@ -132,4 +133,4 @@ class SingleCustomerMultipleSFC(create_ostack_resources.CreateOstackResources, v
                     sudo ip netns exec cats ping -c 5 8.8.8.4;\
                     sudo ip netns exec cats ping -c 5 8.8.8.5"
         }
-        self._remote_command_wo_server(username, password, access_router_ip, command)
+        self._remote_command_validate(username, password, access_router_ip, command)

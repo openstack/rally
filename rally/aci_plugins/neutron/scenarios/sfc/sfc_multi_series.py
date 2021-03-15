@@ -23,24 +23,45 @@ class SFCMultiSeries(create_ostack_resources.CreateOstackResources, vcpe_utils.v
         secgroup = self.context.get("user", {}).get("secgroup")
         key_name=self.context["user"]["keypair"]["name"]
         
-        #net_list, sub_list = self.create_net_sub_for_sfc(src_cidr, dest_cidr)
         net_list, sub_list = self.create_net_sub_for_sfc(src_cidr, dest_cidr, dualstack=dualstack,
                                                          ipv6_src_cidr=ipv6_cidr, ipv6_dest_cidr=ipv6_dest_cidr)
-        left2, sub5 = self.create_network_and_subnets_dual({"provider:network_type": "vlan"},{"cidr": "3.3.0.0/24", 'host_routes': [{'destination': src_cidr, 'nexthop': '3.3.0.1'}]}, 1, None, dualstack, {"cidr": 'c:c::/64', 'host_routes': [{'destination': ipv6_cidr, 'nexthop': 'c:c::1'}], "ipv6_ra_mode":"dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
-        right2, sub6 = self.create_network_and_subnets_dual({"provider:network_type": "vlan"},{"cidr": "4.4.0.0/24", 'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '4.4.0.1'}, {'destination': '128.0.0.0/1', 'nexthop': '4.4.0.1'}]}, 1, None, dualstack, {"cidr":"d:d::/64", 'host_routes': [{'destination': '0:0::/1', 'nexthop': 'd:d::1'}, {'destination': '::/1', 'nexthop': 'd:d::1'}], "ipv6_ra_mode":"dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
-        left3, sub7 = self.create_network_and_subnets_dual({"provider:network_type": "vlan"},{"cidr": "5.5.0.0/24", 'host_routes': [{'destination': src_cidr, 'nexthop': '5.5.0.1'}]}, 1, None, dualstack, {"cidr": 'e:e::/64', 'host_routes': [{'destination': ipv6_cidr, 'nexthop': 'e:e::1'}], "ipv6_ra_mode":"dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
-        right3, sub8 = self.create_network_and_subnets_dual({"provider:network_type": "vlan"},{"cidr": "6.6.0.0/24", 'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '6.6.0.1'}, {'destination': '128.0.0.0/1', 'nexthop': '6.6.0.1'}]}, 1, None, dualstack, {"cidr":"f:f::/64", 'host_routes': [{'destination': '0:0::/1', 'nexthop': 'f:f::1'}, {'destination': '::/1', 'nexthop': 'f:f::1'}], "ipv6_ra_mode":"dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
+        
+        left2, sub5 = self.create_network_and_subnets_dual({"provider:network_type": "vlan"},{"cidr": "3.3.0.0/24", 
+            'host_routes': [{'destination': src_cidr, 'nexthop': '3.3.0.1'}]}, 1, None, dualstack, {"cidr": 'c:c::/64', "gateway_ip": "c:c::1", 
+            'host_routes': [{'destination': ipv6_cidr, 'nexthop': 'c:c::1'}], "ipv6_ra_mode":"dhcpv6-stateful", 
+            "ipv6_address_mode": "dhcpv6-stateful"}, None)
+        
+        right2, sub6 = self.create_network_and_subnets_dual({"provider:network_type": "vlan"},{"cidr": "4.4.0.0/24", 
+            'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '4.4.0.1'}, {'destination': '128.0.0.0/1', 'nexthop': '4.4.0.1'}]}, 1, None, 
+            dualstack, {"cidr":"d:d::/64", "gateway_ip": "d:d::1", 'host_routes': [{'destination': '0:0::/1', 'nexthop': 'd:d::1'}, 
+            {'destination': '::/1', 'nexthop': 'd:d::1'}], "ipv6_ra_mode":"dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
+
+        left3, sub7 = self.create_network_and_subnets_dual({"provider:network_type": "vlan"},{"cidr": "5.5.0.0/24", 
+            'host_routes': [{'destination': src_cidr, 'nexthop': '5.5.0.1'}]}, 1, None, dualstack, {"cidr": 'e:e::/64', "gateway_ip": "e:e::1", 
+            'host_routes': [{'destination': ipv6_cidr, 'nexthop': 'e:e::1'}], "ipv6_ra_mode":"dhcpv6-stateful", 
+            "ipv6_address_mode": "dhcpv6-stateful"}, None)
+       
+        right3, sub8 = self.create_network_and_subnets_dual({"provider:network_type": "vlan"},{"cidr": "6.6.0.0/24", 
+            'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '6.6.0.1'}, {'destination': '128.0.0.0/1', 'nexthop': '6.6.0.1'}]}, 1, None, 
+            dualstack, {"cidr":"f:f::/64", "gateway_ip": "f:f::1", 'host_routes': [{'destination': '0:0::/1', 'nexthop': 'f:f::1'}, 
+            {'destination': '::/1', 'nexthop': 'f:f::1'}], "ipv6_ra_mode":"dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
 
         router = self._create_router({}, False)
         self.add_interface_to_router(router, sub_list, dualstack)
-        self._add_interface_router(sub5[0][0].get("subnet"), router.get("router"))
-        self._add_interface_router(sub5[0][1].get("subnet"), router.get("router"))
-        self._add_interface_router(sub6[0][0].get("subnet"), router.get("router"))
-        self._add_interface_router(sub6[0][1].get("subnet"), router.get("router"))
-        self._add_interface_router(sub7[0][0].get("subnet"), router.get("router"))
-        self._add_interface_router(sub7[0][1].get("subnet"), router.get("router"))
-        self._add_interface_router(sub8[0][0].get("subnet"), router.get("router"))
-        self._add_interface_router(sub8[0][1].get("subnet"), router.get("router"))
+        if dualstack:
+            self._add_interface_router(sub5[0][0].get("subnet"), router.get("router"))
+            self._add_interface_router(sub5[0][1].get("subnet"), router.get("router"))
+            self._add_interface_router(sub6[0][0].get("subnet"), router.get("router"))
+            self._add_interface_router(sub6[0][1].get("subnet"), router.get("router"))
+            self._add_interface_router(sub7[0][0].get("subnet"), router.get("router"))
+            self._add_interface_router(sub7[0][1].get("subnet"), router.get("router"))
+            self._add_interface_router(sub8[0][0].get("subnet"), router.get("router"))
+            self._add_interface_router(sub8[0][1].get("subnet"), router.get("router"))
+        else:
+            self._add_interface_router(sub5[0][0].get("subnet"), router.get("router"))
+            self._add_interface_router(sub6[0][0].get("subnet"), router.get("router"))
+            self._add_interface_router(sub7[0][0].get("subnet"), router.get("router"))
+            self._add_interface_router(sub8[0][0].get("subnet"), router.get("router"))
 
         net1_id = net_list[0].get('network', {}).get('id')
         net2_id = net_list[1].get('network', {}).get('id')
@@ -58,7 +79,7 @@ class SFCMultiSeries(create_ostack_resources.CreateOstackResources, vcpe_utils.v
 
         fip1 = p1.get('port', {}).get('fixed_ips')[0].get('ip_address')
         fip2 = p2.get('port', {}).get('fixed_ips')[0].get('ip_address')
-         
+        
         print "\nConfiguring destination-vm for traffic verification..\n"
         if dualstack:
             command1 = {
@@ -73,7 +94,7 @@ class SFCMultiSeries(create_ostack_resources.CreateOstackResources, vcpe_utils.v
             command2 = {
                     "interpreter": "/bin/sh",
                     "script_inline": "ping -c 5 192.168.200.101;ping -c 5 192.168.200.102;ping -c 5 192.168.200.103; \
-                            ping -c 5 192.168.200.104;ping -c 5 192.168.200.105;\
+                    ping -c 5 192.168.200.104;ping -c 5 192.168.200.105;\
                     ping6 -c 5 2001:d8::101; ping6 -c 5 2001:d8::102; ping6 -c 5 2001:d8::103;\
                     ping6 -c 5 2001:d8::104; ping6 -c 5 2001:d8::105"
                 }
@@ -81,11 +102,13 @@ class SFCMultiSeries(create_ostack_resources.CreateOstackResources, vcpe_utils.v
             command1 = {
                     "interpreter": "/bin/sh",
                     "script_inline": "ip address add 192.168.200.101/24 dev eth1;ip address add 192.168.200.102/24 dev eth1;\
-                    ip address add 192.168.200.103/24 dev eth1;route add default gw 192.168.200.1 eth1"
+                    ip address add 192.168.200.103/24 dev eth1;route add default gw 192.168.200.1 eth1;\
+                    ip address add 192.168.200.104/24 dev eth1;ip address add 192.168.200.105/24 dev eth1"
                 }
             command2 = {
                     "interpreter": "/bin/sh",
-                    "script_inline": "ping -c 5 192.168.200.101;ping -c 5 192.168.200.102;ping -c 5 192.168.200.103"
+                    "script_inline": "ping -c 5 192.168.200.101;ping -c 5 192.168.200.102;ping -c 5 192.168.200.103;\
+                    ping -c 5 192.168.200.104;ping -c 5 192.168.200.105"
                 }
         
         self._remote_command(username, password, fip2, command1, dest_vm)

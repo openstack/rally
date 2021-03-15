@@ -26,7 +26,6 @@ class TrunkRemoveSubport(create_ostack_resources.CreateOstackResources, vcpe_uti
             key_name=self.context["user"]["keypair"]["name"]
 
             net_list, router = self.create_sub_add_to_interfaces_for_trunk(cidr1, cidr2, cidr3, dualstack, v6cidr1, v6cidr2, v6cidr3)
-
             pf1, pf2, vm_tr1, vm_tr2, trunk1, trunk2, port_create_args = self.create_src_dest_vm(secgroup,
                                                                                                  public_network, net_list[0],  net_list[0],
                                                                                                  image,

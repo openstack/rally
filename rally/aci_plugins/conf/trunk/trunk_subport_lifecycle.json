@@ -1,18 +1,19 @@
 {
-    "ScenarioPlugin.svi_testing_with_asc": [
+    "ScenarioPlugin.trunk_subport_lifecycle": [
         {
             "args": {
-                "cidr1": "192.168.10.0/24",
-                "cidr2": "192.168.20.0/24",
+                "cidr1": "192.168.0.0/24",
+                "cidr2": "192.168.10.0/24",
+                "cidr3": "192.168.20.0/24",
                 "image" : {{bras_image}},
                 "flavor": "small",
                 "public_net": {{access_network}},
-                "aci_nodes" : {{aci_nodes}},
                 "username" : "root",
                 "password" : "noir0123",
                 "dualstack": {{dualstack}},
-                "v6cidr1": "2001:a10::/64",
-                "v6cidr2": "2001:a20::/64"
+                "v6cidr1": "2001:a0::/64",
+                "v6cidr2": "2001:a10::/64",
+                "v6cidr3": "2001:a20::/64"
                 },
             "runner": {
                 "type": "serial",

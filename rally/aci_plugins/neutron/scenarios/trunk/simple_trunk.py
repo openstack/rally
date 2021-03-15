@@ -24,7 +24,6 @@ class SimpleTrunk(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPE
             public_network = self.clients("neutron").show_network(public_net)
             secgroup = self.context.get("user", {}).get("secgroup")
             key_name=self.context["user"]["keypair"]["name"]
-
             net_list, router = self.create_sub_add_to_interfaces_for_trunk(cidr1, cidr2, cidr3, dualstack, v6cidr1, v6cidr2, v6cidr3)
 
             port_create_args = {}
@@ -66,7 +65,7 @@ class SimpleTrunk(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPE
             print "\nAdding sub-interfaces into the VM...\n"
             self._remote_command(username, password, fip, command, vm1)
             self.sleep_between(30, 40)
-            
+
             p1_add = p1.get('port', {}).get('fixed_ips')[0].get('ip_address')
             if dualstack:
                 p1v6_add = p1.get('port', {}).get('fixed_ips')[1].get('ip_address')
@@ -79,7 +78,6 @@ class SimpleTrunk(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPE
                             "interpreter": "/bin/sh",
                             "script_inline": "ping -c 5 " + p1_add
                         }
-            import pdb;pdb.set_trace()
 
             print "\nVerify traffic from the default namespace\n"
             self._remote_command(username, password, fip, command, vm1)

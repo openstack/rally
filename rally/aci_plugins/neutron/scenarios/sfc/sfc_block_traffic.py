@@ -16,16 +16,13 @@ from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
 class SFCBlockTraffic(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario,
                       nova_utils.NovaScenario, scenario.OpenStackScenario):
    
-    def run(self, src_cidr, dest_cidr, vm_image, service_image, public_network, flavor, username, password,
-            ipv6_cidr, ipv6_dest_cidr, dualstack):
+    def run(self, src_cidr, dest_cidr, vm_image, service_image, public_network, flavor, username, password):
         
         public_net = self.clients("neutron").show_network(public_network)
         secgroup = self.context.get("user", {}).get("secgroup")
         key_name=self.context["user"]["keypair"]["name"]
 
-        #net_list, sub_list = self.create_net_sub_for_sfc(src_cidr, dest_cidr)
-        net_list, sub_list = self.create_net_sub_for_sfc(src_cidr, dest_cidr, dualstack=dualstack,
-                                                                ipv6_src_cidr=ipv6_cidr, ipv6_dest_cidr=ipv6_dest_cidr)
+        net_list, sub_list = self.create_net_sub_for_sfc(src_cidr, dest_cidr, dualstack=False)
         router = self._create_router({}, False)
         self.add_interface_to_router(router, sub_list, dualstack)
 
@@ -60,11 +57,7 @@ class SFCBlockTraffic(create_ostack_resources.CreateOstackResources, vcpe_utils.
             pp = self._create_port_pair(pin, pout)
             ppg = self._create_port_pair_group([pp])
             fc = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
-            if dualstack:
-                fc2 = self._create_flow_classifier(ipv6_cidr, ipv6_dest_cidr, net1_id, net2_id, ethertype="IPv6")
-                pc = self._create_port_chain([ppg], [fc, fc2])
-            else:
-                pc = self._create_port_chain([ppg], [fc])
+            pc = self._create_port_chain([ppg], [fc])
             self.sleep_between(30, 40)
             
             print "\nTraffic verification after creating SFC\n"

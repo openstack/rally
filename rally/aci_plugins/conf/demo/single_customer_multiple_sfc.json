@@ -18,7 +18,7 @@
                 "access_router_ip" : {{access_router_ip}}
                 },
             "runner": {
-                "type": "constant",
+                "type": "serial",
                 "times": 1,
                 "concurrency": 1
             },

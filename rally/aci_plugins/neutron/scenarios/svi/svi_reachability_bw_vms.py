@@ -13,7 +13,8 @@ from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
                              "keypair@openstack": {},
                              "allow_ssh@openstack": None}, platform="openstack")
 
-class SVIReachabilityBetweenVMs(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_utils.NovaScenario, scenario.OpenStackScenario):
+class SVIReachabilityBetweenVMs(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, 
+        nova_utils.NovaScenario, scenario.OpenStackScenario):
 
     def run(self, cidr1, cidr2, image, flavor, public_net, aci_nodes, username, password, dualstack, v6cidr1, v6cidr2):
          
@@ -28,11 +29,11 @@ class SVIReachabilityBetweenVMs(create_ostack_resources.CreateOstackResources, v
         try:
             if dualstack:
                 net1, sub1 = self.create_network_and_subnets_dual({"provider:network_type": "vlan", "apic:svi": True, "apic:bgp_enable": True, \
-                        "apic:bgp_asn": "10"},{"cidr": cidr1}, 1, None, dualstack, {"cidr": v6cidr1, "ipv6_ra_mode":"dhcpv6-stateful", \
-                        "ipv6_address_mode": "dhcpv6-stateful"}, None)
+                        "apic:bgp_asn": "10"},{"cidr": cidr1}, 1, None, dualstack, {"cidr": v6cidr1, "gateway_ip": v6cidr1[0:10] + '1', \
+                        "ipv6_ra_mode":"dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
                 net2, sub2 = self.create_network_and_subnets_dual({"provider:network_type": "vlan", "apic:svi": True, "apic:bgp_enable": True, \
-                        "apic:bgp_asn": "20"},{"cidr": cidr2}, 1, None, dualstack, {"cidr": v6cidr2, "ipv6_ra_mode":"dhcpv6-stateful", \
-                        "ipv6_address_mode": "dhcpv6-stateful"}, None)
+                        "apic:bgp_asn": "20"},{"cidr": cidr2}, 1, None, dualstack, {"cidr": v6cidr2, "gateway_ip": v6cidr2[0:10] + '1', \
+                        "ipv6_ra_mode":"dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
              
                 networks.extend([net1, net2])
                 self._create_svi_ports(net1, sub1[0][0], cidr1[0:10], aci_nodes, dualstack, sub1[0][1], v6cidr1[0:8])

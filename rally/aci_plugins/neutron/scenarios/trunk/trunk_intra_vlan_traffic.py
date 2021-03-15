@@ -13,8 +13,8 @@ from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
                              "keypair@openstack": {},
                              "allow_ssh@openstack": None}, platform="openstack")
 
-class TrunkIntravlanTraffic(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_utils.NovaScenario,
-                            scenario.OpenStackScenario):
+class TrunkIntravlanTraffic(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, 
+        nova_utils.NovaScenario, scenario.OpenStackScenario):
 
     resources_created = {"vms": [], "trunks": []}
 

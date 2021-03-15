@@ -23,15 +23,16 @@ class SFCScaleSeries(create_ostack_resources.CreateOstackResources, vcpe_utils.v
         secgroup = self.context.get("user", {}).get("secgroup")
         service_image = [service_image1, service_image2, service_image3]
         for x in range(0, int(scale) - 3): service_image.append(service_image[2])
+        
         router = self._create_router({}, False)
         if dualstack:
             net1, sub_net1 = self.create_network_and_subnets_dual({"provider:network_type": "vlan"}, {"cidr": src_cidr}, 1,
                                                               None, dualstack,
-                                                              {"cidr": ipv6_cidr, "ipv6_ra_mode": "dhcpv6-stateful",
+                                                              {"cidr": ipv6_cidr, "gateway_ip": ipv6_cidr[:9]+'1', "ipv6_ra_mode": "dhcpv6-stateful",
                                                                "ipv6_address_mode": "dhcpv6-stateful"}, None)
             net2, sub_net2 = self.create_network_and_subnets_dual({"provider:network_type": "vlan"}, {"cidr": dest_cidr}, 1,
                                                               None, dualstack,
-                                                              {"cidr": ipv6_dest_cidr, "ipv6_ra_mode": "dhcpv6-stateful",
+                                                              {"cidr": ipv6_dest_cidr, "gateway_ip": ipv6_dest_cidr[:9]+'1', "ipv6_ra_mode": "dhcpv6-stateful",
                                                                "ipv6_address_mode": "dhcpv6-stateful"}, None)
 
             self._add_interface_router(sub_net1[0][0].get("subnet"), router.get("router"))
@@ -91,7 +92,6 @@ class SFCScaleSeries(create_ostack_resources.CreateOstackResources, vcpe_utils.v
         self._remote_command(username, password, fip2, command1, dest_vm)
         print("Traffic verification before SFC")
         self._remote_command(username, password, fip1, command2, src_vm)
-
         port_create_args = {}
         port_create_args.update({"port_security_enabled": "false"})
         print("Creating series multi-chain service function...")
@@ -99,10 +99,9 @@ class SFCScaleSeries(create_ostack_resources.CreateOstackResources, vcpe_utils.v
         ppg = []
         try:
             for x in range(0, int(scale)):
-                #service_vm, pin, pout = self.create_service_vm(router, service_image[x],  flavor, "1.1." + str(x) + ".0/24",
-                #                                             "2.2." + str(x) + ".0/24", src_cidr=src_cidr)
-                service_vm, pin, pout = self.create_service_vm(router, service_image[x], flavor, "1.1." + str(x) + ".0/24", "2.2." + str(x) + ".0/24", 
-                        src_cidr=src_cidr,dualstack=dualstack, ipv6_src_cidr=ipv6_cidr, left_v6_cidr= chr(ord('a') + x*2) + ':' + chr(ord('a') + x*2)+"::/64", 
+                service_vm, pin, pout = self.create_service_vm(router, service_image[x], flavor, "1.1." + str(x) + ".0/24", 
+                        "2.2." + str(x) + ".0/24", src_cidr=src_cidr, dualstack=dualstack, ipv6_src_cidr=ipv6_cidr, 
+                        left_v6_cidr= chr(ord('a') + x*2) + ':' + chr(ord('a') + x*2)+"::/64", 
                         right_v6_cidr=chr(ord('b') + x*2)+':' + chr(ord('b') + x*2)+"::/64")
                 pp.append(self._create_port_pair(pin, pout))
                 ppg.append(self._create_port_pair_group([pp[x]]))

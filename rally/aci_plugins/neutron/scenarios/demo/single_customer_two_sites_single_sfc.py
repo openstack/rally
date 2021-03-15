@@ -71,23 +71,15 @@ class SingleCustomerTwoSitesSingleSFC(create_ostack_resources.CreateOstackResour
                 self.configuring_router('noiro', password, access_router_ip, 'orchest_single_customer_multi_site.sh')
 
                 print("Traffic verification from site-1 before creating SFC")
-                command9 = {
-                    "interpreter": "/bin/sh",
-                    "script_inline": "sudo ip netns exec cats-site1 ping -c 5 10.1.1.1;\
-                                                sudo ip netns exec cats-site1 ping -c 5 8.8.8.1;\
-                                                sudo ip netns exec cats-site1 ping -c 5 8.8.8.2;\
-                                                sudo ip netns exec cats-site1 ping -c 5 8.8.8.3"
-                }
-                self._remote_command_wo_server('noiro', password, access_router_ip, command9)
+                self.run_ping("noiro", password, access_router_ip, '10.1.1.1', True, site='cats-site1')
+                self.run_ping("noiro", password, access_router_ip, '8.8.8.1', True, site='cats-site1')
+                self.run_ping("noiro", password, access_router_ip, '8.8.8.2', True, site='cats-site1')
+                self.run_ping("noiro", password, access_router_ip, '8.8.8.3', True, site='cats-site1')
                 print("Traffic verification from site-2 before creating SFC")
-                command10 = {
-                    "interpreter": "/bin/sh",
-                    "script_inline": "sudo ip netns exec cats-site2 ping -c 5 10.1.1.1;\
-                                                sudo ip netns exec cats-site2 ping -c 5 8.8.8.1;\
-                                                sudo ip netns exec cats-site2 ping -c 5 8.8.8.2;\
-                                                sudo ip netns exec cats-site2 ping -c 5 8.8.8.3"
-                }
-                self._remote_command_wo_server('noiro', password, access_router_ip, command10)
+                self.run_ping("noiro", password, access_router_ip, '10.1.1.1', True, site='cats-site2')
+                self.run_ping("noiro", password, access_router_ip, '8.8.8.1', True, site='cats-site2')
+                self.run_ping("noiro", password, access_router_ip, '8.8.8.2', True, site='cats-site2')
+                self.run_ping("noiro", password, access_router_ip, '8.8.8.3', True, site='cats-site2')
 
                 print("Creating a single service function chain...")
                 service_vm, pin, pout = self.create_service_vm(router, service_image1, flavor, '1.1.0.0/24', '2.2.0.0/24',
@@ -100,15 +92,15 @@ class SingleCustomerTwoSitesSingleSFC(create_ostack_resources.CreateOstackResour
                 self.sleep_between(30, 40)
 
                 print("Traffic verification from site-1 after creating SFC")
-                self.run_ping("noiro", password, access_router_ip, '10.1.1.1', site='cats-site1')
-                self.run_ping("noiro", password, access_router_ip, '8.8.8.1', site='cats-site1')
-                self.run_ping("noiro", password, access_router_ip, '8.8.8.2', site='cats-site1')
-                self.run_ping("noiro", password, access_router_ip, '8.8.8.3', site='cats-site1')
+                self.run_ping("noiro", password, access_router_ip, '10.1.1.1', True, site='cats-site1')
+                self.run_ping("noiro", password, access_router_ip, '8.8.8.1', False, site='cats-site1')
+                self.run_ping("noiro", password, access_router_ip, '8.8.8.2', True, site='cats-site1')
+                self.run_ping("noiro", password, access_router_ip, '8.8.8.3', True, site='cats-site1')
                 print("Traffic verification from site-2 after creating SFC")
-                self.run_ping("noiro", password, access_router_ip, '10.1.1.1', site='cats-site2')
-                self.run_ping("noiro", password, access_router_ip, '8.8.8.1', site='cats-site2')
-                self.run_ping("noiro", password, access_router_ip, '8.8.8.2', site='cats-site2')
-                self.run_ping("noiro", password, access_router_ip, '8.8.8.3', site='cats-site2')
+                    self.run_ping("noiro", password, access_router_ip, '10.1.1.1', True, site='cats-site2')
+                self.run_ping("noiro", password, access_router_ip, '8.8.8.1', False, site='cats-site2')
+                self.run_ping("noiro", password, access_router_ip, '8.8.8.2', True, site='cats-site2')
+                self.run_ping("noiro", password, access_router_ip, '8.8.8.3', True, site='cats-site2')
             except Exception as e:
                 raise e
             finally:
@@ -126,5 +118,5 @@ class SingleCustomerTwoSitesSingleSFC(create_ostack_resources.CreateOstackResour
         self.delete_trunks(self.resources_created["trunks"])
         self.delete_ports(self.resources_created["ports"])
         self.cleanup_sfc()
-        self.delete_network(self.resources_created["networks"])
-
+        for nw in self.resources_created["networks"]:
+            self._delete_svi_ports(nw)

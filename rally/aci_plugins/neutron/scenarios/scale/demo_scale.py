@@ -13,11 +13,13 @@ from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
                              "keypair@openstack": {},
                              "allow_ssh@openstack": None}, platform="openstack")
 
-class DemoScale(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_utils.NovaScenario, scenario.OpenStackScenario):
+class DemoScale(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, 
+        nova_utils.NovaScenario, scenario.OpenStackScenario):
 
     resources_created = {"projects": [], "users": [], "vms": [], "trunks": [], "ports": [], "networks": [], "routers": [], "interfaces": []}
 
-    def run(self, access_network, access_network_bgp_asn, nat_network, nat_network_bgp_asn, aci_nodes, bras_image, nat_image, service_image1, flavor, username, password, access_router_ip, scale):
+    def run(self, access_network, access_network_bgp_asn, nat_network, nat_network_bgp_asn, aci_nodes, bras_image, 
+            nat_image, service_image1, flavor, username, password, access_router_ip, scale):
 
         try:
             acc_net = self.create_network(access_network, 'ACCESS', access_network_bgp_asn,
@@ -80,7 +82,8 @@ class DemoScale(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPESc
                 self.resources_created["networks"].append(left)
 
                 right = self._create_network({"provider:network_type": "vlan"})
-                right_sub = self._create_subnet(right, {"cidr": "2.2.0.0/24", 'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '2.2.0.1'}, {'destination': '128.0.0.0/1', 'nexthop': '2.2.0.1'}]}, None)    
+                right_sub = self._create_subnet(right, {"cidr": "2.2.0.0/24", 'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '2.2.0.1'}, \
+                        {'destination': '128.0.0.0/1', 'nexthop': '2.2.0.1'}]}, None)    
                 self.resources_created["networks"].append(right)
 
                 self._add_interface_router(left_sub.get("subnet"), router.get("router"))
@@ -149,10 +152,10 @@ class DemoScale(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPESc
 
             for i in range(1, int(scale)+1):
                 print("Traffic verification from Customer-" + str(i) + " after creating SFC\n")
-                self.ping_for_diff_cust('noiro', password, access_router_ip, i, '10.1.1.1')
+                self.ping_for_diff_cust('noiro', password, access_router_ip, i, '10.1.1.1', True)
                 self.ping_for_diff_cust('noiro', password, access_router_ip, i, '8.8.8.1')
-                self.ping_for_diff_cust('noiro', password, access_router_ip, i, '8.8.8.2')
-                self.ping_for_diff_cust('noiro', password, access_router_ip, i, '8.8.8.3')
+                self.ping_for_diff_cust('noiro', password, access_router_ip, i, '8.8.8.2', True)
+                self.ping_for_diff_cust('noiro', password, access_router_ip, i, '8.8.8.3', True)
                 self.sleep_between(25, 30)
         except Exception as e:
             raise e
@@ -181,10 +184,13 @@ class DemoScale(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPESc
         for user in self.resources_created["users"]:
             self._delete_user(user)
     
-    def ping_for_diff_cust(self, username, password, access_router_ip, n, ping_ip):
+    def ping_for_diff_cust(self, username, password, access_router_ip, n, ping_ip, validate=False):
         command = {
             "interpreter": "/bin/sh",
             "script_inline": "sudo ip netns exec Customer-" + str(n) + " ping -c 5 %s" %ping_ip
         }
-        self._remote_command_wo_server(username, password, access_router_ip, command)
+        if validate:
+            self._remote_command_validate(username, password, access_router_ip, command)
+        else:
+            self._remote_command_wo_server(username, password, access_router_ip, command)
         

@@ -13,8 +13,8 @@ from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
                              "keypair@openstack": {},
                              "allow_ssh@openstack": None}, platform="openstack")
 
-class TrunkIntervlanTraffic(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_utils.NovaScenario,
-                            scenario.OpenStackScenario):
+class TrunkIntervlanTraffic(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, 
+        nova_utils.NovaScenario, scenario.OpenStackScenario):
 
     resources_created = {"vms": [], "trunks": []}
 
@@ -35,19 +35,22 @@ class TrunkIntervlanTraffic(create_ostack_resources.CreateOstackResources, vcpe_
             self.resources_created["trunks"].extend([trunk1, trunk2])
             
             p1, p1_id = self.create_port(net_list[0], port_create_args)
-            vm1 = self.boot_vm(p1_id, image, flavor, key_name=key_name)
+            p10, p10_id = self.create_port(net_list[0], port_create_args)
+            vm1 = self.boot_vm([p10_id,p1_id], image, flavor, key_name=key_name)
 
             subp1_mac, subp1 = self.crete_port_and_add_trunk(net_list[1], port_create_args, trunk1)
             subp2_mac, subp2 = self.crete_port_and_add_trunk(net_list[1], port_create_args, trunk2)
 
             p2, p2_id = self.create_port(net_list[1], port_create_args)
-            vm2 = self.boot_vm(p2_id, image, flavor, key_name=key_name)
+            p20, p20_id = self.create_port(net_list[1], port_create_args)
+            vm2 = self.boot_vm([p20_id,p2_id], image, flavor, key_name=key_name)
 
             subp3_mac, subp3 = self.crete_port_and_add_trunk(net_list[2], port_create_args, trunk1, seg_id=20)
             subp4_mac, subp4 = self.crete_port_and_add_trunk(net_list[2], port_create_args, trunk2, seg_id=20)
             
             p3, p3_id = self.create_port(net_list[2], port_create_args)
-            vm3 = self.boot_vm(p3_id, image, flavor, key_name=key_name)
+            p30, p30_id = self.create_port(net_list[2], port_create_args)
+            vm3 = self.boot_vm([p30_id,p3_id], image, flavor, key_name=key_name)
 
             fip1 = pf1.get('port', {}).get('fixed_ips')[0].get('ip_address')
             fip2 = pf2.get('port', {}).get('fixed_ips')[0].get('ip_address')
@@ -74,7 +77,7 @@ class TrunkIntervlanTraffic(create_ostack_resources.CreateOstackResources, vcpe_
             self._remote_command(username, password, fip1, command1, vm_tr1)
             self._remote_command(username, password, fip2, command2, vm_tr2)
             self.sleep_between(30, 40)
-            import pdb;pdb.set_trace() 
+            
             p1_add = p1.get('port', {}).get('fixed_ips')[0].get('ip_address')
             p2_add = p2.get('port', {}).get('fixed_ips')[0].get('ip_address')
             p3_add = p3.get('port', {}).get('fixed_ips')[0].get('ip_address')
@@ -96,7 +99,8 @@ class TrunkIntervlanTraffic(create_ostack_resources.CreateOstackResources, vcpe_
                                 ip netns exec cats ping -c 5 " + p1_add + ";ip netns exec cats ping6 -c 5 " + p1v6_add + ";\
                                 ip netns exec dogs ping -c 5 " + p1_add + ";ip netns exec dogs ping6 -c 5 " + p1v6_add + ";\
                                 ip netns exec cats ping -c 5 " + subp4_add + ";ip netns exec cats ping6 -c 5 " + subp4v6_add + ";\
-                                ip netns exec dogs ping -c 5 " + subp2_add + ";ip netns exec dogs ping6 -c 5 " + subp2v6_add                    }
+                                ip netns exec dogs ping -c 5 " + subp2_add + ";ip netns exec dogs ping6 -c 5 " + subp2v6_add
+                        }
             else:
                 command = {
                             "interpreter": "/bin/sh",
@@ -104,7 +108,6 @@ class TrunkIntervlanTraffic(create_ostack_resources.CreateOstackResources, vcpe_
                                 ip netns exec dogs ping -c 5 " + p1_add + ";ip netns exec cats ping -c 5 " + subp4_add + ";\
                                 ip netns exec dogs ping -c 5 " + subp2_add
                         }
-            
             
             print "\nInter-vlan traffic verification from VM1\n"
             self._remote_command(username, password, fip1, command, vm_tr1)

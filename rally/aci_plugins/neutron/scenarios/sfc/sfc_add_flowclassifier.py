@@ -21,11 +21,11 @@ class SFCAddFlowclassifier(create_ostack_resources.CreateOstackResources, neutro
         public_net = self.clients("neutron").show_network(public_network)
         secgroup = self.context.get("user", {}).get("secgroup")
         key_name=self.context["user"]["keypair"]["name"]
-        #net_list, sub_list = self.create_net_sub_for_sfc(src_cidr, dest_cidr)
+        
         net_list, sub_list = self.create_net_sub_for_sfc(src_cidr, dest_cidr, dualstack=dualstack,
                                                                 ipv6_src_cidr=ipv6_cidr, ipv6_dest_cidr=ipv6_dest_cidr)
-        test_net, sub5 = self.create_network_and_subnets_dual({"provider:network_type": "vlan"},{"cidr": '192.168.0.0/24'}, 1, None, dualstack,
-                                                              {"cidr": "2001:0::/64", "ipv6_ra_mode":"slaac", "ipv6_address_mode": "slaac"}, None)
+        test_net, sub5 = self.create_network_and_subnets_dual({"provider:network_type": "vlan"},{"cidr": '192.168.0.0/24'}, 1, None, dualstack, \
+                {"cidr": "2001:0::/64", "gateway_ip": "2001:0::1", "ipv6_ra_mode":"dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
         
         router = self._create_router({}, False)
         self.add_interface_to_router(router, sub_list, dualstack)
@@ -33,7 +33,7 @@ class SFCAddFlowclassifier(create_ostack_resources.CreateOstackResources, neutro
             self._add_interface_router(sub5[0][0].get("subnet"), router.get("router"))
             self._add_interface_router(sub5[0][1].get("subnet"), router.get("router"))
         else:
-            self._add_interface_router(sub5[0].get("subnet"), router.get("router"))
+            self._add_interface_router(sub5[0][0].get("subnet"), router.get("router"))
 
         net1_id = net_list[0].get('network', {}).get('id')
         net2_id = net_list[1].get('network', {}).get('id')
@@ -63,7 +63,8 @@ class SFCAddFlowclassifier(create_ostack_resources.CreateOstackResources, neutro
                 }
             command2 = {
                     "interpreter": "/bin/sh",
-                    "script_inline": "ping -c 5 192.168.200.101;ping -c 5 192.168.200.102;ping -c 5 192.168.200.103; ping6 -c 5 2001:d8::101;ping6 -c 5 2001:d8::102;ping6 -c 5 2001:d8::103"
+                    "script_inline": "ping -c 5 192.168.200.101;ping -c 5 192.168.200.102;ping -c 5 192.168.200.103;\
+                    ping6 -c 5 2001:d8::101;ping6 -c 5 2001:d8::102;ping6 -c 5 2001:d8::103"
                 }
         else:
             command1 = {
@@ -97,7 +98,7 @@ class SFCAddFlowclassifier(create_ostack_resources.CreateOstackResources, neutro
             fc3 = self._create_flow_classifier(src_cidr, dest_cidr, net1_id, net2_id)
             if dualstack:
                 fc4 = self._create_flow_classifier(ipv6_cidr, ipv6_dest_cidr, net1_id, net2_id, ethertype="IPv6")
-                self._update_port_chain(pc, [ppg], [fc1, fc3, fc4])
+                self._update_port_chain(pc, [ppg], [fc1, fc2, fc3, fc4])
             else:
                 self._update_port_chain(pc, [ppg], [fc1, fc3])
             self.sleep_between(30, 40)

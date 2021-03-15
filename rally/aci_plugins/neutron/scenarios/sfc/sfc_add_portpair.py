@@ -22,7 +22,9 @@ class SFCAddPortpair(create_ostack_resources.CreateOstackResources, vcpe_utils.v
         public_net = self.clients("neutron").show_network(public_network)        
         secgroup = self.context.get("user", {}).get("secgroup")
         key_name=self.context["user"]["keypair"]["name"]
-        net_list, sub_list = self.create_net_sub_for_sfc(src_cidr, dest_cidr, dualstack=dualstack, ipv6_src_cidr=ipv6_cidr, ipv6_dest_cidr=ipv6_dest_cidr)
+        
+        net_list, sub_list = self.create_net_sub_for_sfc(src_cidr, dest_cidr, dualstack=dualstack, 
+                ipv6_src_cidr=ipv6_cidr, ipv6_dest_cidr=ipv6_dest_cidr)
         router = self._create_router({}, False)
         self.add_interface_to_router(router, sub_list, dualstack)
 
@@ -57,15 +59,15 @@ class SFCAddPortpair(create_ostack_resources.CreateOstackResources, vcpe_utils.v
             command2 = {
                 "interpreter": "/bin/sh",
                 "script_inline": "ping -c 5 192.168.200.101;ping -c 5 192.168.200.102;\
-                                ping -c 5 192.168.200.103; ping6 -c 5 2001:d8::101;ping6 -c 5 2001:d8::102; ping6 -c 5 2001:d8::103;\
-                                ip -6 route add 2001:d8::1"
+                                ping -c 5 192.168.200.103; ping6 -c 5 2001:d8::101;ping6 -c 5 2001:d8::102;\
+                                ping6 -c 5 2001:d8::103"
             }
         else:
             command1 = {
                 "interpreter": "/bin/sh",
                 "script_inline": "ip address add 192.168.200.101/24 dev eth1;\
-                                            ip address add 192.168.200.102/24 dev eth1;\
-                                            ip address add 192.168.200.103/24 dev eth1;route add default gw 192.168.200.1 eth1"
+                                ip address add 192.168.200.102/24 dev eth1;\
+                                ip address add 192.168.200.103/24 dev eth1;route add default gw 192.168.200.1 eth1"
             }
             command2 = {
                 "interpreter": "/bin/sh",
@@ -74,7 +76,7 @@ class SFCAddPortpair(create_ostack_resources.CreateOstackResources, vcpe_utils.v
             }
 
         self._remote_command(username, password, fip2, command1, dest_vm)
-
+        
         try:
             pp1 = self._create_port_pair(pin1, pout1)
             pp2 = self._create_port_pair(pin2, pout2)

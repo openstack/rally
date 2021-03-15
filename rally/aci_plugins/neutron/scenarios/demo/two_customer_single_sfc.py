@@ -135,16 +135,16 @@ class TwoCustomerSingleSFC(create_ostack_resources.CreateOstackResources, vcpe_u
                 print("Validating BGP session from NAT-VM...")
                 self._remote_command(username, password, fip2, command6, nat_vm)
                 print("Traffic verification from Customer-1 after creating SFC\n")
-                self.run_ping('noiro', password, access_router_ip, '10.1.1.1', "cats")
-                self.run_ping('noiro', password, access_router_ip, '8.8.8.1', "cats")
-                self.run_ping('noiro', password, access_router_ip, '8.8.8.2', "cats")
-                self.run_ping('noiro', password, access_router_ip, '8.8.8.3', "cats")
+                self.run_ping('noiro', password, access_router_ip, '10.1.1.1', True, "cats")
+                self.run_ping('noiro', password, access_router_ip, '8.8.8.1', False, "cats")
+                self.run_ping('noiro', password, access_router_ip, '8.8.8.2', True, "cats")
+                self.run_ping('noiro', password, access_router_ip, '8.8.8.3', True, "cats")
 
                 print("Traffic verification from Customer-2 after creating SFC\n")
-                self.run_ping('noiro', password, access_router_ip, '10.1.1.1', "dogs")
-                self.run_ping('noiro', password, access_router_ip, '8.8.8.1', "dogs")
-                self.run_ping('noiro', password, access_router_ip, '8.8.8.2', "dogs")
-                self.run_ping('noiro', password, access_router_ip, '8.8.8.3', "dogs")
+                self.run_ping('noiro', password, access_router_ip, '10.1.1.1', True, "dogs")
+                self.run_ping('noiro', password, access_router_ip, '8.8.8.1', False, "dogs")
+                self.run_ping('noiro', password, access_router_ip, '8.8.8.2', True, "dogs")
+                self.run_ping('noiro', password, access_router_ip, '8.8.8.3', True, "dogs")
             except Exception as e:
                 raise e
             finally:

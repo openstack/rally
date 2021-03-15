@@ -22,7 +22,8 @@ class SFCAddService(create_ostack_resources.CreateOstackResources, vcpe_utils.vC
         public_net = self.clients("neutron").show_network(public_network)
         secgroup = self.context.get("user", {}).get("secgroup")
         key_name=self.context["user"]["keypair"]["name"]
-        net_list, sub_list = self.create_net_sub_for_sfc(src_cidr, dest_cidr, dualstack=dualstack, ipv6_src_cidr=ipv6_cidr, ipv6_dest_cidr=ipv6_dest_cidr)
+        net_list, sub_list = self.create_net_sub_for_sfc(src_cidr, dest_cidr, dualstack=dualstack, ipv6_src_cidr=ipv6_cidr, 
+                ipv6_dest_cidr=ipv6_dest_cidr)
         router = self._create_router({}, False)
         self.add_interface_to_router(router, sub_list, dualstack)
 

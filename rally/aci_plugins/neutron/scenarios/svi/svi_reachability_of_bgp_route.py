@@ -13,8 +13,8 @@ from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
                              "keypair@openstack": {},
                              "allow_ssh@openstack": None}, platform="openstack")
 
-class SVIReachabilityofBGProute(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nova_utils.NovaScenario,
-        scenario.OpenStackScenario):
+class SVIReachabilityofBGProute(create_ostack_resources.CreateOstackResources, vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, 
+        nova_utils.NovaScenario, scenario.OpenStackScenario):
 
     def run(self, cidr1, cidr2, image, flavor, public_net, aci_nodes, username, password, dualstack, v6cidr1, v6cidr2):
         
@@ -26,15 +26,14 @@ class SVIReachabilityofBGProute(create_ostack_resources.CreateOstackResources, v
         networks=[]
         interfaces=[]
         vms=[]
-        import pdb;pdb.set_trace()
         try:
             if dualstack:
                 net1, sub1 = self.create_network_and_subnets_dual({"provider:network_type": "vlan", "apic:svi": True, "apic:bgp_enable": True, \
-                        "apic:bgp_asn": "10"},{"cidr": cidr1}, 1, None, dualstack, {"cidr": v6cidr1, "ipv6_ra_mode":"dhcpv6-stateful", \
-                        "ipv6_address_mode": "dhcpv6-stateful"}, None)
+                        "apic:bgp_asn": "10"},{"cidr": cidr1}, 1, None, dualstack, {"cidr": v6cidr1, "gateway_ip": v6cidr1[0:10] + '1', \
+                        "ipv6_ra_mode":"dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
                 net2, sub2 = self.create_network_and_subnets_dual({"provider:network_type": "vlan", "apic:svi": True, "apic:bgp_enable": True, \
-                        "apic:bgp_asn": "20"},{"cidr": cidr2}, 1, None, dualstack, {"cidr": v6cidr2, "ipv6_ra_mode":"dhcpv6-stateful", \
-                        "ipv6_address_mode": "dhcpv6-stateful"}, None)
+                        "apic:bgp_asn": "20"},{"cidr": cidr2}, 1, None, dualstack, {"cidr": v6cidr2, "gateway_ip": v6cidr2[0:10] + '1', \
+                        "ipv6_ra_mode":"dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
 
                 networks.extend([net1, net2])
                 self._create_svi_ports(net1, sub1[0][0], cidr1[0:10], aci_nodes, dualstack, sub1[0][1], v6cidr1[0:8])
@@ -70,8 +69,6 @@ class SVIReachabilityofBGProute(create_ostack_resources.CreateOstackResources, v
             if dualstack:
                 self.configure_vm(username, password, fip1, vm1, "svi_orchest_vm1_dual.sh")
                 self.configure_vm(username, password, fip2, vm2, "svi_orchest_vm2_dual.sh")
-                #self.configure_vm(username, password, fip1, vm1, "svitesting1.sh")
-                #self.configure_vm(username, password, fip2, vm2, "svitesting2.sh")
             else:
                 self.configure_vm(username, password, fip1, vm1, "svi_orchest_vm1.sh")
                 self.configure_vm(username, password, fip2, vm2, "svi_orchest_vm2.sh")
@@ -79,28 +76,28 @@ class SVIReachabilityofBGProute(create_ostack_resources.CreateOstackResources, v
             self.run_bird_conf(username, password, fip2, vm2, "bird_svi.conf")
             self.sleep_between(100, 120)
 
-            import pdb; pdb.set_trace()
             print("Validating BGP session from VM1...")
             self.validate_bgp_session(username, password, [fip1, fip2], [vm1, vm2], no_demo=True)
-            
+           
             if dualstack:
                 command0 = {
                            "interpreter": "/bin/sh",
-                           "script_inline": "ping -c 5 192.168.10.199;ping6 -c 5 -I 2001:a20::65 2001:a10::c7\
+                           "script_inline": "ping -c 5 192.168.10.199;ping6 -c 5 -I 2001:a20::65 2001:a10::c7;\
                             ping -c 5 192.168.10.200;ping6 -c 5 -I 2001:a20::65 2001:a10::c8;\
-                            ping -c 5 10.10.10.1;ping6 -c 5 -I 2001:a20::65 2001:b10::1\
+                            ping -c 5 10.10.10.1;ping6 -c 5 -I 2001:a20::65 2001:b10::1;\
                             ping -c 5 192.168.20.199;ping6 -c 5 -I 2001:a20::65 2001:b10::c7;\
                             ping -c 5 10.10.10.2;ping6 -c 5 -I 2001:a20::65 2001:b10::2;\
-                            ping -c 5 192.168.20.200;ping6 -c 5 -I 2001:a20::65 2001:a20::c8"
+                            ping -c 5 192.168.20.200;ping6 -c 5 -I 2001:a20::65 2001:a20::c8;"
                         }
             else:
                 command0 = {
                             "interpreter": "/bin/sh",
                             "script_inline": "ping -c 5 192.168.10.199;\
                             ping -c 5 192.168.10.200;ping -c 5 10.10.10.1;\
-                            ping -c 5 192.168.20.199;ping -c 5 10.10.10.2;ping -c 5 192.168.20.200"
+                            ping -c 5 192.168.20.199;ping -c 5 10.10.10.2;ping -c 5 192.168.20.200;"
                         }
             self._remote_command(username, password, fip2, command0, vm2)
+            
             print "\nVerifying the traffic from VM1...\n"
             if dualstack:
                 command1 = {
@@ -109,7 +106,7 @@ class SVIReachabilityofBGProute(create_ostack_resources.CreateOstackResources, v
                             ping -c 5 10.10.20.2;ping6 -c 5 -I 2001:a10::65 2001:b20::2;\
                             ping -c 5 10.10.20.3;ping6 -c 5 -I 2001:a10::65 2001:b20::3;\
                             ping -c 5 10.10.20.4;ping6 -c 5 -I 2001:a10::65 2001:b20::4;\
-                            ping -c 5 10.10.20.5;ping6 -c 5 -I 2001:a10::65 2001:b20::5"
+                            ping -c 5 10.10.20.5;ping6 -c 5 -I 2001:a10::65 2001:b20::5;"
                         }
 
                 command2 = {
@@ -118,19 +115,19 @@ class SVIReachabilityofBGProute(create_ostack_resources.CreateOstackResources, v
                             ping -c 5 10.10.10.2;ping6 -c 5 -I 2001:a20::65 2001:b10::2;\
                             ping -c 5 10.10.10.3;ping6 -c 5 -I 2001:a20::65 2001:b10::3;\
                             ping -c 5 10.10.10.4;ping6 -c 5 -I 2001:a20::65 2001:b10::4;\
-                            ping -c 5 10.10.10.5;ping6 -c 5 -I 2001:a20::65 2001:b10::5"
+                            ping -c 5 10.10.10.5;ping6 -c 5 -I 2001:a20::65 2001:b10::5;"
                         }
             else:
                 command1 = {
                             "interpreter": "/bin/sh",
                             "script_inline": "ping -c 5 10.10.20.1;ping -c 5 10.10.20.2;\
-                            ping -c 5 10.10.20.3;ping -c 5 10.10.20.4;ping -c 5 10.10.20.5"
+                            ping -c 5 10.10.20.3;ping -c 5 10.10.20.4;ping -c 5 10.10.20.5;"
                         }
 
                 command2 = {
                             "interpreter": "/bin/sh",
                             "script_inline": "ping -c 5 10.10.10.1;ping -c 5 10.10.10.2;\
-                            ping -c 5 10.10.10.3;ping -c 5 10.10.10.4;ping -c 5 10.10.10.5"
+                            ping -c 5 10.10.10.3;ping -c 5 10.10.10.4;ping -c 5 10.10.10.5;"
                         } 
             
             self._remote_command(username, password, fip1, command1, vm1)

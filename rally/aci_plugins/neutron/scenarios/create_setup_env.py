@@ -19,7 +19,6 @@ class CreateSetupEnv(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nov
 
     def run(self, access_network, access_network_bgp_asn, nat_network, nat_network_bgp_asn, aci_nodes, dualstack):
       
-        import pdb; pdb.set_trace()
         try:
             acc_net = self.clients("neutron").show_network(access_network)
             nat_net = self.clients("neutron").show_network(nat_network)       
@@ -27,7 +26,8 @@ class CreateSetupEnv(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nov
             acc_net = self._admin_create_network('ACCESS', {"provider:network_type": "vlan", "shared": True, "apic:svi": True, "apic:bgp_enable": True, \
                     "apic:bgp_asn": access_network_bgp_asn, "apic:distinguished_names": {"ExternalNetwork": "uni/tn-common/out-Access-Out/instP-data_ext_pol"}})
             if dualstack:
-                acc_sub = self.admin_create_subnets_dual(acc_net, {"cidr": "172.168.0.0/24"}, None, 1, dualstack, {"cidr": "2001:ac::/64", "ipv6_ra_mode":"dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
+                acc_sub = self.admin_create_subnets_dual(acc_net, {"cidr": "172.168.0.0/24"}, None, 1, dualstack, {"cidr": "2001:ac::/64", 
+                    "gateway_ip": "2001:ac::1", "ipv6_ra_mode":"dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
                 self._create_svi_ports(acc_net, acc_sub[0][0], '172.168.0', aci_nodes, dualstack, acc_sub[0][1], '2001:ac')
             else:
                 acc_sub = self._admin_create_subnet(acc_net, {"cidr": '172.168.0.0/24'}, None)
@@ -36,7 +36,8 @@ class CreateSetupEnv(vcpe_utils.vCPEScenario, neutron_utils.NeutronScenario, nov
             nat_net = self._admin_create_network('INTERNET', {"provider:network_type": "vlan", "shared": True, "apic:svi": True, "apic:bgp_enable": True, \
                     "apic:bgp_asn": nat_network_bgp_asn, "apic:distinguished_names": {"ExternalNetwork": "uni/tn-common/out-Internet-Out/instP-data_ext_pol"}})
             if dualstack:
-                nat_sub = self.admin_create_subnets_dual(nat_net, {"cidr": "173.168.0.0/24"}, None, 1, dualstack, {"cidr": "2001:ad::/64", "ipv6_ra_mode":"dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
+                nat_sub = self.admin_create_subnets_dual(nat_net, {"cidr": "173.168.0.0/24"}, None, 1, dualstack, {"cidr": "2001:ad::/64", 
+                    "gateway_ip": "2001:ad::1", "ipv6_ra_mode":"dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
                 self._create_svi_ports(nat_net, nat_sub[0][0], '173.168.0', aci_nodes, dualstack, nat_sub[0][1], '2001:ad')
             else:
                 nat_sub = self._admin_create_subnet(nat_net, {"cidr": '173.168.0.0/24'}, None)

@@ -23,17 +23,37 @@ class SFCRemoveService(create_ostack_resources.CreateOstackResources, vcpe_utils
         secgroup = self.context.get("user", {}).get("secgroup")
         key_name=self.context["user"]["keypair"]["name"]
 
-        #net_list, sub_list = self.create_net_sub_for_sfc(src_cidr, dest_cidr)
         net_list, sub_list = self.create_net_sub_for_sfc(src_cidr, dest_cidr, dualstack=dualstack,
                                                                 ipv6_src_cidr=ipv6_cidr, ipv6_dest_cidr=ipv6_dest_cidr)
-        left2, sub5 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "3.3.0.0/24", 'host_routes': [{'destination': src_cidr, 'nexthop': '3.3.0.1'}]}, 1, None)
-        right2, sub6 = self._create_network_and_subnets({"provider:network_type": "vlan"},{"cidr": "4.4.0.0/24", 'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '4.4.0.1'}, {'destination': '128.0.0.0/1', 'nexthop': '4.4.0.1'}]}, 1, None)
+    
+        if dualstack:
+            left2, sub5 = self.create_network_and_subnets_dual({"provider:network_type": "vlan"}, {"cidr": "3.3.0.0/24", \
+                     'host_routes': [{'destination': src_cidr, 'nexthop': '3.3.0.1'}]}, 1, None, dualstack, \
+                     {"cidr": 'c:c::/64', "gateway_ip": "c:c::1", 'host_routes': [{'destination': ipv6_cidr, 'nexthop': 'c:c::1'}],\
+                     "ipv6_ra_mode":"dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
+            right2, sub6 = self.create_network_and_subnets_dual({"provider:network_type": "vlan"}, {"cidr": "4.4.0.0/24",\
+                     'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '4.4.0.1'},{'destination': '128.0.0.0/1',\
+                     'nexthop': '4.4.0.1'}]}, 1, None, dualstack, {"cidr":"d:d::/64", "gateway_ip": "d:d::1", 'host_routes': [{'destination': '0:0::/1', \
+                     'nexthop': 'd:d::1'}, {'destination': '::/1', 'nexthop': 'd:d::1'}], "ipv6_ra_mode":"dhcpv6-stateful", \
+                     "ipv6_address_mode": "dhcpv6-stateful"}, None)
+        else:
+            left2, sub5 = self._create_network_and_subnets({"provider:network_type": "vlan"}, {"cidr": "3.3.0.0/24", \
+                     'host_routes': [{'destination': src_cidr, 'nexthop': '3.3.0.1'}]}, 1, None)
+            right2, sub6 = self._create_network_and_subnets({"provider:network_type": "vlan"}, {"cidr": "4.4.0.0/24", \
+                     'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '4.4.0.1'}, {'destination': '128.0.0.0/1', 'nexthop': '4.4.0.1'}]}, 1, None)
 
         router = self._create_router({}, False)
         self.add_interface_to_router(router, sub_list, dualstack)
-        self._add_interface_router(sub5[0].get("subnet"), router.get("router"))
-        self._add_interface_router(sub6[0].get("subnet"), router.get("router"))
-        
+
+        if dualstack:
+             self._add_interface_router(sub5[0][0].get("subnet"), router.get("router"))
+             self._add_interface_router(sub5[0][1].get("subnet"), router.get("router"))
+             self._add_interface_router(sub6[0][0].get("subnet"), router.get("router"))
+             self._add_interface_router(sub6[0][1].get("subnet"), router.get("router"))
+        else:
+             self._add_interface_router(sub5[0].get("subnet"), router.get("router"))
+             self._add_interface_router(sub6[0].get("subnet"), router.get("router"))
+
         net1_id = net_list[0].get('network', {}).get('id')
         net2_id = net_list[1].get('network', {}).get('id')
         
@@ -93,7 +113,10 @@ class SFCRemoveService(create_ostack_resources.CreateOstackResources, vcpe_utils
             self._remote_command(username, password, fip1, command2, src_vm)
 
             print"Removing a function from the chain..."
-            self._update_port_chain(pc, [ppg1], [fc])
+            if dualstack:
+                self._update_port_chain(pc, [ppg1], [fc, fc2])
+            else:
+                self._update_port_chain(pc, [ppg1], [fc])
             self._delete_port_pair_group(ppg2)
             self._delete_port_pair(pp2)
             self.sleep_between(30, 40)

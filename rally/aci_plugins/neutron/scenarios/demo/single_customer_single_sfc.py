@@ -37,7 +37,6 @@ class SingleCustomerSingleSFC(create_ostack_resources.CreateOstackResources, vcp
             nat_vm, trunk2, pfip2 = self.boot_server(nat_net, port_create_args, nat_image, flavor, admin=True)
             self.resources_created["vms"].extend([bras_vm, nat_vm])
             self.resources_created["trunks"].extend([trunk1, trunk2])
-            self.resources_created["ports"].extend([pfip1, pfip2])
 
             print("Creating network, subnet and subports...")
             router = self._create_router({}, False)
@@ -53,6 +52,7 @@ class SingleCustomerSingleSFC(create_ostack_resources.CreateOstackResources, vcp
 
             fip1 = pfip1.get('port', {}).get('fixed_ips')[0].get('ip_address')
             fip2 = pfip2.get('port', {}).get('fixed_ips')[0].get('ip_address')
+            self.resources_created["ports"].extend([pfip1, pfip2])
 
             print("Configuring BRAS-VM...")
             self.configure_bras_nat_vm(username, password, fip1, bras_vm, subp1_mac, "orchest_single_customer_bras.sh")
@@ -64,7 +64,6 @@ class SingleCustomerSingleSFC(create_ostack_resources.CreateOstackResources, vcp
             self.validate_bgp_session(username, password, fip1, bras_vm)
             print("Validating BGP session from NAT-VM...")
             self.validate_bgp_session(username, password, fip2, nat_vm)
-
             try:
                 self.configuring_router('noiro', password, access_router_ip, 'orchest_single_customer.sh')
 
@@ -80,10 +79,10 @@ class SingleCustomerSingleSFC(create_ostack_resources.CreateOstackResources, vcp
                 self.sleep_between(30, 40)
 
                 print("Traffic verification after creating SFC")
-                self.run_ping('noiro', password, access_router_ip, '10.1.1.1')
+                self.run_ping('noiro', password, access_router_ip, '10.1.1.1', True)
                 self.run_ping('noiro', password, access_router_ip, '8.8.8.1')
-                self.run_ping('noiro', password, access_router_ip, '8.8.8.2')
-                self.run_ping('noiro', password, access_router_ip, '8.8.8.3')
+                self.run_ping('noiro', password, access_router_ip, '8.8.8.2', True)
+                self.run_ping('noiro', password, access_router_ip, '8.8.8.3', True)
             except Exception as e:
                 raise e
             finally:
@@ -101,4 +100,6 @@ class SingleCustomerSingleSFC(create_ostack_resources.CreateOstackResources, vcp
         self.delete_trunks(self.resources_created["trunks"])
         self.delete_ports(self.resources_created["ports"])
         self.cleanup_sfc()
-        self.delete_network(self.resources_created["networks"])
+        for nw in self.resources_created["networks"]:
+            self._delete_svi_ports(nw)
+

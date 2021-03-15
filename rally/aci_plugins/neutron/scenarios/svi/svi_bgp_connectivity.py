@@ -29,11 +29,11 @@ class SVIBGPConnectivity(create_ostack_resources.CreateOstackResources, vcpe_uti
         try:
             if dualstack:
                 net1, sub1 = self.create_network_and_subnets_dual({"provider:network_type": "vlan", "apic:svi": True, "apic:bgp_enable": True, \
-                        "apic:bgp_asn": "10"},{"cidr": cidr1}, 1, None, dualstack, {"cidr": v6cidr1, "ipv6_ra_mode":"dhcpv6-stateful", \
-                        "ipv6_address_mode": "dhcpv6-stateful"}, None)
+                        "apic:bgp_asn": "10"},{"cidr": cidr1}, 1, None, dualstack, {"cidr": v6cidr1, "gateway_ip": v6cidr1[0:10] + '1', \
+                        "ipv6_ra_mode":"dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
                 net2, sub2 = self.create_network_and_subnets_dual({"provider:network_type": "vlan", "apic:svi": True, "apic:bgp_enable": True, \
-                        "apic:bgp_asn": "20"},{"cidr": cidr2}, 1, None, dualstack, {"cidr": v6cidr2, "ipv6_ra_mode":"dhcpv6-stateful", \
-                        "ipv6_address_mode": "dhcpv6-stateful"}, None)
+                        "apic:bgp_asn": "20"},{"cidr": cidr2}, 1, None, dualstack, {"cidr": v6cidr2, "gateway_ip": v6cidr2[0:10] + '1', \
+                        "ipv6_ra_mode":"dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
              
                 networks.extend([net1, net2])
                 self._create_svi_ports(net1, sub1[0][0], cidr1[0:10], aci_nodes, dualstack, sub1[0][1], v6cidr1[0:8])
@@ -75,7 +75,7 @@ class SVIBGPConnectivity(create_ostack_resources.CreateOstackResources, vcpe_uti
             self.run_bird_conf(username, password, fip1, vm1, "bird_svi.conf")
             self.run_bird_conf(username, password, fip2, vm2, "bird_svi.conf")
             self.sleep_between(100, 120)
-
+            
             print "\nValidating BGP session from VM1...\n"
             self.validate_bgp_session(username, password, [fip1, fip2],  [vm1,vm2], no_demo=True)
         except Exception as e:

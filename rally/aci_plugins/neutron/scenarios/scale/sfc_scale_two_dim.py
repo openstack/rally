@@ -24,19 +24,18 @@ class SFCScaleTwoDimension(create_ostack_resources.CreateOstackResources, vcpe_u
         secgroup = self.context.get("user", {}).get("secgroup")
         service_image = [service_image1, service_image2, service_image3]
         for i in range(0, int(x) - 3): service_image.append(service_image[2])
+        
         router = self._create_router({}, False)
         if dualstack:
-            net1, sub_net1 = self.create_network_and_subnets_dual({"provider:network_type": "vlan"}, {"cidr": src_cidr},
-                                                                  1,
-                                                                  None, dualstack,
-                                                                  {"cidr": ipv6_cidr, "ipv6_ra_mode": "dhcpv6-stateful",
+            net1, sub_net1 = self.create_network_and_subnets_dual({"provider:network_type": "vlan"}, {"cidr": src_cidr}, 1,
+                                                                  None, dualstack, {"cidr": ipv6_cidr, "gateway_ip": ipv6_cidr[:9]+'1', 
+                                                                  "ipv6_ra_mode": "dhcpv6-stateful",
+                                                                  "ipv6_address_mode": "dhcpv6-stateful"}, None)
+            net2, sub_net2 = self.create_network_and_subnets_dual({"provider:network_type": "vlan"}, {"cidr": dest_cidr}, 1,
+                                                                  None, dualstack, {"cidr": ipv6_dest_cidr, 
+                                                                  "gateway_ip": ipv6_dest_cidr[:9]+'1', "ipv6_ra_mode": "dhcpv6-stateful",
                                                                    "ipv6_address_mode": "dhcpv6-stateful"}, None)
-            net2, sub_net2 = self.create_network_and_subnets_dual({"provider:network_type": "vlan"},
-                                                                  {"cidr": dest_cidr}, 1,
-                                                                  None, dualstack,
-                                                                  {"cidr": ipv6_dest_cidr,
-                                                                   "ipv6_ra_mode": "dhcpv6-stateful",
-                                                                   "ipv6_address_mode": "dhcpv6-stateful"}, None)
+
             self._add_interface_router(sub_net1[0][0].get("subnet"), router.get("router"))
             self._add_interface_router(sub_net1[0][1].get("subnet"), router.get("router"))
             self._add_interface_router(sub_net2[0][0].get("subnet"), router.get("router"))
@@ -89,9 +88,10 @@ class SFCScaleTwoDimension(create_ostack_resources.CreateOstackResources, vcpe_u
 
             }
         self._remote_command(username, password, fip2, command1, dest_vm)
-
+        
         print("Traffic verification before SFC")
         self._remote_command(username, password, fip1, command2, src_vm)
+        
         port_create_args = {}
         port_create_args.update({"port_security_enabled": "false"})
         try:
@@ -102,12 +102,17 @@ class SFCScaleTwoDimension(create_ostack_resources.CreateOstackResources, vcpe_u
                 if dualstack:
                     left, sub_left = self.create_network_and_subnets_dual({"provider:network_type": "vlan"},
                         {"cidr": "1.1." + str(i) + ".0/24", 'host_routes': [{'destination': src_cidr, 'nexthop': '1.1.' + str(i) + '.1'}]}, 1, None,
-                        dualstack, {"cidr": chr(ord('a') + i*2) + ':' + chr(ord('a') + i*2)+"::/64", 'host_routes': [{ 'destination': ipv6_cidr,
-                        'nexthop': chr(ord('a') + i*2) + ':' + chr(ord('a') + i*2)+ '::1' }], "ipv6_ra_mode": "dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
+                        dualstack, {"cidr": chr(ord('a') + i*2) + ':' + chr(ord('a') + i*2)+"::/64", 
+                            "gateway_ip": chr(ord('a') + i*2) + ':' + chr(ord('a') + i*2)+"::1",
+                            'host_routes': [{ 'destination': ipv6_cidr, 'nexthop': chr(ord('a') + i*2) + ':' + chr(ord('a') + i*2)+ '::1' }], 
+                            "ipv6_ra_mode": "dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
 
-                    right, sub_right = self.create_network_and_subnets_dual({"provider:network_type": "vlan"}, {"cidr": "2.2." + str(i) + ".0/24",  'host_routes': [{'destination': '0.0.0.0/1',
-                        'nexthop': '2.2.' + str(i) + '.1'}, {'destination': '128.0.0.0/1', 'nexthop': '2.2.' + str(i) + '.1'}]}, 1, None, dualstack, {"cidr": chr(ord('b') + i*2) + ':' + chr(ord('b') + i*2)+"::/64",
-                        'host_routes': [{'destination': '0:0::/1', 'nexthop': chr(ord('b') + i*2) + ':' + chr(ord('b') + i*2)+ '::1'}, {'destination': '::/1', 'nexthop': chr(ord('b') + i*2) + ':' + chr(ord('b') + i*2)+ '::1'}],
+                    right, sub_right = self.create_network_and_subnets_dual({"provider:network_type": "vlan"}, {"cidr": "2.2." + str(i) + ".0/24",  
+                        'host_routes': [{'destination': '0.0.0.0/1', 'nexthop': '2.2.' + str(i) + '.1'}, 
+                            {'destination': '128.0.0.0/1', 'nexthop': '2.2.' + str(i) + '.1'}]}, 1, None, dualstack, 
+                        {"cidr": chr(ord('b') + i*2) + ':' + chr(ord('b') + i*2)+"::/64", "gateway_ip": chr(ord('b') + i*2) + ':' + chr(ord('b') + i*2)+"::1",
+                        'host_routes': [{'destination': '0:0::/1', 'nexthop': chr(ord('b') + i*2) + ':' + chr(ord('b') + i*2)+ '::1'}, 
+                            {'destination': '::/1', 'nexthop': chr(ord('b') + i*2) + ':' + chr(ord('b') + i*2)+ '::1'}],
                         "ipv6_ra_mode": "dhcpv6-stateful", "ipv6_address_mode": "dhcpv6-stateful"}, None)
 
                     self._add_interface_router(sub_left[0][0].get("subnet"), router.get("router"))
