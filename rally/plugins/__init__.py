@@ -13,9 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import functools
 import os
-
-import decorator
 
 from rally.common.plugin import discover
 
@@ -53,7 +52,9 @@ def load():
     PLUGINS_LOADED = True
 
 
-@decorator.decorator
-def ensure_plugins_are_loaded(f, *args, **kwargs):
-    load()
-    return f(*args, **kwargs)
+def ensure_plugins_are_loaded(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        load()
+        return func(*args, **kwargs)
+    return wrapper

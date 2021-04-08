@@ -13,11 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import functools
+import inspect
 import os
 
-import decorator
-
 from rally import exceptions
+
 
 PATH_GLOBALS = "~/.rally/globals"
 ENV_ENV = "RALLY_ENV"
@@ -124,16 +125,23 @@ def get_global(global_key, do_raise=False):
 def default_from_global(arg_name, env_name,
                         cli_arg_name,
                         message=MSG_MISSING_ARG):
-    def default_from_global(f, *args, **kwargs):
-        id_arg_index = f.__code__.co_varnames.index(arg_name)
-        args = list(args)
-        if args[id_arg_index] is None:
-            args[id_arg_index] = get_global(env_name)
-            if not args[id_arg_index]:
-                print(message % {"arg_name": cli_arg_name})
-                return(1)
-        return f(*args, **kwargs)
-    return decorator.decorator(default_from_global)
+    def wrapper(func):
+
+        @functools.wraps(func)
+        def inner(*args, **kwargs):
+            params = list(inspect.signature(func).parameters)
+            id_arg_index = params.index(arg_name)
+
+            args = list(args)
+            if ((len(args) <= id_arg_index or args[id_arg_index] is None)
+                    and arg_name not in kwargs):
+                kwargs[arg_name] = get_global(env_name)
+                if not kwargs[arg_name]:
+                    print(message % {"arg_name": cli_arg_name})
+                    return 1
+            return func(*args, **kwargs)
+        return inner
+    return wrapper
 
 
 def with_default_env():

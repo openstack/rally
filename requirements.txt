@@ -4,7 +4,6 @@
 
 # Rally core dependencies
 alembic!=1.2.0                                         # MIT
-decorator                                              # new BSD License
 Jinja2                                                 # BSD-3-Clause
 jsonschema                                             # MIT
 oslo.config!=4.3.0,!=4.4.0                             # Apache Software License
