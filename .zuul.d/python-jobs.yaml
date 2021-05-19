@@ -6,6 +6,7 @@
     post-run: tests/ci/playbooks/fetch-html-and-json-reports.yaml
     description: |
       Run test for rally project.
+    nodeset: ubuntu-bionic
 
 - job:
     name: rally-tox-docs
@@ -84,6 +85,7 @@
       Run unit test for rally project.
 
       Uses tox with the ``py38`` environment.
+    nodeset: ubuntu-focal
     vars:
       tox_env: py38
 
@@ -104,6 +106,7 @@
       Run test for rally project.
 
       Uses tox with the ``cover`` environment.
+    nodeset: ubuntu-bionic
     vars:
       coverage_output_src: '{{ zuul.project.src_dir }}/cover/'
       zuul_executor_dest: '{{ zuul.executor.log_root }}/coverage/'
