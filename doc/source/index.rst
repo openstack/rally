@@ -43,6 +43,21 @@ Contents
    task/index
    verification/index
    plugins/index
-   contribute
    feature_requests
    project_info/index
+
+For Contributors
+================
+
+* If you are a new contributor to Rally please refer: :doc:`contributor/contributing`
+
+  .. toctree::
+     :hidden:
+
+     contributor/contributing
+
+  .. toctree::
+     :maxdepth: 2
+
+     contribute
+
