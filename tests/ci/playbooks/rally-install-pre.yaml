@@ -1,7 +1,14 @@
 - hosts: all
   name: Prepare host to install Rally
   tasks:
-    - name: Set Apache URL
+    - name: Check OS distro (CentOS)
+      when: ansible_distribution == "CentOS"
+      set_fact:
+        # in case of centos we do not care about minor versions
+        os_distro: '{{ ansible_distribution }} {{ ansible_distribution_major_version }}'
+
+    - name: Check OS distro (Ubuntu)
+      when: ansible_distribution == "Ubuntu"
       set_fact:
         os_distro: '{{ ansible_distribution }} {{ ansible_distribution_version }}'
 
@@ -10,13 +17,19 @@
       shell:
         cmd: |
           sudo yum remove -y python-crypto || true
+          sudo yum remove -y python36-PyYAML || true
 
           sudo yum update
           sudo yum install -y yum-utils
           sudo yum groupinstall -y development
 
-          sudo yum install -y https://centos7.iuscommunity.org/ius-release.rpm
+          sudo yum install -y https://repo.ius.io/ius-release-el7.rpm https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
           sudo yum install -y python36u python36u-devel
+
+    - name: Uninstall required packages (Centos-8)
+      when: os_distro == "CentOS 8"
+      become: true
+      shell: dnf remove -y python3-pyyaml
 
     - name: Install required packages (Ubuntu-Bionic)
       when: os_distro == "Ubuntu 18.04"
@@ -46,10 +59,14 @@
           curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py
           sudo python3 /tmp/get-pip.py
 
+    - name: Update pip3 if needed
+      when: os_distro == "CentOS 8"
+      become: true
+      shell: pip3 install --upgrade pip
+
     - name: Install bindep
-      shell:
-        cmd: |
-          sudo pip3 install bindep
+      become: true
+      shell: pip3 install --upgrade bindep PyYAML
 
     - name: Prepare rally plugins stored at home dir
       shell:
