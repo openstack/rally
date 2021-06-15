@@ -17,7 +17,7 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
-[x.x.x] - 202x-xx-xx
+[3.3.0] - 2021-06-16
 --------------------
 
 Changed
@@ -26,6 +26,13 @@ Changed
 * ``rally verify`` returns 0 on success, 1, 2 or 3 depending on detected issue.
 
 * Switch docker image from ubuntu 18.04 to ubuntu 20.04
+
+* Move from Freenode to OFTC irc network
+
+Removed
+~~~~~~~
+
+* dependency on decorator library.
 
 [3.2.0] - 2020-10-30
 --------------------
