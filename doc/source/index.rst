@@ -49,15 +49,7 @@ Contents
 For Contributors
 ================
 
-* If you are a new contributor to Rally please refer: :doc:`contributor/contributing`
-
-  .. toctree::
-     :hidden:
-
-     contributor/contributing
-
   .. toctree::
      :maxdepth: 2
 
      contribute
-

@@ -16,4 +16,4 @@ Bugs should be filed on Launchpad:
 For more specific information about contributing to this repository, see the
 rally contributor guide:
 
-   https://docs.openstack.org/rally/latest/contributor/contributing.html
+   https://rally.readthedocs.io/en/latest/contribute.html
