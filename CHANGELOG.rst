@@ -25,6 +25,8 @@ Changed
 
 * ``rally verify`` returns 0 on success, 1, 2 or 3 depending on detected issue.
 
+* Switch docker image from ubuntu 18.04 to ubuntu 20.04
+
 [3.2.0] - 2020-10-30
 --------------------
 
