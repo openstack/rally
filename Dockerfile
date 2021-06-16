@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 RUN sed -i s/^deb-src.*// /etc/apt/sources.list
 
