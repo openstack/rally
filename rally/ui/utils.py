@@ -14,13 +14,14 @@
 #    under the License.
 
 import jinja2
+import markupsafe
 
 
 def get_template(template):
 
     def include_raw_file(file_name):
         try:
-            return jinja2.Markup(loader.get_source(env, file_name)[0])
+            return markupsafe.Markup(loader.get_source(env, file_name)[0])
         except jinja2.TemplateNotFound:
             # NOTE(amaretskiy): re-raise error to make its message clear
             raise IOError("File not found: %s" % file_name)
