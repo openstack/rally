@@ -18,8 +18,6 @@ import copy
 import operator
 import re
 
-import six
-
 from rally.common import logging
 from rally.common.plugin import plugin
 from rally import exceptions
@@ -91,8 +89,7 @@ def preprocess(name, context, args):
 
 
 @plugin.base()
-@six.add_metaclass(abc.ABCMeta)
-class ResourceType(plugin.Plugin):
+class ResourceType(plugin.Plugin, metaclass=abc.ABCMeta):
     """A helper plugin for pre-processing input data of resources."""
 
     def __init__(self, context, cache=None):

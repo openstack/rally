@@ -43,6 +43,13 @@ Contents
    task/index
    verification/index
    plugins/index
-   contribute
    feature_requests
    project_info/index
+
+For Contributors
+================
+
+  .. toctree::
+     :maxdepth: 2
+
+     contribute

@@ -17,18 +17,18 @@
 
 import copy
 import datetime as dt
+import importlib
 import iso8601
 import json
 import pickle
 import pprint
+from unittest import mock
 import uuid
 
 import alembic
 import jsonschema
-import mock
 from oslo_db.sqlalchemy import test_migrations
 from oslo_db.sqlalchemy import utils as db_utils
-import six
 import sqlalchemy as sa
 
 import rally
@@ -38,6 +38,10 @@ from rally import consts
 from rally.task import context
 from tests.unit.common.db import test_migrations_base
 from tests.unit import test as rtest
+
+
+def b(s):
+    return s.encode("latin-1")
 
 
 @context.configure(name="users", platform="testing", order=2)
@@ -123,7 +127,7 @@ class MigrationTestCase(rtest.DBTestCase,
     def setUp(self):
         # we change DB metadata in tests so we reload
         # models to refresh the metadata to it's original state
-        six.moves.reload_module(rally.common.db.models)
+        importlib.reload(rally.common.db.models)
         super(MigrationTestCase, self).setUp()
         self.alembic_config = db.schema._alembic_config()
         self.engine = db.get_engine()
@@ -144,7 +148,7 @@ class MigrationTestCase(rtest.DBTestCase,
 
     def include_object(self, object_, name, type_, reflected, compare_to):
         if type_ == "table" and name == "alembic_version":
-                return False
+            return False
 
         return super(MigrationTestCase, self).include_object(
             object_, name, type_, reflected, compare_to)
@@ -352,8 +356,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     [{"uuid": deployment, "name": deployment,
                       "config": conf,
                       "enum_deployments_status": deployment_status,
-                      "credentials": six.b(json.dumps([])),
-                      "users": six.b(json.dumps([]))
+                      "credentials": b(json.dumps([])),
+                      "users": b(json.dumps([]))
                       }])
 
     _OLD_DEPLOYMENT_SCHEMA = {
@@ -494,11 +498,11 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 deployment_table.insert(),
                 [{"uuid": self._08e1515a576c_deployment_uuid,
                   "name": self._08e1515a576c_deployment_uuid,
-                  "config": six.b("{}"),
+                  "config": b("{}"),
                   "enum_deployments_status":
                   consts.DeployStatus.DEPLOY_FINISHED,
-                  "credentials": six.b(json.dumps([])),
-                  "users": six.b(json.dumps([]))
+                  "credentials": b(json.dumps([])),
+                  "users": b(json.dumps([]))
                   }])
             for i in range(0, len(self._08e1515a576c_logs)):
                 log = json.dumps(self._08e1515a576c_logs[i]["pre"])
@@ -553,8 +557,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "name": self._e654a0648db0_deployment_uuid,
                     "config": "{}",
                     "enum_deployments_status": consts.DeployStatus.DEPLOY_INIT,
-                    "credentials": six.b(json.dumps([])),
-                    "users": six.b(json.dumps([]))
+                    "credentials": b(json.dumps([])),
+                    "users": b(json.dumps([]))
                 }]
             )
 
@@ -641,8 +645,9 @@ class MigrationWalkTestCase(rtest.DBTestCase,
 
             subtasks_found = conn.execute(
                 subtask_table.select().
-                where(subtask_table.c.task_uuid ==
-                      self._e654a0648db0_task_uuid)
+                where(
+                    subtask_table.c.task_uuid == self._e654a0648db0_task_uuid
+                )
             ).fetchall()
 
             self.assertEqual(1, len(subtasks_found))
@@ -673,8 +678,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
 
             workloads_found = conn.execute(
                 workload_table.select().
-                where(workload_table.c.task_uuid ==
-                      self._e654a0648db0_task_uuid)
+                where(
+                    workload_table.c.task_uuid == self._e654a0648db0_task_uuid)
             ).fetchall()
 
             self.assertEqual(1, len(workloads_found))
@@ -714,8 +719,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
 
             workloaddata_found = conn.execute(
                 workloaddata_table.select().
-                where(workloaddata_table.c.task_uuid ==
-                      self._e654a0648db0_task_uuid)
+                where(workloaddata_table.c.task_uuid
+                      == self._e654a0648db0_task_uuid)
             ).fetchall()
 
             self.assertEqual(1, len(workloaddata_found))
@@ -754,19 +759,19 @@ class MigrationWalkTestCase(rtest.DBTestCase,
 
             conn.execute(
                 workloaddata_table.delete().
-                where(workloaddata_table.c.task_uuid ==
-                      self._e654a0648db0_task_uuid)
+                where(workloaddata_table.c.task_uuid
+                      == self._e654a0648db0_task_uuid)
             )
 
             conn.execute(
                 workload_table.delete().
-                where(workload_table.c.task_uuid ==
-                      self._e654a0648db0_task_uuid)
+                where(
+                    workload_table.c.task_uuid == self._e654a0648db0_task_uuid)
             )
             conn.execute(
                 subtask_table.delete().
-                where(subtask_table.c.task_uuid ==
-                      self._e654a0648db0_task_uuid)
+                where(
+                    subtask_table.c.task_uuid == self._e654a0648db0_task_uuid)
             )
 
             conn.execute(
@@ -776,8 +781,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
 
             conn.execute(
                 deployment_table.delete().
-                where(deployment_table.c.uuid ==
-                      self._e654a0648db0_deployment_uuid)
+                where(deployment_table.c.uuid
+                      == self._e654a0648db0_deployment_uuid)
             )
 
     def _pre_upgrade_6ad4f426f005(self, engine):
@@ -802,8 +807,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "name": "my_deployment",
                     "config": json.dumps(conf),
                     "enum_deployments_status": deployment_status,
-                    "credentials": six.b(json.dumps([])),
-                    "users": six.b(json.dumps([]))
+                    "credentials": b(json.dumps([])),
+                    "users": b(json.dumps([]))
                 }])
 
             # create task
@@ -857,55 +862,55 @@ class MigrationWalkTestCase(rtest.DBTestCase,
             )
 
     def _pre_upgrade_32fada9b2fde(self, engine):
-            self._32fada9b2fde_deployments = {
-                # right config which should not be changed after migration
-                "should-not-be-changed-1": {
-                    "admin": {"username": "admin",
-                              "password": "passwd",
-                              "project_name": "admin"},
-                    "auth_url": "http://example.com:5000/v3",
-                    "region_name": "RegionOne",
-                    "type": "ExistingCloud"},
-                # right config which should not be changed after migration
-                "should-not-be-changed-2": {
-                    "admin": {"username": "admin",
-                              "password": "passwd",
-                              "tenant_name": "admin"},
-                    "users": [{"username": "admin",
-                               "password": "passwd",
-                              "tenant_name": "admin"}],
-                    "auth_url": "http://example.com:5000/v2.0",
-                    "region_name": "RegionOne",
-                    "type": "ExistingCloud"},
-                # not ExistingCloud config which should not be changed
-                "should-not-be-changed-3": {
-                    "url": "example.com",
-                    "type": "Something"},
-                # with `admin_domain_name` field
-                "with_admin_domain_name": {
-                    "admin": {"username": "admin",
-                              "password": "passwd",
-                              "project_name": "admin",
-                              "admin_domain_name": "admin"},
-                    "auth_url": "http://example.com:5000/v3",
-                    "region_name": "RegionOne",
-                    "type": "ExistingCloud"},
-            }
-            deployment_table = db_utils.get_table(engine, "deployments")
+        self._32fada9b2fde_deployments = {
+            # right config which should not be changed after migration
+            "should-not-be-changed-1": {
+                "admin": {"username": "admin",
+                          "password": "passwd",
+                          "project_name": "admin"},
+                "auth_url": "http://example.com:5000/v3",
+                "region_name": "RegionOne",
+                "type": "ExistingCloud"},
+            # right config which should not be changed after migration
+            "should-not-be-changed-2": {
+                "admin": {"username": "admin",
+                          "password": "passwd",
+                          "tenant_name": "admin"},
+                "users": [{"username": "admin",
+                           "password": "passwd",
+                          "tenant_name": "admin"}],
+                "auth_url": "http://example.com:5000/v2.0",
+                "region_name": "RegionOne",
+                "type": "ExistingCloud"},
+            # not ExistingCloud config which should not be changed
+            "should-not-be-changed-3": {
+                "url": "example.com",
+                "type": "Something"},
+            # with `admin_domain_name` field
+            "with_admin_domain_name": {
+                "admin": {"username": "admin",
+                          "password": "passwd",
+                          "project_name": "admin",
+                          "admin_domain_name": "admin"},
+                "auth_url": "http://example.com:5000/v3",
+                "region_name": "RegionOne",
+                "type": "ExistingCloud"},
+        }
+        deployment_table = db_utils.get_table(engine, "deployments")
 
-            deployment_status = consts.DeployStatus.DEPLOY_FINISHED
-            with engine.connect() as conn:
-                for deployment in self._32fada9b2fde_deployments:
-                    conf = json.dumps(
-                        self._32fada9b2fde_deployments[deployment])
-                    conn.execute(
-                        deployment_table.insert(),
-                        [{"uuid": deployment, "name": deployment,
-                          "config": conf,
-                          "enum_deployments_status": deployment_status,
-                          "credentials": six.b(json.dumps([])),
-                          "users": six.b(json.dumps([]))
-                          }])
+        deployment_status = consts.DeployStatus.DEPLOY_FINISHED
+        with engine.connect() as conn:
+            for deployment in self._32fada9b2fde_deployments:
+                conf = json.dumps(
+                    self._32fada9b2fde_deployments[deployment])
+                conn.execute(
+                    deployment_table.insert(),
+                    [{"uuid": deployment, "name": deployment,
+                      "config": conf,
+                      "enum_deployments_status": deployment_status,
+                      "credentials": b(json.dumps([])),
+                      "users": b(json.dumps([]))
+                      }])
 
     def _check_32fada9b2fde(self, engine, data):
         self.assertEqual("32fada9b2fde",
@@ -956,75 +961,83 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 )
 
     def _pre_upgrade_484cd9413e66(self, engine):
-            self._484cd9413e66_deployment_uuid = "484cd9413e66-deploy"
+        self._484cd9413e66_deployment_uuid = "484cd9413e66-deploy"
 
-            self._484cd9413e66_verifications = [
-                {"total": {"time": 1.0,
-                           "failures": 2,
-                           "skipped": 3,
-                           "success": 4,
-                           "errors": 0,
-                           "tests": 2
-                           },
-                 "test_cases": {"test1": {"status": "OK"},
-                                "test2": {"status": "FAIL",
-                                          "failure": {"log": "trace"}}},
-                 "set_name": "full"},
-                {"total": {"time": 2.0,
-                           "failures": 3,
-                           "skipped": 4,
-                           "success": 5,
-                           "unexpected_success": 6,
-                           "expected_failures": 7,
-                           "tests": 2
-                           },
-                 "test_cases": {"test1": {"status": "success"},
-                                "test2": {"status": "failed", ""
-                                          "traceback": "trace"}},
-                 "set_name": "smoke"}
-            ]
-            deployment_table = db_utils.get_table(engine, "deployments")
-            verifications_table = db_utils.get_table(engine, "verifications")
-            vresults_table = db_utils.get_table(engine,
-                                                "verification_results")
+        self._484cd9413e66_verifications = [
+            {
+                "total": {
+                    "time": 1.0,
+                    "failures": 2,
+                    "skipped": 3,
+                    "success": 4,
+                    "errors": 0,
+                    "tests": 2
+                },
+                "test_cases": {
+                    "test1": {"status": "OK"},
+                    "test2": {"status": "FAIL", "failure": {"log": "trace"}}
+                },
+                "set_name": "full"
+            },
+            {
+                "total": {
+                    "time": 2.0,
+                    "failures": 3,
+                    "skipped": 4,
+                    "success": 5,
+                    "unexpected_success": 6,
+                    "expected_failures": 7,
+                    "tests": 2
+                },
+                "test_cases": {
+                    "test1": {"status": "success"},
+                    "test2": {"status": "failed", "traceback": "trace"}
+                },
+                "set_name": "smoke"
+            }
+        ]
+        deployment_table = db_utils.get_table(engine, "deployments")
+        verifications_table = db_utils.get_table(engine, "verifications")
+        vresults_table = db_utils.get_table(engine,
+                                            "verification_results")
 
-            deployment_status = consts.DeployStatus.DEPLOY_FINISHED
-            vstatus = consts.TaskStatus.FINISHED
-            with engine.connect() as conn:
+        deployment_status = consts.DeployStatus.DEPLOY_FINISHED
+        vstatus = consts.TaskStatus.FINISHED
+        with engine.connect() as conn:
+            conn.execute(
+                deployment_table.insert(),
+                [{"uuid": self._484cd9413e66_deployment_uuid,
+                  "name": self._484cd9413e66_deployment_uuid,
+                  "config": b(json.dumps([])),
+                  "enum_deployments_status": deployment_status,
+                  "credentials": b(json.dumps([])),
+                  "users": b(json.dumps([]))
+                  }])
+
+            for i in range(len(self._484cd9413e66_verifications)):
+                verification = self._484cd9413e66_verifications[i]
+                vuuid = "uuid-%s" % i
                 conn.execute(
-                    deployment_table.insert(),
-                    [{"uuid": self._484cd9413e66_deployment_uuid,
-                      "name": self._484cd9413e66_deployment_uuid,
-                      "config": six.b(json.dumps([])),
-                      "enum_deployments_status": deployment_status,
-                      "credentials": six.b(json.dumps([])),
-                      "users": six.b(json.dumps([]))
+                    verifications_table.insert(),
+                    [{"uuid": vuuid,
+                      "deployment_uuid":
+                      self._484cd9413e66_deployment_uuid,
+                      "status": vstatus,
+                      "set_name": verification["set_name"],
+                      "tests": verification["total"]["tests"],
+                      "failures": verification["total"]["failures"],
+                      "time": verification["total"]["time"],
+                      "errors": 0,
                       }])
-
-                for i in range(len(self._484cd9413e66_verifications)):
-                    verification = self._484cd9413e66_verifications[i]
-                    vuuid = "uuid-%s" % i
-                    conn.execute(
-                        verifications_table.insert(),
-                        [{"uuid": vuuid,
-                          "deployment_uuid":
-                          self._484cd9413e66_deployment_uuid,
-                          "status": vstatus,
-                          "set_name": verification["set_name"],
-                          "tests": verification["total"]["tests"],
-                          "failures": verification["total"]["failures"],
-                          "time": verification["total"]["time"],
-                          "errors": 0,
-                          }])
-                    data = copy.deepcopy(verification)
-                    data["total"]["test_cases"] = data["test_cases"]
-                    data = data["total"]
-                    conn.execute(
-                        vresults_table.insert(),
-                        [{"uuid": vuuid,
-                          "verification_uuid": vuuid,
-                          "data": json.dumps(data)
-                          }])
+                data = copy.deepcopy(verification)
+                data["total"]["test_cases"] = data["test_cases"]
+                data = data["total"]
+                conn.execute(
+                    vresults_table.insert(),
+                    [{"uuid": vuuid,
+                      "verification_uuid": vuuid,
+                      "data": json.dumps(data)
+                      }])
 
     def _check_484cd9413e66(self, engine, data):
         self.assertEqual("484cd9413e66",
@@ -1086,79 +1099,79 @@ class MigrationWalkTestCase(rtest.DBTestCase,
             deployment_table = db_utils.get_table(engine, "deployments")
             conn.execute(
                 deployment_table.delete().where(
-                    deployment_table.c.uuid ==
-                    self._484cd9413e66_deployment_uuid)
+                    deployment_table.c.uuid
+                    == self._484cd9413e66_deployment_uuid)
             )
 
     def _pre_upgrade_37fdbb373e8d(self, engine):
-            self._37fdbb373e8d_deployment_uuid = "37fdbb373e8d-deployment"
-            self._37fdbb373e8d_verifier_uuid = "37fdbb373e8d-verifier"
-            self._37fdbb373e8d_verifications_tests = [
-                {
-                    "test_1[smoke, negative]": {
-                        "name": "test_1",
-                        "time": 2.32,
-                        "status": "success",
-                        "tags": ["smoke", "negative"]
-                    },
-                    "test_2[smoke, negative]": {
-                        "name": "test_2",
-                        "time": 4.32,
-                        "status": "success",
-                        "tags": ["smoke", "negative"]
-                    }
+        self._37fdbb373e8d_deployment_uuid = "37fdbb373e8d-deployment"
+        self._37fdbb373e8d_verifier_uuid = "37fdbb373e8d-verifier"
+        self._37fdbb373e8d_verifications_tests = [
+            {
+                "test_1[smoke, negative]": {
+                    "name": "test_1",
+                    "time": 2.32,
+                    "status": "success",
+                    "tags": ["smoke", "negative"]
                 },
-                {
-                    "test_3[smoke, negative]": {
-                        "name": "test_3",
-                        "time": 6.32,
-                        "status": "success",
-                        "tags": ["smoke", "negative"]
-                    },
-                    "test_4[smoke, negative]": {
-                        "name": "test_4",
-                        "time": 8.32,
-                        "status": "success",
-                        "tags": ["smoke", "negative"]
-                    }
+                "test_2[smoke, negative]": {
+                    "name": "test_2",
+                    "time": 4.32,
+                    "status": "success",
+                    "tags": ["smoke", "negative"]
                 }
-            ]
+            },
+            {
+                "test_3[smoke, negative]": {
+                    "name": "test_3",
+                    "time": 6.32,
+                    "status": "success",
+                    "tags": ["smoke", "negative"]
+                },
+                "test_4[smoke, negative]": {
+                    "name": "test_4",
+                    "time": 8.32,
+                    "status": "success",
+                    "tags": ["smoke", "negative"]
+                }
+            }
+        ]
 
-            deployment_table = db_utils.get_table(engine, "deployments")
-            verifiers_table = db_utils.get_table(engine, "verifiers")
-            verifications_table = db_utils.get_table(engine, "verifications")
+        deployment_table = db_utils.get_table(engine, "deployments")
+        verifiers_table = db_utils.get_table(engine, "verifiers")
+        verifications_table = db_utils.get_table(engine, "verifications")
 
-            deployment_status = consts.DeployStatus.DEPLOY_FINISHED
-            with engine.connect() as conn:
+        deployment_status = consts.DeployStatus.DEPLOY_FINISHED
+        with engine.connect() as conn:
+            conn.execute(
+                deployment_table.insert(),
+                [{"uuid": self._37fdbb373e8d_deployment_uuid,
+                  "name": self._37fdbb373e8d_deployment_uuid,
+                  "config": b(json.dumps([])),
+                  "enum_deployments_status": deployment_status,
+                  "credentials": b(json.dumps([])),
+                  "users": b(json.dumps([]))
+                  }])
+
+            conn.execute(
+                verifiers_table.insert(),
+                [{"uuid": self._37fdbb373e8d_verifier_uuid,
+                  "name": self._37fdbb373e8d_verifier_uuid,
+                  "type": "some-type",
+                  "status": consts.VerifierStatus.INSTALLED
+                  }])
+
+            for i in range(len(self._37fdbb373e8d_verifications_tests)):
+                tests = self._37fdbb373e8d_verifications_tests[i]
                 conn.execute(
-                    deployment_table.insert(),
-                    [{"uuid": self._37fdbb373e8d_deployment_uuid,
-                      "name": self._37fdbb373e8d_deployment_uuid,
-                      "config": six.b(json.dumps([])),
-                      "enum_deployments_status": deployment_status,
-                      "credentials": six.b(json.dumps([])),
-                      "users": six.b(json.dumps([]))
+                    verifications_table.insert(),
+                    [{"uuid": "verification-uuid-%s" % i,
+                      "deployment_uuid":
+                          self._37fdbb373e8d_deployment_uuid,
+                      "verifier_uuid": self._37fdbb373e8d_verifier_uuid,
+                      "status": consts.VerificationStatus.FINISHED,
+                      "tests": json.dumps(tests)
                       }])
-
-                conn.execute(
-                    verifiers_table.insert(),
-                    [{"uuid": self._37fdbb373e8d_verifier_uuid,
-                      "name": self._37fdbb373e8d_verifier_uuid,
-                      "type": "some-type",
-                      "status": consts.VerifierStatus.INSTALLED
-                      }])
-
-                for i in range(len(self._37fdbb373e8d_verifications_tests)):
-                    tests = self._37fdbb373e8d_verifications_tests[i]
-                    conn.execute(
-                        verifications_table.insert(),
-                        [{"uuid": "verification-uuid-%s" % i,
-                          "deployment_uuid":
-                              self._37fdbb373e8d_deployment_uuid,
-                          "verifier_uuid": self._37fdbb373e8d_verifier_uuid,
-                          "status": consts.VerificationStatus.FINISHED,
-                          "tests": json.dumps(tests)
-                          }])
 
     def _check_37fdbb373e8d(self, engine, data):
         self.assertEqual("37fdbb373e8d",
@@ -1189,8 +1202,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
             deployment_table = db_utils.get_table(engine, "deployments")
             conn.execute(
                 deployment_table.delete().where(
-                    deployment_table.c.uuid ==
-                    self._37fdbb373e8d_deployment_uuid)
+                    deployment_table.c.uuid
+                    == self._37fdbb373e8d_deployment_uuid)
             )
 
     def _pre_upgrade_a6f364988fc2(self, engine):
@@ -1268,10 +1281,10 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 deployment_table.insert(),
                 [{"uuid": self._f33f4610dcda_deployment_uuid,
                   "name": self._f33f4610dcda_deployment_uuid,
-                  "config": six.b(json.dumps([])),
+                  "config": b(json.dumps([])),
                   "enum_deployments_status": deployment_status,
-                  "credentials": six.b(json.dumps([])),
-                  "users": six.b(json.dumps([]))
+                  "credentials": b(json.dumps([])),
+                  "users": b(json.dumps([]))
                   }])
 
             conn.execute(
@@ -1319,8 +1332,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
             deployment_table = db_utils.get_table(engine, "deployments")
             conn.execute(
                 deployment_table.delete().where(
-                    deployment_table.c.uuid ==
-                    self._f33f4610dcda_deployment_uuid)
+                    deployment_table.c.uuid
+                    == self._f33f4610dcda_deployment_uuid)
             )
 
     def _pre_upgrade_4ef544102ba7(self, engine):
@@ -1353,11 +1366,11 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 deployment_table.insert(),
                 [{"uuid": self._4ef544102ba7_deployment_uuid,
                   "name": self._4ef544102ba7_deployment_uuid,
-                  "config": six.b(json.dumps([])),
+                  "config": b(json.dumps([])),
                   "enum_deployments_status":
                   consts.DeployStatus.DEPLOY_FINISHED,
-                  "credentials": six.b(json.dumps([])),
-                  "users": six.b(json.dumps([]))
+                  "credentials": b(json.dumps([])),
+                  "users": b(json.dumps([]))
                   }])
 
         task_table = db_utils.get_table(engine, "tasks")
@@ -1437,8 +1450,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
             deployment_table = db_utils.get_table(engine, "deployments")
             conn.execute(
                 deployment_table.delete().where(
-                    deployment_table.c.uuid ==
-                    self._4ef544102ba7_deployment_uuid)
+                    deployment_table.c.uuid
+                    == self._4ef544102ba7_deployment_uuid)
             )
 
     def _pre_upgrade_92aaaa2a6bb3(self, engine):
@@ -1522,8 +1535,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "name": str(uuid.uuid4()),
                     "config": "{}",
                     "enum_deployments_status": consts.DeployStatus.DEPLOY_INIT,
-                    "credentials": six.b(json.dumps([])),
-                    "users": six.b(json.dumps([]))
+                    "credentials": b(json.dumps([])),
+                    "users": b(json.dumps([]))
                 }]
             )
 
@@ -1534,7 +1547,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "created_at": dt.datetime.utcnow(),
                     "updated_at": dt.datetime.utcnow(),
                     "status": consts.TaskStatus.FINISHED,
-                    "validation_result": six.b(json.dumps({})),
+                    "validation_result": b(json.dumps({})),
                     "deployment_uuid": deployment_uuid
                 }]
             )
@@ -1547,8 +1560,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                         "created_at": dt.datetime.utcnow(),
                         "updated_at": dt.datetime.utcnow(),
                         "task_uuid": self._35fe16d4ab1c_task_uuid,
-                        "context": six.b(json.dumps([])),
-                        "sla": six.b(json.dumps([])),
+                        "context": b(json.dumps([])),
+                        "sla": b(json.dumps([])),
                         "run_in_parallel": False
                     }]
                 )
@@ -1643,8 +1656,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "name": str(uuid.uuid4()),
                     "config": "{}",
                     "enum_deployments_status": consts.DeployStatus.DEPLOY_INIT,
-                    "credentials": six.b(json.dumps([])),
-                    "users": six.b(json.dumps([]))
+                    "credentials": b(json.dumps([])),
+                    "users": b(json.dumps([]))
                 }]
             )
 
@@ -1655,7 +1668,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "created_at": dt.datetime.utcnow(),
                     "updated_at": dt.datetime.utcnow(),
                     "status": consts.TaskStatus.FINISHED,
-                    "validation_result": six.b(json.dumps({})),
+                    "validation_result": b(json.dumps({})),
                     "deployment_uuid": self._7948b83229f6_deployment_uuid
                 }]
             )
@@ -1667,8 +1680,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "created_at": dt.datetime.utcnow(),
                     "updated_at": dt.datetime.utcnow(),
                     "task_uuid": self._7948b83229f6_task_uuid,
-                    "context": six.b(json.dumps([])),
-                    "sla": six.b(json.dumps([])),
+                    "context": b(json.dumps([])),
+                    "sla": b(json.dumps([])),
                     "run_in_parallel": False
                 }]
             )
@@ -1715,7 +1728,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                             "failed_iteration_count": 0,
                             "chunk_size": 0,
                             "compressed_chunk_size": 0,
-                            "chunk_data": six.b(json.dumps([]))
+                            "chunk_data": b(json.dumps([]))
                         }]
                     )
 
@@ -1797,8 +1810,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "name": str(uuid.uuid4()),
                     "config": "{}",
                     "enum_deployments_status": consts.DeployStatus.DEPLOY_INIT,
-                    "credentials": six.b(json.dumps([])),
-                    "users": six.b(json.dumps([]))
+                    "credentials": b(json.dumps([])),
+                    "users": b(json.dumps([]))
                 }]
             )
 
@@ -1809,7 +1822,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "created_at": dt.datetime.utcnow(),
                     "updated_at": dt.datetime.utcnow(),
                     "status": consts.TaskStatus.FINISHED,
-                    "validation_result": six.b(json.dumps({})),
+                    "validation_result": b(json.dumps({})),
                     "deployment_uuid": self._046a38742e89_deployment_uuid
                 }]
             )
@@ -1821,8 +1834,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "created_at": dt.datetime.utcnow(),
                     "updated_at": dt.datetime.utcnow(),
                     "task_uuid": self._046a38742e89_task_uuid,
-                    "context": six.b(json.dumps([])),
-                    "sla": six.b(json.dumps([])),
+                    "context": b(json.dumps([])),
+                    "sla": b(json.dumps([])),
                     "run_in_parallel": False
                 }]
             )
@@ -2052,8 +2065,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "name": str(uuid.uuid4()),
                     "config": "{}",
                     "enum_deployments_status": consts.DeployStatus.DEPLOY_INIT,
-                    "credentials": six.b(json.dumps([])),
-                    "users": six.b(json.dumps([]))
+                    "credentials": b(json.dumps([])),
+                    "users": b(json.dumps([]))
                 }]
             )
 
@@ -2064,7 +2077,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "created_at": dt.datetime.utcnow(),
                     "updated_at": dt.datetime.utcnow(),
                     "status": consts.TaskStatus.FINISHED,
-                    "validation_result": six.b(json.dumps({})),
+                    "validation_result": b(json.dumps({})),
                     "deployment_uuid": self._4394bdc32cfd_deployment_uuid
                 }]
             )
@@ -2076,8 +2089,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "created_at": dt.datetime.utcnow(),
                     "updated_at": dt.datetime.utcnow(),
                     "task_uuid": task_uuid,
-                    "context": six.b(json.dumps([])),
-                    "sla": six.b(json.dumps([])),
+                    "context": b(json.dumps([])),
+                    "sla": b(json.dumps([])),
                     "run_in_parallel": False
                 }]
             )
@@ -2227,8 +2240,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "name": str(uuid.uuid4()),
                     "config": "{}",
                     "enum_deployments_status": consts.DeployStatus.DEPLOY_INIT,
-                    "credentials": six.b(json.dumps([])),
-                    "users": six.b(json.dumps([]))
+                    "credentials": b(json.dumps([])),
+                    "users": b(json.dumps([]))
                 }]
             )
 
@@ -2239,7 +2252,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "created_at": dt.datetime.utcnow(),
                     "updated_at": dt.datetime.utcnow(),
                     "status": consts.TaskStatus.FINISHED,
-                    "validation_result": six.b(json.dumps({})),
+                    "validation_result": b(json.dumps({})),
                     "deployment_uuid": self._046a38742e89_deployment_uuid
                 }]
             )
@@ -2251,8 +2264,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "created_at": dt.datetime.utcnow(),
                     "updated_at": dt.datetime.utcnow(),
                     "task_uuid": self._dc46687661df_task_uuid,
-                    "context": six.b(json.dumps([])),
-                    "sla": six.b(json.dumps([])),
+                    "context": b(json.dumps([])),
+                    "sla": b(json.dumps([])),
                     "run_in_parallel": False
                 }]
             )
@@ -2266,12 +2279,12 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "created_at": w["created_at"],
                     "updated_at": dt.datetime.utcnow(),
                     "position": 0,
-                    "runner": six.b(json.dumps([])),
+                    "runner": b(json.dumps([])),
                     "runner_type": "",
                     "context": json.dumps(w["context"]),
                     "context_execution": "foo",
                     "statistics": "",
-                    "hooks": six.b(json.dumps([])),
+                    "hooks": b(json.dumps([])),
                     "sla": "",
                     "sla_results": "",
                     "args": "",
@@ -2412,9 +2425,9 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "name": str(uuid.uuid4()),
                     "config": (
                         json.dumps(d_cfg) if d_cfg
-                        else six.b(json.dumps(d_cfg))),
+                        else b(json.dumps(d_cfg))),
                     "enum_deployments_status": consts.DeployStatus.DEPLOY_INIT,
-                    "credentials": six.b(json.dumps([]))
+                    "credentials": b(json.dumps([]))
                 } for d_uuid, d_cfg in self._dc0fe6de6786_deployments]
             )
 
@@ -2485,9 +2498,9 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "name": str(uuid.uuid4()),
                     "config": (
                         json.dumps(d_cfg) if d_cfg
-                        else six.b(json.dumps(d_cfg))),
+                        else b(json.dumps(d_cfg))),
                     "enum_deployments_status": consts.DeployStatus.DEPLOY_INIT,
-                    "credentials": six.b(json.dumps([]))
+                    "credentials": b(json.dumps([]))
                 } for d_uuid, d_cfg in self._bc908ac9a1fc_deployments]
             )
 
@@ -2498,7 +2511,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "created_at": dt.datetime.utcnow(),
                     "updated_at": dt.datetime.utcnow(),
                     "status": consts.TaskStatus.FINISHED,
-                    "validation_result": six.b(json.dumps({})),
+                    "validation_result": b(json.dumps({})),
                     "deployment_uuid": self._bc908ac9a1fc_deployments[0][0]
                 }]
             )

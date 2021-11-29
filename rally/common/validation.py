@@ -16,8 +16,6 @@
 import abc
 import traceback
 
-import six
-
 from rally.common import logging
 from rally.common.plugin import plugin
 from rally import exceptions
@@ -25,12 +23,7 @@ from rally import exceptions
 LOG = logging.getLogger(__name__)
 
 
-@logging.log_deprecated_args("Use 'platform' arg instead", "0.10.0",
-                             ["namespace"], log_function=LOG.warning)
-def configure(name, platform="default", namespace=None):
-    if namespace:
-        platform = namespace
-
+def configure(name, platform="default"):
     def wrapper(cls):
         return plugin.configure(name=name, platform=platform)(cls)
 
@@ -38,8 +31,7 @@ def configure(name, platform="default", namespace=None):
 
 
 @plugin.base()
-@six.add_metaclass(abc.ABCMeta)
-class Validator(plugin.Plugin):
+class Validator(plugin.Plugin, metaclass=abc.ABCMeta):
     """A base class for all validators."""
 
     def __init__(self):
@@ -214,9 +206,8 @@ class ValidatablePluginMixin(object):
         """
         try:
             plugin = cls.get(name, allow_hidden=allow_hidden)
-        except exceptions.PluginNotFound:
-            return ["There is no %s plugin with name: '%s'" %
-                    (cls.__name__, name)]
+        except exceptions.PluginNotFound as e:
+            return [e.format_message()]
 
         if vtype is None:
             semantic = True

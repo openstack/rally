@@ -18,11 +18,11 @@ from docutils.parsers import rst
 import json
 import re
 
+from . import utils
 from rally.common.plugin import discover
 from rally.common.plugin import plugin
 from rally.common import validation
 from rally import plugins
-import utils
 
 
 JSON_SCHEMA_TYPES_MAP = {"boolean": "bool",

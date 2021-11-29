@@ -1,0 +1,64 @@
+
+- hosts: all
+  name: Installs all required packages
+  tasks:
+    - name: Check required version of Python
+      args:
+        chdir: "{{ zuul.project.src_dir }}"
+      shell:
+        executable: /bin/sh
+        cmd: |
+          set -e
+
+          iniget(){
+              local xtrace
+              xtrace=$(set +o | grep xtrace)
+              set +o xtrace
+              local section=$1
+              local file="tox.ini"
+              local option="basepython"
+              local line
+
+              line=$(sed -ne "/^\[$section\]/,/^\[.*\]/ { /^$option[ \t]*=/ p; }" "$file")
+              echo ${line#*= python}
+              $xtrace
+          }
+
+          tox_testenv_python=$(iniget 'testenv:{{ tox_env }}')
+          if [ "$tox_testenv_python" != "" ]; then
+              echo $tox_testenv_python
+          else
+              echo $(iniget 'testenv')
+          fi
+      register: python_version
+
+    - name: Install the proper python version
+      become: True
+      become_user: root
+      shell:
+        executable: /bin/sh
+        cmd: |
+          set -e
+
+          apt-get update
+          apt-get install python{{ python_version.stdout }}-dev --yes
+
+    - name: Install the proper python pip version
+      become: True
+      become_user: root
+      shell:
+        executable: /bin/bash
+        cmd: |
+          set -e
+          curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+          python{{ python_version.stdout }} get-pip.py
+
+    - name: Install python tox
+      become: True
+      become_user: root
+      shell:
+        executable: /bin/bash
+        cmd: |
+          pip{{ python_version.stdout }} install tox
+  roles:
+    - bindep

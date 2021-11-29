@@ -1,0 +1,42 @@
+- hosts: all
+  vars:
+    results_dir: "{{ zuul.project.src_dir }}/.test_results/"
+    html_report: "{{ tox_env | default('self') }}_report.html"
+    json_report: "{{ tox_env | default('self') }}_report.json"
+  tasks:
+    - shell: "ls {{ results_dir }}"
+      register: results_dir_stat
+      ignore_errors: True
+
+    - name: Save results
+      become: yes
+      when: results_dir_stat.rc == 0
+      synchronize:
+        src: "{{ results_dir }}"
+        dest: '{{ zuul.executor.log_root }}/'
+        mode: pull
+        copy_links: true
+        verify_host: true
+        rsync_opts:
+        - --include=/**
+        - --include=*/
+        - --exclude=*
+        - --prune-empty-dirs
+
+    - name: Return artifact to Zuul
+      when: html_report in results_dir_stat.stdout
+      zuul_return:
+        data:
+          zuul:
+            artifacts:
+              - name: "HTML report"
+                url: "{{ html_report }}"
+
+    - name: Return artifact to Zuul
+      when: json_report in results_dir_stat.stdout
+      zuul_return:
+        data:
+          zuul:
+            artifacts:
+              - name: "JSON report"
+                url: "{{ json_report }}"

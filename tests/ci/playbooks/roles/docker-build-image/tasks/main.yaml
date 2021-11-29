@@ -1,0 +1,42 @@
+- name: "Build {{ docker_image_tag }} docker image"
+  shell:
+    chdir: '{{ zuul.project.src_dir }}'
+    cmd: 'docker build -t {{ docker_image_tag }} ./'
+
+- name: Get image size
+  shell: >
+    set -e
+    SIZE=$(docker image inspect {{ docker_image_tag }} {% raw %}--format='{{.Size}}'{% endraw %} )
+    SIZE=$(expr $SIZE / 1000 / 1000)
+    echo "Size of {{ docker_image_tag }}: "$SIZE" Mbyte"
+
+- name: Prepare directories to mount to the docker container for persistency
+  shell:
+    chdir: '{{ zuul.project.src_dir }}'
+    cmd: |
+      mkdir -p .test_results
+      sudo chown 65500 .test_results
+
+- name: List Rally version
+  shell: docker run {{ docker_image_tag }} --version
+  register: rally_version_info
+
+- name: Check plugin package is discoverable
+  fail:
+    msg: "{{ rally_package_name }} is not discoverable."
+  when:
+   - '"{{ rally_package_name }}" != ""'
+   - '"{{ rally_package_name }}" not in rally_version_info.stdout'
+
+- name: "Check availability of {{ rally_plugin_name }} plugin"
+  shell: docker run {{ docker_image_tag }} plugin show {{ rally_plugin_name }}
+
+- name: Execute the similar wokrloads as `tox -e self`
+  shell:
+    cmd: >
+      python3 {{ rally_project_path }}/tests/ci/rally_self_job.py
+      --task /rally/source/rally-jobs/self-rally.yaml
+      --plugins-path /rally/source/rally-jobs/plugins
+      --rally-cmd 'docker run -v '$(realpath {{ zuul.project.src_dir }})'/.test_results:/home/rally/.rally {{ docker_image_tag }}'
+      --results-dir /home/rally/.rally
+      --without-tmp-sqlite

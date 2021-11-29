@@ -17,7 +17,7 @@ from docutils.parsers import rst
 from docutils import utils
 import sys
 
-import mock
+from unittest import mock
 
 
 @mock.patch.object(sys, "stderr")

@@ -1,11 +1,12 @@
 - job:
     name: rally-tox-base
     parent: unittests
-    pre-run: tests/ci/playbooks/rally-tox-base/pre-run.yaml
-    run: tests/ci/playbooks/rally-tox-base/run.yaml
-    post-run: tests/ci/playbooks/rally-tox-base/post-run.yaml
+    pre-run: tests/ci/playbooks/tox-install.yaml
+    run: tests/ci/playbooks/tox-run.yaml
+    post-run: tests/ci/playbooks/fetch-html-and-json-reports.yaml
     description: |
       Run test for rally project.
+    nodeset: ubuntu-bionic
 
 - job:
     name: rally-tox-docs
@@ -28,6 +29,16 @@
       tox_env: pep8
 
 - job:
+    name: rally-tox-functional-py38
+    parent: rally-tox-base
+    description: |
+      Run test for rally project.
+
+      Uses tox with the ``functional`` environment.
+    vars:
+      tox_env: functional-py38
+
+- job:
     name: rally-tox-functional
     parent: rally-tox-base
     description: |
@@ -38,16 +49,6 @@
       tox_env: functional
 
 - job:
-    name: rally-tox-functional-py3
-    parent: rally-tox-base
-    description: |
-      Run test for rally project.
-
-      Uses tox with the ``functional-py3`` environment.
-    vars:
-      tox_env: functional-py3
-
-- job:
     name: rally-tox-self
     parent: rally-tox-base
     description: |
@@ -56,36 +57,6 @@
       Uses tox with the ``self`` environment.
     vars:
       tox_env: self
-
-- job:
-    name: rally-tox-py27
-    parent: rally-tox-base
-    description: |
-      Run unit test for rally project.
-
-      Uses tox with the ``py34`` environment.
-    vars:
-      tox_env: py27
-
-- job:
-    name: rally-tox-py34
-    parent: rally-tox-base
-    description: |
-      Run unit test for rally project.
-
-      Uses tox with the ``py34`` environment.
-    vars:
-      tox_env: py34
-
-- job:
-    name: rally-tox-py35
-    parent: rally-tox-base
-    description: |
-      Run unit test for rally project.
-
-      Uses tox with the ``py35`` environment.
-    vars:
-      tox_env: py35
 
 - job:
     name: rally-tox-py36
@@ -106,3 +77,47 @@
       Uses tox with the ``py37`` environment.
     vars:
       tox_env: py37
+
+- job:
+    name: rally-tox-py38
+    parent: rally-tox-base
+    description: |
+      Run unit test for rally project.
+
+      Uses tox with the ``py38`` environment.
+    nodeset: ubuntu-focal
+    vars:
+      tox_env: py38
+
+- job:
+    name: rally-tox-py39
+    parent: rally-tox-base
+    description: |
+      Run unit test for rally project.
+
+      Uses tox with the ``py39`` environment.
+    nodeset: ubuntu-focal
+    vars:
+      tox_env: py39
+
+- job:
+    name: rally-tox-samples
+    parent: rally-tox-base
+    description: |
+      Run unit test for rally project.
+
+      Uses tox with the ``samples`` environment.
+    vars:
+      tox_env: samples
+
+- job:
+    name: rally-tox-cover
+    parent: tox-cover
+    description: |
+      Run test for rally project.
+
+      Uses tox with the ``cover`` environment.
+    nodeset: ubuntu-bionic
+    vars:
+      coverage_output_src: '{{ zuul.project.src_dir }}/cover/'
+      zuul_executor_dest: '{{ zuul.executor.log_root }}/coverage/'

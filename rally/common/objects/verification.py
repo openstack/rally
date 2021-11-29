@@ -76,8 +76,8 @@ class Verification(object):
         self._update(status=status)
 
     def finish(self, totals, tests):
-        if (totals.get("failures", 0) == 0 and
-                totals.get("unexpected_success", 0) == 0):
+        if (totals.get("failures", 0) == 0
+                and totals.get("unexpected_success", 0) == 0):
             status = consts.VerificationStatus.FINISHED
         else:
             status = consts.VerificationStatus.FAILED

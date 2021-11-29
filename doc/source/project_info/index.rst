@@ -140,18 +140,18 @@ Useful links
 - `Project space`_
 - `Bugs`_
 - `Patches on review`_
-- `Meeting logs`_ (server: **irc.freenode.net**, channel:
+- `Meeting logs`_ (server: **irc.oftc.net**, channel:
    **#openstack-meeting**)
-- `IRC logs`_ (server: **irc.freenode.net**, channel: **#openstack-rally**)
+- `IRC logs`_ (server: **irc.oftc.net**, channel: **#openstack-rally**)
 - `Gitter chat`_
 - `Trello board`_
 
 
 Where can I discuss and propose changes?
 ----------------------------------------
-- Our IRC channel: **#openstack-rally** on **irc.freenode.net**;
+- Our IRC channel: **#openstack-rally** on **irc.oftc.net**;
 - Weekly Rally team meeting (in IRC): **#openstack-meeting** on
-  **irc.freenode.net**, held on Mondays at 14:00 UTC;
+  **irc.oftc.net**, held on Mondays at 14:00 UTC;
 - OpenStack mailing list: **openstack-discuss@lists.openstack.org** (see
   `subscription and usage instructions`_);
 - `Rally team on Launchpad`_: Answers/Bugs/Blueprints.

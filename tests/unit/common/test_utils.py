@@ -12,16 +12,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from __future__ import print_function
 import collections
+import queue as Queue
 import string
 import sys
 import threading
 import time
+from unittest import mock
 
 import ddt
-import mock
-from six.moves import queue as Queue
+import pytest
 import testtools
 
 from rally.common import utils
@@ -148,29 +148,6 @@ class FirstIndexTestCase(test.TestCase):
     def test_list_with_non_existing_matching_element(self):
         lst = [1, 3, 5, 7]
         self.assertIsNone(utils.first_index(lst, lambda e: e == 2))
-
-
-class EditDistanceTestCase(test.TestCase):
-
-    def test_distance_empty_strings(self):
-        dist = utils.distance("", "")
-        self.assertEqual(0, dist)
-
-    def test_distance_equal_strings(self):
-        dist = utils.distance("abcde", "abcde")
-        self.assertEqual(0, dist)
-
-    def test_distance_replacement(self):
-        dist = utils.distance("abcde", "__cde")
-        self.assertEqual(2, dist)
-
-    def test_distance_insertion(self):
-        dist = utils.distance("abcde", "ab__cde")
-        self.assertEqual(2, dist)
-
-    def test_distance_deletion(self):
-        dist = utils.distance("abcde", "abc")
-        self.assertEqual(2, dist)
 
 
 class TenantIteratorTestCase(test.TestCase):
@@ -338,9 +315,9 @@ class RandomNameTestCase(test.TestCase):
         name = "foo"
         self.assertFalse(utils.name_matches_object(name, One, Two))
         # ensure that exactly one of the two objects is checked
-        self.assertItemsEqual(
-            One.name_matches_object.call_args_list +
-            Two.name_matches_object.call_args_list,
+        self.assertCountEqual(
+            One.name_matches_object.call_args_list
+            + Two.name_matches_object.call_args_list,
             [mock.call(name)])
 
     def test_name_matches_object_differing_list(self):
@@ -461,6 +438,7 @@ class MergeTestCase(test.TestCase):
 
 
 class TimeoutThreadTestCase(test.TestCase):
+    @pytest.mark.filterwarnings("ignore")
     def test_timeout_thread(self):
         """Create and kill thread by timeout.
 
@@ -489,7 +467,7 @@ class TimeoutThreadTestCase(test.TestCase):
         killer_thread.join()
         time_elapsed = end_time - start_time
         # NOTE(sskripnick): Killing thread with PyThreadState_SetAsyncExc
-        # works with sinificant delay. Make sure this delay is less
+        # works with significant delay. Make sure this delay is less
         # than 10 seconds.
         self.assertLess(time_elapsed, 11,
                         "Thread killed too late (%s seconds)" % time_elapsed)

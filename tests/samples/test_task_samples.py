@@ -17,8 +17,8 @@ import inspect
 import itertools
 import os
 import traceback
+from unittest import mock
 
-import mock
 import yaml
 
 import rally
@@ -37,10 +37,7 @@ class TaskSampleTestCase(test.TestCase):
 
     def setUp(self):
         super(TaskSampleTestCase, self).setUp()
-        if os.environ.get("TOX_ENV_NAME") == "cover":
-            self.skipTest("There is no need to check samples in coverage job.")
-        with mock.patch("rally.api.API.check_db_revision"):
-            self.rapi = api.API()
+        self.rapi = api.API(skip_db_check=True)
 
     def iterate_samples(self, merge_pairs=True):
         """Iterates all task samples
@@ -153,8 +150,9 @@ class TaskSampleTestCase(test.TestCase):
         bad_filenames = []
         for dirname, dirnames, filenames in os.walk(self.samples_path):
             for filename in filenames:
-                if "_" in filename and (filename.endswith(".yaml") or
-                                        filename.endswith(".json")):
+                if "_" in filename and (
+                        filename.endswith(".yaml")
+                        or filename.endswith(".json")):
                     full_path = os.path.join(dirname, filename)
                     bad_filenames.append(full_path)
 

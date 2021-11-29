@@ -15,8 +15,6 @@
 
 """Rally command: deployment"""
 
-from __future__ import print_function
-
 import json
 import os
 import sys
@@ -25,10 +23,9 @@ import jsonschema
 
 from rally.cli import cliutils
 from rally.cli import envutils
-from rally.common import fileutils
+from rally.cli import yamlutils as yaml
 from rally.common import logging
 from rally.common import utils
-from rally.common import yamlutils as yaml
 from rally.env import env_mgr
 from rally import exceptions
 from rally import plugins
@@ -86,21 +83,21 @@ class DeploymentCommands(object):
             result = env_mgr.EnvManager.create_spec_from_sys_environ()
             config = result["spec"]
             if "existing@openstack" in config:
-                # NOTE(andreykurilin): if we are are here it means that
+                # NOTE(andreykurilin): if we are here it means that
                 #   rally-openstack package is installed
                 import rally_openstack
                 if rally_openstack.__version_tuple__ <= (1, 4, 0):
-                    print(rally_openstack.__version_tuple__)
-                    if config["existing@openstack"]["https_key"]:
+                    if ("https_key" in config["existing@openstack"]
+                            and config["existing@openstack"]["https_key"]):
                         print("WARNING: OS_KEY is ignored due to old version "
                               "of rally-openstack package.")
-                    # NOTE(andreykurilin): To support rally-openstack <=1.4.0
-                    #   we need to remove https_key, since OpenStackCredentials
-                    #   object doesn't support it.
-                    #   Latest rally-openstack fixed this issue with
-                    #   https://github.com/openstack/rally-openstack/commit/c7483386e6b59474c83e3ecd0c7ee0e77ff50c02
-
-                    config["existing@openstack"].pop("https_key")
+                        # NOTE(andreykurilin): To support
+                        #    rally-openstack<=1.4.0 we need to remove
+                        #    https_key, since OpenStackCredentials object
+                        #    doesn't support it.
+                        #    Latest rally-openstack fixed this issue with
+                        #    https://github.com/openstack/rally-openstack/commit/c7483386e6b59474c83e3ecd0c7ee0e77ff50c02
+                        config["existing@openstack"].pop("https_key")
         else:
             if not filename:
                 config = {}
@@ -237,17 +234,17 @@ class DeploymentCommands(object):
 
         info = api.deployment.check(deployment=deployment)
         for platform in info:
-            for i, credentials in enumerate(info[platform]):
+            for i, creds in enumerate(info[platform]):
                 failed = False
 
                 n = "" if len(info[platform]) == 1 else " #%s" % (i + 1)
                 header = "Platform %s%s:" % (platform, n)
                 print(cliutils.make_header(header))
-                if "admin_error" in credentials:
-                    print_error("admin", credentials["admin_error"])
+                if "admin_error" in creds:
+                    print_error("admin", creds["admin_error"])
                     failed = True
-                if "user_error" in credentials:
-                    print_error("users", credentials["user_error"])
+                if "user_error" in creds:
+                    print_error("users", creds["user_error"])
                     failed = True
 
                 if not failed:
@@ -256,19 +253,19 @@ class DeploymentCommands(object):
                         "Service": lambda x: x.get("name"),
                         "Service Type": lambda x: x.get("type"),
                         "Status": lambda x: x.get("status", "Available")}
-                    if (is_field_there(credentials["services"], "type") and
-                            is_field_there(credentials["services"], "name")):
+                    if (is_field_there(creds["services"], "type")
+                            and is_field_there(creds["services"], "name")):
                         headers = ["Service", "Service Type", "Status"]
                     else:
                         headers = ["Service", "Status"]
 
-                    if is_field_there(credentials["services"], "version"):
+                    if is_field_there(creds["services"], "version"):
                         headers.append("Version")
 
-                    if is_field_there(credentials["services"], "description"):
+                    if is_field_there(creds["services"], "description"):
                         headers.append("Description")
 
-                    cliutils.print_list(credentials["services"], headers,
+                    cliutils.print_list(creds["services"], headers,
                                         normalize_field_names=True,
                                         formatters=formatters)
                 else:
@@ -326,10 +323,10 @@ class DeploymentCommands(object):
             return 1
         print("Using deployment: %s" % deployment["uuid"])
 
-        fileutils.update_globals_file(envutils.ENV_DEPLOYMENT,
-                                      deployment["uuid"])
-        fileutils.update_globals_file(envutils.ENV_ENV,
-                                      deployment["uuid"])
+        envutils.update_globals_file(envutils.ENV_DEPLOYMENT,
+                                     deployment["uuid"])
+        envutils.update_globals_file(envutils.ENV_ENV,
+                                     deployment["uuid"])
 
         if "openstack" in deployment["credentials"]:
             creds = deployment["credentials"]["openstack"][0]

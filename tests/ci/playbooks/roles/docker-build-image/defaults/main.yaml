@@ -1,0 +1,6 @@
+docker_repository: xrally/xrally
+docker_image_version: "{{ zuul.tag }}"
+docker_image_tag: "{{ docker_repository }}:{{ docker_image_version }}"
+rally_project_path: "{{ zuul.projects['opendev.org/openstack/rally'].src_dir }}"
+rally_plugin_name: "Dummy.dummy"
+rally_package_name: ""

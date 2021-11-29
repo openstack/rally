@@ -1,4 +1,3 @@
-# Copyright 2016: Mirantis Inc.
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -13,61 +12,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from rally.plugins.task.sla.max_average_duration_per_atomic import *  # noqa: F401,F403,E501
+from rally.plugins.task.sla import max_average_duration_per_atomic as _new
 
-"""
-SLA (Service-level agreement) is set of details for determining compliance
-with contracted values such as maximum error rate or minimum response time.
-"""
-
-import collections
-
-from rally.common import streaming_algorithms
-from rally import consts
-from rally.task import sla
+# import it as last item to be sure that we use the right module
+from rally.common import logging
 
 
-@sla.configure(name="max_avg_duration_per_atomic")
-class MaxAverageDurationPerAtomic(sla.SLA):
-    """Maximum average duration of one iterations atomic actions in seconds."""
-    CONFIG_SCHEMA = {"type": "object", "$schema": consts.JSON_SCHEMA,
-                     "patternProperties": {".*": {
-                         "type": "number",
-                         "description": "The name of atomic action."}},
-                     "minProperties": 1,
-                     "additionalProperties": False}
-
-    def __init__(self, criterion_value):
-        super(MaxAverageDurationPerAtomic, self).__init__(criterion_value)
-        self.avg_by_action = collections.defaultdict(float)
-        self.avg_comp_by_action = collections.defaultdict(
-            streaming_algorithms.MeanComputation)
-        self.criterion_items = self.criterion_value.items()
-
-    def add_iteration(self, iteration):
-        if not iteration.get("error"):
-            for action in iteration["atomic_actions"]:
-                duration = action["finished_at"] - action["started_at"]
-                self.avg_comp_by_action[action["name"]].add(duration)
-                result = self.avg_comp_by_action[action["name"]].result()
-                self.avg_by_action[action["name"]] = result
-        self.success = all(self.avg_by_action[atom] <= val
-                           for atom, val in self.criterion_items)
-        return self.success
-
-    def merge(self, other):
-        for atom, comp in self.avg_comp_by_action.items():
-            if atom in other.avg_comp_by_action:
-                comp.merge(other.avg_comp_by_action[atom])
-        self.avg_by_action = {a: comp.result() or 0.0
-                              for a, comp in self.avg_comp_by_action.items()}
-        self.success = all(self.avg_by_action[atom] <= val
-                           for atom, val in self.criterion_items)
-        return self.success
-
-    def details(self):
-        strs = ["Action: '%s'. %.2fs <= %.2fs" %
-                (atom, self.avg_by_action[atom], val)
-                for atom, val in self.criterion_items]
-        head = "Average duration of one iteration for atomic actions:"
-        end = "Status: %s" % self.status()
-        return "\n".join([head] + strs + [end])
+logging.log_deprecated_module(
+    target=__name__, new_module=_new.__name__, release="3.0.0"
+)

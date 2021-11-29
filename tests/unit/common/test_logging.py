@@ -14,8 +14,7 @@
 #    under the License.
 
 import logging   # noqa
-
-import mock
+from unittest import mock
 
 from rally.common import logging as rally_logging
 from tests.unit import test
@@ -93,7 +92,7 @@ class RallyContaxtAdapterTestCase(test.TestCase):
 
         foo()
         # the number of the line which calls logging_method
-        lineno = 92
+        lineno = 91
         self.assertEqual((__file__, lineno, "logging_method()"), self.caller)
 
     @mock.patch("rally.common.logging.getLogger")
@@ -110,7 +109,7 @@ class RallyContaxtAdapterTestCase(test.TestCase):
         foo(1)
 
         # the number of the line which calls foo
-        lineno = 110
+        lineno = 109
         mock_get_logger.assert_called_once_with("%s:%s" % (__file__, lineno))
         logger = mock_get_logger.return_value
         self.assertEqual(1, logger.warning.call_count)
@@ -129,7 +128,7 @@ class RallyContaxtAdapterTestCase(test.TestCase):
         radapter.exception(Exception("!2!"))
 
         # the number of the line which calls foo
-        lineno = 129
+        lineno = 128
         mock_get_logger.assert_called_once_with("%s:%s" % (__file__, lineno))
 
         logger = mock_get_logger.return_value
@@ -146,7 +145,7 @@ class RallyContaxtAdapterTestCase(test.TestCase):
         radapter.error("foo", "bar")
 
         # the number of the line which calls foo
-        lineno = 146
+        lineno = 145
         mock_get_logger.assert_called_once_with("%s:%s" % (__file__, lineno))
 
         logger = mock_get_logger.return_value

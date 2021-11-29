@@ -22,7 +22,6 @@ system or formats.
 import abc
 
 import jsonschema
-import six
 
 from rally.common.plugin import plugin
 from rally import consts
@@ -53,8 +52,7 @@ REPORT_RESPONSE_SCHEMA = {
 
 
 @plugin.base()
-@six.add_metaclass(abc.ABCMeta)
-class VerificationReporter(plugin.Plugin):
+class VerificationReporter(plugin.Plugin, metaclass=abc.ABCMeta):
     """Base class for all reporters for verifications."""
 
     def __init__(self, verifications, output_destination):

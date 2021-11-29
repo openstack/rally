@@ -20,29 +20,28 @@ from rally.common import logging
 from rally.utils import encodeutils
 
 
+_IGNORE_LIST = [
+    "subunit.parser"
+]
+
+
 def prepare_input_args(func):
     # NOTE(andreykurilin): Variables 'runnable', 'eof', 'route_code' are not
     # used in parser.
     def inner(self, test_id=None, test_status=None, timestamp=None,
               file_name=None, file_bytes=None, mime_type=None, test_tags=None,
               runnable=True, eof=False, route_code=None):
-        if not test_id:
+        if not test_id or test_id in _IGNORE_LIST:
             return
 
-        if (test_id.startswith("setUpClass (") or
-                test_id.startswith("tearDown (")):
+        if (test_id.startswith("setUpClass (")
+                or test_id.startswith("tearDown (")):
             test_id = test_id[test_id.find("(") + 1:-1]
 
         tags = _parse_test_tags(test_id)
 
-        if mime_type:
-            mime_type, charset = mime_type.split("; ")[:2]
-            charset = charset.split("=")[1]
-        else:
-            charset = None
-
         func(self, test_id, test_status, timestamp, tags,
-             file_name, file_bytes, test_tags, mime_type, charset)
+             file_name, file_bytes, test_tags, mime_type)
 
     return inner
 
@@ -81,8 +80,8 @@ class SubunitV2StreamResult(object):
         return test_id.split("[")[0] if test_id.find("[") > -1 else test_id
 
     def _check_expected_failure(self, test_id):
-        if (test_id in self._expected_failures or
-                self._get_test_name(test_id) in self._expected_failures):
+        if (test_id in self._expected_failures
+                or self._get_test_name(test_id) in self._expected_failures):
             if self._tests[test_id]["status"] == "fail":
                 self._tests[test_id]["status"] = "xfail"
                 if self._expected_failures[test_id]:
@@ -113,9 +112,9 @@ class SubunitV2StreamResult(object):
         # failed, there is only one event with reason and status. So we should
         # modify all tests of test class manually.
         for test_id in self._unknown_entities:
-            known_test_ids = filter(lambda t:
-                                    t == test_id or t.startswith(
-                                        "%s." % test_id), self._tests)
+            known_test_ids = filter(
+                lambda t: t == test_id or t.startswith("%s." % test_id),
+                self._tests)
             for t_id in known_test_ids:
                 if self._tests[t_id]["status"] == "init":
                     self._tests[t_id]["status"] = (
@@ -161,8 +160,7 @@ class SubunitV2StreamResult(object):
 
     @prepare_input_args
     def status(self, test_id=None, test_status=None, timestamp=None, tags=None,
-               file_name=None, file_bytes=None, worker=None, mime_type=None,
-               charset=None):
+               file_name=None, file_bytes=None, worker=None, mime_type=None):
         if timestamp:
             if not self._first_timestamp:
                 self._first_timestamp = timestamp

@@ -19,8 +19,6 @@ import copy
 import multiprocessing
 import time
 
-import six
-
 from rally.common import logging
 from rally.common.plugin import plugin
 from rally.common import utils as rutils
@@ -105,8 +103,8 @@ def _log_worker_info(**info):
 
 @validation.add_default("jsonschema")
 @plugin.base()
-@six.add_metaclass(abc.ABCMeta)
-class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin):
+class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin,
+                     metaclass=abc.ABCMeta):
     """Base class for all scenario runners.
 
     Scenario runner is an entity that implements a certain strategy of

@@ -15,8 +15,6 @@
 
 """CLI interface for Rally."""
 
-from __future__ import print_function
-
 import sys
 
 from rally.cli import cliutils

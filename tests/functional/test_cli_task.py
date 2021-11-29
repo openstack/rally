@@ -18,9 +18,10 @@ import os
 import re
 import threading
 import time
+from unittest import mock
 
 import jsonschema
-import mock
+import pytest
 import testtools
 
 from rally import api
@@ -236,14 +237,14 @@ class TaskTestCase(testtools.TestCase):
         with open(json_report, "w+") as f:
             f.write(rally("task results", no_logs=True))
         import_print = rally("task import --file %s" % json_report)
-        task_uuid = re.search("UUID:\s([a-z0-9\-]+)", import_print).group(1)
+        task_uuid = re.search(r"UUID:\s([a-z0-9\-]+)", import_print).group(1)
         self.assertIn("Dummy.dummy_random_fail_in_atomic",
                       rally("task results --uuid %s" % task_uuid))
 
         # new json report
         rally("task report --json --out %s" % json_report, no_logs=True)
         import_print = rally("task import --file %s" % json_report)
-        task_uuid = re.search("UUID:\s([a-z0-9\-]+)", import_print).group(1)
+        task_uuid = re.search(r"UUID:\s([a-z0-9\-]+)", import_print).group(1)
         self.assertIn("Dummy.dummy_random_fail_in_atomic",
                       rally("task report --uuid %s --json" % task_uuid))
 
@@ -287,7 +288,8 @@ class TaskTestCase(testtools.TestCase):
                                "Copyright (c) 2010-2015, Michael Bostock"]
         external_signatures = ["<script type=\"text/javascript\" src=",
                                "<link rel=\"stylesheet\" href="]
-        html = open(file_path).read()
+        with open(file_path) as f:
+            html = f.read()
         result_embedded = all([sig in html for sig in embedded_signatures])
         result_external = all([sig in html for sig in external_signatures])
         self.assertEqual(expected, result_embedded)
@@ -365,7 +367,8 @@ class TaskTestCase(testtools.TestCase):
         rally("task start --task %s" % config.filename)
         task_result_file = rally.gen_report_path(suffix="results")
         self.addCleanup(os.remove, task_result_file)
-        rally("task results", report_path=task_result_file, raw=True)
+        rally("task results", report_path=task_result_file, raw=True,
+              getjson=True)
 
         html_report = rally.gen_report_path(extension="html")
         rally("task report --html-static %s --out %s"
@@ -384,7 +387,8 @@ class TaskTestCase(testtools.TestCase):
         self._assert_html_report_libs_are_embedded(html_report)
 
     def _assert_json_report(self, file_path):
-        results = json.loads(open(file_path).read())
+        with open(file_path) as f:
+            results = json.loads(f.read())
         self.assertIn("info", results)
         self.assertIn("tasks", results)
         for task in results["tasks"]:
@@ -604,7 +608,7 @@ class TaskTestCase(testtools.TestCase):
         plugin_paths = ("tests/functional/extra/fake_dir1/,"
                         "tests/functional/extra/fake_dir2/")
         task_file = "tests/functional/extra/test_fake_scenario.json"
-        output = rally(("--plugin-paths %(plugin_paths)s "
+        output = rally(("--debug --plugin-paths %(plugin_paths)s "
                         "task validate --task %(task_file)s") %
                        {"task_file": task_file,
                         "plugin_paths": plugin_paths})
@@ -928,6 +932,7 @@ class TaskTestCase(testtools.TestCase):
                 time.sleep(0.5)
         return task, uuid
 
+    @pytest.mark.filterwarnings("ignore")
     def test_abort(self):
         RUNNER_TIMES = 10
         cfg = {
@@ -1048,6 +1053,52 @@ class TaskTestCase(testtools.TestCase):
         rally("task export --uuid %s --type html --to %s" % (
             " ".join(task_uuids), html_report))
         self.assertTrue(os.path.exists(html_report))
+
+    def test_restart(self):
+        rally = utils.Rally()
+        deployment_id = utils.get_global("RALLY_DEPLOYMENT", rally.env)
+        cfg = self._get_sample_task_config()
+        config = utils.TaskConfig(cfg)
+        output = rally(("task start --task %(task_file)s "
+                        "--deployment %(deployment_id)s") %
+                       {"task_file": config.filename,
+                        "deployment_id": deployment_id})
+
+        output = rally("task restart")
+        result = re.search(
+            r"(?P<task_id>[0-9a-f\-]{36}): started", output)
+        self.assertIsNotNone(result)
+
+    def test_restart_with_scenario(self):
+        rally = utils.Rally()
+        deployment_id = utils.get_global("RALLY_DEPLOYMENT", rally.env)
+        cfg = self._get_sample_task_config()
+        config = utils.TaskConfig(cfg)
+        output = rally(("task start --task %(task_file)s "
+                        "--deployment %(deployment_id)s") %
+                       {"task_file": config.filename,
+                        "deployment_id": deployment_id})
+
+        output = rally(
+            "task restart --scenario Dummy.dummy_random_fail_in_atomic")
+        result = re.search(
+            r"(?P<task_id>[0-9a-f\-]{36}): started", output)
+        self.assertIsNotNone(result)
+        result = re.search(
+            r"test scenario Dummy\.dummy_random_fail_in_atomic", output)
+        self.assertIsNotNone(result)
+
+    def test_restart_with_fake_scenario(self):
+        rally = utils.Rally()
+        deployment_id = utils.get_global("RALLY_DEPLOYMENT", rally.env)
+        cfg = self._get_sample_task_config()
+        config = utils.TaskConfig(cfg)
+        rally(("task start --task %(task_file)s "
+               "--deployment %(deployment_id)s") %
+              {"task_file": config.filename,
+               "deployment_id": deployment_id})
+        self.assertRaises(utils.RallyCliError, rally,
+                          "task restart --scenario fake.fake_scenario")
 
 
 class SLATestCase(testtools.TestCase):
@@ -1453,7 +1504,7 @@ class HookTestCase(testtools.TestCase):
         with open(json_report, "w+") as f:
             f.write(rally("task results", no_logs=True))
         import_print = rally("task import --file %s" % json_report)
-        task_uuid = re.search("UUID:\s([a-z0-9\-]+)", import_print).group(1)
+        task_uuid = re.search(r"UUID:\s([a-z0-9\-]+)", import_print).group(1)
         results = rally("task results --uuid %s" % task_uuid)
         self.assertIn("Dummy.dummy", results)
         self.assertIn("event_hook", results)

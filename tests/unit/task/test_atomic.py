@@ -14,8 +14,7 @@
 #    under the License.
 
 import collections
-
-import mock
+from unittest import mock
 
 from rally.task import atomic
 from tests.unit import test
@@ -109,42 +108,6 @@ class AtomicActionTestCase(test.TestCase):
         inst = TestTimer()
         self.assertRaises(TestException, inst.some_func)
         self.assertEqual([{"name": "test", "children": [], "failed": True,
-                           "started_at": 1, "finished_at": 3}],
-                         inst.atomic_actions())
-
-    @mock.patch("rally.task.atomic.LOG.warning")
-    @mock.patch("time.time", side_effect=[1, 3, 1, 3])
-    def test_optional_action_timer_decorator(self, mock_time,
-                                             mock_log_warning):
-
-        class TestAtomicTimer(atomic.ActionTimerMixin):
-
-            @atomic.optional_action_timer("some")
-            def some_func(self, a, b):
-                return a + b
-
-            @atomic.optional_action_timer("some", argument_name="foo",
-                                          default=False)
-            def other_func(self, a, b):
-                return a + b
-
-        inst = TestAtomicTimer()
-        self.assertEqual(5, inst.some_func(2, 3))
-        self.assertEqual([{"name": "some", "children": [],
-                           "started_at": 1, "finished_at": 3}],
-                         inst.atomic_actions())
-
-        inst = TestAtomicTimer()
-        self.assertEqual(5, inst.some_func(2, 3, atomic_action=False))
-        self.assertEqual([], inst.atomic_actions())
-
-        inst = TestAtomicTimer()
-        self.assertEqual(5, inst.other_func(2, 3))
-        self.assertEqual([], inst.atomic_actions())
-
-        inst = TestAtomicTimer()
-        self.assertEqual(5, inst.other_func(2, 3, foo=True))
-        self.assertEqual([{"name": "some", "children": [],
                            "started_at": 1, "finished_at": 3}],
                          inst.atomic_actions())
 

@@ -15,8 +15,6 @@ import itertools
 import os
 import re
 
-import six.moves
-
 from tests.unit import test
 
 
@@ -192,8 +190,8 @@ class FuncMockArgsDecoratorsChecker(ast.NodeVisitor):
             if funcname == "mock.patch":
                 decname = self._get_value(decorator.args[0])
             elif funcname == "mock.patch.object":
-                decname = (self._get_name(decorator.args[0]) + "." +
-                           self._get_value(decorator.args[1]))
+                decname = (self._get_name(decorator.args[0]) + "."
+                           + self._get_value(decorator.args[1]))
             else:
                 continue
 
@@ -222,7 +220,9 @@ class FuncMockArgsDecoratorsChecker(ast.NodeVisitor):
         self.generic_visit(node)
 
         if node.col_offset == 0:
-            mnode = ast.Module(body=[node])
+            mnode = ast.parse("")
+            mnode.body = [node]
+            mnode = ast.fix_missing_locations(mnode)
             code = compile(mnode, "<ast>", "exec")
             try:
                 exec(code, self.globals_)
@@ -241,7 +241,7 @@ class FuncMockArgsDecoratorsChecker(ast.NodeVisitor):
         self.generic_visit(node)
 
     def check_name(self, arg, dec_vars):
-        return (dec_vars is not None and arg in dec_vars)
+        return dec_vars is not None and arg in dec_vars
 
     def visit_FunctionDef(self, node):
         self.generic_visit(node)
@@ -255,7 +255,7 @@ class FuncMockArgsDecoratorsChecker(ast.NodeVisitor):
 
         error_msgs = []
         mismatched = False
-        for arg, dec_vars in six.moves.zip_longest(mock_args, mock_decs):
+        for arg, dec_vars in itertools.zip_longest(mock_args, mock_decs):
             if not self.check_name(arg, dec_vars):
                 if arg and dec_vars:
                     sorted_by_len = sorted(
@@ -263,19 +263,19 @@ class FuncMockArgsDecoratorsChecker(ast.NodeVisitor):
                     shortest_name = sorted_by_len.pop()
                     if len(shortest_name) <= self.SHORTEST_VARIANT_LEN_LIMIT:
                         error_msgs.append(
-                            ("Argument '%(arg)s' misnamed; should be either "
-                             "of %(dec)s that is derived from the mock "
-                             "decorator args.\n") % {"arg": arg,
-                                                     "dec": dec_vars})
+                            (f"Argument 'mock_{arg}' misnamed; should be "
+                             f"either of {dec_vars} that is derived from the "
+                             f"mock decorator args.\n")
+                        )
                 elif not arg:
                     error_msgs.append(
-                        "Missing or malformed argument for %s decorator."
-                        % dec_vars)
+                        f"Missing or malformed argument for {dec_vars} "
+                        f"decorator.")
                     mismatched = True
                 elif not dec_vars:
                     error_msgs.append(
-                        "Missing or malformed decorator for '%s' argument."
-                        % arg)
+                        f"Missing or malformed decorator for 'mock_{arg}' "
+                        f"argument.")
                     mismatched = True
 
         if error_msgs:
@@ -306,8 +306,8 @@ class MockUsageCheckerTestCase(test.TestCase):
 
         for dirname, dirnames, filenames in os.walk(self.tests_path):
             for filename in filenames:
-                if (not filename.startswith("test_") or
-                   not filename.endswith(".py")):
+                if (not filename.startswith("test_")
+                        or not filename.endswith(".py")):
                     continue
 
                 filename = os.path.relpath(os.path.join(dirname, filename))

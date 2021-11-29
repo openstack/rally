@@ -15,8 +15,9 @@
 
 """Tests for HookExecutor and Hook classes."""
 
+from unittest import mock
+
 import ddt
-import mock
 
 from rally import consts
 from rally.task import hook
@@ -330,9 +331,9 @@ class TriggerTestCase(test.TestCase):
         self.assertEqual(len(right_values),
                          hook_cls.return_value.run_async.call_count)
         hook_status = hook_cls.return_value.result.return_value["status"]
+        res = [hook_cls.return_value.result.return_value] * len(right_values)
         self.assertEqual(
             {"config": cfg,
-             "results": [hook_cls.return_value.result.return_value] *
-                len(right_values),
+             "results": res,
              "summary": {hook_status: len(right_values)}},
             dummy_trigger.get_results())

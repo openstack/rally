@@ -22,7 +22,6 @@ system by connection string.
 import abc
 
 import jsonschema
-import six
 
 from rally.common import logging
 from rally.common.plugin import plugin
@@ -56,8 +55,8 @@ REPORT_RESPONSE_SCHEMA = {
 
 
 @plugin.base()
-@six.add_metaclass(abc.ABCMeta)
-class TaskExporter(plugin.Plugin, validation.ValidatablePluginMixin):
+class TaskExporter(plugin.Plugin, validation.ValidatablePluginMixin,
+                   metaclass=abc.ABCMeta):
     """Plugin base for exporting tasks results to different systems&formats.
 
     This type of plugins is designed to provide the way to present results in

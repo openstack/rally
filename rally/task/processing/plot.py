@@ -19,8 +19,6 @@ import hashlib
 import itertools
 import json
 
-import six
-
 from rally.common import objects
 from rally.common.plugin import plugin
 from rally.common import version
@@ -270,7 +268,7 @@ class Trends(object):
         """Convert object into string."""
         if obj is None:
             return "None"
-        elif isinstance(obj, six.string_types + (int, float)):
+        elif isinstance(obj, (str, int, float)):
             return str(obj).strip()
         elif isinstance(obj, (list, tuple)):
             return ",".join(sorted([self._to_str(v) for v in obj]))
@@ -305,8 +303,8 @@ class Trends(object):
                 "config": workload_cfg}
 
         self._data[key]["tasks"].append(task_uuid)
-        if (self._data[key]["description"] and
-                self._data[key]["description"] != w_description):
+        if (self._data[key]["description"]
+                and self._data[key]["description"] != w_description):
             self._data[key]["description"] = None
 
         self._data[key]["sla_failures"] += not workload["pass_sla"]
@@ -388,7 +386,7 @@ class Trends(object):
                                ("avg", charts.streaming.MeanComputation())):
                 for k, v in trend["durations"]:
                     for i in v:
-                        if isinstance(i[1], (float,) + six.integer_types):
+                        if isinstance(i[1], (float, int)):
                             comp.add(i[1])
                 trend["stat"][stat] = comp.result()
 

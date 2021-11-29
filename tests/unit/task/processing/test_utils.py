@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
+
 import ddt
 
 from rally.task.processing import utils
@@ -47,3 +49,52 @@ class GraphZipperTestCase(test.TestCase):
         self.assertRaises(TypeError, merger.add_point)
         [merger.add_point(1) for value in range(10)]
         self.assertRaises(RuntimeError, merger.add_point, 1)
+
+
+@ddt.ddt
+class PercentileTestCase(test.TestCase):
+
+    mixed1 = [0]
+    mixed6 = [100, 100, 0, 100, 100, 100]
+    mixed5 = [0, 0, 100, 0, 0]
+    mixed16 = [55.71, 83.05, 24.12, 27, 48.36, 16.36, 96.23, 6, 16.0, 88.11,
+               29.52, 99.2, 79.96, 77.84, 85.45, 85.32, 7, 17.1, 3.02, 15.23]
+    mixed50 = [51.63, 82.2, 52.52, .05, 66, 94.03, 78.6, 80.9, 51.89, 79, 1.4,
+               65.06, 12.46, 51.89, 41, 45.39, 124, 62.2, 32.72, 56.98, 31.19,
+               26.27, 97.3, 56.6, 19.75, 69, 25.03, 10.76, 17.71, 29.4, 15.75,
+               19.88, 90.16, 82.0, 63.4, 14.84, 49.07, 72.06, 41, 1.48, 82.19,
+               48.45, 53, 88.33, 52.31, 62, 15.96, 21.17, 25.33, 53.27]
+    mixed50000 = mixed50 * 1000
+    range5000 = list(range(5000))
+
+    @ddt.data(
+        {"stream": "mixed1", "percent": 0.95, "expected": 0},
+        {"stream": "mixed6", "percent": 0.5, "expected": 100},
+        {"stream": "mixed5", "percent": 0.5, "expected": 0},
+        {"stream": "mixed5", "percent": 0.999, "expected": 99.6},
+        {"stream": "mixed5", "percent": 0.001, "expected": 0},
+        {"stream": "mixed16", "percent": 0.25, "expected": 16.27},
+        {"stream": "mixed16", "percent": 0.50, "expected": 38.94},
+        {"stream": "mixed16", "percent": 0.90, "expected":
+            88.92200000000001},
+        {"stream": "mixed50", "percent": 0.25, "expected": 25.105},
+        {"stream": "mixed50", "percent": 0.50, "expected": 51.89},
+        {"stream": "mixed50", "percent": 0.90, "expected":
+            82.81300000000002},
+        {"stream": "mixed50000", "percent": 0.25, "expected":
+            25.03},
+        {"stream": "mixed50000", "percent": 0.50, "expected": 51.89},
+        {"stream": "mixed50000", "percent": 0.90, "expected":
+            82.81299999999108},
+        {"stream": "range5000", "percent": 0.25, "expected": 1249.75},
+        {"stream": "range5000", "percent": 0.50, "expected": 2499.5},
+        {"stream": "range5000", "percent": 0.90, "expected": 4499.1})
+    @ddt.unpack
+    def test_add_and_result(self, percent, stream, expected):
+        stream = copy.copy(getattr(self, stream))
+        self.assertEqual(expected,
+                         utils.percentile(percent=percent, points=stream))
+
+    def test_result_empty(self):
+        self.assertIsNone(utils.percentile([], percent=0.50,
+                                           ignore_sorting=True))

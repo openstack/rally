@@ -14,19 +14,19 @@
 #    under the License.
 
 import datetime as dt
+import io
 import json
 import os.path
 import sys
+from unittest import mock
 
 import ddt
-import mock
-import six
 
 import rally
 from rally import api
 from rally.cli import cliutils
 from rally.cli.commands import task
-from rally.common import yamlutils as yaml
+from rally.cli import yamlutils as yaml
 from rally import consts
 from rally import exceptions
 from tests.unit import fakes
@@ -87,7 +87,9 @@ class TaskCommandsTestCase(test.TestCase):
 
         def open_return_value(filename):
             if filename == "in_task":
-                return mock.Mock()
+                m = mock.MagicMock()
+                m.__enter__.return_value = mock.Mock(read=lambda: "{}")
+                return m
             else:
                 raise IOError()
 
@@ -321,6 +323,67 @@ class TaskCommandsTestCase(test.TestCase):
             abort_on_sla_failure=False)
 
         self.assertFalse(mock__detailed.called)
+
+    @mock.patch("rally.cli.commands.task.TaskCommands._start_task")
+    @ddt.data({"scenario": None},
+              {"scenario": "scenario_name"},
+              {"scenario": "none_name"})
+    @ddt.unpack
+    def test_restart(self, mock__start_task, scenario):
+        self.fake_api.task.get.return_value = {
+            "status": "finished",
+            "title": "fake_task",
+            "description": "this is a test",
+            "tags": [],
+            "subtasks": [
+                {"title": "subtask", "description": "",
+                 "workloads": [
+                     {
+                         "name": "scenario_name",
+                         "args": {},
+                         "contexts": {},
+                         "runner": {"times": 20, "concurrency": 5},
+                         "runner_type": "constant",
+                         "hooks": [],
+                         "sla": {}
+                     }]}
+            ]
+        }
+        if scenario == "none_name":
+            self.assertEqual(
+                1,
+                self.task.restart(self.fake_api, "deployment_uuid",
+                                  "task_uuid", scenarios=scenario)
+            )
+        else:
+            self.assertEqual(
+                mock__start_task.return_value,
+                self.task.restart(self.fake_api, "deployment_uuid",
+                                  "task_uuid", scenarios=scenario)
+            )
+        self.fake_api.task.get.assert_called_once_with(task_id="task_uuid",
+                                                       detailed=True)
+
+    def test_restart_by_crashed_task(self):
+        self.fake_api.task.get.return_value = {
+            "uuid": "task_uuid",
+            "status": "crashed",
+            "title": "fake_task",
+            "description": "this is a test",
+            "tags": [],
+            "subtasks": [],
+            "validation_result": {
+                "trace": {},
+                "etype": "",
+                "msg": ""
+            }
+        }
+        self.assertEqual(
+            1,
+            self.task.restart(self.fake_api, "deployment_uuid", "task_uuid")
+        )
+        self.fake_api.task.get.assert_called_once_with(task_id="task_uuid",
+                                                       detailed=True)
 
     def test_abort(self):
         test_uuid = "17860c43-2274-498d-8669-448eff7b073f"
@@ -573,11 +636,24 @@ class TaskCommandsTestCase(test.TestCase):
                 "contexts": {"users": {}},
                 "data": data or []}]}]}
 
-    @mock.patch("rally.cli.commands.task.json.dumps")
+    @mock.patch("rally.plugins.task.exporters.old_json_results.json.dumps")
     def test_results(self, mock_json_dumps):
+
+        mock_json_dumps.return_value = ""
+
+        def fake_export(tasks, output_type, output_dest=None):
+            tasks = [self.fake_api.task.get(u, detailed=True) for u in tasks]
+            return self.real_api.task.export(tasks, output_type, output_dest)
+
+        self.fake_api.task.export.side_effect = fake_export
+
         task_id = "foo_task_id"
 
-        task_obj = self._make_task(data=[{"atomic_actions": {"foo": 1.1}}])
+        task_obj = self._make_task(
+            data=[{"atomic_actions": [{"name": "foo",
+                                       "started_at": 0,
+                                       "finished_at": 1.1}]}]
+        )
         task_obj["subtasks"][0]["workloads"][0]["hooks"] = [{
             "config": {
                 "action": ("foo", "arg"),
@@ -585,6 +661,7 @@ class TaskCommandsTestCase(test.TestCase):
             },
             "summary": {"success": 1}}
         ]
+        task_obj["uuid"] = task_id
 
         def fix_r(workload):
             cfg = workload["runner"]
@@ -633,9 +710,16 @@ class TaskCommandsTestCase(test.TestCase):
 
     @mock.patch("rally.cli.commands.task.sys.stdout")
     def test_results_no_data(self, mock_stdout):
+        def fake_export(tasks, output_type, output_dest=None):
+            tasks = [self.fake_api.task.get(u, detailed=True) for u in tasks]
+            return self.real_api.task.export(tasks, output_type, output_dest)
+
+        self.fake_api.task.export.side_effect = fake_export
+
         task_id = "foo"
-        self.fake_api.task.get.return_value = self._make_task(
-            status=consts.TaskStatus.CRASHED)
+        task_obj = self._make_task(status=consts.TaskStatus.CRASHED)
+        task_obj["uuid"] = task_id
+        self.fake_api.task.get.return_value = task_obj
 
         self.assertEqual(1, self.task.results(self.fake_api, task_id))
 
@@ -707,7 +791,7 @@ class TaskCommandsTestCase(test.TestCase):
              "status": consts.TaskStatus.RUNNING,
              "tags": ["d"],
              "deployment_name": "some_name"}]
-        out = six.StringIO()
+        out = io.StringIO()
         with mock.patch.object(sys, "stdout", new=out):
             self.task.list(self.fake_api, status="running", uuids_only=True)
             self.assertEqual("a\n", out.getvalue())
@@ -754,7 +838,7 @@ class TaskCommandsTestCase(test.TestCase):
         print_list_calls = []
 
         def print_list(*args, **kwargs):
-            print_list_calls.append(six.StringIO())
+            print_list_calls.append(io.StringIO())
             kwargs["out"] = print_list_calls[-1]
             original_print_list(*args, **kwargs)
 
@@ -859,7 +943,7 @@ class TaskCommandsTestCase(test.TestCase):
             deployment="deployment",
             config=mock__load_and_validate_task.return_value)
 
-    @mock.patch("rally.common.fileutils._rewrite_env_file")
+    @mock.patch("rally.cli.envutils._rewrite_env_file")
     def test_use(self, mock__rewrite_env_file):
         task_id = "80422553-5774-44bd-98ac-38bd8c7a0feb"
         self.task.use(self.fake_api, task_id)
@@ -875,12 +959,13 @@ class TaskCommandsTestCase(test.TestCase):
         self.assertRaises(exceptions.DBRecordNotFound, self.task.use,
                           self.fake_api, task_id)
 
+    @mock.patch("rally.cli.task_results_loader.load")
     @mock.patch("rally.cli.commands.task.os.path")
     @mock.patch("rally.cli.commands.task.webbrowser.open_new_tab")
     @mock.patch("rally.cli.commands.task.open", create=True)
     @mock.patch("rally.cli.commands.task.print")
     def test_export(self, mock_print, mock_open, mock_open_new_tab,
-                    mock_path):
+                    mock_path, mock_load):
 
         # file
         self.fake_api.task.export.return_value = {
@@ -890,15 +975,14 @@ class TaskCommandsTestCase(test.TestCase):
         mock_path.realpath.return_value = "real_path"
         mock_fd = mock.mock_open()
         mock_open.side_effect = mock_fd
-        self.task._load_task_results_file = mock.MagicMock(
-            return_value=[{"task": "task_1"}, {"task": "task2"}])
+        mock_load.return_value = [{"task": "task_1"}, {"task": "task2"}]
 
         self.task.export(self.fake_api, tasks=["uuid", "file"],
                          output_type="json", output_dest="output_dest",
                          open_it=True)
 
         self.fake_api.task.export.assert_called_once_with(
-            tasks=["uuid"] + self.task._load_task_results_file.return_value,
+            tasks=["uuid"] + mock_load.return_value,
             output_type="json",
             output_dest="output_dest"
         )
@@ -1013,160 +1097,18 @@ class TaskCommandsTestCase(test.TestCase):
             mock.call(error_traceback or "No traceback available.")
         ], any_order=False)
 
-    @mock.patch("rally.cli.commands.task.open", create=True)
-    @mock.patch("rally.cli.commands.task.json.loads")
-    @mock.patch("rally.cli.commands.task.jsonschema.validate",
-                return_value=None)
-    def test__load_task_results_file(self, mock_validate, mock_loads,
-                                     mock_open):
-        task_file = "/tmp/task.json"
-        workload = {
-            "uuid": "n/a",
-            "full_duration": 2, "load_duration": 1,
-            "created_at": "2017-07-01T07:03:01",
-            "updated_at": "2017-07-01T07:03:03",
-            "total_iteration_count": 2,
-            "failed_iteration_count": 1,
-            "min_duration": 3,
-            "max_duration": 5,
-            "start_time": 1,
-            "name": "Foo.bar", "description": "descr",
-            "position": 2,
-            "args": {"key1": "value1"},
-            "runner_type": "constant",
-            "runner": {"time": 3},
-            "hooks": [{"config": {
-                "description": "descr",
-                "action": ("foo", {"arg1": "v1"}),
-                "trigger": ("t", {"a2", "v2"})}}],
-            "pass_sla": True,
-            "sla": {"failure_rate": {"max": 0}},
-            "sla_results": {"sla": [{"success": True}]},
-            "contexts": {"users": {}},
-            "contexts_results": [],
-            "data": [{"timestamp": 1, "atomic_actions": {"foo": 1.0,
-                                                         "bar": 1.0},
-                      "duration": 5, "idle_duration": 0, "error": [{}]},
-                     {"timestamp": 2, "atomic_actions": {"bar": 1.1},
-                      "duration": 3, "idle_duration": 0, "error": []}],
-            "statistics": {"durations": mock.ANY}
-        }
-
-        results = [{
-            "hooks": [{
-                "config": {
-                    "name": "foo",
-                    "args": {"arg1": "v1"},
-                    "description": "descr",
-                    "trigger": {"name": "t", "args": {"a2", "v2"}}}}],
-            "key": {
-                "name": workload["name"],
-                "description": workload["description"],
-                "pos": workload["position"],
-                "kw": {
-                    "args": workload["args"],
-                    "runner": {"type": "constant", "time": 3},
-                    "hooks": [{
-                        "name": "foo",
-                        "args": {"arg1": "v1"},
-                        "description": "descr",
-                        "trigger": {"name": "t", "args": {"a2", "v2"}}}],
-                    "sla": workload["sla"],
-                    "context": workload["contexts"]}},
-            "sla": workload["sla_results"]["sla"],
-            "result": workload["data"],
-            "full_duration": workload["full_duration"],
-            "load_duration": workload["load_duration"],
-            "created_at": "2017-01-07T07:03:01"}
-        ]
-        mock_loads.return_value = results
-        ret = self.task._load_task_results_file(self.fake_api, task_file)
-        self.assertEqual([{
-            "version": 2,
-            "title": "Task loaded from a file.",
-            "description": "Auto-ported from task format V1.",
-            "uuid": "n/a",
-            "env_uuid": "n/a",
-            "env_name": "n/a",
-            "status": "finished",
-            "tags": [],
-            "subtasks": [{
-                "title": "A SubTask",
-                "description": "",
-                "workloads": [workload]}]}], ret)
-
-    @mock.patch("rally.cli.commands.task.open", create=True)
-    @mock.patch("rally.cli.commands.task.json.loads")
-    @mock.patch("rally.cli.commands.task.jsonschema.validate")
-    def test__load_task_new_results_file(self, mock_validate,
-                                         mock_loads, mock_open):
-        task_file = "/tmp/task.json"
-        results = {
-            "tasks": [{
-                "env_uuid": "env-uuid-1",
-                "env_name": "env-name-1",
-                "subtasks": [{
-                    "workloads": [{
-                        "contexts": "contexts",
-                        "scenario": {"Foo.bar": {}},
-                        "runner": {"constant": {
-                            "times": 100,
-                            "concurrency": 5
-                        }}
-                    }]
-                }]
-            }]
-        }
-
-        mock_loads.return_value = results
-        ret = self.task._load_task_results_file(self.fake_api, task_file)
-        self.assertEqual([{
-            "env_uuid": "env-uuid-1",
-            "env_name": "env-name-1",
-            "subtasks": [{
-                "workloads": [{
-                    "args": {},
-                    "name": "Foo.bar",
-                    "contexts": "contexts",
-                    "contexts_results": [],
-                    "runner_type": "constant",
-                    "runner": {
-                        "times": 100,
-                        "concurrency": 5
-                    }
-                }]
-            }]
-        }], ret)
-
-    @mock.patch("rally.cli.commands.task.open", create=True)
-    @mock.patch("rally.cli.commands.task.json.loads")
-    def test__load_task_results_file_wrong_format(self, mock_loads, mock_open):
-        task_id = "/tmp/task.json"
-        mock_loads.return_value = "results"
-        self.assertRaises(task.FailedToLoadResults,
-                          self.task._load_task_results_file,
-                          api=self.real_api, task_id=task_id)
-
-        mock_loads.return_value = ["results"]
-        self.assertRaises(task.FailedToLoadResults,
-                          self.task._load_task_results_file,
-                          api=self.real_api, task_id=task_id)
-
+    @mock.patch("rally.cli.task_results_loader.load")
     @mock.patch("rally.cli.commands.task.os.path")
-    def test_import_results(self, mock_os_path):
+    def test_import_results(self, mock_os_path, mock_load):
         mock_os_path.exists.return_value = True
         mock_os_path.expanduser = lambda path: path
-        self.task._load_task_results_file = mock.MagicMock(
-            return_value=["results"]
-        )
+        mock_load.return_value = ["results"]
 
         self.task.import_results(self.fake_api,
                                  "deployment_uuid",
                                  "task_file", tags=["tag"])
 
-        self.task._load_task_results_file.assert_called_once_with(
-            self.fake_api, "task_file"
-        )
+        mock_load.assert_called_once_with("task_file")
         self.fake_api.task.import_results.assert_called_once_with(
             deployment="deployment_uuid", task_results="results",
             tags=["tag"])

@@ -16,7 +16,6 @@ import inspect
 import os
 
 import jsonschema
-import six
 
 from rally.common import logging
 from rally.common import validation
@@ -43,17 +42,19 @@ class ArgsValidator(validation.Validator):
         scenario = plugin_cls
         name = scenario.get_name()
         platform = scenario.get_platform()
-        scenario = scenario().run
-        args, _varargs, varkwargs, defaults = inspect.getargspec(scenario)
+
+        args_spec = inspect.signature(scenario.run).parameters
+        missed_args = [
+            p.name
+            for i, p in enumerate(args_spec.values())
+            if (i != 0  # first argument is self-argument, i.e instance of cls
+                and p.default == inspect.Parameter.empty
+                and p.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD)
+        ]
 
         hint_msg = (" Use `rally plugin show --name %s --platform %s` "
                     "to display scenario description." % (name, platform))
 
-        # scenario always accepts an instance of scenario cls as a first arg
-        missed_args = args[1:]
-        if defaults:
-            # do not require args with default values
-            missed_args = missed_args[:-len(defaults)]
         if "args" in config:
             missed_args = set(missed_args) - set(config["args"])
         if missed_args:
@@ -62,8 +63,13 @@ class ArgsValidator(validation.Validator):
                                  "hint": hint_msg})
             self.fail(msg)
 
-        if varkwargs is None and "args" in config:
-            redundant_args = set(config["args"]) - set(args[1:])
+        support_kwargs = any(
+            p for p in args_spec.values()
+            if p.kind == inspect.Parameter.VAR_KEYWORD
+        )
+
+        if not support_kwargs and "args" in config:
+            redundant_args = [p for p in config["args"] if p not in args_spec]
             if redundant_args:
                 msg = ("Unexpected argument(s) found ['%(args)s'].%(hint)s" %
                        {"args": "', '".join(redundant_args),
@@ -189,7 +195,7 @@ class EnumValidator(validation.Validator):
         if self.case_insensitive:
             self.values = []
             for value in values:
-                if isinstance(value, (six.text_type, six.string_types)):
+                if isinstance(value, str):
                     value = value.lower()
                 self.values.append(value)
         else:
@@ -199,7 +205,7 @@ class EnumValidator(validation.Validator):
         value = config.get("args", {}).get(self.param_name)
         if value:
             if self.case_insensitive:
-                if isinstance(value, (six.text_type, six.string_types)):
+                if isinstance(value, str):
                     value = value.lower()
 
             if value not in self.values:
@@ -288,10 +294,10 @@ class RestrictedParametersValidator(validation.Validator):
     def validate(self, context, config, plugin_cls, plugin_cfg):
         restricted_params = []
         for param_name in self.params:
-            args = config.get("args", {})
-            a_dict, a_key = (args, self.subdict) if self.subdict else (
-                config, "args")
-            if param_name in a_dict.get(a_key, {}):
+            source = config.get("args", {})
+            if self.subdict:
+                source = source.get(self.subdict) or {}
+            if param_name in source:
                 restricted_params.append(param_name)
         if restricted_params:
             self.fail("You can't specify parameters '%s' in '%s'" % (

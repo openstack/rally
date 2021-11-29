@@ -13,10 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import io
 import tempfile
-
-import mock
-import six
+from unittest import mock
 
 from rally.cli import cliutils
 from rally.cli.commands import verify
@@ -130,7 +129,7 @@ class VerifyCommandsTestCase(test.TestCase):
         self.fake_api.verifier.list_plugins.assert_called_once_with(
             platform="some")
 
-    @mock.patch("rally.cli.commands.verify.fileutils.update_globals_file")
+    @mock.patch("rally.cli.commands.verify.envutils.update_globals_file")
     def test_create_verifier(self, mock_update_globals_file):
         self.fake_api.verifier.create.return_value = self.verifier_uuid
         self.fake_api.verifier.get.return_value = self.verifier_data
@@ -147,7 +146,7 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_update_globals_file.assert_called_once_with(
             envutils.ENV_VERIFIER, self.verifier_uuid)
 
-    @mock.patch("rally.cli.commands.verify.fileutils.update_globals_file")
+    @mock.patch("rally.cli.commands.verify.envutils.update_globals_file")
     def test_use_verifier(self, mock_update_globals_file):
         self.fake_api.verifier.get.return_value = self.verifier_data
         self.verify.use_verifier(self.fake_api, self.verifier_uuid)
@@ -195,7 +194,7 @@ class VerifyCommandsTestCase(test.TestCase):
         print_dict_calls = []
 
         def print_dict(*args, **kwargs):
-            print_dict_calls.append(six.StringIO())
+            print_dict_calls.append(io.StringIO())
             kwargs["out"] = print_dict_calls[-1]
             original_print_dict(*args, **kwargs)
 
@@ -381,7 +380,7 @@ class VerifyCommandsTestCase(test.TestCase):
         self.fake_api.verifier.delete_extension.assert_called_once_with(
             verifier_id=self.verifier_uuid, name="ext_name")
 
-    @mock.patch("rally.cli.commands.verify.fileutils.update_globals_file")
+    @mock.patch("rally.cli.commands.verify.envutils.update_globals_file")
     @mock.patch("rally.cli.commands.verify.os.path.exists")
     def test_start(self, mock_exists, mock_update_globals_file):
         self.verify.start(self.fake_api, self.verifier_uuid,
@@ -463,7 +462,7 @@ class VerifyCommandsTestCase(test.TestCase):
         self.assertFalse(mock_update_globals_file.called)
 
     @mock.patch("rally.cli.commands.verify.os.path.exists")
-    @mock.patch("rally.cli.commands.verify.fileutils.update_globals_file")
+    @mock.patch("rally.cli.commands.verify.envutils.update_globals_file")
     def test_start_on_unfinished_deployment(self, mock_update_globals_file,
                                             mock_exists):
         deployment_id = self.deployment_uuid
@@ -477,7 +476,7 @@ class VerifyCommandsTestCase(test.TestCase):
             1, self.verify.start(self.fake_api,
                                  self.deployment_uuid, deployment_id))
 
-    @mock.patch("rally.cli.commands.verify.fileutils.update_globals_file")
+    @mock.patch("rally.cli.commands.verify.envutils.update_globals_file")
     def test_use(self, mock_update_globals_file):
         self.fake_api.verification.get.return_value = self.verification_data
         self.verify.use(self.fake_api, self.verification_uuid)
@@ -486,7 +485,7 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_update_globals_file.assert_called_once_with(
             envutils.ENV_VERIFICATION, self.verification_uuid)
 
-    @mock.patch("rally.cli.commands.verify.fileutils.update_globals_file")
+    @mock.patch("rally.cli.commands.verify.envutils.update_globals_file")
     def test_rerun(self, mock_update_globals_file):
         self.fake_api.verification.rerun.return_value = {
             "verification": self.verification_data,
@@ -518,7 +517,7 @@ class VerifyCommandsTestCase(test.TestCase):
         print_dict_calls = []
 
         def print_dict(*args, **kwargs):
-            print_dict_calls.append(six.StringIO())
+            print_dict_calls.append(io.StringIO())
             kwargs["out"] = print_dict_calls[-1]
             original_print_dict(*args, **kwargs)
 

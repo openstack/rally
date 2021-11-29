@@ -98,8 +98,8 @@ class ValidatorTestCase(test.TestCase):
 
         result = DummyPluginBase.validate("dummy_plugin", None, None, None)
         self.assertEqual(1, len(result))
-        self.assertIn("There is no DummyPluginBase plugin "
-                      "with name: 'dummy_plugin'", result[0])
+        self.assertIn("There is no DummyPluginBase plugin `dummy_plugin`",
+                      result[0])
 
     def test_failure_includes_detailed_info(self):
 

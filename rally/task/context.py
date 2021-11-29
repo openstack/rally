@@ -16,8 +16,6 @@
 import abc
 import collections
 
-import six
-
 from rally.common import cfg
 from rally.common import logging
 from rally.common.plugin import plugin
@@ -33,15 +31,16 @@ CONF = cfg.CONF
 CONF_OPTS = [
     cfg.StrOpt(
         "context_resource_name_format",
-        help="Template is used to generate random names of resources. X is "
-             "replaced with random latter, amount of X can be adjusted")
+        help="A mktemp(1)-like format string that will be used to pattern "
+             "the generated random string. It must contain two separate "
+             "segments of at least three 'X's; the first one will be replaced "
+             "by a portion of the owner ID (i.e task/subtask ID), and the "
+             "second will be replaced with a random string.")
 ]
 CONF.register_opts(CONF_OPTS)
 
 
-@logging.log_deprecated_args("Use 'platform' arg instead", "0.10.0",
-                             ["namespace"], log_function=LOG.warning)
-def configure(name, order, platform="default", namespace=None, hidden=False):
+def configure(name, order, platform="default", hidden=False):
     """Context class wrapper.
 
     Each context class has to be wrapped by configure() wrapper. It
@@ -56,8 +55,6 @@ def configure(name, order, platform="default", namespace=None, hidden=False):
     :param hidden: If it is true you won't be able to specify context via
                    task config
     """
-    if namespace:
-        platform = namespace
 
     def wrapper(cls):
         cls = plugin.configure(name=name, platform=platform,
@@ -86,9 +83,9 @@ def add_default_context(name, config):
 
 # TODO(andreykurilin): BaseContext is used by Task and Verification and should
 #                      be moved to common place
-@six.add_metaclass(abc.ABCMeta)
 class BaseContext(plugin.Plugin, functional.FunctionalMixin,
-                  utils.RandomNameGeneratorMixin, atomic.ActionTimerMixin):
+                  utils.RandomNameGeneratorMixin, atomic.ActionTimerMixin,
+                  metaclass=abc.ABCMeta):
     """This class is a factory for context classes.
 
     Every context class should be a subclass of this class and implement

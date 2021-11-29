@@ -32,15 +32,16 @@ CONF = cfg.CONF
 CONF_OPTS = [
     cfg.StrOpt(
         "scenario_resource_name_format",
-        help="Template is used to generate random names of resources. X is "
-             "replaced with random latter, amount of X can be adjusted")
+        help="A mktemp(1)-like format string that will be used to pattern "
+             "the generated random string. It must contain two separate "
+             "segments of at least three 'X's; the first one will be replaced "
+             "by a portion of the owner ID (i.e task/subtask ID), and the "
+             "second will be replaced with a random string.")
 ]
 CONF.register_opts(CONF_OPTS)
 
 
-@logging.log_deprecated_args("Use 'platform' arg instead", "0.10.0",
-                             ["namespace"], log_function=LOG.warning)
-def configure(name, platform="default", namespace=None, context=None):
+def configure(name, platform="default", context=None):
     """Configure scenario by setting proper meta data.
 
     This can also transform plain function into scenario plugin, however
@@ -54,8 +55,6 @@ def configure(name, platform="default", namespace=None, context=None):
                     will be updated by provided contexts.
     """
     context = context or {}
-    if namespace:
-        platform = namespace
 
     def wrapper(cls):
         # TODO(boris-42): Drop this check as soon as we refactor rally report

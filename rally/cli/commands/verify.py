@@ -15,20 +15,16 @@
 
 """Rally command: verify"""
 
-from __future__ import print_function
-
+import configparser
 import datetime as dt
 import json
 import os
 import webbrowser
 
-from six.moves import configparser
-
 from rally.cli import cliutils
 from rally.cli import envutils
-from rally.common import fileutils
+from rally.cli import yamlutils as yaml
 from rally.common import logging
-from rally.common import yamlutils as yaml
 from rally import exceptions
 from rally import plugins
 
@@ -152,7 +148,7 @@ class VerifyCommands(object):
     def use_verifier(self, api, verifier_id):
         """Choose a verifier to use for the future operations."""
         verifier = api.verifier.get(verifier_id=verifier_id)
-        fileutils.update_globals_file(envutils.ENV_VERIFIER, verifier["uuid"])
+        envutils.update_globals_file(envutils.ENV_VERIFIER, verifier["uuid"])
         print("Using verifier '%s' (UUID=%s) as the default verifier "
               "for the future CLI operations."
               % (verifier["name"], verifier["uuid"]))
@@ -337,6 +333,7 @@ class VerifyCommands(object):
             if extra_options:
                 if os.path.isfile(extra_options):
                     conf = configparser.ConfigParser()
+                    conf.optionxform = str
                     conf.read(extra_options)
                     extra_options = dict(conf._sections)
                     for s in extra_options:
@@ -529,6 +526,13 @@ class VerifyCommands(object):
         else:
             print("Verification UUID: %s." % verification_uuid)
 
+        if results["totals"]["unexpected_success"] > 0:
+            return 2
+        if results["totals"]["failures"] > 0:
+            return 3
+
+        return 0
+
     @cliutils.help_group("verification")
     @cliutils.args("--uuid", dest="verification_uuid", type=str, required=True,
                    help="Verification UUID. " + LIST_VERIFICATIONS_HINT)
@@ -537,7 +541,7 @@ class VerifyCommands(object):
 
         verification = api.verification.get(
             verification_uuid=verification_uuid)
-        fileutils.update_globals_file(
+        envutils.update_globals_file(
             envutils.ENV_VERIFICATION, verification["uuid"])
         print("Using verification (UUID=%s) as the default verification "
               "for the future operations." % verification["uuid"])
@@ -630,10 +634,9 @@ class VerifyCommands(object):
         formatters = {
             "Started at": lambda v: v["created_at"].replace("T", " "),
             "Finished at": lambda v: v["updated_at"].replace("T", " "),
-            "Duration": lambda v: (dt.datetime.strptime(v["updated_at"],
-                                                        TIME_FORMAT) -
-                                   dt.datetime.strptime(v["created_at"],
-                                                        TIME_FORMAT)),
+            "Duration": lambda v: (
+                dt.datetime.strptime(v["updated_at"], TIME_FORMAT)
+                - dt.datetime.strptime(v["created_at"], TIME_FORMAT)),
             "Run arguments": run_args_formatter,
             "Tags": lambda v: ", ".join(v["tags"]) or None,
             "Verifier name": lambda v: "%s (UUID: %s)" % (verifier["name"],
@@ -700,10 +703,9 @@ class VerifyCommands(object):
                     deployment=v["deployment_uuid"])["name"]),
                 "Started at": lambda v: v["created_at"],
                 "Finished at": lambda v: v["updated_at"],
-                "Duration": lambda v: (dt.datetime.strptime(v["updated_at"],
-                                                            TIME_FORMAT) -
-                                       dt.datetime.strptime(v["created_at"],
-                                                            TIME_FORMAT))
+                "Duration": lambda v:
+                (dt.datetime.strptime(v["updated_at"], TIME_FORMAT)
+                 - dt.datetime.strptime(v["created_at"], TIME_FORMAT))
             }
             cliutils.print_list(verifications, fields, formatters=formatters,
                                 normalize_field_names=True, sortby_index=4)

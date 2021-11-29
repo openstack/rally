@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
-
 from rally.common.plugin import discover
 
 
@@ -41,7 +39,7 @@ class RallyException(Exception):
         super(RallyException, self).__init__(self.msg_fmt % kwargs)
 
     def format_message(self):
-        return six.text_type(self)
+        return str(self)
 
 
 def find_exception(response):
@@ -140,7 +138,8 @@ class NotFoundException(RallyException):
 
 class PluginNotFound(NotFoundException):
     error_code = 211
-    msg_fmt = "There is no plugin `%(name)s` in %(platform)s platform."
+    msg_fmt = "There is no%(base)s plugin `%(name)s` in %(platform)s " \
+              "platform."
 
 
 class PluginWithSuchNameExists(RallyException):

@@ -9,7 +9,7 @@ Glossary
 .. warning:: Unfortunately, our glossary is not full, but the Rally
   team is working on improving it.  If you cannot find a definition in
   which you are interested, feel free to ping us via IRC
-  (#openstack-rally channel at Freenode) or via E-Mail
+  (#openstack-rally channel at OFTC) or via E-Mail
   (openstack-discuss@lists.openstack.org with tag [Rally]).
 
 .. contents::

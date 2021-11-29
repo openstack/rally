@@ -16,9 +16,7 @@
 """Tests for db.api layer."""
 
 import datetime as dt
-
-import mock
-from six import moves
+from unittest import mock
 
 from rally.common import db
 from rally import consts
@@ -122,12 +120,12 @@ class TasksTestCase(test.DBTestCase):
 
     def test_task_list(self):
         INIT = consts.TaskStatus.INIT
-        task_init = sorted(self._create_task()["uuid"] for i in moves.range(3))
+        task_init = sorted(self._create_task()["uuid"] for i in range(3))
         FINISHED = consts.TaskStatus.FINISHED
         task_finished = sorted(self._create_task(
             {"status": FINISHED,
              "env_uuid": self.env["uuid"]}
-        )["uuid"] for i in moves.range(3))
+        )["uuid"] for i in range(3))
 
         task_all = sorted(task_init + task_finished)
 

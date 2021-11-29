@@ -15,10 +15,10 @@
 
 import functools
 import traceback
+import warnings
 
 from oslo_log import handlers
 from oslo_log import log as oslogging
-import six
 
 from rally.common import cfg
 
@@ -107,7 +107,7 @@ class RallyContextAdapter(oslogging.KeywordArgumentAdapter):
         self.log(log.ERROR, msg, *args, **kwargs)
 
     def exception(self, msg, exc_info=True, *args, **kwargs):
-        if not isinstance(msg, (six.text_type, six.string_types)):
+        if not isinstance(msg, str):
             caller = self._find_the_caller()
             logger = getLogger("%s:%s" % (caller[0], caller[1]))
             logger.warning("[%s] %s" % (caller[2], self._exc_msg))
@@ -330,6 +330,14 @@ def log_deprecated_args(message, rally_version, deprecated_args,
 
         return wrapper
     return decorator
+
+
+def log_deprecated_module(target, new_module, release):
+    warnings.warn(
+        f"Module `{target}` moved to `{new_module}` since Rally v{release}. "
+        f"The import from old place is deprecated and may be removed in "
+        f"further releases."
+    )
 
 
 def is_debug():

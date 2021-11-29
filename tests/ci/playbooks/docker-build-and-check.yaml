@@ -1,0 +1,4 @@
+- hosts: all
+  name: Build docker image for Rally and check it (calling the similar workload as `tox -e self`)
+  roles:
+    - docker-build-image

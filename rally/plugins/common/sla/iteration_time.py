@@ -1,4 +1,3 @@
-# Copyright 2014: Mirantis Inc.
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -13,41 +12,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from rally.plugins.task.sla.iteration_time import *  # noqa: F401,F403
+from rally.plugins.task.sla import iteration_time as _new
 
-"""
-SLA (Service-level agreement) is set of details for determining compliance
-with contracted values such as maximum error rate or minimum response time.
-"""
-
-from rally import consts
-from rally.task import sla
+# import it as last item to be sure that we use the right module
+from rally.common import logging
 
 
-@sla.configure(name="max_seconds_per_iteration")
-class IterationTime(sla.SLA):
-    """Maximum time for one iteration in seconds."""
-    CONFIG_SCHEMA = {
-        "type": "number",
-        "$schema": consts.JSON_SCHEMA7,
-        "minimum": 0.0,
-        "exclusiveMinimum": 0.0}
-
-    def __init__(self, criterion_value):
-        super(IterationTime, self).__init__(criterion_value)
-        self.max_iteration_time = 0.0
-
-    def add_iteration(self, iteration):
-        if iteration["duration"] > self.max_iteration_time:
-            self.max_iteration_time = iteration["duration"]
-        self.success = self.max_iteration_time <= self.criterion_value
-        return self.success
-
-    def merge(self, other):
-        if other.max_iteration_time > self.max_iteration_time:
-            self.max_iteration_time = other.max_iteration_time
-        self.success = self.max_iteration_time <= self.criterion_value
-        return self.success
-
-    def details(self):
-        return ("Maximum seconds per iteration %.2fs <= %.2fs - %s" %
-                (self.max_iteration_time, self.criterion_value, self.status()))
+logging.log_deprecated_module(
+    target=__name__, new_module=_new.__name__, release="3.0.0"
+)

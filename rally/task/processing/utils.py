@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import math
+
 
 class GraphZipper(object):
 
@@ -45,8 +47,8 @@ class GraphZipper(object):
             order = self.point_order - int(self.compression_ratio / 2.0)
 
         value = (
-            sum(p[0] * p[1] for p in self.ratio_value_points) /
-            self.compression_ratio
+            sum(p[0] * p[1] for p in self.ratio_value_points)
+            / self.compression_ratio
         )
 
         return [order, value]
@@ -75,3 +77,18 @@ class GraphZipper(object):
 
     def get_zipped_graph(self):
         return self.zipped_graph
+
+
+def percentile(points, percent, ignore_sorting=False):
+    if not points:
+        return None
+    if not ignore_sorting:
+        points.sort()
+    k = (len(points) - 1) * percent
+    f = math.floor(k)
+    c = math.ceil(k)
+    if f == c:
+        return points[int(k)]
+    d0 = points[int(f)] * (c - k)
+    d1 = points[int(c)] * (k - f)
+    return d0 + d1

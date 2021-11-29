@@ -17,9 +17,9 @@
 
 import collections
 import datetime as dt
+from unittest import mock
 
 import ddt
-import mock
 
 from rally.common import objects
 from rally import consts
@@ -225,7 +225,6 @@ class TaskTestCase(test.TestCase):
             "soft": True, "status": consts.TaskStatus.INIT
         },
         {
-            "soft": True, "status": consts.TaskStatus.VALIDATING,
             "soft": True, "status": consts.TaskStatus.ABORTED
         },
         {

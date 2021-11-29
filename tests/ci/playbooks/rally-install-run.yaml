@@ -1,0 +1,36 @@
+- hosts: all
+  name: a run script for rally-install-* jobs
+  tasks:
+    - name: Get list of packages to install from bindep
+      command: "bindep -b -f {{ zuul.project.src_dir }}/bindep.txt"
+      register: bindep_output
+      ignore_errors: True
+
+    - name: Install distro packages from bindep
+      package:
+        name: "{{ bindep_output.stdout_lines }}"
+        state: present
+      become: yes
+      when: bindep_output.stdout_lines
+
+    - name: Install Rally system wide
+      shell:
+        executable: /bin/sh
+        chdir: '{{ zuul.project.src_dir }}'
+        cmd: "sudo pip3 install --constraint ./upper-constraints.txt ./"
+
+    - name: Create direcotry for html and json reports
+      shell:
+        executable: /bin/bash
+        chdir: '{{ zuul.project.src_dir }}'
+        cmd: mkdir .test_results
+
+    - name: Execute the similar script as `tox -e self`
+      shell:
+        executable: /bin/bash
+        chdir: '{{ zuul.project.src_dir }}'
+        cmd: >
+          python3 ./tests/ci/rally_self_job.py
+          --task ./rally-jobs/self-rally.yaml
+          --plugins-path ./rally-jobs/plugins
+          --results-dir ./.test_results

@@ -137,13 +137,13 @@ def upgrade():
     # validation failed
     op.execute(
         task.update().where(
-            (task.c.status == op.inline_literal("failed")) &
-            (task.c.validation_result == {})).values(
+            (task.c.status == op.inline_literal("failed"))
+            & (task.c.validation_result == {})).values(
             {"new_status": "crashed", "validation_result": {}}))
     op.execute(
         task.update().where(
-            (task.c.status == op.inline_literal("failed")) &
-            (task.c.validation_result != {})).values(
+            (task.c.status == op.inline_literal("failed"))
+            & (task.c.validation_result != {})).values(
             {"new_status": "validation_failed",
              "validation_result": task.c.validation_result}))
 

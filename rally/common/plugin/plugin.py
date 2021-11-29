@@ -33,9 +33,6 @@ def base():
     - Plugin lookup - one can easily get all plugins from some base.
 
     Plugin bases by default initialize _default_meta
-
-    .. warning:: This decorator should be added the line before
-        six.add_metaclass if it is used.
     """
     def wrapper(cls):
         if not issubclass(cls, Plugin):
@@ -156,8 +153,10 @@ class Plugin(meta.MetaMixin, info.InfoMixin):
                               allow_hidden=allow_hidden)
 
         if not results:
+            base = cls._get_base()
+            base = "" if base == Plugin else " %s" % base.__name__
             raise exceptions.PluginNotFound(
-                name=name, platform=platform or "in any")
+                name=name, platform=platform or "any", base=base)
 
         if len(results) == 1:
             return results[0]

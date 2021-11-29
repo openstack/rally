@@ -54,8 +54,8 @@ def _check_user_entry(user):
         keys = set(user.keys())
         if keys == {"username", "password", "tenant_name",
                     "project_domain_name", "user_domain_name"}:
-            if (user["user_domain_name"] == "" and
-                    user["project_domain_name"] == ""):
+            if (user["user_domain_name"] == ""
+                    and user["project_domain_name"] == ""):
                 # it is credentials of keystone v2 and they were created
                 # --fromenv
                 del user["user_domain_name"]

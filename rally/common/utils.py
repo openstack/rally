@@ -19,8 +19,10 @@ import copy
 import ctypes
 import heapq
 import inspect
+import io
 import multiprocessing
 import os
+import queue as queue_m
 import random
 import re
 import shutil
@@ -30,11 +32,9 @@ import tempfile
 import time
 import uuid
 
-from six import moves
-
+from rally.common.io import junit
 from rally.common import logging
 from rally import exceptions
-from rally.utils import strutils
 
 LOG = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ class ImmutableMixin(object):
 
 class EnumMixin(object):
     def __iter__(self):
-        for k, v in moves.map(lambda x: (x, getattr(self, x)), dir(self)):
+        for k, v in map(lambda x: (x, getattr(self, x)), dir(self)):
             if not k.startswith("_"):
                 yield v
 
@@ -63,7 +63,7 @@ class StdOutCapture(object):
         self.stdout = sys.stdout
 
     def __enter__(self):
-        sys.stdout = moves.StringIO()
+        sys.stdout = io.StringIO()
         return sys.stdout
 
     def __exit__(self, type, value, traceback):
@@ -75,7 +75,7 @@ class StdErrCapture(object):
         self.stderr = sys.stderr
 
     def __enter__(self):
-        sys.stderr = moves.StringIO()
+        sys.stderr = io.StringIO()
         return sys.stderr
 
     def __exit__(self, type, value, traceback):
@@ -156,6 +156,7 @@ class RAMInt(object):
             self.__int.value = 0
 
 
+@logging.log_deprecated("it was an inner helper.", rally_version="3.0.0")
 def get_method_class(func):
     """Return the class that defined the given method.
 
@@ -178,6 +179,7 @@ def get_method_class(func):
         return None
 
 
+@logging.log_deprecated("it was an inner helper.", rally_version="3.0.0")
 def first_index(lst, predicate):
     """Return the index of the first element that matches a predicate.
 
@@ -190,27 +192,6 @@ def first_index(lst, predicate):
         if predicate(e):
             return i
     return None
-
-
-@logging.log_deprecated(message="Its not used elsewhere in Rally already.",
-                        rally_version="0.4.1")
-def distance(s1, s2):
-    """Computes the edit distance between two strings.
-
-    The edit distance is the Levenshtein distance. The larger the return value,
-    the more edits are required to transform one string into the other.
-
-    :param s1: First string to compare
-    :param s2: Second string to compare
-    :returns: Integer distance between two strings
-    """
-    n = range(0, len(s1) + 1)
-    for y in range(1, len(s2) + 1):
-        l, n = n, [y]
-        for x in moves.range(1, len(s1) + 1):
-            n.append(min(l[x] + 1, n[-1] + 1,
-                         l[x - 1] + (s2[y - 1] != s1[x - 1])))
-    return n[-1]
 
 
 def retry(times, func, *args, **kwargs):
@@ -233,6 +214,7 @@ def retry(times, func, *args, **kwargs):
                 raise
 
 
+@logging.log_deprecated("it is openstack specific.", rally_version="3.0.0")
 def iterate_per_tenants(users):
     """Iterate of a single arbitrary user from each tenant
 
@@ -446,6 +428,7 @@ def make_name_matcher(*names):
     return CustomNameMatcher
 
 
+@logging.log_deprecated("it was an inner helper.", rally_version="3.0.0")
 def merge(length, *sources):
     """Merge lists of lists.
 
@@ -542,7 +525,7 @@ def interruptable_sleep(sleep_time, atomic_delay=0.1):
         if sleep_time < 1:
             return time.sleep(sleep_time)
 
-        for x in moves.xrange(int(sleep_time / atomic_delay)):
+        for x in range(int(sleep_time / atomic_delay)):
             time.sleep(atomic_delay)
 
         left = sleep_time - (int(sleep_time / atomic_delay)) * atomic_delay
@@ -590,10 +573,10 @@ def timeout_thread(queue):
         try:
             next_thread = queue.get(timeout=timeout)
             all_threads.append(next_thread)
-        except (moves.queue.Empty, ValueError):
+        except (queue_m.Empty, ValueError):
             # NOTE(rvasilets) Empty means that timeout was occurred.
             # ValueError means that timeout lower than 0.
-            if thread.isAlive():
+            if thread.is_alive():
                 LOG.info("Thread %s is timed out. Terminating." % thread.ident)
                 terminate_thread(thread.ident)
             all_threads.popleft()
@@ -684,13 +667,6 @@ class LockedDict(dict):
     def clear(self, *args, **kwargs):
         self._check_is_unlocked()
         return super(LockedDict, self).clear(*args, **kwargs)
-
-
-@logging.log_deprecated(message="Its not used elsewhere in Rally already.",
-                        rally_version="0.11.2")
-def format_float_to_str(num):
-    """DEPRECATED. Use rally.utils.strutils.format_float_to_str instead."""
-    return strutils.format_float_to_str(num)
 
 
 class DequeAsQueue(object):
@@ -815,23 +791,6 @@ class BackupHelper(object):
                 shutil.rmtree(path)
 
 
+@logging.log_deprecated("it was an inner helper.", rally_version="3.0.0")
 def prettify_xml(elem, level=0):
-    """Adds indents.
-
-    Code of this method was copied from
-        http://effbot.org/zone/element-lib.htm#prettyprint
-
-    """
-    i = "\n" + level * "  "
-    if len(elem):
-        if not elem.text or not elem.text.strip():
-            elem.text = i + "  "
-        if not elem.tail or not elem.tail.strip():
-            elem.tail = i
-        for elem in elem:
-            prettify_xml(elem, level + 1)
-        if not elem.tail or not elem.tail.strip():
-            elem.tail = i
-    else:
-        if level and (not elem.tail or not elem.tail.strip()):
-            elem.tail = i
+    return junit._prettify_xml(elem, level=level)

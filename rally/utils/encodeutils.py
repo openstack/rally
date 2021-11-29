@@ -14,7 +14,9 @@
 
 import sys
 
-import six
+
+def _get_default_encoding():
+    return sys.stdin.encoding or sys.getdefaultencoding()
 
 
 def safe_decode(text, incoming=None, errors="strict"):
@@ -27,15 +29,14 @@ def safe_decode(text, incoming=None, errors="strict"):
     :returns: text or a unicode `incoming` encoded representation of it.
     :raises TypeError: If text is not an instance of str
     """
-    if not isinstance(text, (six.string_types, six.binary_type)):
+    if not isinstance(text, (str, bytes)):
         raise TypeError("%s can't be decoded" % type(text))
 
-    if isinstance(text, six.text_type):
+    if isinstance(text, str):
         return text
 
     if not incoming:
-        incoming = (sys.stdin.encoding or
-                    sys.getdefaultencoding())
+        incoming = _get_default_encoding()
 
     try:
         return text.decode(incoming, errors)
@@ -71,12 +72,11 @@ def safe_encode(text, incoming=None, encoding="utf-8", errors="strict"):
         See also to_utf8() function which is simpler and don't depend on
         the locale encoding.
     """
-    if not isinstance(text, (six.string_types, six.binary_type)):
+    if not isinstance(text, (str, bytes)):
         raise TypeError("%s can't be encoded" % type(text))
 
     if not incoming:
-        incoming = (sys.stdin.encoding or
-                    sys.getdefaultencoding())
+        incoming = _get_default_encoding()
 
     # Avoid case issues in comparisons
     if hasattr(incoming, "lower"):
@@ -84,7 +84,7 @@ def safe_encode(text, incoming=None, encoding="utf-8", errors="strict"):
     if hasattr(encoding, "lower"):
         encoding = encoding.lower()
 
-    if isinstance(text, six.text_type):
+    if isinstance(text, str):
         return text.encode(encoding, errors)
     elif text and encoding != incoming:
         # Decode text before encoding it with `encoding`

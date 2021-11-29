@@ -12,11 +12,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import configparser
+import io
 import os
 import subprocess
-
-import six
-from six.moves import configparser
 
 from rally.common import logging
 from rally.utils import encodeutils
@@ -74,19 +73,21 @@ def create_dir(dir_path):
 
 def extend_configfile(extra_options, conf_path):
     conf_object = configparser.ConfigParser()
+    conf_object.optionxform = str
     conf_object.read(conf_path)
 
     conf_object = add_extra_options(extra_options, conf_object)
     with open(conf_path, "w") as configfile:
         conf_object.write(configfile)
 
-    raw_conf = six.StringIO()
+    raw_conf = io.StringIO()
     conf_object.write(raw_conf)
 
     return raw_conf.getvalue()
 
 
 def add_extra_options(extra_options, conf_object):
+    conf_object.optionxform = str
     for section in extra_options:
         if section not in (conf_object.sections() + ["DEFAULT"]):
             conf_object.add_section(section)

@@ -13,18 +13,73 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import collections
 import datetime as dt
+from unittest import mock
+import uuid
 
-import ddt
 from jsonschema import exceptions as schema_exceptions
-import mock
-import six
 
 from rally import exceptions
 from rally.task import utils
-from tests.unit import fakes
 from tests.unit import test
+
+
+class FakeResource(object):
+
+    def __init__(self, manager=None, name=None, status="ACTIVE", items=None,
+                 deployment_uuid=None, id=None):
+        self.name = name or str(uuid.uuid4())
+        self.status = status
+        self.manager = manager
+        self.uuid = str(uuid.uuid4())
+        self.id = id or self.uuid
+        self.items = items or {}
+        self.deployment_uuid = deployment_uuid or str(uuid.uuid4())
+
+    def __getattr__(self, name):
+        # NOTE(msdubov): e.g. server.delete() -> manager.delete(server)
+        def manager_func(*args, **kwargs):
+            return getattr(self.manager, name)(self, *args, **kwargs)
+        return manager_func
+
+    def __getitem__(self, key):
+        return self.items[key]
+
+
+class FakeManager(object):
+
+    def __init__(self):
+        super(FakeManager, self).__init__()
+        self.cache = {}
+        self.resources_order = []
+
+    def get(self, resource_uuid):
+        return self.cache.get(resource_uuid)
+
+    def delete(self, resource_uuid):
+        cached = self.get(resource_uuid)
+        if cached is not None:
+            cached.status = "DELETED"
+            del self.cache[resource_uuid]
+            self.resources_order.remove(resource_uuid)
+
+    def _cache(self, resource):
+        self.resources_order.append(resource.uuid)
+        self.cache[resource.uuid] = resource
+        return resource
+
+    def list(self, **kwargs):
+        return [self.cache[key] for key in self.resources_order]
+
+    def find(self, **kwargs):
+        for resource in self.cache.values():
+            match = True
+            for key, value in kwargs.items():
+                if getattr(resource, key, None) != value:
+                    match = False
+                    break
+            if match:
+                return resource
 
 
 class TaskUtilsTestCase(test.TestCase):
@@ -51,9 +106,9 @@ class TaskUtilsTestCase(test.TestCase):
     def test_resource_is(self):
         is_active = utils.resource_is("ACTIVE")
         self.assertEqual(is_active.status_getter, utils.get_status)
-        self.assertTrue(is_active(fakes.FakeResource(status="active")))
-        self.assertTrue(is_active(fakes.FakeResource(status="aCtIvE")))
-        self.assertFalse(is_active(fakes.FakeResource(status="ERROR")))
+        self.assertTrue(is_active(FakeResource(status="active")))
+        self.assertTrue(is_active(FakeResource(status="aCtIvE")))
+        self.assertFalse(is_active(FakeResource(status="ERROR")))
 
     def test_resource_is_with_fake_status_getter(self):
         fake_getter = mock.MagicMock(return_value="LGTM")
@@ -70,7 +125,7 @@ class TaskUtilsTestCase(test.TestCase):
                 break
 
     def test_manager_list_sizes(self):
-        manager = fakes.FakeManager()
+        manager = FakeManager()
 
         def lst():
             return [1] * 10
@@ -84,38 +139,38 @@ class TaskUtilsTestCase(test.TestCase):
 
     def test_get_from_manager(self):
         get_from_manager = utils.get_from_manager()
-        manager = fakes.FakeManager()
-        resource = fakes.FakeResource(manager=manager)
+        manager = FakeManager()
+        resource = FakeResource(manager=manager)
         manager._cache(resource)
         self.assertEqual(resource, get_from_manager(resource))
 
     def test_get_from_manager_with_uuid_field(self):
         get_from_manager = utils.get_from_manager()
-        manager = fakes.FakeManager()
-        resource = fakes.FakeResource(manager=manager)
+        manager = FakeManager()
+        resource = FakeResource(manager=manager)
         manager._cache(resource)
         self.assertEqual(resource, get_from_manager(resource, id_attr="uuid"))
 
     def test_get_from_manager_in_error_state(self):
         get_from_manager = utils.get_from_manager()
-        manager = fakes.FakeManager()
-        resource = fakes.FakeResource(manager=manager, status="ERROR")
+        manager = FakeManager()
+        resource = FakeResource(manager=manager, status="ERROR")
         manager._cache(resource)
         self.assertRaises(exceptions.GetResourceFailure,
                           get_from_manager, resource)
 
     def test_get_from_manager_in_deleted_state(self):
         get_from_manager = utils.get_from_manager()
-        manager = fakes.FakeManager()
-        resource = fakes.FakeResource(manager=manager, status="DELETED")
+        manager = FakeManager()
+        resource = FakeResource(manager=manager, status="DELETED")
         manager._cache(resource)
         self.assertRaises(exceptions.GetResourceNotFound,
                           get_from_manager, resource)
 
     def test_get_from_manager_in_deleted_state_for_heat_resource(self):
         get_from_manager = utils.get_from_manager()
-        manager = fakes.FakeManager()
-        resource = fakes.FakeResource(manager=manager)
+        manager = FakeManager()
+        resource = FakeResource(manager=manager)
         resource.stack_status = "DELETE_COMPLETE"
         manager._cache(resource)
         self.assertRaises(exceptions.GetResourceNotFound,
@@ -123,8 +178,8 @@ class TaskUtilsTestCase(test.TestCase):
 
     def test_get_from_manager_in_deleted_state_for_ceilometer_resource(self):
         get_from_manager = utils.get_from_manager()
-        manager = fakes.FakeManager()
-        resource = fakes.FakeResource(manager=manager)
+        manager = FakeManager()
+        resource = FakeResource(manager=manager)
         resource.state = "DELETED"
         manager._cache(resource)
         self.assertRaises(exceptions.GetResourceNotFound,
@@ -133,7 +188,7 @@ class TaskUtilsTestCase(test.TestCase):
     def test_get_from_manager_not_found(self):
         get_from_manager = utils.get_from_manager()
         manager = mock.MagicMock()
-        resource = fakes.FakeResource(manager=manager, status="ERROR")
+        resource = FakeResource(manager=manager, status="ERROR")
 
         class NotFoundException(Exception):
             http_status = 404
@@ -145,7 +200,7 @@ class TaskUtilsTestCase(test.TestCase):
     def test_get_from_manager_http_exception(self):
         get_from_manager = utils.get_from_manager()
         manager = mock.MagicMock()
-        resource = fakes.FakeResource(manager=manager, status="ERROR")
+        resource = FakeResource(manager=manager, status="ERROR")
 
         class HTTPException(Exception):
             pass
@@ -160,7 +215,7 @@ class WaitForTestCase(test.TestCase):
     def setUp(self):
         super(WaitForTestCase, self).setUp()
 
-        self.resource = fakes.FakeResource()
+        self.resource = FakeResource()
         self.load_secs = 0.01
         self.fake_checker_delayed = self.get_fake_checker_delayed(
             seconds=self.load_secs)
@@ -492,80 +547,3 @@ class WaitForStatusTestCase(test.TestCase):
                           utils.wait_for_status,
                           resource=res, ready_statuses=["ready"],
                           update_resource=upd, timeout=2, id_attr="uuid")
-
-
-@ddt.ddt
-class WrapperForAtomicActionsTestCase(test.TestCase):
-
-    def test_dict_atomic(self):
-        atomic_actions = collections.OrderedDict(
-            [("action_1", 1), ("action_2", 2)])
-        atomic_wrapper = utils.WrapperForAtomicActions(atomic_actions, 1)
-        self.assertEqual(1, atomic_wrapper["action_1"])
-        self.assertEqual(2, atomic_wrapper["action_2"])
-        self.assertEqual(atomic_actions.items(),
-                         atomic_wrapper.items())
-        self.assertEqual(1, atomic_wrapper.get("action_1"))
-        self.assertIsNone(atomic_wrapper.get("action_3"))
-        self.assertEqual(2, len(atomic_wrapper))
-        self.assertEqual([{"name": "action_1", "started_at": 1,
-                           "finished_at": 2, "children": []},
-                          {"name": "action_2", "started_at": 2,
-                           "finished_at": 4, "children": []}
-                          ], atomic_wrapper)
-
-    def test_list_atomic(self):
-        atomic_actions = [{"name": "action_1", "started_at": 1,
-                           "finished_at": 2, "children": []},
-                          {"name": "action_2", "started_at": 2,
-                           "finished_at": 4, "children": []}]
-
-        atomic_wrapper = utils.WrapperForAtomicActions(atomic_actions)
-        self.assertEqual(1, atomic_wrapper["action_1"])
-        self.assertEqual(2, atomic_wrapper["action_2"])
-        self.assertEqual(
-            collections.OrderedDict(
-                [("action_1", 1), ("action_2", 2)]).items(),
-            atomic_wrapper.items())
-        self.assertEqual(atomic_actions[0], atomic_wrapper[0])
-        self.assertEqual(atomic_actions[1], atomic_wrapper[1])
-        self.assertEqual(1, atomic_wrapper.get("action_1"))
-        self.assertIsNone(atomic_wrapper.get("action_3"))
-        self.assertEqual(2, len(atomic_wrapper))
-        self.assertEqual(atomic_actions[0], six.next(iter(atomic_wrapper)))
-
-    def test__convert_new_atomic_actions(self):
-        atomic_actions = collections.OrderedDict(
-            [("action_1", 1), ("action_2", 2)])
-        atomic_wrapper = utils.WrapperForAtomicActions(atomic_actions)
-        self.assertEqual(
-            [{"name": "action_1", "started_at": 0,
-              "finished_at": 1, "children": []},
-             {"name": "action_2", "started_at": 1,
-              "finished_at": 3, "children": []}],
-            atomic_wrapper._convert_old_atomic_actions(atomic_actions))
-
-    @ddt.data(
-        {"atomic_actions": [{"name": "some", "started_at": 1.0,
-                             "finished_at": 2.0, "children": []}],
-         "expected": {"some": 1.0}},
-        {"atomic_actions": [{"name": "some", "started_at": 1.0,
-                             "finished_at": 2.0, "children": []},
-                            {"name": "some", "started_at": 2.0,
-                             "finished_at": 3.0, "children": []}],
-         "expected": {"some": 1.0, "some (2)": 1.0}},
-        {"atomic_actions": [{"name": "some", "started_at": 1.0,
-                             "finished_at": 2.0, "children": []},
-                            {"name": "some", "started_at": 2.0,
-                             "finished_at": 3.0, "children": []},
-                            {"name": "some", "started_at": 3.0,
-                             "finished_at": 4.0, "children": []}
-                            ],
-         "expected": {"some": 1.0, "some (2)": 1.0, "some (3)": 1.0}}
-    )
-    @ddt.unpack
-    def test_convert_new_atomic_actions(self, atomic_actions, expected):
-        atomic_wrapper = utils.WrapperForAtomicActions(atomic_actions)
-        self.assertEqual(expected,
-                         atomic_wrapper._convert_new_atomic_actions(
-                             atomic_actions))

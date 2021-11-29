@@ -13,9 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import functools
 import os
-
-import decorator
 
 from rally.common.plugin import discover
 
@@ -31,7 +30,15 @@ def load():
 
         opts.register()
 
-        discover.import_modules_from_package("rally.plugins.common")
+        # NOTE(andreykurilin): `rally.plugins.common` includes deprecated
+        #   modules. As soon as they will be removed the direct import of
+        #   validators should be replaced by
+        #
+        #       discover.import_modules_from_package("rally.plugins.common")
+        from rally.plugins.common import validators  # noqa: F401
+
+        discover.import_modules_from_package("rally.plugins.task")
+        discover.import_modules_from_package("rally.plugins.verification")
 
         packages = discover.find_packages_by_entry_point()
         for package in packages:
@@ -45,7 +52,9 @@ def load():
     PLUGINS_LOADED = True
 
 
-@decorator.decorator
-def ensure_plugins_are_loaded(f, *args, **kwargs):
-    load()
-    return f(*args, **kwargs)
+def ensure_plugins_are_loaded(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        load()
+        return func(*args, **kwargs)
+    return wrapper

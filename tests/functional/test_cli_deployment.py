@@ -12,12 +12,12 @@
 
 import os
 
-import unittest
+import testtools
 
 from tests.functional import utils
 
 
-class DeploymentTestCase(unittest.TestCase):
+class DeploymentTestCase(testtools.TestCase):
 
     def test_create_deployment_from_env(self):
         os.environ.update(

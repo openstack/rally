@@ -1,30 +1,3 @@
-- job:
-    name: rally-install-ubuntu-xenial
-    parent: base
-    nodeset: ubuntu-xenial
-    run: tests/ci/playbooks/rally-install/run.yaml
-    timeout: 1800
-
-- job:
-    name: rally-install-ubuntu-bionic
-    parent: base
-    nodeset: ubuntu-bionic
-    run: tests/ci/playbooks/rally-install/run.yaml
-    timeout: 1800
-
-- job:
-    name: rally-install-centos-7
-    parent: base
-    nodeset: centos-7
-    run: tests/ci/playbooks/rally-install/run.yaml
-    timeout: 1800
-
-- job:
-    name: rally-database-migration
-    parent: base
-    nodeset: ubuntu-bionic
-    run: tests/ci/playbooks/rally-database-migration/run.yaml
-    timeout: 1800
 
 - project:
     templates:
@@ -33,35 +6,42 @@
       rtd_webhook_id: "52691"
     check:
       jobs:
+        - rally-tox-cover
         - rally-tox-docs
         - rally-tox-pep8
-        - rally-tox-py27
-        - rally-tox-py34
-        - rally-tox-py35
         - rally-tox-py36
         - rally-tox-py37
-        - rally-tox-cover
+        - rally-tox-py38
+        - rally-tox-py39
+        - rally-tox-samples
         - rally-tox-functional
-        - rally-tox-functional-py3
-        - rally-database-migration
-        - rally-install-ubuntu-xenial
-        - rally-install-ubuntu-bionic
-        - rally-install-centos-7
+        - rally-tox-functional-py38
         - rally-tox-self
+        - rally-install-ubuntu-bionic
+        - rally-install-ubuntu-focal
+        - rally-install-centos-7
+        - rally-install-centos-8
+        - rally-docker-build
     gate:
       jobs:
+        - rally-tox-cover
         - rally-tox-docs
         - rally-tox-pep8
-        - rally-tox-py27
-        - rally-tox-py34
-        - rally-tox-py35
         - rally-tox-py36
         - rally-tox-py37
-        - rally-tox-cover
+        - rally-tox-py38
+        - rally-tox-py39
         - rally-tox-functional
-        - rally-tox-functional-py3
-        - rally-database-migration
-        - rally-install-ubuntu-xenial
-        - rally-install-ubuntu-bionic
-        - rally-install-centos-7
         - rally-tox-self
+        - rally-install-ubuntu-bionic
+        - rally-install-ubuntu-focal
+        - rally-install-centos-7
+        - rally-install-centos-8
+    post:
+      jobs:
+        - rally-docker-build-and-push:
+            vars:
+              docker_image_version: latest
+    release:
+      jobs:
+        - rally-docker-build-and-push
