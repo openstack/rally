@@ -280,9 +280,10 @@ class DeploymentCommands(object):
             env_file.write("export OS_AUTH_URL='%(auth_url)s'\n"
                            "export OS_USERNAME='%(username)s'\n"
                            "export OS_PASSWORD='%(password)s'\n"
-                           "export OS_TENANT_NAME='%(tenant_name)s'\n"
-                           "export OS_PROJECT_NAME='%(tenant_name)s'\n"
                            % credential)
+            if credential.get("tenant_name"):
+                env_file.write("export OS_TENANT_NAME='%s'\n" %
+                               credential["tenant_name"])
             if credential.get("region_name"):
                 env_file.write("export OS_REGION_NAME='%s'\n" %
                                credential["region_name"])
@@ -297,11 +298,19 @@ class DeploymentCommands(object):
             if credential.get("https_cacert"):
                 env_file.write("export OS_CACERT='%s'\n" %
                                credential["https_cacert"])
-            if credential.get("project_domain_name"):
+            if credential.get("domain_name"):
                 env_file.write("export OS_IDENTITY_API_VERSION=3\n"
                                "export OS_USER_DOMAIN_NAME='%s'\n"
+                               "export OS_DOMAIN_NAME='%s'\n" %
+                               (credential["user_domain_name"],
+                                credential["domain_name"]))
+            elif credential.get("project_domain_name"):
+                env_file.write("export OS_IDENTITY_API_VERSION=3\n"
+                               "export OS_USER_DOMAIN_NAME='%s'\n"
+                               "export OS_PROJECT_NAME='%s'\n"
                                "export OS_PROJECT_DOMAIN_NAME='%s'\n" %
                                (credential["user_domain_name"],
+                                credential["project_name"],
                                 credential["project_domain_name"]))
         expanded_path = os.path.expanduser("~/.rally/openrc")
         if os.path.exists(expanded_path):
