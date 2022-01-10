@@ -17,6 +17,16 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
+[unreleased]
+------------
+
+Fixed
+~~~~~
+
+* rally.utils.sshutils.SSH.execute leaves fifo files.
+
+  `Launchpad-bug #1956956 <https://launchpad.net/bugs/1956956>`_
+
 [3.3.0] - 2021-06-16
 --------------------
 
