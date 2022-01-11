@@ -51,7 +51,7 @@
         cmd: |
           set -e
           curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-          python{{ python_version.stdout }} get-pip.py
+          python{{ python_version.stdout }} get-pip.py --force-reinstall
 
     - name: Install python tox
       become: True
