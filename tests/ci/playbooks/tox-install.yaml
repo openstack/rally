@@ -59,6 +59,6 @@
       shell:
         executable: /bin/bash
         cmd: |
-          pip{{ python_version.stdout }} install tox
+          python{{ python_version.stdout }} -m pip install tox
   roles:
     - bindep
