@@ -78,8 +78,8 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = u"Rally"
-copyright = u"%d, OpenStack Foundation" % dt.datetime.now().year
+project = "Rally"
+copyright = "%d, OpenStack Foundation" % dt.datetime.now().year
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -239,8 +239,8 @@ latex_elements = {
 latex_documents = [
     ("index",
      "%s.tex" % project,
-     u"%s Documentation" % project,
-     u"OpenStack Foundation", "manual"),
+     "%s Documentation" % project,
+     "OpenStack Foundation", "manual"),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -283,8 +283,8 @@ latex_documents = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    ("index", "Rally", u"Rally Documentation",
-     u"Rally Team", "Rally",
+    ("index", "Rally", "Rally Documentation",
+     "Rally Team", "Rally",
      "Testing framework and tool for all kinds of tests",
      "Development"),
 ]
