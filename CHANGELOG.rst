@@ -27,11 +27,17 @@ Fixed
 
   `Launchpad-bug #1956956 <https://launchpad.net/bugs/1956956>`_
 
+Changed
+~~~~~~~
+
+Check ability to install Rally on Centos 8 Stream and Centos 9 Stream and
+stop checking Centos 7 and Centos 8
+
 [3.3.0] - 2021-06-16
 --------------------
 
 Changed
-~~~~~
+~~~~~~~
 
 * ``rally verify`` returns 0 on success, 1, 2 or 3 depending on detected issue.
 
