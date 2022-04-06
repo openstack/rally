@@ -27,7 +27,7 @@
 - job:
     name: rally-docker-build
     parent: build-docker-image
-    nodeset: ubuntu-bionic
+    nodeset: ubuntu-focal
     run: tests/ci/playbooks/docker-build-and-check.yaml
     post-run: tests/ci/playbooks/fetch-html-and-json-reports.yaml
     timeout: 1800
@@ -37,7 +37,7 @@
 - job:
     name: rally-docker-build-and-push
     parent: build-docker-image
-    nodeset: ubuntu-bionic
+    nodeset: ubuntu-focal
     run: tests/ci/playbooks/docker-build-check-and-push.yaml
     post-run: tests/ci/playbooks/fetch-html-and-json-reports.yaml
     timeout: 1800

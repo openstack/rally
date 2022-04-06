@@ -24,7 +24,7 @@ Execute command and get output:
     status, stdout, stderr = ssh.execute("ps ax")
     if status:
         raise Exception("Command failed with non-zero status.")
-    print stdout.splitlines()
+    print(stdout.splitlines())
 
 Execute command with huge output:
 
@@ -157,12 +157,18 @@ class SSH(object):
 
         client = self._get_client()
 
+        should_close_stdin = False
         if isinstance(stdin, str):
             stdin = io.StringIO(stdin)
+            should_close_stdin = True
 
-        return self._run(client, cmd, stdin=stdin, stdout=stdout,
-                         stderr=stderr, raise_on_error=raise_on_error,
-                         timeout=timeout)
+        try:
+            return self._run(client, cmd, stdin=stdin, stdout=stdout,
+                             stderr=stderr, raise_on_error=raise_on_error,
+                             timeout=timeout)
+        finally:
+            if should_close_stdin:
+                stdin.close()
 
     def _run(self, client, cmd, stdin=None, stdout=None, stderr=None,
              raise_on_error=True, timeout=3600):
@@ -246,15 +252,15 @@ class SSH(object):
 
         :returns: tuple (exit_status, stdout, stderr)
         """
-        stdout = io.StringIO()
-        stderr = io.StringIO()
+        with io.StringIO() as stdout:
+            with io.StringIO() as stderr:
 
-        exit_status, data = self.run(cmd, stderr=stderr, stdout=stdout,
-                                     stdin=stdin, timeout=timeout,
-                                     raise_on_error=False)
-        stdout.seek(0)
-        stderr.seek(0)
-        return (exit_status, stdout.read(), stderr.read())
+                exit_status, data = self.run(cmd, stderr=stderr, stdout=stdout,
+                                             stdin=stdin, timeout=timeout,
+                                             raise_on_error=False)
+                stdout.seek(0)
+                stderr.seek(0)
+                return exit_status, stdout.read(), stderr.read()
 
     def wait(self, timeout=120, interval=1):
         """Wait for the host will be available via ssh."""

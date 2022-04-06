@@ -128,22 +128,26 @@ class SSHTestCase(test.TestCase):
         m_client.close.assert_called_once_with()
         self.assertFalse(self.ssh._client)
 
-    @mock.patch("rally.utils.sshutils.io.StringIO")
-    def test_execute(self, mock_string_io):
-        mock_string_io.side_effect = stdio = [mock.Mock(), mock.Mock()]
-        stdio[0].read.return_value = "stdout fake data"
-        stdio[1].read.return_value = "stderr fake data"
-        with mock.patch.object(self.ssh, "run") as mock_run:
-            mock_run.return_value = (0, None)
-            status, stdout, stderr = self.ssh.execute("cmd",
-                                                      stdin="fake_stdin",
-                                                      timeout=43)
+    def test_execute(self):
+        stdout_txt = "stdout fake data"
+        stdout_io = io.StringIO(stdout_txt)
+        stderr_txt = "stderr fake data"
+        stderr_io = io.StringIO(stderr_txt)
+
+        with mock.patch("rally.utils.sshutils.io.StringIO") as mock_string_io:
+            mock_string_io.side_effect = [stdout_io, stderr_io]
+            with mock.patch.object(self.ssh, "run") as mock_run:
+                mock_run.return_value = (0, None)
+                status, stdout, stderr = self.ssh.execute("cmd",
+                                                          stdin="fake_stdin",
+                                                          timeout=43)
+
         mock_run.assert_called_once_with(
-            "cmd", stdin="fake_stdin", stdout=stdio[0],
-            stderr=stdio[1], timeout=43, raise_on_error=False)
+            "cmd", stdin="fake_stdin", stdout=stdout_io, stderr=stderr_io,
+            timeout=43, raise_on_error=False)
         self.assertEqual(0, status)
-        self.assertEqual("stdout fake data", stdout)
-        self.assertEqual("stderr fake data", stderr)
+        self.assertEqual(stdout_txt, stdout)
+        self.assertEqual(stderr_txt, stderr)
 
     @mock.patch("rally.utils.sshutils.time")
     def test_wait_timeout(self, mock_time):

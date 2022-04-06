@@ -33,7 +33,7 @@ interface for it. At this point, Rally supports only one plugin in the
 verification component out of the box - as you might guess, Tempest plugin. In
 this guide, we will show how to use Tempest and Rally together via the updated
 **'rally verify'** interface. We assume that you already have a
-:ref:`Rally installation <tutorial_step_0_installation>` and have already
+:ref:`Rally installation <install>` and have already
 :ref:`registered an OpenStack deployment <tutorial_step_1_setting_up_env_and_running_benchmark_from_samples>`
 in Rally. So, let's get started!
 

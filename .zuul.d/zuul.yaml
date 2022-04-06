@@ -19,8 +19,8 @@
         - rally-tox-self
         - rally-install-ubuntu-bionic
         - rally-install-ubuntu-focal
-        - rally-install-centos-7
-        - rally-install-centos-8
+        - rally-install-centos-8s
+        - rally-install-centos-9s
         - rally-docker-build
     gate:
       jobs:
@@ -35,8 +35,8 @@
         - rally-tox-self
         - rally-install-ubuntu-bionic
         - rally-install-ubuntu-focal
-        - rally-install-centos-7
-        - rally-install-centos-8
+        - rally-install-centos-8s
+        - rally-install-centos-9s
     post:
       jobs:
         - rally-docker-build-and-push:

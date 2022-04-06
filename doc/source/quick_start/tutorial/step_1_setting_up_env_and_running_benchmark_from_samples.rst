@@ -24,7 +24,7 @@ Step 1. Setting up the environment and running a task from samples
 In this demo basic operations in Rally are performed, such as adding
 OpenStack cloud deployment, running task against it and generating report.
 
-It's assumed that you have gone through :ref:`tutorial_step_0_installation` and
+It's assumed that you have gone through :ref:`install` and
 have an already existing OpenStack deployment with Keystone available at
 *<KEYSTONE_AUTH_URL>*.
 

@@ -27,7 +27,6 @@ more complicated cases.
    :glob:
    :maxdepth: 1
 
-   tutorial/step_0_installation
    tutorial/step_1_setting_up_env_and_running_benchmark_from_samples
    tutorial/step_2_input_task_format
    tutorial/step_3_benchmarking_with_existing_users

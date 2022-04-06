@@ -17,11 +17,11 @@
     nodeset: ubuntu-focal
 
 - job:
-    name: rally-install-centos-7
+    name: rally-install-centos-8s
     parent: rally-install-base
-    nodeset: centos-7
+    nodeset: centos-8-stream
 
 - job:
-    name: rally-install-centos-8
+    name: rally-install-centos-9s
     parent: rally-install-base
-    nodeset: centos-8
+    nodeset: centos-8-stream
