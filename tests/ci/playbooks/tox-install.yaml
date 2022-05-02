@@ -50,7 +50,13 @@
         executable: /bin/bash
         cmd: |
           set -e
-          curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+          pip_url="https://bootstrap.pypa.io/get-pip.py"
+          if [ "{{ python_version.stdout }}" = "3.6" ];  then
+              pip_url="https://bootstrap.pypa.io/pip/3.6/get-pip.py"
+          elif [ "{{ python_version.stdout }}" = "3" ];  then
+              pip_url="https://bootstrap.pypa.io/pip/3.6/get-pip.py"
+          fi
+          curl $pip_url -o get-pip.py
           python{{ python_version.stdout }} get-pip.py --force-reinstall
 
     - name: Install python tox

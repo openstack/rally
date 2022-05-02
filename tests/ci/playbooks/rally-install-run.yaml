@@ -13,6 +13,11 @@
       become: yes
       when: bindep_output.stdout_lines
 
+    # Required for https://bugs.launchpad.net/devstack/+bug/1968798
+    - name: Configure project src_dir as git safe
+      become: yes
+      command: git config --system --add safe.directory {{ ansible_user_dir }}/{{ zuul.project.src_dir }}
+
     - name: Install Rally system wide
       shell:
         executable: /bin/sh
