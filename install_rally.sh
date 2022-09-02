@@ -36,7 +36,7 @@ VIRTUALENV_VERSION="15.1.0"
 VIRTUALENV_URL="https://raw.github.com/pypa/virtualenv/$VIRTUALENV_VERSION/virtualenv.py"
 
 RALLY_GIT_URL="https://github.com/noironetworks/rally"
-RALLY_GIT_BRANCH="noiro-master"
+RALLY_GIT_BRANCH="dualstack-vcpe"
 RALLY_CONFIGURATION_DIR=/etc/rally
 RALLY_DATABASE_DIR=/var/lib/rally/database
 DBTYPE=sqlite
