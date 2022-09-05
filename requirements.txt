@@ -24,11 +24,6 @@ SQLAlchemy>=1.0.10,!=1.1.5,!=1.1.6,!=1.1.7,!=1.1.8     # MIT
 six>=1.10.0                                            # MIT
 virtualenv>=14.0.6                                     # MIT
 
-
-# PyACI
--e git+https://github.com/datacenter/pyaci.git@master#egg=pyaci
-
-
 # OpenStack related
 boto>=2.32.1                                           # MIT
 gnocchiclient>=3.3.1                                   # Apache Software License
