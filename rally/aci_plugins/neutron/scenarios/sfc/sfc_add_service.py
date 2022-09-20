@@ -84,7 +84,7 @@ class SFCAddService(create_ostack_resources.CreateOstackResources, vcpe_utils.vC
 
             print"Adding a new function to the chain..."
             service_vm2, pin2, pout2 = self.create_service_vm(router, service_image2, flavor, '3.3.0.0/24', '4.4.0.0/24',
-                    src_cidr=src_cidr, dualstack=dualstack, ipv6_src_cidr=ipv6_cidr, left_v6_cidr='c:c::/64', right_v6_cidr='d:d::/64')
+            src_cidr=src_cidr, dualstack=dualstack, ipv6_src_cidr=ipv6_cidr, left_v6_cidr='c:c::/64', right_v6_cidr='d:d::/64')
             pp2 = self._create_port_pair(pin2, pout2)
             ppg2 = self._create_port_pair_group([pp2])
             if dualstack:
