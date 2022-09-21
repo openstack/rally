@@ -8,6 +8,8 @@ from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.vm import utils as vm_utils
 from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
+import requests
+import json
 
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
@@ -15,7 +17,7 @@ LOG = logging.getLogger(__name__)
 class CreateOstackResources(vcpe_utils.vCPEScenario, vm_utils.VMScenario, neutron_utils.NeutronScenario, nova_utils.NovaScenario, scenario.OpenStackScenario):
     
     def create_network(self, network, name, bgp_asn, external_net, cidr, aci_nodes):
-        
+
         print "Creating external network with provided l3out...\n"
         try:
             net = self.clients("neutron").show_network(network)
@@ -28,6 +30,41 @@ class CreateOstackResources(vcpe_utils.vCPEScenario, vm_utils.VMScenario, neutro
             self._create_svi_ports(net, sub, cidr[0:9], aci_nodes)
 
         return net
+
+    def get_token(self, apic, username, password):
+        print "Creating Token for apic...\n"
+        url = "https://"+apic+"/api/aaaLogin.json"
+        payload = {
+            "aaaUser": {
+                "attributes": {
+                        "name": username,
+                        "pwd": password
+                }
+            }
+        }
+
+        headers = {
+            "Content-Type" : "application/json"
+        }
+
+        requests.packages.urllib3.disable_warnings()
+        response = requests.post(url,data=json.dumps(payload), headers=headers, verify=False).json()
+
+        token = response['imdata'][0]['aaaLogin']['attributes']['token']
+        return token
+
+    def get_apic_resource(self, apic, token, name):
+        print "getting Apic resources...\n"
+        url = "https://"+apic+"/api/node/class/"+name+".json"
+
+        headers = {
+            "Cookie" : "APIC-Cookie=" + token, 
+        }
+
+        requests.packages.urllib3.disable_warnings()
+        response = requests.get(url, headers=headers, verify=False)
+
+        return response
 
     def boot_vm(self, port_id, image, flavor, key_name=None, admin=False, user=False):
         

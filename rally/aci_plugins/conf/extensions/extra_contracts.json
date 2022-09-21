@@ -1,0 +1,31 @@
+{
+    "ScenarioPlugin.extra_contracts": [
+        {
+            "args": {
+                "cidr1": "192.168.10.0/24",
+                "cidr2": "192.168.20.0/24",
+                "image" : {{bras_image}},
+                "flavor": "small",
+                "public_net": {{access_network}},
+                "aci_nodes" : {{aci_nodes}},
+                "username" : "root",
+                "password" : "noir0123",
+                "apic": "10.102.1.10"
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 },
+                 "roles": [ 
+                        "Admin" 
+                 ]
+            }
+        }
+    ]
+}
