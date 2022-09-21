@@ -1,0 +1,178 @@
+{
+    "ScenarioPlugin.address_scope": [
+        {
+            "args": {
+                "cidr1": "192.168.10.0/24",
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 },
+                 "roles": [ 
+                        "admin" 
+                 ]
+            }
+        }
+    ],
+    "ScenarioPlugin.epg_contract_master": [
+        {
+            "args": {
+                "cidr1": "192.168.10.0/24",
+                "apic": {{apic}}
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 },
+                 "roles": [ 
+                        "admin" 
+                 ]
+            }
+        }
+    ],
+    "ScenarioPlugin.erspan_config": [
+        {
+            "args": {
+                "cidr1": "192.168.10.0/24",
+                "image" : {{bras_image}},
+                "flavor": "small"
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 },
+                 "roles": [ 
+                        "admin" 
+                 ]
+            }
+        }
+    ],
+    "ScenarioPlugin.external_contracts": [
+        {
+            "args": {
+                "cidr1": "192.168.10.0/24",
+                "apic": {{apic}}
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 },
+                 "roles": [ 
+                        "admin" 
+                 ]
+            }
+        }
+    ],
+    "ScenarioPlugin.extra_contracts": [
+        {
+            "args": {
+                "cidr1": "192.168.10.0/24",
+                "apic": {{apic}}
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 },
+                 "roles": [ 
+                        "admin" 
+                 ]
+            }
+        }
+    ],
+    "ScenarioPlugin.nested_allowed_vlans_domain": [
+        {
+            "args": {
+                "cidr1": "192.168.10.0/24"
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 },
+                 "roles": [ 
+                        "admin" 
+                 ]
+            }
+        }
+    ],
+    "ScenarioPlugin.policy_enforcement_pref": [
+        {
+            "args": {
+                "cidr1": "192.168.10.0/24",
+                "apic": {{apic}}
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 },
+                 "roles": [ 
+                        "admin" 
+                 ]
+            }
+        }
+    ],
+    "ScenarioPlugin.subnet_extensions": [
+        {
+            "args": {
+                "cidr1": "192.168.10.0/24",
+                "image" : {{bras_image}},
+                "flavor": {{flavor}}
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 },
+                 "roles": [ 
+                        "admin" 
+                 ]
+            }
+        }
+    ]
+}
