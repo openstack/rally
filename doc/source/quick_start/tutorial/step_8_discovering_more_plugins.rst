@@ -31,7 +31,7 @@ in one task to test your cloud in a comprehensive way.
 
 First, let's see what plugins are available in Rally. One of the ways to
 discover these plugins is just to inspect their `source code`_.
-another is to use build-in rally plugin command.
+Another is to use build-in rally plugin command.
 
 CLI: rally plugin show
 ----------------------
