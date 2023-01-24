@@ -1,0 +1,24 @@
+{
+    "ScenarioPlugin.extra_contracts": [
+        {
+            "args": {
+                "cidr1": "192.168.10.0/24",
+                "apic": {{apic}}
+                },
+            "runner": {
+                "type": "serial",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                 },
+                 "roles": [ 
+                        "admin" 
+                 ]
+            }
+        }
+    ]
+}
