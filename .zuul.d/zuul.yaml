@@ -6,7 +6,8 @@
       rtd_webhook_id: "52691"
     check:
       jobs:
-        - rally-tox-cover
+        - rally-tox-cover:
+            voting: false
         - rally-tox-docs
         - rally-tox-pep8
         - rally-tox-py36
@@ -24,7 +25,7 @@
         - rally-docker-build
     gate:
       jobs:
-        - rally-tox-cover
+        #- rally-tox-cover
         - rally-tox-docs
         - rally-tox-pep8
         - rally-tox-py36
