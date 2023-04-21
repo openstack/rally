@@ -68,6 +68,14 @@ class vCPEScenario(vm_utils.VMScenario, scenario.OpenStackScenario):
             self.add_output(complete={"title": "Script Output",
                                       "chart_plugin": "TextArea",
                                       "data": text_area_output})
+            
+        if "birdc show protocol" in str(command):
+            try:
+                for line in text_area_output:
+                    if ("bgp" in line) and (("Idle" in line) and ("BGP Error: Bad peer AS" in line)):
+                        raise ConnectionError("BGP not established")
+            except ConnectionError as e:
+                raise e
 
     
     @atomic.action_timer("neutron.create_port_pair")
