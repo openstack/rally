@@ -5,8 +5,8 @@ them in complex tests scenarios that allows to perform all kinds of testing!
 
 # The purpose of xrally image or how to use it
 
-**xrally** image bases on the latest LTS release of *ubuntu* which is 20.04 at
-the moment. It provides raw xrally framework with only in-tree plugins (no
+**xrally** image bases on the official python3.9-slim docker image.
+It provides raw xrally framework with only in-tree plugins (no
 pre-installed plugins for Kubernetes, OpenStack, etc).
 
 You can use this image as a base image and extend it with installation of

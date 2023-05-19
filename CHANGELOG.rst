@@ -27,6 +27,12 @@ Fixed
 
   `Launchpad-bug #1956956 <https://launchpad.net/bugs/1956956>`_
 
+Changed
+~~~~~~~
+
+`xrally/xrally docker image <https://hub.docker.com/r/xrally/xrally>`_ switched
+to use python3.9-slim as a base image instead of ubuntu 20.04.
+
 Added
 ~~~~~
 
