@@ -24,7 +24,6 @@ Guidelines for writing new hacking checks
 
 """
 
-import functools
 import re
 import tokenize
 
@@ -77,22 +76,6 @@ re_datetime_alias = re.compile(r"^(from|import) datetime(?!\s+as\s+dt$)")
 re_log_warn = re.compile(r"(.)*LOG\.(warn)\(\s*('|\"|_)")
 
 
-def skip_ignored_lines(func):
-
-    @functools.wraps(func)
-    def wrapper(physical_line, logical_line, filename):
-        line = physical_line.strip()
-        if not line or line.startswith("#") or line.endswith("# noqa"):
-            return
-        try:
-            for res in func(physical_line, logical_line, filename):
-                yield res
-        except StopIteration:
-            return
-
-    return wrapper
-
-
 def _parse_assert_mock_str(line):
     point = line.find(".assert_")
 
@@ -107,8 +90,7 @@ def _parse_assert_mock_str(line):
 
 
 @core.flake8ext
-@skip_ignored_lines
-def check_assert_methods_from_mock(physical_line, logical_line, filename):
+def check_assert_methods_from_mock(logical_line, filename, noqa=False):
     """Ensure that ``assert_*`` methods from ``mock`` library is used correctly
 
     N301 - base error number
@@ -116,6 +98,8 @@ def check_assert_methods_from_mock(physical_line, logical_line, filename):
     N303 - related to nonexistent "assert_called_once"
     N304 - related to nonexistent "called_once_with"
     """
+    if noqa:
+        return
 
     correct_names = ["assert_any_call", "assert_called_once_with",
                      "assert_called_with", "assert_has_calls",
@@ -161,12 +145,13 @@ def check_assert_methods_from_mock(physical_line, logical_line, filename):
 
 
 @core.flake8ext
-@skip_ignored_lines
-def check_import_of_logging(physical_line, logical_line, filename):
+def check_import_of_logging(logical_line, filename, noqa=False):
     """Check correctness import of logging module
 
     N310
     """
+    if noqa:
+        return
 
     excluded_files = ["./rally/common/logging.py",
                       "./tests/unit/common/test_logging.py",
@@ -185,12 +170,13 @@ def check_import_of_logging(physical_line, logical_line, filename):
 
 
 @core.flake8ext
-@skip_ignored_lines
-def check_import_of_config(physical_line, logical_line, filename):
+def check_import_of_config(logical_line, filename, noqa=False):
     """Check correctness import of config module
 
     N311
     """
+    if noqa:
+        return
 
     excluded_files = ["./rally/common/cfg.py"]
 
@@ -205,8 +191,7 @@ def check_import_of_config(physical_line, logical_line, filename):
 
 
 @core.flake8ext
-@skip_ignored_lines
-def no_use_conf_debug_check(physical_line, logical_line, filename):
+def no_use_conf_debug_check(logical_line, filename, noqa=False):
     """Check for "cfg.CONF.debug"
 
     Rally has two DEBUG level:
@@ -216,6 +201,8 @@ def no_use_conf_debug_check(physical_line, logical_line, filename):
 
     N312
     """
+    if noqa:
+        return
     excluded_files = ["./rally/common/logging.py"]
 
     point = logical_line.find("CONF.debug")
@@ -226,36 +213,39 @@ def no_use_conf_debug_check(physical_line, logical_line, filename):
 
 
 @core.flake8ext
-@skip_ignored_lines
-def assert_true_instance(physical_line, logical_line, filename):
+def assert_true_instance(logical_line, noqa=False):
     """Check for assertTrue(isinstance(a, b)) sentences
 
     N320
     """
+    if noqa:
+        return
     if re_assert_true_instance.match(logical_line):
         yield (0, "N320 assertTrue(isinstance(a, b)) sentences not allowed, "
                   "you should use assertIsInstance(a, b) instead.")
 
 
 @core.flake8ext
-@skip_ignored_lines
-def assert_equal_type(physical_line, logical_line, filename):
+def assert_equal_type(logical_line, noqa=False):
     """Check for assertEqual(type(A), B) sentences
 
     N321
     """
+    if noqa:
+        return
     if re_assert_equal_type.match(logical_line):
         yield (0, "N321 assertEqual(type(A), B) sentences not allowed, "
                   "you should use assertIsInstance(a, b) instead.")
 
 
 @core.flake8ext
-@skip_ignored_lines
-def assert_equal_none(physical_line, logical_line, filename):
+def assert_equal_none(logical_line, noqa=False):
     """Check for assertEqual(A, None) or assertEqual(None, A) sentences
 
     N322
     """
+    if noqa:
+        return
     res = (re_assert_equal_start_with_none.search(logical_line)
            or re_assert_equal_end_with_none.search(logical_line))
     if res:
@@ -265,8 +255,7 @@ def assert_equal_none(physical_line, logical_line, filename):
 
 
 @core.flake8ext
-@skip_ignored_lines
-def assert_true_or_false_with_in(physical_line, logical_line, filename):
+def assert_true_or_false_with_in(logical_line, noqa=False):
     """Check assertTrue/False(A in/not in B) with collection contents
 
     Check for assertTrue/False(A in B), assertTrue/False(A not in B),
@@ -275,6 +264,8 @@ def assert_true_or_false_with_in(physical_line, logical_line, filename):
 
     N323
     """
+    if noqa:
+        return
     res = (re_assert_true_false_with_in_or_not_in.search(logical_line)
            or re_assert_true_false_with_in_or_not_in_spaces.search(
                logical_line))
@@ -285,8 +276,7 @@ def assert_true_or_false_with_in(physical_line, logical_line, filename):
 
 
 @core.flake8ext
-@skip_ignored_lines
-def assert_equal_in(physical_line, logical_line, filename):
+def assert_equal_in(logical_line, noqa=False):
     """Check assertEqual(A in/not in B, True/False) with collection contents
 
     Check for assertEqual(A in B, True/False), assertEqual(True/False, A in B),
@@ -295,6 +285,8 @@ def assert_equal_in(physical_line, logical_line, filename):
 
     N324
     """
+    if noqa:
+        return
     res = (re_assert_equal_in_end_with_true_or_false.search(logical_line)
            or re_assert_equal_in_start_with_true_or_false.search(logical_line))
     if res:
@@ -304,12 +296,13 @@ def assert_equal_in(physical_line, logical_line, filename):
 
 
 @core.flake8ext
-@skip_ignored_lines
-def assert_not_equal_none(physical_line, logical_line, filename):
+def assert_not_equal_none(logical_line, noqa=False):
     """Check for assertNotEqual(A, None) or assertEqual(None, A) sentences
 
     N325
     """
+    if noqa:
+        return
     res = (re_assert_not_equal_start_with_none.search(logical_line)
            or re_assert_not_equal_end_with_none.search(logical_line))
     if res:
@@ -319,8 +312,7 @@ def assert_not_equal_none(physical_line, logical_line, filename):
 
 
 @core.flake8ext
-@skip_ignored_lines
-def assert_equal_true_or_false(physical_line, logical_line, filename):
+def assert_equal_true_or_false(logical_line, noqa=False):
     """Check for assertEqual(A, True/False) sentences
 
     Check for assertEqual(A, True/False) sentences or
@@ -328,6 +320,8 @@ def assert_equal_true_or_false(physical_line, logical_line, filename):
 
     N326
     """
+    if noqa:
+        return
     res = (re_assert_equal_end_with_true_or_false.search(logical_line)
            or re_assert_equal_start_with_true_or_false.search(logical_line))
     if res:
@@ -337,9 +331,7 @@ def assert_equal_true_or_false(physical_line, logical_line, filename):
 
 
 @core.flake8ext
-@skip_ignored_lines
-def check_no_direct_rally_objects_import(physical_line, logical_line,
-                                         filename):
+def check_no_direct_rally_objects_import(logical_line, filename, noqa=False):
     """Check if rally.common.objects are properly imported.
 
     If you import "from rally.common import objects" you are able to use
@@ -347,10 +339,9 @@ def check_no_direct_rally_objects_import(physical_line, logical_line,
 
     N340
     """
-    if filename == "./rally/common/objects/__init__.py":
+    if noqa:
         return
-
-    if filename == "./rally/common/objects/endpoint.py":
+    if filename == "./rally/common/objects/__init__.py":
         return
 
     if (logical_line.startswith("from rally.common.objects")
@@ -361,8 +352,7 @@ def check_no_direct_rally_objects_import(physical_line, logical_line,
 
 
 @core.flake8ext
-@skip_ignored_lines
-def check_no_oslo_deprecated_import(physical_line, logical_line, filename):
+def check_no_oslo_deprecated_import(logical_line, noqa=False):
     """Check if oslo.foo packages are not imported instead of oslo_foo ones.
 
     Libraries from oslo.foo namespace are deprecated because of namespace
@@ -370,6 +360,8 @@ def check_no_oslo_deprecated_import(physical_line, logical_line, filename):
 
     N341
     """
+    if noqa:
+        return
     if (logical_line.startswith("from oslo.")
        or logical_line.startswith("import oslo.")):
         yield (0, "N341: Import oslo module: `from oslo_xyz import ...`. "
@@ -378,12 +370,13 @@ def check_no_oslo_deprecated_import(physical_line, logical_line, filename):
 
 
 @core.flake8ext
-@skip_ignored_lines
-def check_quotes(physical_line, logical_line, filename):
+def check_quotes(logical_line, noqa=False):
     """Check that single quotation marks are not used
 
     N350
     """
+    if noqa:
+        return
 
     in_string = False
     in_multiline_string = False
@@ -432,12 +425,13 @@ def check_quotes(physical_line, logical_line, filename):
 
 
 @core.flake8ext
-@skip_ignored_lines
-def check_no_constructor_data_struct(physical_line, logical_line, filename):
+def check_no_constructor_data_struct(logical_line, noqa=False):
     """Check that data structs (lists, dicts) are declared using literals
 
     N351
     """
+    if noqa:
+        return
 
     match = re_no_construct_dict.search(logical_line)
     if match:
@@ -448,17 +442,12 @@ def check_no_constructor_data_struct(physical_line, logical_line, filename):
 
 
 @core.flake8ext
-def check_dict_formatting_in_string(logical_line, tokens):
+def check_dict_formatting_in_string(logical_line, tokens, noqa=False):
     """Check that strings do not use dict-formatting with a single replacement
 
     N352
     """
-    # NOTE(stpierre): Can't use @skip_ignored_lines here because it's
-    # a stupid decorator that only works on functions that take
-    # (logical_line, filename) as arguments.
-    if (not logical_line
-            or logical_line.startswith("#")
-            or logical_line.endswith("# noqa")):
+    if noqa:
         return
 
     current_string = ""
@@ -516,40 +505,30 @@ def check_dict_formatting_in_string(logical_line, tokens):
 
 
 @core.flake8ext
-@skip_ignored_lines
-def check_using_unicode(physical_line, logical_line, filename):
-    """Check crosspython unicode usage
-
-    N353
-    """
-
-    if re.search(r"\bunicode\(", logical_line):
-        yield (0, "N353 'unicode' function is absent in python3. Please "
-                  "use 'str' instead.")
-
-
-@core.flake8ext
-def check_raises(physical_line, logical_line, filename):
+def check_raises(logical_line, filename, noqa=False):
     """Check raises usage
 
     N354
     """
+    if noqa:
+        return
 
     ignored_files = ["./tests/unit/test_hacking.py",
                      "./tests/hacking/checks.py"]
     if filename not in ignored_files:
-        if re_raises.search(physical_line):
+        if re_raises.search(logical_line):
             yield (0, "N354 ':Please use ':raises Exception: conditions' "
                       "in docstrings.")
 
 
 @core.flake8ext
-@skip_ignored_lines
-def check_old_type_class(physical_line, logical_line, filename):
+def check_old_type_class(logical_line, noqa=False):
     """Use new-style Python classes
 
     N355
     """
+    if noqa:
+        return
 
     if re_old_type_class.search(logical_line):
         yield (0, "N355 This class does not inherit from anything and thus "
@@ -558,23 +537,25 @@ def check_old_type_class(physical_line, logical_line, filename):
 
 
 @core.flake8ext
-@skip_ignored_lines
-def check_datetime_alias(physical_line, logical_line, filename):
+def check_datetime_alias(logical_line, noqa=False):
     """Ensure using ``dt`` as alias for ``datetime``
 
     N356
     """
+    if noqa:
+        return
     if re_datetime_alias.search(logical_line):
         yield 0, "N356 Please use ``dt`` as alias for ``datetime``."
 
 
 @core.flake8ext
-@skip_ignored_lines
-def check_db_imports_in_cli(physical_line, logical_line, filename):
+def check_db_imports_in_cli(logical_line, filename, noqa=False):
     """Ensure that CLI modules do not use ``rally.common.db``
 
     N360
     """
+    if noqa:
+        return
     if (not filename.startswith("./rally/cli")
             or filename == "./rally/cli/commands/db.py"):
         return
@@ -584,8 +565,7 @@ def check_db_imports_in_cli(physical_line, logical_line, filename):
 
 
 @core.flake8ext
-@skip_ignored_lines
-def check_objects_imports_in_cli(physical_line, logical_line, filename):
+def check_objects_imports_in_cli(logical_line, filename):
     """Ensure that CLI modules do not use ``rally.common.objects``
 
     N361
@@ -598,19 +578,19 @@ def check_objects_imports_in_cli(physical_line, logical_line, filename):
 
 
 @core.flake8ext
-@skip_ignored_lines
-def check_log_warn(physical_line, logical_line, filename):
+def check_log_warn(logical_line):
     if re_log_warn.search(logical_line):
         yield 0, "N313 LOG.warn is deprecated, please use LOG.warning"
 
 
 @core.flake8ext
-@skip_ignored_lines
-def check_opts_import_path(physical_line, logical_line, filename):
+def check_opts_import_path(logical_line, filename, noqa=False):
     """Ensure that we load opts from correct paths only
 
-     N342
-     """
+    N342
+    """
+    if noqa:
+        return
     excluded_files = ["./rally/task/engine.py",
                       "./rally/task/context.py",
                       "./rally/task/scenario.py",

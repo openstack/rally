@@ -1,62 +1,33 @@
 - hosts: all
   name: Prepare host to install Rally
   tasks:
-    - name: Check OS distro (CentOS)
-      when: ansible_distribution == "CentOS"
-      set_fact:
-        # in case of centos we do not care about minor versions
-        os_distro: '{{ ansible_distribution }} {{ ansible_distribution_major_version }}'
-
-    - name: Check OS distro (Ubuntu)
-      when: ansible_distribution == "Ubuntu"
-      set_fact:
-        os_distro: '{{ ansible_distribution }} {{ ansible_distribution_version }}'
-
-    - name: Install required packages (Centos-7)
-      when: os_distro == "CentOS 7"
-      shell:
-        cmd: |
-          sudo yum remove -y python-crypto || true
-          sudo yum remove -y python36-PyYAML || true
-
-          sudo yum update
-          sudo yum install -y yum-utils
-          sudo yum groupinstall -y development
-
-          sudo yum install -y https://repo.ius.io/ius-release-el7.rpm https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-          sudo yum install -y python36u python36u-devel
-
-    - name: Uninstall required packages (Centos-8)
-      when: os_distro == "CentOS 8"
+    - name: Uninstall python3-pyyaml (CentOS 8 & 9)
       become: true
-      shell: dnf remove -y python3-pyyaml
+      package:
+        state: absent
+        name: python3-pyyaml
 
-    - name: Install required packages (Ubuntu-Bionic)
-      when: os_distro == "Ubuntu 18.04"
-      shell:
-        chdir: '{{ zuul.project.src_dir }}'
-        cmd: |
-          # NOTE(pabelanger): We run apt-get update to ensure we dont have a stale
-          # package cache in the gate.
-          sudo apt update
-          sudo apt install --yes python3.6-dev
+    - name: Install python3.8-dev (Ubuntu 20.04)
+      become: true
+      package:
+        state: present
+        name: python3.8-dev
+      when: ansible_distribution == "Ubuntu" and ansible_distribution_version == "20.04"
 
-    - name: Install required packages (Ubuntu-Focal)
-      when: os_distro == "Ubuntu 20.04"
-      shell:
-        chdir: '{{ zuul.project.src_dir }}'
-        cmd: |
-          # NOTE(pabelanger): We run apt-get update to ensure we dont have a stale
-          # package cache in the gate.
-          sudo apt update
-          sudo apt install --yes python3.8-dev
+    - name: Install python3.10-dev (Ubuntu 22.04)
+      become: true
+      package:
+        state: present
+        name: python3.10-dev
+      when: ansible_distribution == "Ubuntu" and ansible_distribution_version == "22.04"
 
     - name: Install pip3 if needed
-      when: os_distro == "CentOS 7" or os_distro == "Ubuntu 18.04" or os_distro == "Ubuntu 20.04"
+      become: true
       shell:
         executable: /bin/bash
         chdir: '{{ zuul.project.src_dir }}'
         cmd: |
+          set -e
           python_version=`python3 --version`
           python_version=`echo $python_version |awk '{print $2}'`
           echo $python_version
@@ -66,19 +37,13 @@
               pip_url=https://bootstrap.pypa.io/get-pip.py
           fi
           curl $pip_url -o /tmp/get-pip.py
-          sudo python3 /tmp/get-pip.py
-
-    - name: Update pip3 if needed
-      when: os_distro == "CentOS 8"
-      become: true
-      shell: pip3 install --upgrade pip
+          python3 /tmp/get-pip.py
 
     - name: Install bindep
       become: true
-      shell: pip3 install --upgrade bindep PyYAML
+      shell: pip3 install --upgrade bindep
 
     - name: Prepare rally plugins stored at home dir
-      shell:
-        cmd: |
-          mkdir --parents ~/.rally/plugins
-          cp --recursive {{ zuul.project.src_dir }}/rally-jobs/plugins/* ~/.rally/plugins
+      shell: |
+        mkdir --parents ~/.rally/plugins
+        cp --recursive {{ zuul.project.src_dir }}/rally-jobs/plugins/* ~/.rally/plugins

@@ -1,0 +1,4 @@
+default_pip_url: "https://bootstrap.pypa.io/get-pip.py"
+
+versioned_pip_url:
+  python3.6: "https://bootstrap.pypa.io/pip/3.6/get-pip.py"
