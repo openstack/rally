@@ -27,11 +27,19 @@ Fixed
 
   `Launchpad-bug #1956956 <https://launchpad.net/bugs/1956956>`_
 
-Changed
+Added
+~~~~~
+
+* Pin SQLAlchemy to <2.0.0
+* CI for running unit and functional tests using python 3.10
+* CI jobs that check Rally installation compatibility with CentOS 9 Stream and
+  Ubuntu Jammy
+
+Removed
 ~~~~~~~
 
-Check ability to install Rally on Centos 8 Stream and Centos 9 Stream and
-stop checking Centos 7 and Centos 8
+* CI jobs with installation compatibility checks for CentOS 7, CentOS 8
+  (CentOS 8 Stream is checked instead), Ubuntu Bionic.
 
 [3.3.0] - 2021-06-16
 --------------------

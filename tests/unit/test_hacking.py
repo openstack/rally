@@ -10,6 +10,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import inspect
 import io
 import tokenize
 
@@ -23,12 +24,23 @@ from tests.unit import test
 class HackingTestCase(test.TestCase):
 
     def _assert_good_samples(self, checker, samples, module_file="f"):
+        spec = inspect.getfullargspec(checker)
+        base_args = {}
+        if "filename" in spec.args:
+            base_args["filename"] = module_file
         for s in samples:
-            self.assertEqual([], list(checker(s, s, module_file)), s)
+            args = {"logical_line": s, **base_args}
+            self.assertEqual([], list(checker(*args)), s)
 
     def _assert_bad_samples(self, checker, samples, module_file="f"):
+        spec = inspect.getfullargspec(checker)
+        base_args = {}
+        if "filename" in spec.args:
+            base_args["filename"] = module_file
+
         for s in samples:
-            self.assertEqual(1, len(list(checker(s, s, module_file))), s)
+            args = {"logical_line": s, **base_args}
+            self.assertEqual(1, len(list(checker(**args))), s)
 
     def test__parse_assert_mock_str(self):
         pos, method, obj = checks._parse_assert_mock_str(
@@ -43,21 +55,6 @@ class HackingTestCase(test.TestCase):
         self.assertIsNone(method)
         self.assertIsNone(obj)
 
-    @ddt.data(
-        {"line": "fdafadfdas  # noqa", "result": []},
-        {"line": "  # fdafadfdas", "result": []},
-        {"line": "  ", "result": []},
-        {"line": "otherstuff", "result": [42]}
-    )
-    @ddt.unpack
-    def test_skip_ignored_lines(self, line, result):
-
-        @checks.skip_ignored_lines
-        def any_gen(physical_line, logical_line, file_name):
-            yield 42
-
-        self.assertEqual(result, list(any_gen(line, line, "f")))
-
     def test_correct_usage_of_assert_from_mock(self):
         correct_method_names = ["assert_any_call", "assert_called_once_with",
                                 "assert_called_with", "assert_has_calls"]
@@ -71,7 +68,7 @@ class HackingTestCase(test.TestCase):
         fake_method = "rtfm.assert_something()"
 
         actual_number, actual_msg = next(checks.check_assert_methods_from_mock(
-            fake_method, fake_method, "./tests/fake/test"))
+            fake_method, "./tests/fake/test"))
         self.assertEqual(4, actual_number)
         self.assertTrue(actual_msg.startswith("N301"))
 
@@ -79,7 +76,7 @@ class HackingTestCase(test.TestCase):
         fake_method = "rtfm.assert_called()"
 
         actual_number, actual_msg = next(checks.check_assert_methods_from_mock(
-            fake_method, fake_method, "./tests/fake/test"))
+            fake_method, "./tests/fake/test", False))
         self.assertEqual(4, actual_number)
         self.assertTrue(actual_msg.startswith("N302"))
 
@@ -87,7 +84,7 @@ class HackingTestCase(test.TestCase):
         fake_method = "rtfm.assert_called_once()"
 
         actual_number, actual_msg = next(checks.check_assert_methods_from_mock(
-            fake_method, fake_method, "./tests/fake/test"))
+            fake_method, "./tests/fake/test", False))
         self.assertEqual(4, actual_number)
         self.assertTrue(actual_msg.startswith("N303"))
 
@@ -100,16 +97,16 @@ class HackingTestCase(test.TestCase):
                         "import rally.common.logging"]
 
         for bad in bad_imports:
-            checkres = checks.check_import_of_logging(bad, bad, "fakefile")
+            checkres = checks.check_import_of_logging(bad, "fakefile")
             self.assertIsNotNone(next(checkres))
 
         for bad in bad_imports:
             checkres = checks.check_import_of_logging(
-                bad, bad, "./rally/common/logging.py")
+                bad, "./rally/common/logging.py")
             self.assertEqual([], list(checkres))
 
         for good in good_imports:
-            checkres = checks.check_import_of_logging(good, good, "fakefile")
+            checkres = checks.check_import_of_logging(good, "fakefile")
             self.assertEqual([], list(checkres))
 
     def test_no_use_conf_debug_check(self):
@@ -134,8 +131,7 @@ class HackingTestCase(test.TestCase):
     )
     @ddt.unpack
     def test_assert_true_instance(self, line, result):
-        self.assertEqual(
-            result, len(list(checks.assert_true_instance(line, line, "f"))))
+        self.assertEqual(result, len(list(checks.assert_true_instance(line))))
 
     @ddt.data(
         {
@@ -149,8 +145,7 @@ class HackingTestCase(test.TestCase):
     )
     @ddt.unpack
     def test_assert_equal_type(self, line, result):
-        self.assertEqual(result,
-                         len(list(checks.assert_equal_type(line, line, "f"))))
+        self.assertEqual(result, len(list(checks.assert_equal_type(line))))
 
     @ddt.data(
         {"line": "self.assertEqual(A, None)", "result": 1},
@@ -160,8 +155,7 @@ class HackingTestCase(test.TestCase):
     @ddt.unpack
     def test_assert_equal_none(self, line, result):
 
-        self.assertEqual(result,
-                         len(list(checks.assert_equal_none(line, line, "f"))))
+        self.assertEqual(result, len(list(checks.assert_equal_none(line))))
 
     @ddt.data(
         {"line": "self.assertNotEqual(A, None)", "result": 1},
@@ -171,9 +165,7 @@ class HackingTestCase(test.TestCase):
     @ddt.unpack
     def test_assert_not_equal_none(self, line, result):
 
-        self.assertEqual(result,
-                         len(list(checks.assert_not_equal_none(line,
-                                                               line, "f"))))
+        self.assertEqual(result, len(list(checks.assert_not_equal_none(line))))
 
     def test_assert_true_or_false_with_in_or_not_in(self):
         good_lines = [
@@ -334,16 +326,6 @@ class HackingTestCase(test.TestCase):
                 [],
                 list(checks.check_dict_formatting_in_string(sample, tokens)))
 
-    @ddt.data(
-        "text = unicode('sometext')",
-        "text = process(unicode('sometext'))"
-    )
-    def test_check_using_unicode(self, line):
-
-        checkres = checks.check_using_unicode(line, line, "fakefile")
-        self.assertIsNotNone(next(checkres))
-        self.assertEqual([], list(checkres))
-
     def test_check_raises(self):
         self._assert_bad_samples(
             checks.check_raises,
@@ -357,21 +339,17 @@ class HackingTestCase(test.TestCase):
     def test_check_db_imports_of_cli(self):
         line = "from rally.common import db"
 
-        next(checks.check_db_imports_in_cli(
-            line, line, "./rally/cli/filename"))
+        next(checks.check_db_imports_in_cli(line, "./rally/cli/filename"))
 
-        checkres = checks.check_db_imports_in_cli(
-            line, line, "./filename")
+        checkres = checks.check_db_imports_in_cli(line, "./filename")
         self.assertRaises(StopIteration, next, checkres)
 
     def test_check_objects_imports_of_cli(self):
         line = "from rally.common import objects"
 
-        next(checks.check_objects_imports_in_cli(
-            line, line, "./rally/cli/filename"))
+        next(checks.check_objects_imports_in_cli(line, "./rally/cli/filename"))
 
-        checkres = checks.check_objects_imports_in_cli(
-            line, line, "./filename")
+        checkres = checks.check_objects_imports_in_cli(line, "./filename")
         self.assertRaises(StopIteration, next, checkres)
 
     @ddt.data(
@@ -379,7 +357,7 @@ class HackingTestCase(test.TestCase):
         "class Oldstyle:"
     )
     def test_check_old_type_class(self, line):
-        checkres = checks.check_old_type_class(line, line, "fakefile")
+        checkres = checks.check_old_type_class(line)
         self.assertIsNotNone(next(checkres))
         self.assertEqual([], list(checkres))
 
@@ -390,12 +368,12 @@ class HackingTestCase(test.TestCase):
                  "from datetime import datetime as dtime"]
 
         for line in lines:
-            checkres = checks.check_datetime_alias(line, line, "fakefile")
+            checkres = checks.check_datetime_alias(line)
             self.assertIsNotNone(next(checkres))
             self.assertEqual([], list(checkres))
 
         line = "import datetime as dt"
-        checkres = checks.check_datetime_alias(line, line, "fakefile")
+        checks.check_datetime_alias(line)
 
     def test_check_log_warn(self):
         bad_samples = ["LOG.warn('foo')", "LOG.warn(_('bar'))"]

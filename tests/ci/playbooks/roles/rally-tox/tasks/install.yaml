@@ -1,0 +1,35 @@
+- name: Check required version of Python
+  args:
+    executable: python3
+  script: "find_python_for_tox_env.py --tox-cfg {{ zuul.project.src_dir }}/tox.ini --tox-env {{ tox_env }}"
+  changed_when: false
+  register: python_exec_from_tox
+  when: python_exec is not defined
+
+- name: "Set python_exec var to {{ python_exec_from_tox }}"
+  set_fact:
+    python_exec: "{{ python_exec_from_tox.stdout.strip() }}"
+  when: python_exec_from_tox is defined and python_exec_from_tox.stdout.strip()
+
+- name: Install the proper python version and pip
+  become: True
+  become_user: root
+  shell: |
+    set -e
+
+    apt-get update
+    apt-get install {{ python_exec }}-dev --yes
+    
+    curl {{ versioned_pip_url.get(python_exec, default_pip_url) }} -o get-pip.py
+    {{ python_exec }} get-pip.py --force-reinstall
+  when: python_exec is defined
+
+- name: Install python tox
+  become: True
+  become_user: root
+  shell: "{{ python_exec }} -m pip install tox"
+
+
+- name: Install system deps
+  include_role:
+    name: bindep
