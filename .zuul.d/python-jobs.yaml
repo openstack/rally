@@ -6,7 +6,7 @@
     post-run: tests/ci/playbooks/fetch-html-and-json-reports.yaml
     description: |
       Run test for rally project.
-    nodeset: ubuntu-bionic
+    nodeset: ubuntu-jammy
 
 - job:
     name: rally-tox-docs
@@ -27,16 +27,6 @@
       Uses tox with the ``self`` environment.
     vars:
       tox_env: pep8
-
-- job:
-    name: rally-tox-functional-py38
-    parent: rally-tox-base
-    description: |
-      Run test for rally project.
-
-      Uses tox with the ``functional`` environment.
-    vars:
-      tox_env: functional-py38
 
 - job:
     name: rally-tox-functional
@@ -67,6 +57,7 @@
       Uses tox with the ``py36`` environment.
     vars:
       tox_env: py36
+    nodeset: ubuntu-bionic
 
 - job:
     name: rally-tox-py37
@@ -77,6 +68,7 @@
       Uses tox with the ``py37`` environment.
     vars:
       tox_env: py37
+    nodeset: ubuntu-bionic
 
 - job:
     name: rally-tox-py38
@@ -85,9 +77,9 @@
       Run unit test for rally project.
 
       Uses tox with the ``py38`` environment.
-    nodeset: ubuntu-focal
     vars:
       tox_env: py38
+    nodeset: ubuntu-focal
 
 - job:
     name: rally-tox-py39
@@ -96,9 +88,19 @@
       Run unit test for rally project.
 
       Uses tox with the ``py39`` environment.
-    nodeset: ubuntu-focal
     vars:
       tox_env: py39
+    nodeset: ubuntu-focal
+
+- job:
+    name: rally-tox-py310
+    parent: rally-tox-base
+    description: |
+      Run unit test for rally project.
+
+      Uses tox with the ``py310`` environment.
+    vars:
+      tox_env: py310
 
 - job:
     name: rally-tox-samples
@@ -117,7 +119,6 @@
       Run test for rally project.
 
       Uses tox with the ``cover`` environment.
-    nodeset: ubuntu-bionic
     vars:
       coverage_output_src: '{{ zuul.project.src_dir }}/cover/'
       zuul_executor_dest: '{{ zuul.executor.log_root }}/coverage/'

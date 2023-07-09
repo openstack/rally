@@ -1,10 +1,8 @@
-FROM ubuntu:20.04
+FROM python:3.9-slim
 
-RUN sed -i s/^deb-src.*// /etc/apt/sources.list
-
-RUN apt-get update && apt-get install --yes sudo python3-dev python3-pip vim git-core && \
+RUN apt-get update && apt-get install --yes sudo vim git-core && \
     apt clean && \
-    pip3 --no-cache-dir install --upgrade pip setuptools && \
+    python3 -m pip --no-cache-dir install --upgrade pip setuptools && \
     useradd -u 65500 -m rally && \
     usermod -aG sudo rally && \
     echo "rally ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/00-rally-user && \
@@ -13,8 +11,8 @@ RUN apt-get update && apt-get install --yes sudo python3-dev python3-pip vim git
 COPY ./ /rally/source
 WORKDIR /rally/source
 
-RUN pip3 install . --constraint upper-constraints.txt --no-cache-dir && \
-    pip3 install pymysql psycopg2-binary --no-cache-dir && \
+RUN python3 -m pip install . --constraint upper-constraints.txt --no-cache-dir && \
+    python3 -m pip install pymysql psycopg2-binary --no-cache-dir && \
     mkdir -p /etc/rally && \
     echo "[database]" > /etc/rally/rally.conf && \
     echo "connection=sqlite:////home/rally/.rally/rally.db" >> /etc/rally/rally.conf

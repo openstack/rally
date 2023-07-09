@@ -41,9 +41,8 @@ task_helper = sa.Table(
     sa.MetaData(),
     sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
     sa.Column("uuid", sa.String(36), nullable=False),
-    sa.Column("status", sa.Enum(*list(consts.TaskStatus),
-                                name="enum_tasks_status"),
-              default=consts.TaskStatus.INIT, nullable=False),
+    sa.Column("status", sa.String(36), default=consts.TaskStatus.INIT,
+              nullable=False),
     sa.Column("verification_log", sa.Text, default=""),
     sa.Column("tag", sa.String(64), default=""),
     sa.Column("deployment_uuid", sa.String(36), nullable=False)

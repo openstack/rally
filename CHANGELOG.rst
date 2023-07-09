@@ -17,8 +17,10 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
-[unreleased]
-------------
+[3.4.0] - 2023-05-23
+--------------------
+
+This is the last release with support of Python 3.6 and Python 3.7
 
 Fixed
 ~~~~~
@@ -30,8 +32,22 @@ Fixed
 Changed
 ~~~~~~~
 
-Check ability to install Rally on Centos 8 Stream and Centos 9 Stream and
-stop checking Centos 7 and Centos 8
+`xrally/xrally docker image <https://hub.docker.com/r/xrally/xrally>`_ switched
+to use python3.9-slim as a base image instead of ubuntu 20.04.
+
+Added
+~~~~~
+
+* Pin SQLAlchemy to <2.0.0
+* CI for running unit and functional tests using python 3.10
+* CI jobs that check Rally installation compatibility with CentOS 9 Stream and
+  Ubuntu Jammy
+
+Removed
+~~~~~~~
+
+* CI jobs with installation compatibility checks for CentOS 7, CentOS 8
+  (CentOS 8 Stream is checked instead), Ubuntu Bionic.
 
 [3.3.0] - 2021-06-16
 --------------------

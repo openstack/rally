@@ -31,7 +31,7 @@
 - name: "Check availability of {{ rally_plugin_name }} plugin"
   shell: docker run {{ docker_image_tag }} plugin show {{ rally_plugin_name }}
 
-- name: Execute the similar wokrloads as `tox -e self`
+- name: Execute the similar workloads as `tox -e self`
   shell:
     cmd: >
       python3 {{ rally_project_path }}/tests/ci/rally_self_job.py

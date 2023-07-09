@@ -7,14 +7,14 @@
     timeout: 1800
 
 - job:
-    name: rally-install-ubuntu-bionic
-    parent: rally-install-base
-    nodeset: ubuntu-bionic
-
-- job:
     name: rally-install-ubuntu-focal
     parent: rally-install-base
     nodeset: ubuntu-focal
+
+- job:
+    name: rally-install-ubuntu-jammy
+    parent: rally-install-base
+    nodeset: ubuntu-jammy
 
 - job:
     name: rally-install-centos-8s
@@ -24,4 +24,4 @@
 - job:
     name: rally-install-centos-9s
     parent: rally-install-base
-    nodeset: centos-8-stream
+    nodeset: centos-9-stream

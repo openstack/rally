@@ -616,11 +616,11 @@ def run(argv, categories):
         rapi = api.API(config_args=argv[1:], skip_db_check=True)
     except exceptions.RallyException as e:
         print(e)
-        return(2)
+        return 2
 
     if CONF.category.name == "bash-completion":
         print(_generate_bash_completion_script())
-        return(0)
+        return 0
 
     fn = CONF.category.action_fn
     fn_args = [encodeutils.safe_decode(arg)
@@ -652,7 +652,7 @@ def run(argv, categories):
                 if arg[1].get("dest", "").endswith(missing):
                     print(" " + arg[0][0])
                     break
-        return(1)
+        return 1
 
     try:
         validate_deprecated_args(argv, fn)

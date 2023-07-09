@@ -705,7 +705,7 @@ class ResultConsumerTestCase(test.TestCase):
         runner = mock.MagicMock(result_queue=False)
 
         is_done = mock.MagicMock()
-        is_done.isSet.side_effect = (False, True)
+        is_done.is_set.side_effect = (False, True)
 
         task = mock.MagicMock()
         mock_task_get_status.return_value = consts.TaskStatus.ABORTED
@@ -923,7 +923,7 @@ class ResultConsumerTestCase(test.TestCase):
                                             consts.TaskStatus.ABORTING)
         mock_is_done = mock.MagicMock()
         mock_event.return_value = mock_is_done
-        mock_is_done.isSet.return_value = False
+        mock_is_done.is_set.return_value = False
         ctx_manager = mock.MagicMock()
 
         res = engine.ResultConsumer(workload_cfg, task=task, subtask=subtask,
@@ -954,7 +954,7 @@ class ResultConsumerTestCase(test.TestCase):
         mock_event.return_value = mock_is_done
         ctx_manager = mock.MagicMock()
 
-        mock_is_done.isSet.side_effect = [False, False, False, False, True]
+        mock_is_done.is_set.side_effect = [False, False, False, False, True]
 
         res = engine.ResultConsumer(workload_cfg, task=task, subtask=subtask,
                                     workload=workload, runner=runner,

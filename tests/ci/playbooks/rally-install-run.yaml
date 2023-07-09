@@ -4,7 +4,7 @@
     - name: Get list of packages to install from bindep
       command: "bindep -b -f {{ zuul.project.src_dir }}/bindep.txt"
       register: bindep_output
-      ignore_errors: True
+      failed_when: bindep_output.rc != 0 and bindep_output.rc != 1
 
     - name: Install distro packages from bindep
       package:

@@ -124,13 +124,13 @@ class ResultConsumer(object):
                                                     {"raw": results_chunk})
                     self.workload_data_count += 1
 
-            elif self.is_done.isSet():
+            elif self.is_done.is_set():
                 break
             else:
                 time.sleep(0.1)
 
     def _consume_events(self):
-        while not self.is_done.isSet() or self.runner.event_queue:
+        while not self.is_done.is_set() or self.runner.event_queue:
             if self.runner.event_queue:
                 event = self.runner.event_queue.popleft()
                 self.hook_executor.on_event(
@@ -201,7 +201,7 @@ class ResultConsumer(object):
         runner.run method.
         """
 
-        while not self.is_done.isSet():
+        while not self.is_done.is_set():
             if self.is_task_in_aborting_status(self.task["uuid"],
                                                check_soft=False):
                 self.runner.abort()

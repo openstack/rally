@@ -13,12 +13,12 @@
         - rally-tox-py37
         - rally-tox-py38
         - rally-tox-py39
+        - rally-tox-py310
         - rally-tox-samples
         - rally-tox-functional
-        - rally-tox-functional-py38
         - rally-tox-self
-        - rally-install-ubuntu-bionic
         - rally-install-ubuntu-focal
+        - rally-install-ubuntu-jammy
         - rally-install-centos-8s
         - rally-install-centos-9s
         - rally-docker-build
@@ -31,10 +31,11 @@
         - rally-tox-py37
         - rally-tox-py38
         - rally-tox-py39
+        - rally-tox-py310
         - rally-tox-functional
         - rally-tox-self
-        - rally-install-ubuntu-bionic
         - rally-install-ubuntu-focal
+        - rally-install-ubuntu-jammy
         - rally-install-centos-8s
         - rally-install-centos-9s
     post:

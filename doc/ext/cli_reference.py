@@ -145,7 +145,7 @@ def make_arguments_section(category_name, cmd_name, arguments, defaults):
 
 def get_defaults(func):
     """Return a map of argument:default_value for specified function."""
-    spec = inspect.getargspec(func)
+    spec = inspect.getfullargspec(func)
     if spec.defaults:
         return dict(zip(spec.args[-len(spec.defaults):], spec.defaults))
     return {}

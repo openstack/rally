@@ -579,7 +579,7 @@ class TaskCommands(object):
             print("Error: Invalid task status '%s'.\nAvailable statuses: %s"
                   % (status, ", ".join(consts.TaskStatus)),
                   file=sys.stderr)
-            return(1)
+            return 1
 
         if not all_deployments:
             filters["deployment"] = deployment

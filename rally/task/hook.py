@@ -63,7 +63,7 @@ class HookExecutor(object):
         stopwatch = rutils.Stopwatch(stop_event=self._timer_stop_event)
         stopwatch.start()
         seconds_since_start = 0
-        while not self._timer_stop_event.isSet():
+        while not self._timer_stop_event.is_set():
             self.on_event(event_type="time", value=seconds_since_start)
             seconds_since_start += 1
             stopwatch.sleep(seconds_since_start)

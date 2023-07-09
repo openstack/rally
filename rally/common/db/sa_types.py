@@ -33,6 +33,7 @@ class TimeStamp(sa_types.TypeDecorator):
 
     impl = sa_types.BigInteger
     _coefficient = 1000000.0
+    cache_ok = True
 
     def process_bind_param(self, value, dialect):
         if value is None:
@@ -57,6 +58,8 @@ class LongText(sa_types.TypeDecorator):
        LONGTEXT that allows us to store 4GiB.
     """
 
+    cache_ok = True
+
     def load_dialect_impl(self, dialect):
         if dialect.name == "mysql":
             return dialect.type_descriptor(mysql_types.LONGTEXT)
@@ -68,6 +71,7 @@ class JSONEncodedDict(LongText):
     """Represents an immutable structure as a json-encoded string."""
 
     impl = sa_types.Text
+    cache_ok = True
 
     def process_bind_param(self, value, dialect):
         if value is not None:
@@ -75,7 +79,7 @@ class JSONEncodedDict(LongText):
         return value
 
     def process_result_value(self, value, dialect):
-        if value is not None:
+        if value:
             value = json.loads(
                 value, object_pairs_hook=collections.OrderedDict)
         return value
@@ -83,6 +87,8 @@ class JSONEncodedDict(LongText):
 
 class JSONEncodedList(JSONEncodedDict):
     """Represents an immutable structure as a json-encoded string."""
+
+    cache_ok = True
 
     def process_result_value(self, value, dialect):
         if value is not None:
@@ -153,10 +159,12 @@ class MutableList(mutable.Mutable, list):
 
 class MutableJSONEncodedList(JSONEncodedList):
     """Represent a mutable structure as a json-encoded string."""
+    cache_ok = True
 
 
 class MutableJSONEncodedDict(JSONEncodedDict):
     """Represent a mutable structure as a json-encoded string."""
+    cache_ok = True
 
 
 MutableDict.associate_with(MutableJSONEncodedDict)

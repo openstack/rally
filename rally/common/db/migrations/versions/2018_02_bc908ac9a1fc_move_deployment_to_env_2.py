@@ -30,7 +30,6 @@ import uuid
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.engine import reflection
 
 from rally.common.db import sa_types
 from rally import exceptions
@@ -127,7 +126,7 @@ verifications_helper = sa.Table(
 
 def upgrade():
     connection = op.get_bind()
-    inspector = reflection.Inspector.from_engine(connection)
+    inspector = sa.inspect(connection)
     if "deployments" not in inspector.get_table_names():
         # 7287df262dbc did not fail. nothing to do
         return
