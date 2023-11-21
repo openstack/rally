@@ -17,6 +17,20 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
+[unreleased]
+------------
+
+Added
+~~~~~
+
+* CI checks for Python 3.11 compatibility
+
+
+Removed
+~~~~~~~
+
+* Support for Python 3.6 and Python 3.7
+
 [3.4.0] - 2023-05-23
 --------------------
 

@@ -9,11 +9,10 @@
         - rally-tox-cover
         - rally-tox-docs
         - rally-tox-pep8
-        - rally-tox-py36
-        - rally-tox-py37
         - rally-tox-py38
         - rally-tox-py39
         - rally-tox-py310
+        - rally-tox-py311
         - rally-tox-samples
         - rally-tox-functional
         - rally-tox-self
@@ -27,11 +26,10 @@
         - rally-tox-cover
         - rally-tox-docs
         - rally-tox-pep8
-        - rally-tox-py36
-        - rally-tox-py37
         - rally-tox-py38
         - rally-tox-py39
         - rally-tox-py310
+        - rally-tox-py311
         - rally-tox-functional
         - rally-tox-self
         - rally-install-ubuntu-focal

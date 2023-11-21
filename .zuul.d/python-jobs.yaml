@@ -49,28 +49,6 @@
       tox_env: self
 
 - job:
-    name: rally-tox-py36
-    parent: rally-tox-base
-    description: |
-      Run unit test for rally project.
-
-      Uses tox with the ``py36`` environment.
-    vars:
-      tox_env: py36
-    nodeset: ubuntu-bionic
-
-- job:
-    name: rally-tox-py37
-    parent: rally-tox-base
-    description: |
-      Run unit test for rally project.
-
-      Uses tox with the ``py37`` environment.
-    vars:
-      tox_env: py37
-    nodeset: ubuntu-bionic
-
-- job:
     name: rally-tox-py38
     parent: rally-tox-base
     description: |
@@ -101,6 +79,16 @@
       Uses tox with the ``py310`` environment.
     vars:
       tox_env: py310
+
+- job:
+    name: rally-tox-py311
+    parent: rally-tox-base
+    description: |
+      Run unit test for rally project.
+
+      Uses tox with the ``py311`` environment.
+    vars:
+      tox_env: py311
 
 - job:
     name: rally-tox-samples
