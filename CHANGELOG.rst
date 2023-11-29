@@ -20,6 +20,12 @@ Changelog
 [unreleased]
 ------------
 
+Fixed
+~~~~~
+
+* Parsing subunit v2 stream (rally-verify component) when the result is
+  wrapped by ``memoryview`` python object.
+
 Added
 ~~~~~
 

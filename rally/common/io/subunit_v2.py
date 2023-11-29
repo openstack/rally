@@ -25,33 +25,22 @@ _IGNORE_LIST = [
 ]
 
 
-def prepare_input_args(func):
-    # NOTE(andreykurilin): Variables 'runnable', 'eof', 'route_code' are not
-    # used in parser.
-    def inner(self, test_id=None, test_status=None, timestamp=None,
-              file_name=None, file_bytes=None, mime_type=None, test_tags=None,
-              runnable=True, eof=False, route_code=None):
-        if not test_id or test_id in _IGNORE_LIST:
-            return
+class TestID(str):
 
-        if (test_id.startswith("setUpClass (")
-                or test_id.startswith("tearDown (")):
-            test_id = test_id[test_id.find("(") + 1:-1]
+    @staticmethod
+    def __new__(cls, value):
+        if (value.startswith("setUpClass (")
+                or value.startswith("tearDown (")):
+            value = value[value.find("(") + 1:-1]
+        return super(TestID, cls).__new__(cls, value)
 
-        tags = _parse_test_tags(test_id)
-
-        func(self, test_id, test_status, timestamp, tags,
-             file_name, file_bytes, test_tags, mime_type)
-
-    return inner
-
-
-def _parse_test_tags(test_id):
-    tags = []
-    if test_id.find("[") > -1:
-        tags = test_id.split("[")[1][:-1].split(",")
-
-    return tags
+    def __init__(self, value):
+        if self.find("[") > -1:
+            self.name, tags = self.split("[", 1)
+            self.tags = tags[:-1].split(",")
+        else:
+            self.name = value
+            self.tags = []
 
 
 class SubunitV2StreamResult(object):
@@ -75,13 +64,9 @@ class SubunitV2StreamResult(object):
         self._unknown_entities = {}
         self._is_parsed = False
 
-    @staticmethod
-    def _get_test_name(test_id):
-        return test_id.split("[")[0] if test_id.find("[") > -1 else test_id
-
-    def _check_expected_failure(self, test_id):
+    def _check_expected_failure(self, test_id: TestID):
         if (test_id in self._expected_failures
-                or self._get_test_name(test_id) in self._expected_failures):
+                or test_id.name in self._expected_failures):
             if self._tests[test_id]["status"] == "fail":
                 self._tests[test_id]["status"] = "xfail"
                 if self._expected_failures[test_id]:
@@ -94,16 +79,16 @@ class SubunitV2StreamResult(object):
         for t_id in self._skipped_tests.copy():
             if t_id not in self._tests:
                 status = "skip"
-                name = self._get_test_name(t_id)
+                t_id = TestID(t_id)
                 self._tests[t_id] = {"status": status,
-                                     "name": name,
+                                     "name": t_id.name,
                                      "duration": "%.3f" % 0,
-                                     "tags": _parse_test_tags(t_id)}
+                                     "tags": t_id.tags}
                 if self._skipped_tests[t_id]:
                     self._tests[t_id]["reason"] = self._skipped_tests[t_id]
                     status += ": %s" % self._tests[t_id]["reason"]
                 if self._live:
-                    self._logger.info("{-} %s ... %s" % (name, status))
+                    self._logger.info("{-} %s ... %s" % (t_id.name, status))
 
             self._skipped_tests.pop(t_id)
 
@@ -158,9 +143,17 @@ class SubunitV2StreamResult(object):
                 "unexpected_success": len(self.filter_tests("uxsuccess")),
                 "expected_failures": len(self.filter_tests("xfail"))}
 
-    @prepare_input_args
-    def status(self, test_id=None, test_status=None, timestamp=None, tags=None,
-               file_name=None, file_bytes=None, worker=None, mime_type=None):
+    def status(self, test_id=None, test_status=None, timestamp=None,
+               file_name=None, file_bytes=None, mime_type=None, test_tags=None,
+               runnable=True, eof=False, route_code=None):
+
+        if not test_id or test_id in _IGNORE_LIST:
+            return
+
+        test_id = TestID(test_id)
+        if isinstance(file_bytes, memoryview):
+            file_bytes = file_bytes.tobytes()
+
         if timestamp:
             if not self._first_timestamp:
                 self._first_timestamp = timestamp
@@ -168,9 +161,9 @@ class SubunitV2StreamResult(object):
 
         if test_status == "exists":
             self._tests[test_id] = {"status": "init",
-                                    "name": self._get_test_name(test_id),
+                                    "name": test_id.name,
                                     "duration": "%.3f" % 0,
-                                    "tags": tags if tags else []}
+                                    "tags": test_id.tags}
         elif test_id in self._tests:
             if test_status == "inprogress":
                 # timestamp of test start
@@ -219,9 +212,8 @@ class SubunitV2StreamResult(object):
                 if reason:
                     status += ": %s" % reason
 
-            w = "{%s} " % worker.pop().split("-")[1] if worker else "-"
-            self._logger.info("%s ... %s"
-                              % (w + self._get_test_name(test_id), status))
+            w = "{%s} " % test_tags.pop().split("-")[1] if test_tags else "-"
+            self._logger.info(f"{w}{test_id.name} ... {status}")
 
     def filter_tests(self, status):
         """Filter tests by given status."""

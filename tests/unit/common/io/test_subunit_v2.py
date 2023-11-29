@@ -12,7 +12,6 @@
 #    under the License.
 
 import os
-from unittest import mock
 
 from rally.common.io import subunit_v2
 from tests.unit import test
@@ -93,23 +92,6 @@ RuntimeError: broken setUp method
 
         self.assertTrue(results._is_parsed)
 
-    def test_prepare_input_args(self):
-        some_mock = mock.MagicMock()
-
-        @subunit_v2.prepare_input_args
-        def some_a(self_, test_id, test_status, timestamp, test_tags,
-                   file_name, file_bytes, worker, mime_type):
-            some_mock(test_id, test_tags)
-
-        some_a("", "setUpClass (some_test[tag1,tag2])")
-        some_mock.assert_called_once_with(
-            "some_test[tag1,tag2]", ["tag1", "tag2"])
-
-        some_mock.reset_mock()
-        some_a("", "tearDown (some_test[tag1,tag2])")
-        some_mock.assert_called_once_with(
-            "some_test[tag1,tag2]", ["tag1", "tag2"])
-
     def test_no_status_called(self):
         self.assertEqual({"tests_count": 0, "tests_duration": "%.3f" % 0,
                           "failures": 0, "skipped": 0, "success": 0,
@@ -144,3 +126,10 @@ RuntimeError: broken setUp method
         self.assertEqual("skip", tests[test_id]["status"])
         self.assertEqual("Some details why this test skipped",
                          tests[test_id]["reason"])
+
+
+class TestIDTestCase(test.TestCase):
+    def test_id_processing(self):
+        value = subunit_v2.TestID("setUpClass (some_test[tag1,tag2])")
+        self.assertEqual("some_test", value.name)
+        self.assertEqual(["tag1", "tag2"], value.tags)
