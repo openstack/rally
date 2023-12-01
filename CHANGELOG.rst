@@ -26,6 +26,12 @@ Fixed
 * Parsing subunit v2 stream (rally-verify component) when the result is
   wrapped by ``memoryview`` python object.
 
+Changed
+~~~~~~~
+
+* `xrally/xrally docker image <https://hub.docker.com/r/xrally/xrally>`_ switched
+   to use python3.11-slim as a base image instead of python3.9-slim.
+
 Added
 ~~~~~
 

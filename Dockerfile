@@ -1,6 +1,6 @@
-FROM python:3.9-slim
+FROM python:3.11-slim
 
-RUN apt-get update && apt-get install --yes sudo vim git-core && \
+RUN apt-get update && apt-get install --yes sudo vim git-core build-essential && \
     apt clean && \
     python3 -m pip --no-cache-dir install --upgrade pip setuptools && \
     useradd -u 65500 -m rally && \
