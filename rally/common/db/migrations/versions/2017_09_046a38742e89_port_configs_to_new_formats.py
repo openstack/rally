@@ -48,10 +48,10 @@ def upgrade():
     connection = op.get_bind()
 
     for workload in connection.execute(workload_helper.select()):
-        runner = json.loads(workload["runner"])
+        runner = json.loads(workload.runner)
         runner.pop("type")
         values = {"runner": json.dumps(runner)}
-        hooks = workload["hooks"]
+        hooks = workload.hooks
         if hooks:
             values["hooks"] = []
             for hook in json.loads(hooks):

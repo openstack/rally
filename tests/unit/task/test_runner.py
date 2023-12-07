@@ -129,6 +129,10 @@ class ScenarioRunnerHelpersTestCase(test.TestCase):
                          ["Exception", "Something went wrong"])
 
 
+def noop_worker_process(i):
+    pass
+
+
 @ddt.ddt
 class ScenarioRunnerTestCase(test.TestCase):
 
@@ -170,13 +174,10 @@ class ScenarioRunnerTestCase(test.TestCase):
 
         processes_to_start = 10
 
-        def worker_process(i):
-            pass
-
         counter = ((i,) for i in range(100))
 
         process_pool = runner_obj._create_process_pool(
-            processes_to_start, worker_process, counter)
+            processes_to_start, noop_worker_process, counter)
         self.assertEqual(processes_to_start, len(process_pool))
         for process in process_pool:
             self.assertIsInstance(process, multiprocessing.Process)

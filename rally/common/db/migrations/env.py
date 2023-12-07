@@ -36,7 +36,7 @@ def run_migrations_online():
     and associate a connection with the context.
     """
     engine = api.get_engine()
-    with engine.connect() as connection:
+    with engine.begin() as connection:
         context.configure(connection=connection,
                           render_as_batch=True,
                           target_metadata=target_metadata)

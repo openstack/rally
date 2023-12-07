@@ -19,14 +19,13 @@ import datetime as dt
 import uuid
 
 import sqlalchemy as sa
-import sqlalchemy.ext.declarative
 import sqlalchemy.orm   # noqa (used as sa.orm)
 
 from rally.common.db import sa_types
 from rally import consts
 
 
-BASE = sa.ext.declarative.declarative_base()
+BASE = sa.orm.declarative_base()
 
 
 def UUID():

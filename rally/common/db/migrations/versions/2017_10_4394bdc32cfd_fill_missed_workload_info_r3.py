@@ -71,8 +71,9 @@ def upgrade():
 
     for workload in connection.execute(workload_helper.select()):
         full_data = []
-        for wdata in connection.execute(workload_data_helper.select(
-                workload_data_helper.c.workload_uuid == workload.uuid)):
+        for wdata in connection.execute(
+                workload_data_helper.select().where(
+                    workload_data_helper.c.workload_uuid == workload.uuid)):
             chunk_data = wdata.chunk_data["raw"]
 
             require_updating = False

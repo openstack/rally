@@ -265,7 +265,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         runner_obj = rps.RPSScenarioRunner(self.task, config)
 
         runner_obj._run_scenario(fakes.FakeScenario, "do_it",
-                                 fakes.FakeContext({}).context, {})
+                                 {"task": {"uuid": 1}}, {})
 
         self.assertEqual(config["times"], len(runner_obj.result_queue))
 
@@ -279,7 +279,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         runner_obj = rps.RPSScenarioRunner(self.task, config)
 
         runner_obj._run_scenario(fakes.FakeScenario, "something_went_wrong",
-                                 fakes.FakeContext({}).context, {})
+                                 {"task": {"uuid": 1}}, {})
         self.assertEqual(config["times"], len(runner_obj.result_queue))
         for result_batch in runner_obj.result_queue:
             for result in result_batch:

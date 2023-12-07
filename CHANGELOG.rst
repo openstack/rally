@@ -20,6 +20,11 @@ Changelog
 unreleased
 ----------
 
+Changed
+~~~~~~~
+
+* Add support for SQLAlchemy 2.0
+
 Fixed
 ~~~~~
 

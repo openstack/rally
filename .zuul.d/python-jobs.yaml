@@ -91,6 +91,18 @@
       tox_env: py311
 
 - job:
+    name: rally-tox-py311-sqlalchemy14
+    parent: rally-tox-py311
+    vars:
+      tox_env: py311-sa14
+
+- job:
+    name: rally-tox-py311-sqlalchemy2
+    parent: rally-tox-py311
+    vars:
+      tox_env: py311-sa2
+
+- job:
     name: rally-tox-samples
     parent: rally-tox-base
     description: |

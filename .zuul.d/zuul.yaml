@@ -12,7 +12,8 @@
         - rally-tox-py38
         - rally-tox-py39
         - rally-tox-py310
-        - rally-tox-py311
+        - rally-tox-py311-sqlalchemy14
+        - rally-tox-py311-sqlalchemy2
         - rally-tox-samples
         - rally-tox-functional
         - rally-tox-self
@@ -29,7 +30,8 @@
         - rally-tox-py38
         - rally-tox-py39
         - rally-tox-py310
-        - rally-tox-py311
+        - rally-tox-py311-sqlalchemy14
+        - rally-tox-py311-sqlalchemy2
         - rally-tox-functional
         - rally-tox-self
         - rally-install-ubuntu-focal

@@ -131,6 +131,19 @@ class CheckPRSValidator(validation.Validator):
                 return self.fail(msg)
 
 
+def _runs_per_second(rps_cfg, start_timer, number_of_processes):
+    """At the given second return desired rps."""
+
+    if not isinstance(rps_cfg, dict):
+        return float(rps_cfg) / number_of_processes
+    stage_order = (time.time() - start_timer) / rps_cfg.get(
+        "duration", 1) - 1
+    rps = (float(rps_cfg["start"] + rps_cfg["step"] * stage_order)
+           / number_of_processes)
+
+    return min(rps, float(rps_cfg["end"]))
+
+
 @validation.add("check_rps")
 @runner.configure(name="rps")
 class RPSScenarioRunner(runner.ScenarioRunner):
@@ -232,18 +245,6 @@ class RPSScenarioRunner(runner.ScenarioRunner):
         max_cpu_used = min(cpu_count,
                            self.config.get("max_cpu_count", cpu_count))
 
-        def runs_per_second(rps_cfg, start_timer, number_of_processes):
-            """At the given second return desired rps."""
-
-            if not isinstance(rps_cfg, dict):
-                return float(rps_cfg) / number_of_processes
-            stage_order = (time.time() - start_timer) / rps_cfg.get(
-                "duration", 1) - 1
-            rps = (float(rps_cfg["start"] + rps_cfg["step"] * stage_order)
-                   / number_of_processes)
-
-            return min(rps, float(rps_cfg["end"]))
-
         processes_to_start = min(max_cpu_used, times,
                                  self.config.get("max_concurrency", times))
         times_per_worker, times_overhead = divmod(times, processes_to_start)
@@ -282,7 +283,7 @@ class RPSScenarioRunner(runner.ScenarioRunner):
                     times_per_worker + (times_overhead and 1),
                     concurrency_per_worker + (concurrency_overhead and 1),
                     context, cls, method_name, args, event_queue,
-                    self.aborted, runs_per_second, self.config["rps"],
+                    self.aborted, _runs_per_second, self.config["rps"],
                     processes_to_start
                 )
                 if times_overhead:

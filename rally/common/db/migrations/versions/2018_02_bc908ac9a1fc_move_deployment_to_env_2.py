@@ -131,10 +131,10 @@ def upgrade():
         # 7287df262dbc did not fail. nothing to do
         return
 
-    envs = [env["uuid"] for env in connection.execute(envs_helper.select())]
+    envs = [env.uuid for env in connection.execute(envs_helper.select())]
 
     for deployment in connection.execute(deployments_helper.select()):
-        if deployment["uuid"] in envs:
+        if deployment.uuid in envs:
             # this deployment had been migrated by 7287df262dbc. Nothing to do
             continue
         status = "FAILED TO CREATE"

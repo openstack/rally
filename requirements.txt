@@ -19,5 +19,5 @@ pyOpenSSL                                              # Apache License, Version
 PyYAML                                                 # MIT
 python-subunit                                         # Apache-2.0 or BSD
 requests!=2.20.0,!=2.24.0                              # Apache License, Version 2.0
-SQLAlchemy!=1.1.5,!=1.1.6,!=1.1.7,!=1.1.8,<2.0.0       # MIT
+SQLAlchemy>=1.4.0                                      # MIT
 virtualenv!=16.3.0                                     # MIT

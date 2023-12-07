@@ -105,8 +105,8 @@ class BaseWalkMigrationMixin(object):
         # init. So we cleanup the DB.
         db.schema.schema_cleanup()
         up_and_down_versions = self._up_and_down_versions()
-        for ver_up, ver_down in up_and_down_versions:
-            self._migrate_up(engine, ver_up, with_data=True)
+        for ver_up, prev_version in up_and_down_versions:
+            self._migrate_up(engine, ver_up)
 
     def _get_version_from_db(self, engine):
         """Return latest version for each type of migrate repo from db."""
@@ -126,7 +126,7 @@ class BaseWalkMigrationMixin(object):
 
         self._alembic_command(cmd, engine, self.ALEMBIC_CONFIG, version)
 
-    def _migrate_up(self, engine, version, with_data=False):
+    def _migrate_up(self, engine, version):
         """Migrate up to a new version of the db.
 
         We allow for data insertion and post checks at every
@@ -137,18 +137,15 @@ class BaseWalkMigrationMixin(object):
         # where a failed data migration happens otherwise
         check_version = version
         try:
-            if with_data:
-                data = None
-                pre_upgrade = getattr(
-                    self, "_pre_upgrade_%s" % check_version, None)
-                if pre_upgrade:
-                    data = pre_upgrade(engine)
+            pre_upgrade = getattr(
+                self, "_pre_upgrade_%s" % check_version, None)
+            if pre_upgrade:
+                pre_upgrade(engine)
             self._migrate(engine, version, "upgrade")
             self.assertEqual(version, self._get_version_from_db(engine))
-            if with_data:
-                check = getattr(self, "_check_%s" % check_version, None)
-                if check:
-                    check(engine, data)
+            check = getattr(self, "_check_%s" % check_version, None)
+            if check:
+                check(engine)
         except Exception:
             LOG.error("Failed to migrate to version %(ver)s on engine %(eng)s"
                       % {"ver": version, "eng": engine})

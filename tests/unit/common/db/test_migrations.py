@@ -22,6 +22,7 @@ import iso8601
 import json
 import pickle
 import pprint
+import typing as t
 from unittest import mock
 import uuid
 
@@ -277,7 +278,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
     def test_walk_versions(self):
         self.walk_versions(self.engine)
 
-    def _check_3177d36ea270(self, engine, data):
+    def _check_3177d36ea270(self, engine: sa.engine.Engine):
         self.assertEqual(
             "3177d36ea270", db.schema.schema_revision(engine=engine))
         self.assertColumnExists(engine, "deployments", "credentials")
@@ -348,7 +349,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
         deployment_table = db_utils.get_table(engine, "deployments")
 
         deployment_status = consts.DeployStatus.DEPLOY_FINISHED
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             for deployment in self._54e844ebfbc3_deployments:
                 conf = json.dumps(self._54e844ebfbc3_deployments[deployment])
                 conn.execute(
@@ -425,7 +426,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
 
     }
 
-    def _check_54e844ebfbc3(self, engine, data):
+    def _check_54e844ebfbc3(self, engine: sa.engine.Engine):
         self.assertEqual("54e844ebfbc3",
                          db.schema.schema_revision(engine=engine))
 
@@ -433,9 +434,11 @@ class MigrationWalkTestCase(rtest.DBTestCase,
 
         deployment_table = db_utils.get_table(engine, "deployments")
 
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             deployments_found = conn.execute(
                 deployment_table.select()).fetchall()
+            self.assertEqual(len(self._54e844ebfbc3_deployments),
+                             len(deployments_found))
             for deployment in deployments_found:
                 # check deployment
                 self.assertIn(deployment.uuid, original_deployments)
@@ -493,7 +496,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
         task_table = db_utils.get_table(engine, "tasks")
 
         self._08e1515a576c_deployment_uuid = "08e1515a576c-uuuu-uuuu-iiii-dddd"
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             conn.execute(
                 deployment_table.insert(),
                 [{"uuid": self._08e1515a576c_deployment_uuid,
@@ -515,7 +518,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                       "deployment_uuid": self._08e1515a576c_deployment_uuid
                       }])
 
-    def _check_08e1515a576c(self, engine, data):
+    def _check_08e1515a576c(self, engine: sa.engine.Engine):
         self.assertEqual("08e1515a576c",
                          db.schema.schema_revision(engine=engine))
 
@@ -524,8 +527,10 @@ class MigrationWalkTestCase(rtest.DBTestCase,
         deployment_table = db_utils.get_table(engine, "deployments")
         task_table = db_utils.get_table(engine, "tasks")
 
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             tasks_found = conn.execute(task_table.select()).fetchall()
+            self.assertEqual(len(self._08e1515a576c_logs),
+                             len(tasks_found))
             for task in tasks_found:
                 actual_log = json.loads(task.verification_log)
                 self.assertIsInstance(actual_log, dict)
@@ -549,7 +554,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
         self._e654a0648db0_task_uuid = str(uuid.uuid4())
         self._e654a0648db0_deployment_uuid = str(uuid.uuid4())
 
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             conn.execute(
                 deployment_table.insert(),
                 [{
@@ -605,7 +610,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 ]
             )
 
-    def _check_e654a0648db0(self, engine, data):
+    def _check_e654a0648db0(self, engine: sa.engine.Engine):
         self.assertEqual(
             "e654a0648db0", db.schema.schema_revision(engine=engine))
 
@@ -616,7 +621,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
         tag_table = db_utils.get_table(engine, "tags")
         deployment_table = db_utils.get_table(engine, "deployments")
 
-        with engine.connect() as conn:
+        with engine.begin() as conn:
 
             # Check task
 
@@ -789,7 +794,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
         deployment_table = db_utils.get_table(engine, "deployments")
         task_table = db_utils.get_table(engine, "tasks")
         task_result_table = db_utils.get_table(engine, "task_results")
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             # create deployment
             conf = {
                 "admin": {"username": "admin",
@@ -830,14 +835,14 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 }]
             )
 
-    def _check_6ad4f426f005(self, engine, data):
+    def _check_6ad4f426f005(self, engine: sa.engine.Engine):
         self.assertEqual("6ad4f426f005",
                          db.schema.schema_revision(engine=engine))
 
         deployment_table = db_utils.get_table(engine, "deployments")
         task_table = db_utils.get_table(engine, "tasks")
         task_result_table = db_utils.get_table(engine, "task_results")
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             task_results = conn.execute(task_result_table.select()).fetchall()
             self.assertEqual(1, len(task_results))
             task_result = task_results[0]
@@ -899,7 +904,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
         deployment_table = db_utils.get_table(engine, "deployments")
 
         deployment_status = consts.DeployStatus.DEPLOY_FINISHED
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             for deployment in self._32fada9b2fde_deployments:
                 conf = json.dumps(
                     self._32fada9b2fde_deployments[deployment])
@@ -912,7 +917,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                       "users": b(json.dumps([]))
                       }])
 
-    def _check_32fada9b2fde(self, engine, data):
+    def _check_32fada9b2fde(self, engine: sa.engine.Engine):
         self.assertEqual("32fada9b2fde",
                          db.schema.schema_revision(engine=engine))
 
@@ -920,9 +925,11 @@ class MigrationWalkTestCase(rtest.DBTestCase,
 
         deployment_table = db_utils.get_table(engine, "deployments")
 
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             deployments_found = conn.execute(
                 deployment_table.select()).fetchall()
+            self.assertEqual(len(self._32fada9b2fde_deployments),
+                             len(deployments_found))
             for deployment in deployments_found:
                 # check deployment
                 self.assertIn(deployment.uuid, original_deployments)
@@ -1003,7 +1010,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
 
         deployment_status = consts.DeployStatus.DEPLOY_FINISHED
         vstatus = consts.TaskStatus.FINISHED
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             conn.execute(
                 deployment_table.insert(),
                 [{"uuid": self._484cd9413e66_deployment_uuid,
@@ -1016,7 +1023,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
 
             for i in range(len(self._484cd9413e66_verifications)):
                 verification = self._484cd9413e66_verifications[i]
-                vuuid = "uuid-%s" % i
+                vuuid = f"484cd9413e66-uuid-{i}"
                 conn.execute(
                     verifications_table.insert(),
                     [{"uuid": vuuid,
@@ -1039,15 +1046,18 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                       "data": json.dumps(data)
                       }])
 
-    def _check_484cd9413e66(self, engine, data):
+    def _check_484cd9413e66(self, engine: sa.engine.Engine):
         self.assertEqual("484cd9413e66",
                          db.schema.schema_revision(engine=engine))
 
         verifications_table = db_utils.get_table(engine, "verifications")
+        deployment_table = db_utils.get_table(engine, "deployments")
 
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             verifications = conn.execute(
                 verifications_table.select()).fetchall()
+            self.assertEqual(len(self._484cd9413e66_verifications),
+                             len(verifications))
             for i in range(len(verifications)):
                 verification_orig = self._484cd9413e66_verifications[i]
                 verification = verifications[i]
@@ -1090,13 +1100,11 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 self.assertEqual(
                     verification_orig["total"].get("expected_failures", 0),
                     verification.expected_failures)
-
                 conn.execute(
                     verifications_table.delete().where(
-                        verifications_table.c.uuid == verification.uuid)
+                        verifications_table.c.uuid == verification.uuid
+                    )
                 )
-
-            deployment_table = db_utils.get_table(engine, "deployments")
             conn.execute(
                 deployment_table.delete().where(
                     deployment_table.c.uuid
@@ -1142,7 +1150,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
         verifications_table = db_utils.get_table(engine, "verifications")
 
         deployment_status = consts.DeployStatus.DEPLOY_FINISHED
-        with engine.connect() as conn:
+        with engine.begin() as conn:
+
             conn.execute(
                 deployment_table.insert(),
                 [{"uuid": self._37fdbb373e8d_deployment_uuid,
@@ -1173,12 +1182,14 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                       "tests": json.dumps(tests)
                       }])
 
-    def _check_37fdbb373e8d(self, engine, data):
+    def _check_37fdbb373e8d(self, engine: sa.engine.Engine):
         self.assertEqual("37fdbb373e8d",
                          db.schema.schema_revision(engine=engine))
 
         verifications_table = db_utils.get_table(engine, "verifications")
-        with engine.connect() as conn:
+        deployment_table = db_utils.get_table(engine, "deployments")
+
+        with engine.begin() as conn:
             verifications = conn.execute(
                 verifications_table.select()).fetchall()
             self.assertEqual(len(verifications),
@@ -1199,7 +1210,6 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                         verifications_table.c.uuid == v.uuid)
                 )
 
-            deployment_table = db_utils.get_table(engine, "deployments")
             conn.execute(
                 deployment_table.delete().where(
                     deployment_table.c.uuid
@@ -1226,29 +1236,34 @@ class MigrationWalkTestCase(rtest.DBTestCase,
         ]
 
         tags_table = db_utils.get_table(engine, "tags")
-        with engine.connect() as conn:
-            for t in self._a6f364988fc2_tags:
+        with engine.begin() as conn:
+            for tag in self._a6f364988fc2_tags:
                 conn.execute(
                     tags_table.insert(),
                     [{
-                        "uuid": t["uuid"],
-                        "enum_tag_types": t["type"],
-                        "type": t["type"],
-                        "tag": t["tag"]
+                        "uuid": tag["uuid"],
+                        "enum_tag_types": tag["type"],
+                        "type": tag["type"],
+                        "tag": tag["tag"]
                     }])
 
-    def _check_a6f364988fc2(self, engine, data):
+    def _check_a6f364988fc2(self, engine: sa.engine.Engine):
         self.assertEqual("a6f364988fc2",
                          db.schema.schema_revision(engine=engine))
 
         tags_table = db_utils.get_table(engine, "tags")
-        with engine.connect() as conn:
-            tags = conn.execute(tags_table.select()).fetchall()
+        with engine.begin() as conn:
+            tags: t.Sequence[sa.Row] = (
+                conn.execute(tags_table.select()).fetchall()
+            )
             self.assertEqual(len(tags), len(self._a6f364988fc2_tags))
 
             for i in range(len(tags)):
+                actual_tag = tags[i]._mapping
                 for k in ("uuid", "type", "tag"):
-                    self.assertEqual(self._a6f364988fc2_tags[i][k], tags[i][k])
+                    self.assertEqual(
+                        self._a6f364988fc2_tags[i][k], actual_tag[k]
+                    )
 
                 conn.execute(
                     tags_table.delete().where(
@@ -1276,7 +1291,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
         verifications_table = db_utils.get_table(engine, "verifications")
 
         deployment_status = consts.DeployStatus.DEPLOY_FINISHED
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             conn.execute(
                 deployment_table.insert(),
                 [{"uuid": self._f33f4610dcda_deployment_uuid,
@@ -1307,12 +1322,12 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                       "unexpected_success": v["unexpected_success"]
                       }])
 
-    def _check_f33f4610dcda(self, engine, data):
+    def _check_f33f4610dcda(self, engine: sa.engine.Engine):
         self.assertEqual("f33f4610dcda",
                          db.schema.schema_revision(engine=engine))
 
         verifications_table = db_utils.get_table(engine, "verifications")
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             verifications = conn.execute(
                 verifications_table.select()).fetchall()
             self.assertEqual(len(verifications),
@@ -1361,7 +1376,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 "status": "verifying"},
         }
         deployment_table = db_utils.get_table(engine, "deployments")
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             conn.execute(
                 deployment_table.insert(),
                 [{"uuid": self._4ef544102ba7_deployment_uuid,
@@ -1374,7 +1389,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                   }])
 
         task_table = db_utils.get_table(engine, "tasks")
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             for task in self.tasks:
                 conn.execute(
                     task_table.insert(),
@@ -1388,7 +1403,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     }])
 
         subtask_table = db_utils.get_table(engine, "subtasks")
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             for task in self.tasks:
                 conn.execute(
                     subtask_table.insert(),
@@ -1401,7 +1416,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                         "uuid": "subtask_" + self.tasks[task]["uuid"]
                     }])
 
-    def _check_4ef544102ba7(self, engine, data):
+    def _check_4ef544102ba7(self, engine: sa.engine.Engine):
         self.assertEqual("4ef544102ba7",
                          db.schema.schema_revision(engine=engine))
 
@@ -1409,7 +1424,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
 
         task_table = db_utils.get_table(engine, "tasks")
         subtask_table = db_utils.get_table(engine, "subtasks")
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             subtasks_found = conn.execute(
                 subtask_table.select()).fetchall()
             for subtask in subtasks_found:
@@ -1418,13 +1433,13 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                         subtask_table.c.id == subtask.id)
                 )
 
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             tasks_found = conn.execute(
                 task_table.select()).fetchall()
             self.assertEqual(3, len(tasks_found))
             for task in tasks_found:
-                self.assertIn("uuid", task)
-                self.assertIn("status", task)
+                self.assertIn("uuid", task._mapping)
+                self.assertIn("status", task._mapping)
 
                 if task.status != org_tasks[task.uuid]["status"]:
                     if task.uuid.startswith("should-not-be-changed"):
@@ -1466,7 +1481,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
         deployment_table = db_utils.get_table(engine, "deployments")
         deployment_status = consts.DeployStatus.DEPLOY_FINISHED
 
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             for deployment, creds in self._92aaaa2a6bb3_deployments:
                 conn.execute(
                     deployment_table.insert(),
@@ -1476,7 +1491,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                       "credentials": pickle.dumps(creds),
                       }])
 
-    def _check_92aaaa2a6bb3(self, engine, data):
+    def _check_92aaaa2a6bb3(self, engine: sa.engine.Engine):
         expected_credentials = [
             ("1-cred", {"openstack": [{"foo": "bar"}]}),
             ("2-cred", {"openstack": [{"foo": "bar1"},
@@ -1487,7 +1502,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
 
         deployment_table = db_utils.get_table(engine, "deployments")
 
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             for deployment, expected_creds in expected_credentials:
 
                 dep_obj = conn.execute(
@@ -1527,7 +1542,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
             ]
         }
 
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             conn.execute(
                 deployment_table.insert(),
                 [{
@@ -1590,13 +1605,13 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                         }]
                     )
 
-    def _check_35fe16d4ab1c(self, engine, data):
+    def _check_35fe16d4ab1c(self, engine: sa.engine.Engine):
         deployment_table = db_utils.get_table(engine, "deployments")
         task_table = db_utils.get_table(engine, "tasks")
         subtask_table = db_utils.get_table(engine, "subtasks")
         workload_table = db_utils.get_table(engine, "workloads")
 
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             task_id = self._35fe16d4ab1c_task_uuid
             task_obj = conn.execute(
                 task_table.select().where(
@@ -1648,7 +1663,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                                 "wdata": True},
             str(uuid.uuid4()): {"preprocessed": -1, "expected": None}}
 
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             conn.execute(
                 deployment_table.insert(),
                 [{
@@ -1732,7 +1747,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                         }]
                     )
 
-    def _check_7948b83229f6(self, engine, data):
+    def _check_7948b83229f6(self, engine: sa.engine.Engine):
         deployment_table = db_utils.get_table(engine, "deployments")
         task_table = db_utils.get_table(engine, "tasks")
         subtask_table = db_utils.get_table(engine, "subtasks")
@@ -1741,10 +1756,15 @@ class MigrationWalkTestCase(rtest.DBTestCase,
 
         subtask_uuid = None
 
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             task_uuid = self._7948b83229f6_task_uuid
-            for workload in conn.execute(workload_table.select().where(
-                    workload_table.c.task_uuid == task_uuid)).fetchall():
+
+            workloads_found = conn.execute(workload_table.select().where(
+                workload_table.c.task_uuid == task_uuid)).fetchall()
+            self.assertEqual(len(self._7948b83229f6_workloads),
+                             len(workloads_found))
+
+            for workload in workloads_found:
                 if subtask_uuid is None:
                     subtask_uuid = workload.subtask_uuid
                 if workload.uuid not in self._7948b83229f6_workloads:
@@ -1802,7 +1822,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
             }
         ]
 
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             conn.execute(
                 deployment_table.insert(),
                 [{
@@ -1867,7 +1887,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     }]
                 )
 
-    def _check_046a38742e89(self, engine, data):
+    def _check_046a38742e89(self, engine: sa.engine.Engine):
         deployment_table = db_utils.get_table(engine, "deployments")
         task_table = db_utils.get_table(engine, "tasks")
         subtask_table = db_utils.get_table(engine, "subtasks")
@@ -1875,10 +1895,14 @@ class MigrationWalkTestCase(rtest.DBTestCase,
 
         subtask_uuid = None
 
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             task_uuid = self._046a38742e89_task_uuid
-            for workload in conn.execute(workload_table.select().where(
-                    workload_table.c.task_uuid == task_uuid)).fetchall():
+
+            workloads_found = conn.execute(workload_table.select().where(
+                workload_table.c.task_uuid == task_uuid)).fetchall()
+            self.assertEqual(2, len(workloads_found))
+
+            for workload in workloads_found:
                 if subtask_uuid is None:
                     subtask_uuid = workload.subtask_uuid
 
@@ -2057,7 +2081,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
              }}}
         ]
 
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             conn.execute(
                 deployment_table.insert(),
                 [{
@@ -2138,7 +2162,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     }]
                 )
 
-    def _check_4394bdc32cfd(self, engine, data):
+    def _check_4394bdc32cfd(self, engine: sa.engine.Engine):
         deployment_table = db_utils.get_table(engine, "deployments")
         task_table = db_utils.get_table(engine, "tasks")
         subtask_table = db_utils.get_table(engine, "subtasks")
@@ -2147,10 +2171,14 @@ class MigrationWalkTestCase(rtest.DBTestCase,
 
         task_uuid = None
 
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             subtask_id = self._4394bdc32cfd_subtask
-            for workload in conn.execute(workload_table.select().where(
-                    workload_table.c.subtask_uuid == subtask_id)).fetchall():
+
+            workloads_found = conn.execute(workload_table.select().where(
+                workload_table.c.subtask_uuid == subtask_id)).fetchall()
+            self.assertEqual(2, len(workloads_found))
+
+            for workload in workloads_found:
                 if task_uuid is None:
                     task_uuid = workload.task_uuid
                 original = [w for w in self._4394bdc32cfd_workloads
@@ -2232,7 +2260,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
             }
         }
 
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             conn.execute(
                 deployment_table.insert(),
                 [{
@@ -2297,25 +2325,25 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 } for w_uuid, w in self._dc46687661df_workloads.items()]
             )
 
-    def _check_dc46687661df(self, engine, data):
+    def _check_dc46687661df(self, engine: sa.engine.Engine):
         deployment_table = db_utils.get_table(engine, "deployments")
         task_table = db_utils.get_table(engine, "tasks")
         subtask_table = db_utils.get_table(engine, "subtasks")
         workload_table = db_utils.get_table(engine, "workloads")
 
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             task_uuid = self._dc46687661df_task_uuid
             for w_uuid, w in self._dc46687661df_workloads.items():
                 workload = conn.execute(workload_table.select().where(
                     workload_table.c.uuid == w_uuid)).first()
 
-                self.assertNotIn("context", workload)
-                self.assertNotIn("context_execution", workload)
+                self.assertNotIn("context", workload._mapping)
+                self.assertNotIn("context_execution", workload._mapping)
 
                 self.assertEqual(w["context"],
-                                 json.loads(workload["contexts"]))
+                                 json.loads(workload.contexts))
                 if w["start_time"] is None:
-                    self.assertEqual("[]", workload["contexts_results"])
+                    self.assertEqual("[]", workload.contexts_results)
                 elif w.get("with_fake_context", False):
                     self.assertEqual([{
                         "plugin_cfg": {"description": mock.ANY},
@@ -2328,7 +2356,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                                     "finished_at": 1483221609.9,
                                     "atomic_actions": [],
                                     "error": None}}],
-                        json.loads(workload["contexts_results"]))
+                        json.loads(workload.contexts_results))
                 else:
                     self.assertEqual([{
                         "plugin_name": "AllExecutedContexts",
@@ -2348,7 +2376,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                                     "finished_at": 1483221609.9,
                                     "atomic_actions": [],
                                     "error": None}}],
-                        json.loads(workload["contexts_results"]))
+                        json.loads(workload.contexts_results))
 
                 conn.execute(
                     workload_table.delete().where(
@@ -2357,15 +2385,15 @@ class MigrationWalkTestCase(rtest.DBTestCase,
             subtask = conn.execute(subtask_table.select().where(
                 subtask_table.c.task_uuid == task_uuid)).first()
 
-            self.assertNotIn("context", subtask)
-            self.assertNotIn("context_execution", subtask)
+            self.assertNotIn("context", subtask._mapping)
+            self.assertNotIn("context_execution", subtask._mapping)
 
-            self.assertEqual("{}", subtask["contexts"])
-            self.assertEqual("[]", subtask["contexts_results"])
+            self.assertEqual("{}", subtask.contexts)
+            self.assertEqual("[]", subtask.contexts_results)
 
             conn.execute(
                 subtask_table.delete().where(
-                    subtask_table.c.uuid == subtask["uuid"]))
+                    subtask_table.c.uuid == subtask.uuid))
 
             conn.execute(
                 task_table.delete().where(task_table.c.uuid == task_uuid))
@@ -2417,7 +2445,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
             # some custom unknown thing
             (str(uuid.uuid4()), {"some_special_deployment": "foo"})
         ]
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             conn.execute(
                 deployment_table.insert(),
                 [{
@@ -2431,10 +2459,10 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 } for d_uuid, d_cfg in self._dc0fe6de6786_deployments]
             )
 
-    def _check_dc0fe6de6786(self, engine, data):
+    def _check_dc0fe6de6786(self, engine: sa.engine.Engine):
         deployment_table = db_utils.get_table(engine, "deployments")
 
-        with engine.connect() as conn:
+        with engine.begin() as conn:
 
             for d_uuid, d_cfg in self._dc0fe6de6786_deployments:
                 deployment = conn.execute(deployment_table.select().where(
@@ -2490,7 +2518,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
         self._bc908ac9a1fc_verifier_uuid = str(uuid.uuid4())
         self._bc908ac9a1fc_verification_uuid = str(uuid.uuid4())
 
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             conn.execute(
                 deployment_table.insert(),
                 [{
@@ -2540,21 +2568,21 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 }]
             )
 
-    def _check_bc908ac9a1fc(self, engine, data):
+    def _check_bc908ac9a1fc(self, engine: sa.engine.Engine):
         env_table = db_utils.get_table(engine, "envs")
         platform_table = db_utils.get_table(engine, "platforms")
         task_table = db_utils.get_table(engine, "tasks")
         verifier_table = db_utils.get_table(engine, "verifiers")
         verification_table = db_utils.get_table(engine, "verifications")
 
-        with engine.connect() as conn:
+        with engine.begin() as conn:
 
             task = conn.execute(task_table.select().where(
                 task_table.c.uuid == self._bc908ac9a1fc_task_uuid)).first()
-            self.assertNotIn("deployment_uuid", task)
-            self.assertIn("env_uuid", task)
+            self.assertNotIn("deployment_uuid", task._mapping)
+            self.assertIn("env_uuid", task._mapping)
             self.assertEqual(self._bc908ac9a1fc_deployments[0][0],
-                             task["env_uuid"])
+                             task.env_uuid)
             conn.execute(
                 task_table.delete().where(
                     task_table.c.uuid == self._bc908ac9a1fc_task_uuid))
@@ -2562,10 +2590,10 @@ class MigrationWalkTestCase(rtest.DBTestCase,
             v_id = self._bc908ac9a1fc_verification_uuid
             verification = conn.execute(verification_table.select().where(
                 verification_table.c.uuid == v_id)).first()
-            self.assertNotIn("deployment_uuid", verification)
-            self.assertIn("env_uuid", verification)
+            self.assertNotIn("deployment_uuid", verification._mapping)
+            self.assertIn("env_uuid", verification._mapping)
             self.assertEqual(self._bc908ac9a1fc_deployments[0][0],
-                             verification["env_uuid"])
+                             verification.env_uuid)
             conn.execute(
                 verification_table.delete().where(
                     verification_table.c.uuid == v_id))
@@ -2578,7 +2606,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     env_table.c.uuid == d_uuid)).first()
                 if d_cfg.get("creds", {}):
                     # openstack deployment
-                    env_spec = json.loads(env["spec"])
+                    env_spec = json.loads(env.spec)
                     self.assertEqual({"existing@openstack"},
                                      set(env_spec.keys()))
                     self.assertEqual(
@@ -2614,10 +2642,10 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 else:
                     if "creds" in d_cfg:
                         # empty deployment
-                        self.assertEqual({}, json.loads(env["spec"]))
+                        self.assertEqual({}, json.loads(env.spec))
                     else:
                         # something
-                        self.assertEqual(d_cfg, json.loads(env["spec"]))
+                        self.assertEqual(d_cfg, json.loads(env.spec))
 
                     platforms = conn.execute(platform_table.select().where(
                         platform_table.c.env_uuid == d_uuid)).fetchall()

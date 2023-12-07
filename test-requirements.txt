@@ -2,7 +2,7 @@
 # of appearance. Changing the order has an impact on the overall integration
 # process, which may cause wedges in the gate later.
 
-hacking>=3.0                                           # Apache Software License
+hacking>=4.0                                           # Apache Software License
 
 fixtures                                               # Apache Software License/BSD License
 pytest                                                 # MIT
@@ -18,5 +18,5 @@ testtools                                              # MIT
 
 testresources                                          # UNKNOWN
 
-docutils                                               # public domain, Python, 2-Clause BSD, GPL 3 (see COPYING.txt)
+docutils                                               # BSD License/GNU General Public License (GPL)/Python Software Foundation License
 Pygments                                               # BSD-2-Clause

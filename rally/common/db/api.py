@@ -43,11 +43,12 @@ these objects be simple dictionaries.
 import datetime as dt
 import functools
 import tempfile
+import threading
 import time
 
 from oslo_db import exception as db_exc
 from oslo_db import options as db_options
-from oslo_db.sqlalchemy import session as db_session
+from oslo_db.sqlalchemy import enginefacade
 import sqlalchemy as sa
 import sqlalchemy.orm   # noqa
 
@@ -65,36 +66,32 @@ db_options.set_defaults(
 
 _FACADE = None
 _SESSION_MAKER = None
+_CONTEXT = None
 
 
-def _create_facade_lazily():
+def _get_facade():
     global _FACADE
 
     if _FACADE is None:
-        _FACADE = db_session.EngineFacade.from_config(CONF)
+        ctx = enginefacade.transaction_context()
+        ctx.configure(
+            sqlite_fk=False,
+            expire_on_commit=False
+        )
+        _FACADE = ctx.writer
 
     return _FACADE
 
 
 def get_engine():
-    facade = _create_facade_lazily()
-    return facade.get_engine()
-
-
-def get_session():
-    global _SESSION_MAKER
-
-    if not _SESSION_MAKER:
-        _SESSION_MAKER = sa.orm.sessionmaker()
-        _SESSION_MAKER.configure(bind=get_engine())
-
-    return _SESSION_MAKER()
+    return _get_facade().get_engine()
 
 
 def engine_reset():
-    global _FACADE, _SESSION_MAKER
+    global _FACADE, _CONTEXT
+
     _FACADE = None
-    _SESSION_MAKER = None
+    _CONTEXT = None
 
 
 def serialize(data):
@@ -123,20 +120,19 @@ def serialize(data):
     raise ValueError("Failed to serialize %r data type." % type(data).__name__)
 
 
+def _get_context():
+    global _CONTEXT
+    if _CONTEXT is None:
+        _CONTEXT = threading.local()
+    return _CONTEXT
+
+
 def with_session(f):
 
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
-        session = get_session()
-        session.expire_on_commit = False
-        try:
+        with _get_facade().using(_get_context()) as session:
             result = f(session, *args, **kwargs)
-            session.commit()
-        except Exception:
-            session.rollback()
-            raise
-        finally:
-            session.close()
 
         return serialize(result)
 
@@ -202,7 +198,7 @@ def task_get(session, uuid=None, detailed=False):
 @with_session
 def task_get_status(session, uuid=None):
     task = (session.query(models.Task)
-                   .options(sa.orm.load_only("status"))
+                   .options(sa.orm.load_only(models.Task.status))
                    .filter_by(uuid=uuid).first())
     if not task:
         raise exceptions.DBRecordNotFound(
@@ -304,7 +300,7 @@ def task_list(session, status=None, env=None, tags=None, uuids_only=False):
         query = query.filter(models.Task.uuid.in_(uuids))
 
     if uuids_only:
-        query = query.options(sa.orm.load_only("uuid"))
+        query = query.options(sa.orm.load_only(models.Task.uuid))
 
     for task in query.all():
         task = task.as_dict()
@@ -524,7 +520,7 @@ def env_get(session, uuid_or_name):
 def env_get_status(session, uuid):
     resp = (session.query(models.Env)
                    .filter_by(uuid=uuid)
-                   .options(sa.orm.load_only("status"))
+                   .options(sa.orm.load_only(models.Env.status))
                    .first())
     if not resp:
         raise exceptions.DBRecordNotFound(
