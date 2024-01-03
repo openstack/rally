@@ -196,7 +196,7 @@ class CliUtilsTestCase(test.TestCase):
     @ddt.unpack
     def test_pretty_float_formatter(self, obj, args, expected=None):
         formatter = cliutils.pretty_float_formatter(*args)
-        if type(expected) == type and issubclass(expected, Exception):
+        if type(expected) is type and issubclass(expected, Exception):
             self.assertRaises(expected, formatter, obj)
         else:
             self.assertEqual(expected, formatter(obj))

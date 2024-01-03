@@ -147,7 +147,7 @@ class NumberValidator(validation.Validator):
         if self.integer_only:
             # NOTE(boris-42): Force check that passed value is not float, this
             #   is important cause int(float_numb) won't raise exception
-            if type(value) == float:
+            if isinstance(value, float):
                 return self.fail("%(name)s is %(val)s which hasn't int type"
                                  % {"name": self.param_name, "val": value})
             num_func = int

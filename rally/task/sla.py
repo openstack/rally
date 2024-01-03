@@ -178,7 +178,7 @@ class SLA(plugin.Plugin, validation.ValidatablePluginMixin,
         """
 
     def validate_type(self, other):
-        if type(self) != type(other):
+        if type(self) is not type(other):
             raise TypeError(
                 "Error merging SLAs of types %s, %s. Only SLAs of the same "
                 "type could be merged." % (type(self), type(other)))
