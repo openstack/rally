@@ -627,7 +627,7 @@ class LockedDict(dict):
                 obj = dict(obj)
                 for k, v in obj.items():
                     obj[k] = unlock(v)
-            elif type(obj) == tuple:
+            elif isinstance(obj, tuple):
                 obj = tuple([unlock(v) for v in obj])
             return obj
         return copy.deepcopy(unlock(self), memo=memo)

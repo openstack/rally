@@ -170,7 +170,7 @@ class HookExecutorTestCase(test.TestCase):
         self.assertEqual(
             [{
                 "config": self.conf["hooks"][0],
-                "results":[
+                "results": [
                     {
                         "triggered_by": {"event_type": "time", "value": 2},
                         "started_at": fakes.FakeTimer().timestamp(),

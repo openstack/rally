@@ -131,7 +131,7 @@ class ServiceMeta(type):
 
     def __init__(cls, name, bases, namespaces):
         super(ServiceMeta, cls).__init__(name, bases, namespaces)
-        bases = [c for c in cls.__bases__ if type(c) == ServiceMeta]
+        bases = [c for c in cls.__bases__ if isinstance(c, ServiceMeta)]
         if not bases:
             # nothing to check
             return

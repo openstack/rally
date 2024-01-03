@@ -914,7 +914,7 @@ def validate_output(output_type, output):
 
         proper_type = _OUTPUT_SCHEMA["key_types"][key]
         if not isinstance(output[key], proper_type):
-            if type(proper_type) == tuple:
+            if isinstance(proper_type, tuple):
                 return ("Value of %(name)s output %(key)s has wrong type "
                         "'%(actual_type)s', should be in %(types)r"
                         % {"name": output_type,
