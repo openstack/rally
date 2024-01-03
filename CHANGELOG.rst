@@ -37,6 +37,19 @@ Added
 
 * CI checks for Python 3.11 compatibility
 
+* Support for specifying platform of context as a part of required_context
+  validator like bellow:
+
+  .. code-block:: python
+
+     from rally.task import scenario
+     from rally.task import validation
+
+     @scenario.configure(name="Dummy.scenario")
+     @validation.add("required_context", contexts=["ctx_name@platform"])
+     class ElasticsearchLogInstanceName(scenario.Scenario):
+         def run(self):
+              pass   
 
 Removed
 ~~~~~~~

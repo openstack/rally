@@ -20,6 +20,7 @@ import ddt
 from rally.common.plugin import plugin
 from rally.common import validation
 from rally.plugins.common import validators
+from rally.plugins.task.contexts import dummy as dummy_ctx
 from tests.unit import test
 
 
@@ -256,27 +257,53 @@ class RequiredContextsValidatorTestCase(test.TestCase):
 
     def test_validate_failed(self):
         validator = validators.RequiredContextsValidator(
-            contexts=("c1", "c2", "c3"))
+            contexts=("c1@bar", "c2", "c3"))
         e = self.assertRaises(
             validation.ValidationError,
             validator.validate, self.credentials, {"contexts": {"a": 1}},
             None, None)
         self.assertEqual(
             "The following context(s) are required but missing from "
-            "the input task file: c1, c2, c3", e.message)
+            "the input task file: c1@bar, c2, c3", e.message)
 
     @ddt.data(
         {"config": {
-            "contexts": {"c1": 1, "c2": 2, "c3": 3,
-                         "b1": 1, "a1": 1}}},
+            "contexts": {
+                "a1": 1, "b1": 1, "c1@foo": 1, "c2": 2, "c3": 3
+            }
+        }},
         {"config": {
-            "contexts": {"c1": 1, "c2": 2, "c3": 3,
-                         "b1": 1, "b2": 2, "a1": 1}}},
+            "contexts": {
+                "a1@foo": 1, "b1": 1, "c1": 1, "c2": 2, "c3": 3, "b2": 2
+            }
+        }},
     )
     @ddt.unpack
     def test_validate_with_or(self, config):
+        @dummy_ctx.context.configure(name="a1", platform="foo", order=0)
+        class A1(dummy_ctx.DummyContext):
+            pass
+
+        @dummy_ctx.context.configure(name="c1", platform="foo", order=0)
+        class C1(dummy_ctx.DummyContext):
+            pass
+
+        @dummy_ctx.context.configure(name="c2", platform="foo", order=0)
+        class C2(dummy_ctx.DummyContext):
+            pass
+
+        self.addCleanup(A1.unregister)
+        self.addCleanup(C1.unregister)
+        self.addCleanup(C2.unregister)
+
         validator = validators.RequiredContextsValidator(
-            contexts=[("a1", "a2"), "c1", ("b1", "b2"), "c2"])
+            contexts=[("a1@foo", "a2"), "c1", ("b1", "b2"), "c2@foo"])
+        validator.validate(self.credentials, config, None, None)
+
+        # check arg that should be ignored
+        validator = validators.RequiredContextsValidator(
+            "ignore@me",
+            contexts=[("a1@foo", "a2"), "c1", ("b1", "b2"), "c2@foo"])
         validator.validate(self.credentials, config, None, None)
 
     def test_validate_with_or_failed(self):

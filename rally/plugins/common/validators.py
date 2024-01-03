@@ -19,6 +19,8 @@ import jsonschema
 
 from rally.common import logging
 from rally.common import validation
+from rally import exceptions
+from rally.task import context as context_lib
 
 LOG = logging.getLogger(__name__)
 
@@ -308,7 +310,7 @@ class RestrictedParametersValidator(validation.Validator):
 @validation.configure(name="required_contexts")
 class RequiredContextsValidator(validation.Validator):
 
-    def __init__(self, contexts, *args):
+    def __init__(self, *args, contexts=None):
         """Validator checks if required contexts are specified.
 
         :param contexts: list of strings and tuples with context names that
@@ -323,25 +325,48 @@ class RequiredContextsValidator(validation.Validator):
             if args:
                 LOG.warning("Positional argument is not what "
                             "'required_context' decorator expects. "
-                            "Use `contexts` argument instead")
+                            "Use only `contexts` argument instead")
         else:
-            # it is old way validator
-            self.contexts = [contexts]
+            # it is an old way validator
+            self.contexts = []
+            if contexts:
+                self.contexts.append(contexts)
             self.contexts.extend(args)
+
+    @staticmethod
+    def _match(requested_ctx_name, input_contexts):
+        requested_ctx_name_extended = f"{requested_ctx_name}@"
+        for input_ctx_name in input_contexts:
+            if (requested_ctx_name == input_ctx_name
+                    or input_ctx_name.startswith(requested_ctx_name_extended)):
+                return True
+
+        if "@" in requested_ctx_name:
+            platform_aware_name, platform = requested_ctx_name.split("@")
+            if platform_aware_name in input_contexts:
+                try:
+                    ctx_cls = context_lib.Context.get(requested_ctx_name)
+                except (exceptions.PluginNotFound,
+                        exceptions.MultiplePluginsFound):
+                    return False
+                return ctx_cls.get_platform() == platform
+
+        return False
 
     def validate(self, context, config, plugin_cls, plugin_cfg):
         missing_contexts = []
-        input_context = config.get("contexts", {})
+        input_contexts = config.get("contexts", {})
 
-        for name in self.contexts:
-            if isinstance(name, tuple):
-                if not set(name) & set(input_context):
+        for required_ctx in self.contexts:
+            if isinstance(required_ctx, tuple):
+                if not any(self._match(r_ctx, input_contexts)
+                           for r_ctx in required_ctx):
                     # formatted string like: 'foo or bar or baz'
-                    formatted_names = "'%s'" % " or ".join(name)
+                    formatted_names = "'%s'" % " or ".join(required_ctx)
                     missing_contexts.append(formatted_names)
             else:
-                if name not in input_context:
-                    missing_contexts.append(name)
+                if not self._match(required_ctx, input_contexts):
+                    missing_contexts.append(required_ctx)
 
         if missing_contexts:
             self.fail("The following context(s) are required but missing from "
