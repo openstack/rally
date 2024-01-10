@@ -17,7 +17,7 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
-[3.5.0] - 2024-01-10
+[4.0.0] - 2024-01-10
 --------------------
 
 Fixed
