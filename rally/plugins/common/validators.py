@@ -30,8 +30,13 @@ class JsonSchemaValidator(validation.Validator):
     """JSON schema validator"""
 
     def validate(self, context, config, plugin_cls, plugin_cfg):
+        validator = jsonschema.validators.validator_for(
+            plugin_cls.CONFIG_SCHEMA, default=jsonschema.Draft7Validator
+        )
         try:
-            jsonschema.validate(plugin_cfg, plugin_cls.CONFIG_SCHEMA)
+            jsonschema.validate(
+                plugin_cfg, plugin_cls.CONFIG_SCHEMA, cls=validator
+            )
         except jsonschema.ValidationError as err:
             self.fail(str(err))
 

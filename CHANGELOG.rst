@@ -32,6 +32,9 @@ Changed
 * `xrally/xrally docker image <https://hub.docker.com/r/xrally/xrally>`_ switched
    to use python3.11-slim as a base image instead of python3.9-slim.
 
+* Use 'draft-7' as a default jsonschema validator when there is no meta-schema
+  field specified at ``$schema``.
+
 Added
 ~~~~~
 
