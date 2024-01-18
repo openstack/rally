@@ -17,6 +17,15 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
+unreleased
+----------
+
+Fixed
+~~~~~
+
+* Correct `python_requires` version to indicate correct minimum supported
+  python version
+
 [4.0.0] - 2024-01-10
 --------------------
 

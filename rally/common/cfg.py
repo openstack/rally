@@ -16,7 +16,6 @@
 #   oslo_config. As a first step, let's hardcode the interface of it
 
 from oslo_config import cfg
-from oslo_config import fixture  # noqa
 
 
 CONF = cfg.CONF

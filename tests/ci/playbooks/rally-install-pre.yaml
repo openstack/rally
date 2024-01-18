@@ -6,6 +6,8 @@
       package:
         state: absent
         name: python3-pyyaml
+      when:
+        - ansible_distribution == "CentOS"
 
     - name: Install python3.8-dev (Ubuntu 20.04)
       become: true
@@ -19,7 +21,34 @@
       package:
         state: present
         name: python3.10-dev
-      when: ansible_distribution == "Ubuntu" and ansible_distribution_version == "22.04"
+      when:
+        - ansible_distribution == "Ubuntu"
+        - ansible_distribution_version == "22.04"
+
+    - name: Install python3.8-devel (Centos 8)
+      become: true
+      package:
+        state: present
+        name: python38-devel
+      when:
+        - ansible_distribution == "CentOS"
+        - ansible_distribution_version | int < 9
+
+    - name: Change default python3 to be python3.8 (Centos 8)
+      become: true
+      shell: |
+        set -x
+        set -e
+
+        echo "alias python3='python3.8'" >> ~/.bashrc"
+        echo "alias python3='python3.8'" >> ~zuul/.bashrc"
+        whereis python3.8
+        ls /usr/bin/python*
+        update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 100
+        update-alternatives --set python3 /usr/bin/python3.8
+      when:
+        - ansible_distribution == "CentOS"
+        - ansible_distribution_version | int < 9
 
     - name: Install pip3 if needed
       become: true
@@ -28,15 +57,9 @@
         chdir: '{{ zuul.project.src_dir }}'
         cmd: |
           set -e
-          python_version=`python3 --version`
-          python_version=`echo $python_version |awk '{print $2}'`
+          python_version=`python3 --version | awk '{print $2}'`
           echo $python_version
-          if [[ $python_version =~ ^3.6 ]]; then
-              pip_url=https://bootstrap.pypa.io/pip/3.6/get-pip.py
-          else
-              pip_url=https://bootstrap.pypa.io/get-pip.py
-          fi
-          curl $pip_url -o /tmp/get-pip.py
+          curl https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py
           python3 /tmp/get-pip.py
 
     - name: Install bindep

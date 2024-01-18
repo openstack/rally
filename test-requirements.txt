@@ -4,11 +4,12 @@
 
 hacking>=3.0                                           # Apache Software License
 
+fixtures                                               # Apache Software License/BSD License
 pytest                                                 # MIT
 # py.test plugin for measuring coverage.
 pytest-cov                                             # MIT
 # py.test plugin for generating HTML reports
-pytest-html                                            # Mozilla Public License 2.0 (MPL 2.0)
+pytest-html                                            # MIT
 # py.test xdist plugin for distributed testing and loop-on-failing modes
 pytest-xdist                                           # MIT
 
@@ -17,5 +18,5 @@ testtools                                              # MIT
 
 testresources                                          # UNKNOWN
 
-docutils<0.18                                          # public domain, Python, 2-Clause BSD, GPL 3 (see COPYING.txt)
+docutils                                               # public domain, Python, 2-Clause BSD, GPL 3 (see COPYING.txt)
 Pygments                                               # BSD-2-Clause
