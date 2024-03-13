@@ -90,7 +90,7 @@ class Platform(plugin.Plugin, validation.ValidatablePluginMixin):
     def update(self, new_spec):
         """Updates existing platform config and returns new platform data.
 
-        :param new_platform_config: New platform config.
+        :param new_spec: New platform spec.
         :returns: Complete platform data as dictionary
         """
         raise NotImplementedError(
