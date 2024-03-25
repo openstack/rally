@@ -4,6 +4,7 @@
 
 # Rally core dependencies
 alembic!=1.2.0,!=1.6.3                                 # MIT
+fixtures                                               # Apache-2.0/BSD
 Jinja2                                                 # BSD-3-Clause
 jsonschema                                             # MIT
 markupsafe                                             # BSD-3-Clause
