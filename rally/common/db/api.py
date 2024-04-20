@@ -47,7 +47,7 @@ import time
 
 from oslo_db import exception as db_exc
 from oslo_db import options as db_options
-from oslo_db.sqlalchemy import enginefacade
+from oslo_db.sqlalchemy import session as db_session
 import sqlalchemy as sa
 import sqlalchemy.orm   # noqa
 
@@ -71,19 +71,14 @@ def _create_facade_lazily():
     global _FACADE
 
     if _FACADE is None:
-        ctx = enginefacade.transaction_context()
-        ctx.configure(
-            sqlite_fk=False,
-            __autocommit=False,
-            expire_on_commit=False
-        )
-        _FACADE = ctx
+        _FACADE = db_session.EngineFacade.from_config(CONF)
 
     return _FACADE
 
 
 def get_engine():
-    return _create_facade_lazily().writer.get_engine()
+    facade = _create_facade_lazily()
+    return facade.get_engine()
 
 
 def get_session():
