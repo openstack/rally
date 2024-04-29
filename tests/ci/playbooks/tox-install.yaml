@@ -1,6 +1,6 @@
-- hosts: all
+- name: "Pre playbook"
+  hosts: all
   tasks:
     - include_role:
         name: "rally-tox"
-      vars:
-        action: "install"
+        tasks_from: "install"

@@ -1,6 +1,6 @@
-- hosts: all
+- name: "Run playbook"
+  hosts: all
   tasks:
     - include_role:
         name: "rally-tox"
-      vars:
-        action: "run"
+        tasks_from: "run"

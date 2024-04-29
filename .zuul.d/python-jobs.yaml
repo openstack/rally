@@ -6,7 +6,7 @@
     post-run: tests/ci/playbooks/fetch-html-and-json-reports.yaml
     description: |
       Run test for rally project.
-    nodeset: ubuntu-jammy
+    nodeset: ubuntu-noble
 
 - job:
     name: rally-tox-docs
@@ -79,6 +79,7 @@
       Uses tox with the ``py310`` environment.
     vars:
       tox_env: py310
+    nodeset: ubuntu-jammy
 
 - job:
     name: rally-tox-py311
@@ -89,18 +90,13 @@
       Uses tox with the ``py311`` environment.
     vars:
       tox_env: py311
+    nodeset: debian-bookworm
 
 - job:
-    name: rally-tox-py311-sqlalchemy14
-    parent: rally-tox-py311
+    name: rally-tox-py312
+    parent: rally-tox-base
     vars:
-      tox_env: py311-sa14
-
-- job:
-    name: rally-tox-py311-sqlalchemy2
-    parent: rally-tox-py311
-    vars:
-      tox_env: py311-sa2
+      tox_env: py312
 
 - job:
     name: rally-tox-samples
@@ -122,3 +118,9 @@
     vars:
       coverage_output_src: '{{ zuul.project.src_dir }}/cover/'
       zuul_executor_dest: '{{ zuul.executor.log_root }}/coverage/'
+
+- job:
+    name: rally-tox-zuul-ansible-lint
+    parent: rally-tox-py312
+    vars:
+      tox_env: zuul-ansible-lint

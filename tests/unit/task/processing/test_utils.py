@@ -14,6 +14,7 @@
 #    under the License.
 
 import copy
+import math
 
 import ddt
 
@@ -42,7 +43,17 @@ class GraphZipperTestCase(test.TestCase):
                                             zipped_size=None, expected=None):
         merger = utils.GraphZipper(len(data_stream), zipped_size)
         [merger.add_point(value) for value in data_stream]
-        self.assertEqual(expected, merger.get_zipped_graph())
+
+        actual_graph = merger.get_zipped_graph()
+        self.assertEqual(len(expected), len(actual_graph))
+        for i, (e_point, e_value) in enumerate(expected):
+            a_point, a_value = actual_graph[i]
+            self.assertEqual(e_point, a_point,
+                             msg=f"Point order of element #{i} is different")
+            self.assertTrue(
+                math.isclose(e_value, a_value, rel_tol=1e-15),
+                msg=f"Point value at #{i} is not equal: {e_value} != {a_value}"
+            )
 
     def test_add_point_raises(self):
         merger = utils.GraphZipper(10, 8)

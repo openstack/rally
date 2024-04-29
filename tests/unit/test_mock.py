@@ -114,16 +114,16 @@ class FuncMockArgsDecoratorsChecker(ast.NodeVisitor):
         """
         val = None
         if isinstance(node, ast.Constant):
-            val = node.s
+            val = node.value
         elif isinstance(node, ast.BinOp):
             if pairwise_isinstance(
                     (node.op, ast.Mod), (node.left, ast.Constant),
                     (node.right, ast.Name)):
-                val = node.left.s % self.globals_[node.right.id]
+                val = node.left.value % self.globals_[node.right.id]
             elif pairwise_isinstance(
                     (node.op, ast.Add), (node.left, ast.Name),
                     (node.right, ast.Constant)):
-                val = self.globals_[node.left.id] + node.right.s
+                val = self.globals_[node.left.id] + node.right.value
         elif isinstance(node, ast.Name):
             val = self.globals_[node.id]
 

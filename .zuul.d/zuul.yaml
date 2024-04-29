@@ -4,38 +4,26 @@
       - docs-on-readthedocs
     vars:
       rtd_webhook_id: "52691"
-    check:
+    check: &queue
       jobs:
         - rally-tox-cover
         - rally-tox-docs
         - rally-tox-pep8
-        - rally-tox-py38
         - rally-tox-py39
         - rally-tox-py310
-        - rally-tox-py311-sqlalchemy14
-        - rally-tox-py311-sqlalchemy2
+        - rally-tox-py311
+        - rally-tox-py312
+        - rally-tox-zuul-ansible-lint:
+            files:
+              - tests/ci/playbooks/*
         - rally-tox-samples
         - rally-tox-functional
         - rally-tox-self
-        - rally-install-ubuntu-focal
         - rally-install-ubuntu-jammy
+        - rally-install-ubuntu-noble
         - rally-install-centos-9s
         - rally-docker-build
-    gate:
-      jobs:
-        - rally-tox-cover
-        - rally-tox-docs
-        - rally-tox-pep8
-        - rally-tox-py38
-        - rally-tox-py39
-        - rally-tox-py310
-        - rally-tox-py311-sqlalchemy14
-        - rally-tox-py311-sqlalchemy2
-        - rally-tox-functional
-        - rally-tox-self
-        - rally-install-ubuntu-focal
-        - rally-install-ubuntu-jammy
-        - rally-install-centos-9s
+    gate: *queue
     post:
       jobs:
         - rally-docker-build-and-push:

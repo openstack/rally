@@ -7,14 +7,14 @@
     timeout: 1800
 
 - job:
-    name: rally-install-ubuntu-focal
-    parent: rally-install-base
-    nodeset: ubuntu-focal
-
-- job:
     name: rally-install-ubuntu-jammy
     parent: rally-install-base
     nodeset: ubuntu-jammy
+
+- job:
+    name: rally-install-ubuntu-noble
+    parent: rally-install-base
+    nodeset: ubuntu-noble
 
 - job:
     name: rally-install-centos-9s

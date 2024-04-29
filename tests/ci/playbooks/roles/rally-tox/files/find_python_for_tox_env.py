@@ -53,7 +53,7 @@ def main():
     )
     parser.add_argument(
         "--default-python3-version", metavar="<python-interpreter>",
-        type=str, required=False, default="python3.10",
+        type=str, required=False, default="python3.12",
         help="Default python3 interpreter to use for 'python3' case."
     )
     args = parser.parse_args()

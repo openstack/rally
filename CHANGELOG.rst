@@ -17,6 +17,20 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
+unreleased
+----------
+
+Added
+~~~~~
+
+* CI jobs for checking compatibility with python 3.12
+
+Removed
+~~~~~~~
+
+* Support for Python3.8 is dropped
+* Support for SQLAlchemy <2
+
 [4.1.0] - 2024-04-29
 --------------------
 

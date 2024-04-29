@@ -11,7 +11,7 @@ pytest-cov                                             # MIT
 # py.test plugin for generating HTML reports
 pytest-html                                            # MIT
 # py.test xdist plugin for distributed testing and loop-on-failing modes
-pytest-xdist                                           # MIT
+pytest-xdist
 
 ddt                                                    # MIT
 

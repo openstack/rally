@@ -1,8 +1,13 @@
-- hosts: all
-  name: a run script for rally-install-* jobs
+- name: Run script for rally-install-* jobs
+  hosts: all
   tasks:
+    - name: Create virtualenv and install bindep
+      shell: |
+        virtualenv {{ zuul.project.src_dir }}/.venv
+        {{ zuul.project.src_dir }}/.venv/bin/pip3 install bindep
+
     - name: Get list of packages to install from bindep
-      command: "bindep -b -f {{ zuul.project.src_dir }}/bindep.txt"
+      command: "{{ zuul.project.src_dir }}/.venv/bin/bindep -b -f {{ zuul.project.src_dir }}/bindep.txt"
       register: bindep_output
       failed_when: bindep_output.rc != 0 and bindep_output.rc != 1
 
@@ -10,32 +15,35 @@
       package:
         name: "{{ bindep_output.stdout_lines }}"
         state: present
-      become: yes
+      become: true
       when: bindep_output.stdout_lines
 
     # Required for https://bugs.launchpad.net/devstack/+bug/1968798
     - name: Configure project src_dir as git safe
-      become: yes
+      become: true
+      # noqa command-instead-of-module there is no builtin git-config module
       command: git config --system --add safe.directory {{ ansible_user_dir }}/{{ zuul.project.src_dir }}
 
     - name: Install Rally system wide
+      become: true
       shell:
-        executable: /bin/sh
         chdir: '{{ zuul.project.src_dir }}'
-        cmd: "sudo pip3 install --constraint ./upper-constraints.txt ./"
+        cmd: '.venv/bin/pip3 install --constraint ./upper-constraints.txt ./'
 
-    - name: Create direcotry for html and json reports
+    - name: Create directory for html and json reports
       shell:
         executable: /bin/bash
         chdir: '{{ zuul.project.src_dir }}'
         cmd: mkdir .test_results
 
     - name: Execute the similar script as `tox -e self`
+      become: true
       shell:
         executable: /bin/bash
         chdir: '{{ zuul.project.src_dir }}'
-        cmd: >
-          python3 ./tests/ci/rally_self_job.py
-          --task ./rally-jobs/self-rally.yaml
-          --plugins-path ./rally-jobs/plugins
-          --results-dir ./.test_results
+        cmd: |
+          . .venv/bin/activate
+          python3 ./tests/ci/rally_self_job.py \
+            --task ./rally-jobs/self-rally.yaml \
+            --plugins-path ./rally-jobs/plugins \
+            --results-dir ./.test_results

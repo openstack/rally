@@ -1,5 +1,5 @@
-- hosts: all
-  name: Build and push docker image for Rally
+- name: Build and push docker image for Rally
+  hosts: all
   roles:
     - docker-build-image
     - docker-push-image

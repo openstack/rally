@@ -1,0 +1,31 @@
+# NOTE(andreykurilin): ansible-lint expects playbooks to be in a separate
+#   directory called 'playbooks'. There is no real reason for such structure
+#   and it also requires specific ansible config option to be specified so
+#   playbooks can find roles.
+#   https://docs.ansible.com/ansible/latest/user_guide/sample_setup.html#sample-directory-layout
+#   Despite the fact, ansible-lint has 'kinds' configuration option for
+#   specifying 'custom' structure, it doesn't support relative paths, so the
+#   name of repository is hardcoded here. Not the best solution, but should
+#   work as soon as nobody renames it locally :)
+kinds:
+  - playbook: "**/rally/tests/ci/playbooks/*.{yml,yaml}"
+
+mock_roles:
+  # zuul specific roles
+  - copy-build-sshkey
+  - multi-node-hosts-file
+  - multi-node-known-hosts
+  - bindep
+  - fetch-tox-output
+
+mock_modules:
+  - synchronize
+  - zuul_return
+
+skip_list:
+  - no-changed-when  # Commands should not change things if nothing needs doing
+  - unnamed-task  # All tasks should be named
+  - fqcn[action-core]  # Use FQCN for builtin module actions (shell)
+  - name[template]  # Jinja templates should only be at the end of 'name'
+  - command-instead-of-shell  # Use shell only when shell functionality is required.
+  - no-jinja-when  # No Jinja2 in when.

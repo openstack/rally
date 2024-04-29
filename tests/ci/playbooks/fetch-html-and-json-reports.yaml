@@ -1,4 +1,5 @@
-- hosts: all
+- name: "Post playbook that generates artifacts"
+  hosts: all
   vars:
     results_dir: "{{ zuul.project.src_dir }}/.test_results/"
     html_report: "{{ tox_env | default('self') }}_report.html"
@@ -6,10 +7,10 @@
   tasks:
     - shell: "ls {{ results_dir }}"
       register: results_dir_stat
-      ignore_errors: True
+      ignore_errors: true
 
     - name: Save results
-      become: yes
+      become: true
       when: results_dir_stat.rc == 0
       synchronize:
         src: "{{ results_dir }}"
@@ -18,10 +19,10 @@
         copy_links: true
         verify_host: true
         rsync_opts:
-        - --include=/**
-        - --include=*/
-        - --exclude=*
-        - --prune-empty-dirs
+          - --include=/**
+          - --include=*/
+          - --exclude=*
+          - --prune-empty-dirs
 
     - name: Return artifact to Zuul
       when: html_report in results_dir_stat.stdout

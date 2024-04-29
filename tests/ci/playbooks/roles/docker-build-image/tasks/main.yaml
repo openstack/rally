@@ -25,8 +25,8 @@
   fail:
     msg: "{{ rally_package_name }} is not discoverable."
   when:
-   - '"{{ rally_package_name }}" != ""'
-   - '"{{ rally_package_name }}" not in rally_version_info.stdout'
+    - '"{{ rally_package_name }}" != ""'
+    - '"{{ rally_package_name }}" not in rally_version_info.stdout'
 
 - name: "Check availability of {{ rally_plugin_name }} plugin"
   shell: docker run {{ docker_image_tag }} plugin show {{ rally_plugin_name }}
