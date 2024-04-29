@@ -13,12 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import testtools
+import unittest
 
 from tests.functional import utils
 
 
-class PluginTestCase(testtools.TestCase):
+class PluginTestCase(unittest.TestCase):
 
     def test_show_one(self):
         rally = utils.Rally()
@@ -30,8 +30,9 @@ class PluginTestCase(testtools.TestCase):
 
     def test_show_multiple(self):
         rally = utils.Rally()
-        result = self.assertRaises(utils.RallyCliError,
-                                   rally, "plugin show Dummy")
+        with self.assertRaises(utils.RallyCliError) as e_ctx:
+            rally("plugin show Dummy")
+        result = e_ctx.exception
         self.assertIn("Multiple plugins found:", result.output)
         self.assertIn("Dummy.dummy", result.output)
         self.assertIn("Dummy.dummy_exception", result.output)
@@ -40,22 +41,22 @@ class PluginTestCase(testtools.TestCase):
     def test_show_not_found(self):
         rally = utils.Rally()
         name = "Dummy666666"
-        result = self.assertRaises(utils.RallyCliError,
-                                   rally, "plugin show %s" % name)
-        self.assertIn("Plugin %s not found" % name, result.output)
+        with self.assertRaises(utils.RallyCliError) as e_ctx:
+            rally(f"plugin show {name}")
+        self.assertIn("Plugin %s not found" % name, e_ctx.exception.output)
 
     def test_show_not_found_in_specific_platform(self):
         rally = utils.Rally()
         name = "Dummy"
         platform = "non_existing"
-        result = self.assertRaises(
-            utils.RallyCliError,
-            rally, "plugin show --name %(name)s --platform %(platform)s"
-                   % {"name": name, "platform": platform})
+
+        with self.assertRaises(utils.RallyCliError) as e_ctx:
+            rally(f"plugin show --name {name} --platform {platform}")
+
         self.assertIn(
             "Plugin %(name)s@%(platform)s not found"
             % {"name": name, "platform": platform},
-            result.output)
+            e_ctx.exception.output)
 
     def test_list(self):
         rally = utils.Rally()

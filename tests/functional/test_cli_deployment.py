@@ -11,13 +11,12 @@
 #    under the License.
 
 import os
-
-import testtools
+import unittest
 
 from tests.functional import utils
 
 
-class DeploymentTestCase(testtools.TestCase):
+class DeploymentTestCase(unittest.TestCase):
 
     def test_create_deployment_from_env(self):
         os.environ.update(

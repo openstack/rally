@@ -16,11 +16,11 @@
 import fixtures
 from fixtures._fixtures.tempdir import TempDir
 import os
+import unittest
 from unittest import mock
 import uuid
 
 from oslo_config import fixture as cfg_fixture  # noqa N311
-import testtools
 
 from rally.common import db
 from rally import plugins
@@ -48,7 +48,7 @@ class DatabaseFixture(cfg_fixture.Config):
         db.schema.schema_create()
 
 
-class TestCase(testtools.TestCase):
+class TestCase(fixtures.TestWithFixtures, unittest.TestCase):
     """Test case base class for all unit tests."""
 
     def __init__(self, *args, **kwargs):
@@ -67,8 +67,7 @@ class TestCase(testtools.TestCase):
         self.useFixture(TempHomeDir())
 
     def _test_atomic_action_timer(self, atomic_actions, name, count=1,
-                                  parent=[]):
-
+                                  parent=None):
         if parent:
             is_found = False
             for action in atomic_actions:
@@ -94,18 +93,17 @@ class TestCase(testtools.TestCase):
                           % {"name": name, "count": count,
                              "actual_count": actual_count})
 
-    def assertSequenceEqual(self, iterable_1, iterable_2, msg=None):
-        self.assertEqual(tuple(iterable_1), tuple(iterable_2), msg)
-
-    _IS_EMPTY_MSG = "Iterable is not empty"
-
-    def assertIsEmpty(self, iterable, msg=None):
-        if len(iterable):
-            if msg:
-                msg = "%s : %s" % (self._IS_EMPTY_MSG, msg)
-            else:
-                msg = self._IS_EMPTY_MSG
-            raise self.failureException(msg)
+    # TODO(andreykurilin): port existing code to use 'standard' flow
+    def assertRaises(
+        self,
+        expected_exception,
+        callable,
+        *args,
+        **kwargs,
+    ):
+        with super().assertRaises(expected_exception) as ctx:
+            callable(*args, **kwargs)
+        return ctx.exception
 
 
 class DBTestCase(TestCase):

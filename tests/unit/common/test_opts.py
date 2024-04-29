@@ -28,11 +28,11 @@ class RegisterOptsTestCase(test.TestCase):
 
         opts.register_options_from_path("unexisting.path.without.method.name")
         self.assertFalse(mock_register_opts.called)
-        self.assertIsEmpty(opts._registered_paths)
+        self.assertEqual(0, len(opts._registered_paths))
 
         opts.register_options_from_path("unexisting.path:method_name")
         self.assertFalse(mock_register_opts.called)
-        self.assertIsEmpty(opts._registered_paths)
+        self.assertEqual(0, len(opts._registered_paths))
 
         opts.register_options_from_path(
             "tests.unit.common.test_opts:fake_list_opts")

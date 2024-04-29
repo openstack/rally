@@ -14,9 +14,6 @@ pytest-html                                            # MIT
 pytest-xdist                                           # MIT
 
 ddt                                                    # MIT
-testtools                                              # MIT
-
-testresources                                          # UNKNOWN
 
 docutils                                               # BSD License/GNU General Public License (GPL)/Python Software Foundation License
 Pygments                                               # BSD-2-Clause

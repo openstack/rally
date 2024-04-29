@@ -13,10 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import sys
-
-import testtools
-
 from rally import exceptions
 from rally.task import functional
 from tests.unit import test
@@ -113,8 +109,6 @@ class FunctionalMixinTestCase(test.TestCase):
                           a.assertGreater,
                           len(["1", "2"]), len(["3", "4", "5"]))
 
-    @testtools.skipIf(sys.version_info < (2, 7),
-                      "assertRaises as context not supported")
     def test_assert_with_custom_message(self):
         class A(functional.FunctionalMixin):
             def __init__(self):

@@ -702,7 +702,7 @@ class TaskCommandsTestCase(test.TestCase):
         self.assertIsNone(self.task.results(self.fake_api, task_id))
         self.assertEqual(1, mock_json_dumps.call_count)
         self.assertEqual(1, len(mock_json_dumps.call_args[0]))
-        self.assertSequenceEqual(result, mock_json_dumps.call_args[0][0])
+        self.assertEqual(list(result), mock_json_dumps.call_args[0][0])
         self.assertEqual({"sort_keys": False, "indent": 4},
                          mock_json_dumps.call_args[1])
         self.fake_api.task.get.assert_called_once_with(

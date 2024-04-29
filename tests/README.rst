@@ -16,7 +16,7 @@ All internal methods should be fully covered by unit tests with a reasonable moc
 About Rally unit tests:
 
 - All `unit tests <http://en.wikipedia.org/wiki/Unit_testing>`_ are located inside /tests/unit/*
-- Tests are written on top of: *testtools* and *mock* libs
+- Tests are written on top of: *unittest* lib
 - `Tox <https://tox.readthedocs.org/en/latest/>`_ is used to run unit tests
 
 
@@ -25,20 +25,20 @@ To run unit tests locally::
   $ pip install tox
   $ tox
 
-To run py27, py34, py35 or pep8 only::
+To run py311 or pep8 only::
 
   $ tox -e <name>
 
-  # NOTE: <name> is one of py27, py34, py35 or pep8
+  # NOTE: <name> is one of py311 or pep8
 
-To run py27/py34/py35 against mysql or psql
+To run py311 against mysql or psql
 
   $ export RALLY_UNITTEST_DB_URL="mysql://user:secret@localhost/rally"
-  $ tox -epy27
+  $ tox -epy311
 
-To run specific test of py27/py34/py35::
+To run specific test of py311::
 
-  $ tox -e py27 -- tests.unit.test_osclients
+  $ tox -e py311 -- tests.unit.test_osclients
 
 To get test coverage::
 

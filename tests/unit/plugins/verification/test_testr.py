@@ -34,7 +34,7 @@ class TestrContextTestCase(test.TestCase):
     def assertEqualCmd(self, expected, actual, msg="", stestr=False):
         cmd = ["stestr" if stestr else "testr", "run", "--subunit"]
         cmd.extend(expected)
-        self.assertEqual(cmd, actual, message=msg)
+        self.assertEqual(cmd, actual, msg=msg)
 
     def test_setup_with_concurrency(self):
         # default behaviour

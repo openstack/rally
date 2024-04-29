@@ -16,13 +16,12 @@
 import json
 import os
 import tempfile
-
-import testtools
+import unittest
 
 from tests.functional import utils
 
 
-class EnvTestCase(testtools.TestCase):
+class EnvTestCase(unittest.TestCase):
 
     def test_create_no_spec(self):
         rally = utils.Rally()

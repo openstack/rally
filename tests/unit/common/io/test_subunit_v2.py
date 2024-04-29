@@ -37,7 +37,7 @@ class SubunitParserTestCase(test.TestCase):
         skipped_test = "test_foo.SimpleTestCase.test_skip_something"
 
         self.assertEqual(result.totals["skipped"], len(skipped_tests))
-        self.assertSequenceEqual([skipped_test], skipped_tests.keys())
+        self.assertSequenceEqual([skipped_test], list(skipped_tests))
         self.assertEqual(
             {"status": "skip", "reason": "This should be skipped.",
              "duration": "0.000", "name": skipped_test, "tags": [],

@@ -11,7 +11,6 @@
 #    under the License.
 
 import ast
-import sys
 from unittest import mock
 
 from tests.unit import test
@@ -327,15 +326,10 @@ def test_func(self, mock_args, mock_args2, mock_some_longer_args):
         )
 
         self.assertIsNone(self.visitor.visit_FunctionDef(self.tree))
-        if sys.version_info < (3, 8):
-            # https://github.com/python/cpython/pull/9731
-            lineno = 2
-        else:
-            lineno = 7
         self.assertEqual(
             [
                 {
-                    "lineno": lineno,
+                    "lineno": 7,
                     "messages": [
                         "Argument 'mock_bar_foo_misnamed' misnamed; should be "
                         "either of %s that is derived from the mock decorator "
@@ -367,15 +361,10 @@ def test_func(self, mock_args, mock_args2, mock_some_longer_args):
         )
 
         self.assertIsNone(self.visitor.visit_FunctionDef(self.tree))
-        if sys.version_info < (3, 8):
-            # https://github.com/python/cpython/pull/9731
-            lineno = 2
-        else:
-            lineno = 7
         self.assertEqual(
             [
                 {
-                    "lineno": lineno,
+                    "lineno": 7,
                     "messages": [
                         "Argument 'mock_bar_foo_misnamed' misnamed; should be "
                         "either of %s that is derived from the mock decorator "
@@ -408,15 +397,10 @@ def test_func(self, mock_args, mock_args2, mock_some_longer_args):
         )
 
         self.assertIsNone(self.visitor.visit_FunctionDef(self.tree))
-        if sys.version_info < (3, 8):
-            # https://github.com/python/cpython/pull/9731
-            lineno = 2
-        else:
-            lineno = 7
         self.assertEqual(
             [
                 {
-                    "lineno": lineno,
+                    "lineno": 7,
                     "messages": [
                         "Missing or malformed argument for {'mock_foo', "
                         "'mock_foo_bar', 'mock_pkg_foo_bar', ...} decorator."
@@ -448,12 +432,7 @@ def test_func(self, mock_args, mock_args2, mock_some_longer_args):
             self.visitor.errors[0]["decs"]
         )
 
-        if sys.version_info < (3, 8):
-            # https://github.com/python/cpython/pull/9731
-            lineno = 2
-        else:
-            lineno = 7
-        self.assertEqual(lineno, self.visitor.errors[0]["lineno"])
+        self.assertEqual(7, self.visitor.errors[0]["lineno"])
 
     def test_visit_ok(self):
         self.visitor.classname_python = "my_class_object"

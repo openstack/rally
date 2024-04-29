@@ -18,11 +18,11 @@ import string
 import sys
 import threading
 import time
+import unittest
 from unittest import mock
 
 import ddt
 import pytest
-import testtools
 
 from rally.common import utils
 from rally import exceptions
@@ -125,8 +125,8 @@ def module_level_method():
 
 class MethodClassTestCase(test.TestCase):
 
-    @testtools.skipIf(sys.version_info > (2, 9), "Problems with access to "
-                                                 "class from <locals>")
+    @unittest.skipIf(sys.version_info > (2, 9), "Problems with access to "
+                                                "class from <locals>")
     def test_method_class_for_class_level_method(self):
         class A(object):
             def m(self):

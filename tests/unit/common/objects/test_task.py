@@ -382,7 +382,7 @@ class TaskTestCase(test.TestCase):
         mock_validate_output.return_value = validate_output_return_value
         self.assertEqual(expected,
                          task.result_has_valid_schema(data),
-                         message=repr(data))
+                         msg=repr(data))
         if validate_output_calls:
             mock_validate_output.assert_has_calls(
                 [mock.call(*args) for args in validate_output_calls],
