@@ -63,6 +63,9 @@ extensions = [
     "ext.plugin_reference",
     "ext.include_vars"
 ]
+if not on_rtd:
+    extensions.append("openstackdocstheme")
+
 todo_include_todos = True
 
 # Add any paths that contain templates here, relative to this directory.
@@ -136,21 +139,17 @@ pygments_style = "native"
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 if not on_rtd:
-    html_theme = "openstackrally"
+    html_theme = "openstackdocs"
 else:
     html_theme = "default"
+
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 # html_theme_options = {}
 
 # Add any paths that contain custom themes here, relative to this directory.
-if not on_rtd:
-    import oslosphinx
-    theme_dir = os.path.join(os.path.dirname(oslosphinx.__file__), "theme")
-    html_theme_path = [theme_dir, "_templates"]
-else:
-    html_theme_path = []
+html_theme_path = []
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
