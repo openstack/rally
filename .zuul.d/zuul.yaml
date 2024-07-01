@@ -19,7 +19,6 @@
         - rally-tox-self
         - rally-install-ubuntu-focal
         - rally-install-ubuntu-jammy
-        - rally-install-centos-8s
         - rally-install-centos-9s
         - rally-docker-build
     gate:
@@ -36,7 +35,6 @@
         - rally-tox-self
         - rally-install-ubuntu-focal
         - rally-install-ubuntu-jammy
-        - rally-install-centos-8s
         - rally-install-centos-9s
     post:
       jobs:
