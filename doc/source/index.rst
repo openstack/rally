@@ -49,7 +49,7 @@ Contents
 For Contributors
 ================
 
-  .. toctree::
-     :maxdepth: 2
+.. toctree::
+   :maxdepth: 2
 
-     contribute
+   contribute
