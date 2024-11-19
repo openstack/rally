@@ -19,12 +19,12 @@ maximum allowed version).
 """
 
 import collections
+import importlib.metadata
 import logging
 import re
 import sys
 import textwrap
 
-import pkg_resources
 import requests
 
 
@@ -119,6 +119,10 @@ class PYPIPackage(object):
             if self._pypi_license == "UNKNOWN":
                 self._pypi_license = None
         return self._license
+
+    @classmethod
+    def parse_line(cls, line):
+        raise NotImplementedError()
 
     def __eq__(self, other):
         return (isinstance(other, PYPIPackage)
@@ -262,7 +266,11 @@ class UpperConstraint(PYPIPackage):
         return self.version
 
 
-def parse_data(raw_data, include_comments=True, dependency_cls=Requirement):
+def parse_data(
+    raw_data,
+    include_comments: bool = True,
+    dependency_cls: type[PYPIPackage] = Requirement
+):
     # first elem is None to simplify checks of last elem in requirements
     requirements = [None]
     for line in raw_data.split("\n"):
@@ -304,7 +312,7 @@ def parse_data(raw_data, include_comments=True, dependency_cls=Requirement):
         for v in requirements if v)
 
 
-def _fetch_from_gr(filename):
+def _fetch_from_gr(filename: str) -> str:
     """Try to fetch data from OpenStack global-requirements repo"""
     for i in range(0, len(GLOBAL_REQUIREMENTS_LOCATIONS)):
         url = GLOBAL_REQUIREMENTS_LOCATIONS[i] + filename
@@ -316,7 +324,7 @@ def _fetch_from_gr(filename):
     raise Exception("Unable to obtain %s" % filename)
 
 
-def _write_requirements(filename, requirements):
+def _write_requirements(filename: str, requirements: list | dict) -> None:
     """Saves requirements to file."""
     if isinstance(requirements, dict):
         requirements = requirements.values()
@@ -327,7 +335,7 @@ def _write_requirements(filename, requirements):
             f.write("\n")
 
 
-def sync_requirements():
+def sync_requirements() -> None:
     """Synchronizes Rally requirements with OpenStack global-requirements."""
     LOG.info("Obtaining global-requirements of OpenStack...")
     raw_gr = _fetch_from_gr("global-requirements.txt")
@@ -350,7 +358,7 @@ def sync_requirements():
         _write_requirements(file_name, requirements)
 
 
-def update_upper_constraints():
+def update_upper_constraints() -> None:
     """Obtains latest version of packages and put them to upper-constraints."""
     LOG.info("Obtaining upper-constrains from OpenStack...")
     raw_g_uc = _fetch_from_gr("upper-constraints.txt")
@@ -361,10 +369,10 @@ def update_upper_constraints():
                            include_comments=False,
                            dependency_cls=UpperConstraint)
 
-    our_uc = [UpperConstraint(package_name=p.project_name, version=p.version)
-              for p in pkg_resources.working_set
+    our_uc = [UpperConstraint(package_name=p.name, version=p.version)
+              for p in importlib.metadata.distributions()
               # do not include the current package at u-c
-              if p.project_name != "rally"]
+              if p.name != "rally"]
 
     for package in our_uc:
         if package.package_name in global_uc:

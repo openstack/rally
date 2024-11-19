@@ -15,6 +15,8 @@
 
 from pbr import version as pbr_version
 
+from rally.common.plugin import discover as rally_discover
+
 RALLY_VENDOR = "OpenStack Foundation"
 RALLY_PRODUCT = "OpenStack Rally"
 RALLY_PACKAGE = None  # OS distro package version suffix
@@ -35,14 +37,8 @@ def database_revision():
 
 def plugins_versions():
     """Show packages version"""
-    import pkg_resources
 
-    packages = {}
-    for package in pkg_resources.working_set:
-        entry_map = package.get_entry_map("rally_plugins")
-        if not entry_map:
-            # this package doesn't have rally_plugins entry-point
-            continue
-        packages[package.project_name] = package.version
-
-    return packages
+    return dict(
+        (ep.dist.name, ep.dist.version)
+        for ep in rally_discover.iter_entry_points()
+    )

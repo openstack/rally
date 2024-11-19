@@ -21,3 +21,4 @@ python-subunit                                         # Apache-2.0 or BSD
 requests!=2.20.0,!=2.24.0                              # Apache-2.0
 SQLAlchemy>=2                                          # MIT
 virtualenv!=16.3.0                                     # MIT
+packaging!=20.5,!=20.6,!=20.7                          # Apache Software License/BSD License

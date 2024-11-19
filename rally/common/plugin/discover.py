@@ -14,10 +14,12 @@
 #    under the License.
 
 import importlib
+import importlib.metadata
+import importlib.util
 import os
-import pkg_resources
 import pkgutil
 import sys
+import typing as t
 
 import rally
 from rally.common import logging
@@ -50,7 +52,7 @@ def import_modules_from_package(package):
 
     :param package: Full package name. For example: rally.plugins.openstack
     """
-    path = [os.path.dirname(rally.__file__), ".."] + package.split(".")
+    path = [os.path.dirname(rally.__file__), "..", *package.split(".")]
     path = os.path.join(*path)
     for root, dirs, files in os.walk(path):
         for filename in files:
@@ -62,44 +64,50 @@ def import_modules_from_package(package):
                 sys.modules[module_name] = importlib.import_module(module_name)
 
 
+def iter_entry_points():  # pragma: no cover
+    try:
+        # Python 3.10+
+        return importlib.metadata.entry_points(group="rally_plugins")
+    except TypeError:
+        # Python 3.8-3.9
+        return importlib.metadata.entry_points().get("rally_plugins", [])
+
+
 def find_packages_by_entry_point():
     """Find all packages with rally_plugins entry-point"""
-    loaded_packages = []
+    packages = {}
 
-    for package in pkg_resources.working_set:
-        entry_map = package.get_entry_map("rally_plugins")
-        if not entry_map:
-            # this package doesn't have rally_plugins entry-point
+    for ep in iter_entry_points():
+        if ep.name not in ("path", "options"):
             continue
+        if ep.dist.name not in packages:
+            packages[ep.dist.name] = {
+                "name": ep.dist.name,
+                "version": ep.dist.version
+            }
 
-        package_info = {}
-
-        if "path" in entry_map:
-            ep = entry_map["path"]
-            package_info["plugins_path"] = ep.module_name
-        if "options" in entry_map:
-            ep = entry_map["options"]
-            package_info["options"] = "%s:%s" % (
-                ep.module_name,
-                ep.attrs[0] if ep.attrs else "list_opts",
+        if ep.name == "path":
+            packages[ep.dist.name]["plugins_path"] = ep.value
+            packages[ep.dist.name]["plugins_path_ep"] = ep
+        elif ep.name == "options":
+            packages[ep.dist.name]["options"] = (
+                ep.value if ":" in ep.value else f"{ep.value}:list_opts"
             )
 
-        if package_info:
-            package_info.update(
-                name=package.project_name,
-                version=package.version)
-            loaded_packages.append(package_info)
-    return loaded_packages
+    return list(packages.values())
 
 
-def import_modules_by_entry_point(_packages=None):
+def import_modules_by_entry_point(_packages: t.Union[list, None] = None):
     """Import plugins by entry-point 'rally_plugins'."""
-    loaded_packages = _packages or find_packages_by_entry_point()
+    if _packages is not None:
+        loaded_packages = _packages
+    else:
+        loaded_packages = find_packages_by_entry_point()
 
     for package in loaded_packages:
         if "plugins_path" in package:
-            em = pkg_resources.get_entry_map(package["name"])
-            ep = em["rally_plugins"]["path"]
+
+            ep = package["plugins_path_ep"]
             try:
                 m = ep.load()
                 if hasattr(m, "__path__"):
@@ -109,11 +117,12 @@ def import_modules_by_entry_point(_packages=None):
                 prefix = m.__name__ + "."
                 for loader, name, _is_pkg in pkgutil.walk_packages(
                         path, prefix=prefix):
-                    sys.modules[name] = importlib.import_module(name)
+                    if name not in sys.modules:
+                        sys.modules[name] = importlib.import_module(name)
             except Exception as e:
                 msg = ("\t Failed to load plugins from module '%(module)s' "
                        "(package: '%(package)s')" %
-                       {"module": ep.module_name,
+                       {"module": ep.name,
                         "package": "%s %s" % (package["name"],
                                               package["version"])})
                 if logging.is_debug():
@@ -145,7 +154,7 @@ def load_plugins(dir_or_file, depth=0):
         if depth:
             msg = "\t" + msg
         LOG.info(msg)
-        module_name = os.path.splitext(plugin_file.split("/")[-1])[0]
+        module_name = os.path.splitext(os.path.basename(plugin_file))[0]
         try:
             spec = importlib.util.spec_from_file_location(
                 module_name, plugin_file)

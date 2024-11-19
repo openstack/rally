@@ -522,21 +522,6 @@ def check_raises(logical_line, filename, noqa=False):
 
 
 @core.flake8ext
-def check_old_type_class(logical_line, noqa=False):
-    """Use new-style Python classes
-
-    N355
-    """
-    if noqa:
-        return
-
-    if re_old_type_class.search(logical_line):
-        yield (0, "N355 This class does not inherit from anything and thus "
-                  "will be an old-style class by default. Try to inherit from "
-                  "``object`` or another new-style class.")
-
-
-@core.flake8ext
 def check_datetime_alias(logical_line, noqa=False):
     """Ensure using ``dt`` as alias for ``datetime``
 

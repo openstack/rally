@@ -13,6 +13,8 @@
 #    under the License.
 
 import abc
+import importlib.metadata
+import importlib.resources
 import inspect
 import io
 import os
@@ -20,7 +22,8 @@ import re
 import shutil
 import sys
 
-import pkg_resources
+import packaging
+import packaging.requirements
 
 from rally.common.io import subunit_v2
 from rally.common import logging
@@ -261,10 +264,12 @@ class VerifierManager(plugin.Plugin, metaclass=abc.ABCMeta):
 
         LOG.debug("Initializing virtual environment in %s directory."
                   % self.venv_dir)
-        utils.check_output(["virtualenv", "-p", sys.executable, self.venv_dir],
-                           cwd=self.repo_dir,
-                           msg_on_err="Failed to initialize virtual env "
-                                      "in %s directory." % self.venv_dir)
+        utils.check_output(
+            ["virtualenv", "-p", sys.executable, self.venv_dir],
+            cwd=self.repo_dir,
+            msg_on_err=f"Failed to initialize virtual env in "
+                       f"{self.venv_dir} directory."
+        )
 
         LOG.debug("Installing verifier in virtual environment.")
         # NOTE(ylobankov): Use 'develop mode' installation to provide an
@@ -279,15 +284,27 @@ class VerifierManager(plugin.Plugin, metaclass=abc.ABCMeta):
         reqs_file_path = reqs_file_path or os.path.join(self.repo_dir,
                                                         "requirements.txt")
         with open(reqs_file_path) as f:
-            required_packages = [
-                p for p in f.read().split("\n")
-                if p.strip() and not p.startswith("#")
-            ]
-        try:
-            pkg_resources.require(required_packages)
-        except (pkg_resources.DistributionNotFound,
-                pkg_resources.VersionConflict) as e:
-            raise VerifierSetupFailure(e.report(), verifier=self.verifier.name)
+            req_file_data = f.read()
+
+        for p in req_file_data.split("\n"):
+            if not p.strip() or p.startswith("#"):
+                continue
+            req = packaging.requirements.Requirement(p.split("#")[0].strip())
+
+            try:
+                version = importlib.metadata.distribution(req.name).version
+            except importlib.metadata.PackageNotFoundError:
+                raise VerifierSetupFailure(
+                    f"The '{req}' distribution was not found, but "
+                    f"is required by the application",
+                    verifier=self.verifier.name
+                )
+
+            if not req.specifier.contains(version):
+                raise VerifierSetupFailure(
+                    f"{req.name} {version} is installed but {req} is required",
+                    verifier=self.verifier.name
+                )
 
     def checkout(self, version):
         """Switch a verifier repo."""

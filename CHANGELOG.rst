@@ -25,6 +25,12 @@ Added
 
 * CI jobs for checking compatibility with python 3.12
 
+Changed
+~~~~~~~
+
+Replaced deprecated `pkg_resources` library with `importlib` & `packaging`
+for plugins discovery and loading.
+
 Removed
 ~~~~~~~
 
