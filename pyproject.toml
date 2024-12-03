@@ -1,0 +1,73 @@
+[project]
+name = "rally"
+description = "Generic Testing Framework & Tool that unifies all types of testing"
+authors = [
+    {name = "OpenStack", email = "openstack-discuss@lists.openstack.org"},
+]
+readme = "README.rst"
+license = { text = "Apache License, Version 2.0"}
+classifiers = [
+    "Environment :: OpenStack",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dynamic = ["version", "dependencies"]
+requires-python = ">=3.9"
+
+[project.urls]
+Homepage = "https://rally.readthedocs.io/"
+Issues = "https://bugs.launchpad.net/rally"
+Source = "https://opendev.org/openstack/rally"
+Github = "https://github.com/openstack/rally"
+Changelog = "https://github.com/openstack/rally/blob/master/CHANGELOG.rst"
+
+[build-system]
+requires = [
+    "setuptools>=64",
+    "setuptools_scm>=8"
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.data-files]
+"etc/bash_completion.d" = ["etc/rally.bash_completion"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[project.optional-dependencies]
+mysql = [
+  "PyMySQL>=0.7.6"  # MIT
+]
+postgres = [
+  "psycopg2>=2.5"  # LGPL/ZPL
+]
+
+[tool.setuptools_scm]
+local_scheme = "no-local-version"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["rally*"]
+exclude = ["tests"]
+
+[project.scripts]
+rally = "rally.cli.main:main"
+
+[project.entry-points."oslo.config.opts"]
+rally = "rally.common.opts:list_opts"
+
+[project.entry-points."oslo.config.opts.defaults"]
+rally = "rally.common.opts:update_opt_defaults"

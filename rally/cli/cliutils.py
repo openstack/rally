@@ -116,7 +116,11 @@ def print_list(objs, fields, formatters=None, sortby_index=0,
 
     if print_border and print_row_border:
         headers_horizontal_char = "="
-        kwargs["hrules"] = prettytable.ALL
+        try:
+            kwargs["hrules"] = prettytable.HRuleStyle.ALL
+        except AttributeError:  # pragma: no cover
+            # old prettytable
+            kwargs["hrules"] = prettytable.ALL
     else:
         headers_horizontal_char = "-"
     pt = prettytable.PrettyTable(field_labels)
@@ -143,7 +147,11 @@ def print_list(objs, fields, formatters=None, sortby_index=0,
         pt.add_row(row)
 
     if not print_border or not print_header:
-        pt.set_style(prettytable.PLAIN_COLUMNS)
+        try:
+            pt.set_style(prettytable.TableStyle.PLAIN_COLUMNS)
+        except AttributeError:  # pragma: no cover
+            # old prettytable
+            pt.set_style(prettytable.PLAIN_COLUMNS)
         pt.left_padding_width = 0
         pt.right_padding_width = 1
 
@@ -506,7 +514,7 @@ def _compose_action_description(action_fn):
 def _print_version():
     from rally.common import version
 
-    print("Rally version: %s" % version.version_string())
+    print("Rally version: %s" % version.__version__)
     packages = version.plugins_versions()
     if packages:
         print("\nInstalled Plugins:")

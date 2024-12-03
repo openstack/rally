@@ -4,7 +4,7 @@
 
 hacking>=4.0                                           # Apache Software License
 
-fixtures                                               # Apache Software License/BSD License
+fixtures                                               # Apache-2.0 or BSD
 pytest                                                 # MIT
 # py.test plugin for measuring coverage.
 pytest-cov                                             # MIT

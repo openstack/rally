@@ -1,24 +1,21 @@
-# The order of packages is significant, because pip processes them in the order
-# of appearance. Changing the order has an impact on the overall integration
-# process, which may cause wedges in the gate later.
 
 # Rally core dependencies
-alembic!=1.2.0,!=1.6.3                                 # MIT
+alembic!=1.2.0,!=1.6.3
 Jinja2                                                 # BSD
-jsonschema                                             # MIT
+jsonschema
 markupsafe
 oslo.config!=4.3.0,!=4.4.0                             # Apache Software License
 # do not forget to remove `testresources` from test-requirements. it is a
 # dependency of oslo.db for tests
 oslo.db                                                # Apache Software License
 oslo.log!=3.44.2,!=4.1.2,!=4.2.0,!=5.0.1,!=5.0.2,!=5.1.0  # Apache Software License
+packaging!=20.5,!=20.6,!=20.7                          # Apache Software License/BSD License
 paramiko!=2.9.0,!=2.9.1                                # LGPL
-pbr!=2.1.0                                             # Apache Software License
-PrettyTable!=3.4.0                                     # BSD
+PrettyTable!=3.4.0
 pyOpenSSL                                              # Apache License, Version 2.0
 PyYAML                                                 # MIT
 python-subunit                                         # Apache-2.0 or BSD
 requests!=2.20.0,!=2.24.0                              # Apache-2.0
+setuptools_scm
 SQLAlchemy>=2                                          # MIT
 virtualenv!=16.3.0                                     # MIT
-packaging!=20.5,!=20.6,!=20.7                          # Apache Software License/BSD License
