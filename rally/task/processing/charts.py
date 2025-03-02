@@ -32,7 +32,8 @@ class Chart(plugin.Plugin, metaclass=abc.ABCMeta):
     prepare data that is suitable for rendering by JavaScript.
     """
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def widget(self):
         """Widget name to display this chart by JavaScript."""
 
@@ -315,7 +316,8 @@ class Table(Chart, metaclass=abc.ABCMeta):
     widget = "Table"
     _styles = {}
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def columns(self):
         """List of columns names."""
 
