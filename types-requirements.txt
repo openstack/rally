@@ -1,0 +1,8 @@
+mypy
+# Type stubs for external packages
+types-Jinja2
+types-jsonschema
+types-paramiko
+types-PyYAML
+types-requests
+types-setuptools

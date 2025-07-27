@@ -12,14 +12,20 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import annotations
+
 import sys
 
 
-def _get_default_encoding():
+def _get_default_encoding() -> str:
     return sys.stdin.encoding or sys.getdefaultencoding()
 
 
-def safe_decode(text, incoming=None, errors="strict"):
+def safe_decode(
+    text: str | bytes,
+    incoming: str | None = None,
+    errors: str = "strict",
+) -> str:
     """Decodes incoming string using `incoming` if they're not already unicode.
 
     :param text: text/bytes string to decode
@@ -56,7 +62,12 @@ def safe_decode(text, incoming=None, errors="strict"):
         return text.decode("utf-8", errors)
 
 
-def safe_encode(text, incoming=None, encoding="utf-8", errors="strict"):
+def safe_encode(
+    text: str | bytes,
+    incoming: str | None = None,
+    encoding: str = "utf-8",
+    errors: str = "strict",
+) -> bytes:
     """Encodes incoming text/bytes string using `encoding`.
 
     If incoming is not specified, text is expected to be encoded with

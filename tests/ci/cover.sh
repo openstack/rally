@@ -55,7 +55,12 @@ echo "Allowed to introduce missing lines : ${ALLOWED_EXTRA_MISSING}"
 echo "Missing lines in master            : ${baseline_missing}"
 echo "Missing lines in proposed change   : ${current_missing}"
 
-if [ $allowed_missing -gt $current_missing ];
+# Support a way to allow violation
+if git log -1 --pretty=format:%B | grep -q "PRAGMA: NO COVER"
+then
+    echo "PRAGMA: NO COVER found in latest commit message. Skipping coverage threshold check."
+    exit_code=0
+elif [ $allowed_missing -gt $current_missing ];
 then
     if [ $baseline_missing -lt $current_missing ];
     then

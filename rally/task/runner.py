@@ -137,7 +137,7 @@ class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin,
         self.result_queue = collections.deque()
         self.event_queue = collections.deque()
         self.aborted = multiprocessing.Event()
-        self.run_duration = 0
+        self.run_duration = 0.0
         self.batch_size = batch_size
         self.result_batch = []
 

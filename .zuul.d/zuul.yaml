@@ -8,6 +8,7 @@
       jobs:
         - rally-tox-cover
         - rally-tox-docs
+        - rally-tox-mypy
         - rally-tox-pep8
         - rally-tox-py39
         - rally-tox-py310

@@ -13,10 +13,17 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import annotations
+
+import typing as t
+
+if t.TYPE_CHECKING:  # pragma: no cover
+    import requests
+
 from rally.common.plugin import discover
 
 
-_exception_map = None
+_exception_map: dict[int, type[RallyException]] | None = None
 
 
 class RallyException(Exception):
@@ -30,7 +37,7 @@ class RallyException(Exception):
     msg_fmt = "%(message)s"
     error_code = 100
 
-    def __init__(self, message=None, **kwargs):
+    def __init__(self, message: str | None = None, **kwargs: t.Any) -> None:
         self.kwargs = kwargs
 
         if "%(message)s" in self.msg_fmt:
@@ -38,11 +45,11 @@ class RallyException(Exception):
 
         super(RallyException, self).__init__(self.msg_fmt % kwargs)
 
-    def format_message(self):
+    def format_message(self) -> str:
         return str(self)
 
 
-def find_exception(response):
+def find_exception(response: requests.Response) -> RallyException:
     """Discover a proper exception class based on response object."""
     global _exception_map
     if _exception_map is None:
@@ -56,7 +63,7 @@ def find_exception(response):
     return exc_class(error_data["msg"])
 
 
-def make_exception(exc):
+def make_exception(exc: Exception) -> RallyException:
     """Check a class of exception and convert it to rally-like if needed."""
     if isinstance(exc, RallyException):
         return exc

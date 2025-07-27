@@ -13,8 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import annotations
 
 from importlib.metadata import version as _version
+import typing as t
 
 from rally.common.plugin import discover as rally_discover
 
@@ -27,7 +29,7 @@ try:
 except Exception:
     # Fallback to setuptools_scm for development installs
     try:
-        from setuptools_scm import get_version
+        from setuptools_scm import get_version  # type: ignore[import-untyped]
 
         __version__ = get_version()
     except Exception:
@@ -41,13 +43,13 @@ __version_tuple__ = tuple(
 )
 
 
-def database_revision():
+def database_revision() -> dict[str, t.Any]:
     from rally.common.db import schema
 
     return schema.schema_revision(detailed=True)
 
 
-def plugins_versions():
+def plugins_versions() -> dict[str, str]:
     """Show packages version"""
 
     return dict(
@@ -60,13 +62,13 @@ def plugins_versions():
 class version_info:
 
     @classmethod
-    def semantic_version(cls):
+    def semantic_version(cls) -> type[version_info]:
         return cls
 
     @classmethod
-    def version_tuple(cls):
+    def version_tuple(cls) -> tuple[int | str, ...]:
         return __version_tuple__
 
 
-def version_string():
+def version_string() -> str:
     return __version__

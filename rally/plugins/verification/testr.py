@@ -16,7 +16,7 @@ import os
 import re
 import shutil
 import subprocess
-
+import typing as t
 
 from rally.common.io import subunit_v2
 from rally.common import logging
@@ -144,10 +144,13 @@ class TestrLauncher(manager.VerifierManager):
                                   stderr=subprocess.STDOUT)
         xfail_list = context.get("xfail_list")
         skip_list = context.get("skip_list")
-        results = subunit_v2.parse(stream.stdout, live=True,
-                                   expected_failures=xfail_list,
-                                   skipped_tests=skip_list,
-                                   logger_name=self.verifier.name)
+        results = subunit_v2.parse(
+            t.cast(t.IO, stream.stdout),
+            live=True,
+            expected_failures=xfail_list,
+            skipped_tests=skip_list,
+            logger_name=self.verifier.name
+        )
         stream.wait()
 
         return results

@@ -71,3 +71,468 @@ rally = "rally.common.opts:list_opts"
 
 [project.entry-points."oslo.config.opts.defaults"]
 rally = "rally.common.opts:update_opt_defaults"
+
+[tool.mypy]
+files = [
+    "rally",
+]
+python_version = "3.9"
+disallow_untyped_defs = true
+check_untyped_defs = true
+allow_redefinition = true
+strict_equality = true
+# disable warnings on missing `return None` at the end of functions that
+#   declare optional result
+no_warn_no_return = true
+
+# FIXME(andreykurilin): all the following should be fixed
+
+[[tool.mypy.overrides]]
+module = "rally.api"
+disable_error_code = ["attr-defined", "no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.cli.cliutils"
+disable_error_code = ["arg-type", "assignment", "import-untyped", "index", "no-untyped-def", "var-annotated"]
+
+[[tool.mypy.overrides]]
+module = "rally.cli.commands.db"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.cli.commands.deployment"
+disable_error_code = ["import-not-found", "no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.cli.commands.env"
+disable_error_code = ["arg-type", "func-returns-value", "no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.cli.commands.plugin"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.cli.commands.task"
+disable_error_code = ["no-untyped-def", "var-annotated"]
+
+[[tool.mypy.overrides]]
+module = "rally.cli.commands.verify"
+disable_error_code = ["assignment", "attr-defined", "method-assign", "no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.cli.envutils"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.cli.main"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.cli.task_results_loader"
+disable_error_code = ["attr-defined", "no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.cli.yamlutils"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.broker"
+disable_error_code = ["no-untyped-def", "var-annotated"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.api"
+disable_error_code = ["arg-type", "assignment", "import-untyped", "no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.migrations.env"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.migrations.versions.2016_01_ca3626f62937_init_migration"
+disable_error_code = ["no-untyped-def", "arg-type"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.migrations.versions.2016_03_3177d36ea270_merge_credentials_from_users_and_admin"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.migrations.versions.2016_04_4ef544102ba7_change_task_status_enum"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.migrations.versions.2016_04_e654a0648db0_refactor_task_results"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.migrations.versions.2016_07_54e844ebfbc3_update_deployment_configs"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.migrations.versions.2016_08_32fada9b2fde_remove_admin_domain_name"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.migrations.versions.2016_09_08e1515a576c_fix_invalid_verification_logs"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.migrations.versions.2016_09_6ad4f426f005_add_hooks_to_task_result"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.migrations.versions.2016_11_484cd9413e66_new_db_schema_for_verification_component"
+disable_error_code = ["no-untyped-def", "union-attr"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.migrations.versions.2016_12_37fdbb373e8d_fix_test_results_for_verifications"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.migrations.versions.2017_01_a6f364988fc2_change_tag_type_enum"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.migrations.versions.2017_01_f33f4610dcda_change_verification_statuses"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.migrations.versions.2017_02_92aaaa2a6bb3_refactor_credentials"
+disable_error_code = ["no-untyped-def", "var-annotated"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.migrations.versions.2017_06_35fe16d4ab1c_update_tasks_based_on_workloads"
+disable_error_code = ["no-untyped-def", "var-annotated"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.migrations.versions.2017_06_c517b0011857_fill_missed_workload_info"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.migrations.versions.2017_07_7948b83229f6_workload_min_max_durations"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.migrations.versions.2017_08_fab4f4f31f8a_fill_missed_workload_info"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.migrations.versions.2017_09_046a38742e89_port_configs_to_new_formats"
+disable_error_code = ["assignment", "attr-defined", "no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.migrations.versions.2017_09_e0a5df2c5153_upsize_the_size_of_task_title"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.migrations.versions.2017_10_4394bdc32cfd_fill_missed_workload_info_r3"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.migrations.versions.2017_10_9a18c6fe265c_rename_namespace_to_platform"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.migrations.versions.2017_10_dc46687661df_update_contexts"
+disable_error_code = ["attr-defined", "index", "misc", "no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.migrations.versions.2017_12_a43700a813a5_add_env_platforms_tables"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.migrations.versions.2018_01_44169f4d455e_deleted_worker_table"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.migrations.versions.2018_01_7287df262dbc_move_deployment_to_env"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.migrations.versions.2018_02_95208e4eface_add_config_field_to_env_models"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.migrations.versions.2018_02_bc908ac9a1fc_move_deployment_to_env_2"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.migrations.versions.2018_02_dc0fe6de6786_update_old_deployment_config"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.models"
+disable_error_code = ["attr-defined", "misc", "no-untyped-def", "valid-type", "union-attr"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.sa_types"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.db.schema"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.logging"
+disable_error_code = ["attr-defined", "import-untyped", "name-defined", "no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.objects.deploy"
+disable_error_code = ["import-not-found", "no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.objects.task"
+disable_error_code = ["assignment", "index", "no-untyped-def", "operator"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.objects.verification"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.objects.verifier"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.opts"
+disable_error_code = ["no-untyped-def", "var-annotated"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.plugin.discover"
+disable_error_code = ["arg-type", "call-arg", "no-untyped-def", "union-attr"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.plugin.info"
+disable_error_code = ["attr-defined", "no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.plugin.meta"
+disable_error_code = ["assignment", "attr-defined", "no-untyped-def", "var-annotated"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.plugin.plugin"
+disable_error_code = ["no-untyped-def", "str-format"]
+
+
+[[tool.mypy.overrides]]
+module = "rally.common.streaming_algorithms"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.common.validation"
+disable_error_code = ["attr-defined", "no-untyped-def"]
+
+
+
+[[tool.mypy.overrides]]
+module = "rally.env.env_mgr"
+disable_error_code = ["attr-defined", "index", "no-untyped-def", "var-annotated"]
+
+[[tool.mypy.overrides]]
+module = "rally.env.platform"
+disable_error_code = ["no-untyped-def"]
+
+
+[[tool.mypy.overrides]]
+module = "rally.plugins"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.plugins.common.validators"
+disable_error_code = ["arg-type", "assignment", "no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.plugins.task.contexts.dummy"
+disable_error_code = ["dict-item", "no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.plugins.task.exporters.elastic.client"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.plugins.task.exporters.elastic.exporter"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.plugins.task.exporters.elastic.flatten"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.plugins.task.exporters.html"
+disable_error_code = ["no-untyped-def", "var-annotated"]
+
+[[tool.mypy.overrides]]
+module = "rally.plugins.task.exporters.json_exporter"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.plugins.task.exporters.junit"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.plugins.task.exporters.old_json_results"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.plugins.task.exporters.trends"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.plugins.task.hook_triggers.event"
+disable_error_code = ["dict-item", "no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.plugins.task.hook_triggers.periodic"
+disable_error_code = ["dict-item", "no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.plugins.task.hooks.sys_call"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.plugins.task.runners.constant"
+disable_error_code = ["assignment", "no-untyped-def", "var-annotated"]
+
+[[tool.mypy.overrides]]
+module = "rally.plugins.task.runners.rps"
+disable_error_code = ["no-untyped-def", "var-annotated"]
+
+[[tool.mypy.overrides]]
+module = "rally.plugins.task.runners.serial"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.plugins.task.scenarios.dummy.dummy"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.plugins.task.scenarios.requests.http_requests"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.plugins.task.scenarios.requests.utils"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.plugins.task.sla.failure_rate"
+disable_error_code = ["dict-item", "no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.plugins.task.sla.iteration_time"
+disable_error_code = ["dict-item", "no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.plugins.task.sla.max_average_duration"
+disable_error_code = ["dict-item", "no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.plugins.task.sla.max_average_duration_per_atomic"
+disable_error_code = ["assignment", "dict-item", "no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.plugins.task.sla.outliers"
+disable_error_code = ["dict-item", "no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.plugins.task.sla.performance_degradation"
+disable_error_code = ["dict-item", "no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.plugins.task.types"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.plugins.verification.reporters"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.plugins.verification.testr"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.task.atomic"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.task.context"
+disable_error_code = ["assignment", "no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.task.engine"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.task.exporter"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.task.functional"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.task.hook"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.task.processing.charts"
+disable_error_code = ["index", "no-untyped-def", "override", "var-annotated"]
+
+[[tool.mypy.overrides]]
+module = "rally.task.processing.plot"
+disable_error_code = ["assignment", "attr-defined", "no-untyped-def", "var-annotated"]
+
+[[tool.mypy.overrides]]
+module = "rally.task.processing.utils"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.task.runner"
+disable_error_code = ["no-untyped-def", "var-annotated"]
+
+[[tool.mypy.overrides]]
+module = "rally.task.scenario"
+disable_error_code = ["attr-defined", "no-untyped-def", "var-annotated"]
+
+[[tool.mypy.overrides]]
+module = "rally.task.service"
+disable_error_code = ["call-overload", "no-untyped-def", "var-annotated"]
+
+[[tool.mypy.overrides]]
+module = "rally.task.sla"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.task.task_cfg"
+disable_error_code = ["assignment", "attr-defined", "no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.task.types"
+disable_error_code = ["no-untyped-def", "var-annotated"]
+
+[[tool.mypy.overrides]]
+module = "rally.task.utils"
+disable_error_code = ["index", "no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.ui.utils"
+disable_error_code = ["no-untyped-def"]
+
+
+[[tool.mypy.overrides]]
+module = "rally.utils.sshutils"
+disable_error_code = ["assignment", "attr-defined", "no-untyped-def"]
+
+
+[[tool.mypy.overrides]]
+module = "rally.verification.context"
+disable_error_code = ["no-untyped-def", "var-annotated"]
+
+[[tool.mypy.overrides]]
+module = "rally.verification.manager"
+disable_error_code = ["no-untyped-def", "var-annotated"]
+
+[[tool.mypy.overrides]]
+module = "rally.verification.reporter"
+disable_error_code = ["no-untyped-def"]
+
+[[tool.mypy.overrides]]
+module = "rally.verification.utils"
+disable_error_code = ["assignment", "method-assign", "no-untyped-def"]

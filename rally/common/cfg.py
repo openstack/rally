@@ -15,7 +15,7 @@
 # NOTE(andreykurilin): In near future we are planning to get rid of
 #   oslo_config. As a first step, let's hardcode the interface of it
 
-from oslo_config import cfg
+from oslo_config import cfg  # type: ignore[import-untyped]
 
 
 CONF = cfg.CONF

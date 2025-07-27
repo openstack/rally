@@ -12,10 +12,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import annotations
+
+import typing as t
 import uuid
 
 
-def _format_uuid_string(string):
+def _format_uuid_string(string: str) -> str:
     return (string.replace("urn:", "")
                   .replace("uuid:", "")
                   .strip("{}")
@@ -23,7 +26,7 @@ def _format_uuid_string(string):
                   .lower())
 
 
-def is_uuid_like(val):
+def is_uuid_like(val: t.Any) -> bool:
     """Returns validation of a value as a UUID.
 
     :param val: Value to verify
@@ -43,7 +46,11 @@ TRUE_STRINGS = ("1", "t", "true", "on", "y", "yes")
 FALSE_STRINGS = ("0", "f", "false", "off", "n", "no")
 
 
-def bool_from_string(subject, strict=False, default=False):
+def bool_from_string(
+    subject: str | bool | int,
+    strict: bool = False,
+    default: bool = False,
+) -> bool:
     """Interpret a subject as a boolean.
 
     A subject can be a boolean, a string or an integer. Boolean type value
@@ -81,7 +88,7 @@ def bool_from_string(subject, strict=False, default=False):
         return default
 
 
-def format_float_to_str(num):
+def format_float_to_str(num: float) -> str:
     """Format number into human-readable float format.
 
      More precise it convert float into the string and remove redundant

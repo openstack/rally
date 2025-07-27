@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import annotations
+
 import bisect
 import collections
 import copy
@@ -30,78 +32,108 @@ import string
 import sys
 import tempfile
 import time
+import typing as t
 import uuid
 
 from rally.common.io import junit
 from rally.common import logging
 from rally import exceptions
 
+if t.TYPE_CHECKING:  # pragma: no cover
+    import threading
+
+
 LOG = logging.getLogger(__name__)
 
 
-class ImmutableMixin(object):
+class ImmutableMixin:
     _inited = False
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._inited = True
 
-    def __setattr__(self, key, value):
+    def __setattr__(self, key: str, value: t.Any) -> None:
         if self._inited:
             raise AttributeError("This object is immutable.")
         super(ImmutableMixin, self).__setattr__(key, value)
 
 
-class EnumMixin(object):
-    def __iter__(self):
+class EnumMixin:
+    def __iter__(self) -> t.Iterator[t.Any]:
         for k, v in map(lambda x: (x, getattr(self, x)), dir(self)):
             if not k.startswith("_"):
                 yield v
 
 
-class StdOutCapture(object):
-    def __init__(self):
+class StdOutCapture:
+    def __init__(self) -> None:
         self.stdout = sys.stdout
 
-    def __enter__(self):
+    def __enter__(self) -> io.StringIO:
         sys.stdout = io.StringIO()
         return sys.stdout
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(
+        self,
+        type: type[BaseException] | None,
+        value: BaseException | None,
+        traceback: t.Any,
+    ) -> None:
         sys.stdout = self.stdout
 
 
-class StdErrCapture(object):
-    def __init__(self):
+class StdErrCapture:
+    def __init__(self) -> None:
         self.stderr = sys.stderr
 
-    def __enter__(self):
+    def __enter__(self) -> io.StringIO:
         sys.stderr = io.StringIO()
         return sys.stderr
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(
+        self,
+        type: type[BaseException] | None,
+        value: BaseException | None,
+        traceback: t.Any,
+    ) -> None:
         sys.stderr = self.stderr
 
 
-class Timer(object):
+class Timer:
     """Timer based on context manager interface."""
 
-    def __enter__(self):
-        self.error = None
+    def __enter__(self) -> Timer:
+        self.error: (
+            tuple[type[BaseException], BaseException, t.Any] | None
+        ) = None
         self.start = time.time()
         return self
 
-    def timestamp(self):
+    def timestamp(self) -> float:
         return self.start
 
-    def finish_timestamp(self):
+    def finish_timestamp(self) -> float:
         return self.finish
 
-    def __exit__(self, type, value, tb):
+    def __exit__(
+        self,
+        type: type[BaseException] | None,
+        value: BaseException | None,
+        tb: t.Any,
+    ) -> None:
         self.finish = time.time()
-        if type:
+        if type and value:
             self.error = (type, value, tb)
 
-    def duration(self, fmt=False):
+    @t.overload
+    def duration(self, fmt: t.Literal[False] = False) -> float:
+        ...
+
+    @t.overload
+    def duration(self, fmt: t.Literal[True]) -> str:
+        ...
+
+    def duration(self, fmt: bool = False) -> float | str:
         duration = self.finish - self.start
         if not fmt:
             return duration
@@ -112,15 +144,15 @@ class Timer(object):
         return "%.2f msec" % (duration * 1000)
 
 
-class Struct(object):
-    def __init__(self, **entries):
+class Struct:
+    def __init__(self, **entries: t.Any) -> None:
         self.__dict__.update(entries)
 
-    def __getitem__(self, item, default=None):
+    def __getitem__(self, item: str, default: t.Any = None) -> t.Any:
         return getattr(self, item, default)
 
 
-class RAMInt(object):
+class RAMInt:
     """Share RAM integer, for IPC.
 
     This class represents iterable which refers directly to an integer value
@@ -128,36 +160,36 @@ class RAMInt(object):
     share integer among processes and threads.
     """
 
-    def __init__(self, base_value=0):
+    def __init__(self, base_value: int = 0) -> None:
         self.__int = multiprocessing.Value("I", base_value)
 
-    def __int__(self):
+    def __int__(self) -> int:
         return self.__int.value
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.__int.value)
 
-    def __iter__(self):
+    def __iter__(self) -> RAMInt:
         return self
 
-    def __next__(self):
-        with self.__int._lock:
+    def __next__(self) -> int:
+        with self.__int._lock:  # type: ignore[attr-defined]
             value = self.__int.value
             self.__int.value += 1
             if self.__int.value > value:
                 return value
             raise StopIteration
 
-    def next(self):
+    def next(self) -> int:
         return self.__next__()
 
-    def reset(self):
-        with self.__int._lock:
+    def reset(self) -> None:
+        with self.__int._lock:  # type: ignore[attr-defined]
             self.__int.value = 0
 
 
 @logging.log_deprecated("it was an inner helper.", rally_version="3.0.0")
-def get_method_class(func):
+def get_method_class(func: t.Any) -> type | None:
     """Return the class that defined the given method.
 
     :param func: function to get the class for.
@@ -165,7 +197,7 @@ def get_method_class(func):
     """
     if hasattr(func, "im_class"):
         # this check works in Python 2
-        for cls in inspect.getmro(func.im_class):
+        for cls in inspect.getmro(func.im_class):  # type: ignore[attr-defined]
             if func.__name__ in cls.__dict__:
                 return cls
     elif hasattr(func, "__qualname__") and inspect.isfunction(func):
@@ -180,7 +212,10 @@ def get_method_class(func):
 
 
 @logging.log_deprecated("it was an inner helper.", rally_version="3.0.0")
-def first_index(lst, predicate):
+def first_index(
+    lst: list[t.Any],
+    predicate: t.Callable[[t.Any], bool],
+) -> int | None:
     """Return the index of the first element that matches a predicate.
 
     :param lst: list to find the matching element in.
@@ -194,7 +229,12 @@ def first_index(lst, predicate):
     return None
 
 
-def retry(times, func, *args, **kwargs):
+def retry(
+    times: int,
+    func: t.Callable[..., t.Any],
+    *args: t.Any,
+    **kwargs: t.Any,
+) -> t.Any:
     """Try to execute multiple times function mitigating exceptions.
 
     :param times: Amount of attempts to execute function
@@ -215,7 +255,9 @@ def retry(times, func, *args, **kwargs):
 
 
 @logging.log_deprecated("it is openstack specific.", rally_version="3.0.0")
-def iterate_per_tenants(users):
+def iterate_per_tenants(
+    users: list[dict[str, t.Any]],
+) -> t.Iterator[tuple[dict[str, t.Any], str]]:
     """Iterate of a single arbitrary user from each tenant
 
     :type users: list of users
@@ -254,15 +296,15 @@ class RandomNameGeneratorMixin(object):
     RESOURCE_NAME_ALLOWED_CHARACTERS = string.ascii_letters + string.digits
 
     @classmethod
-    def _get_resource_name_format(cls):
+    def _get_resource_name_format(cls) -> str:
         return cls.RESOURCE_NAME_FORMAT
 
     @classmethod
-    def _get_resource_name_allowed_characters(cls):
+    def _get_resource_name_allowed_characters(cls) -> str:
         return cls.RESOURCE_NAME_ALLOWED_CHARACTERS
 
     @classmethod
-    def _generate_random_part(cls, length):
+    def _generate_random_part(cls, length: int) -> str:
         """Generate a random string.
 
         :param length: The length of the random string.
@@ -275,7 +317,7 @@ class RandomNameGeneratorMixin(object):
             for i in range(length))
 
     @classmethod
-    def _generate_task_id_part(cls, task_id, length):
+    def _generate_task_id_part(cls, task_id: str, length: int) -> str:
         # NOTE(stpierre): the first part of the random name is a
         # subset of the task ID
         task_id_part = task_id.replace("-", "")[0:length]
@@ -307,13 +349,13 @@ class RandomNameGeneratorMixin(object):
         finally:
             random.seed()
 
-    def get_owner_id(self):
+    def get_owner_id(self) -> str | None:
         if hasattr(self, "task"):
             return self.task["uuid"]
         elif hasattr(self, "verification"):
             return self.verification["uuid"]
 
-    def generate_random_name(self):
+    def generate_random_name(self) -> str:
         """Generate pseudo-random resource name for scenarios.
 
         The name follows a deterministic pattern, which helps support
@@ -337,13 +379,18 @@ class RandomNameGeneratorMixin(object):
         parts = match.groupdict()
         return "".join([
             parts["prefix"],
-            self._generate_task_id_part(task_id, len(parts["task"])),
+            self._generate_task_id_part(task_id or "", len(parts["task"])),
             parts["sep"],
             self._generate_random_part(len(parts["rand"])),
             parts["suffix"]])
 
     @classmethod
-    def name_matches_object(cls, name, task_id=None, exact=True):
+    def name_matches_object(
+        cls,
+        name: str,
+        task_id: str | None = None,
+        exact: bool = True,
+    ) -> bool:
         """Determine if a resource name could have been created by this class.
 
         :param name: The resource name to check against this class's
@@ -359,6 +406,9 @@ class RandomNameGeneratorMixin(object):
         """
         match = cls._resource_name_placeholder_re.match(
             cls._get_resource_name_format())
+        if match is None:
+            raise ValueError("%s is not a valid resource name format" %
+                             cls._get_resource_name_format())
         parts = match.groupdict()
         subst = {
             "prefix": re.escape(parts["prefix"]),
@@ -379,7 +429,7 @@ class RandomNameGeneratorMixin(object):
         return bool(name_re.match(name))
 
 
-def name_matches_object(name, *objects, **kwargs):
+def name_matches_object(name: str, *objects: t.Any, **kwargs: t.Any) -> bool:
     """Determine if a resource name could have been created by given objects.
 
     The object(s) must implement RandomNameGeneratorMixin.
@@ -408,7 +458,7 @@ def name_matches_object(name, *objects, **kwargs):
                for obj in unique_rng_options.values())
 
 
-def make_name_matcher(*names):
+def make_name_matcher(*names: str) -> type[RandomNameGeneratorMixin]:
     """Construct a matcher for custom names
 
     In case of contexts, there can be custom names. To reuse common cleanup
@@ -422,14 +472,19 @@ def make_name_matcher(*names):
         NAMES = names
 
         @classmethod
-        def name_matches_object(cls, name, task_id=None, exact=True):
+        def name_matches_object(
+            cls,
+            name: str,
+            task_id: str | None = None,
+            exact: bool = True,
+        ) -> bool:
             return name in cls.NAMES
 
     return CustomNameMatcher
 
 
 @logging.log_deprecated("it was an inner helper.", rally_version="3.0.0")
-def merge(length, *sources):
+def merge(length: int, *sources: t.Any) -> t.Any:
     """Merge lists of lists.
 
     Each source produces (or contains) lists of ordered items.
@@ -462,7 +517,7 @@ def merge(length, *sources):
         {"data": [], "gen": src}
         for src in sources]
 
-    out_chunk = []
+    out_chunk: list[t.Any] = []
     while True:
         while len(out_chunk) < length:
 
@@ -508,7 +563,7 @@ def merge(length, *sources):
             return
 
 
-def interruptable_sleep(sleep_time, atomic_delay=0.1):
+def interruptable_sleep(sleep_time: float, atomic_delay: float = 0.1) -> None:
     """Return after sleep_time seconds.
 
     Divide sleep_time by atomic_delay, and call time.sleep N times.
@@ -535,7 +590,10 @@ def interruptable_sleep(sleep_time, atomic_delay=0.1):
         raise ValueError("sleep_time should be >= 0")
 
 
-def terminate_thread(thread_ident, exc_type=exceptions.ThreadTimeoutException):
+def terminate_thread(
+    thread_ident: int,
+    exc_type: type[BaseException] = exceptions.ThreadTimeoutException,
+) -> None:
     """Terminate a python thread.
 
     Use PyThreadState_SetAsyncExc to terminate thread.
@@ -548,14 +606,16 @@ def terminate_thread(thread_ident, exc_type=exceptions.ThreadTimeoutException):
         ctypes.c_long(thread_ident), ctypes.py_object(exc_type))
 
 
-def timeout_thread(queue):
+def timeout_thread(
+    queue: queue_m.Queue[tuple[threading.Thread, float] | tuple[None, None]],
+) -> None:
     """Terminate threads by timeout.
 
     Function need to be run in separate thread. Its designed to terminate
     threads which are running longer then timeout.
 
-    Parent thread will put tuples (thread_ident, deadline) in the queue,
-    where `thread_ident` is Thread.ident value of thread to watch, and
+    Parent thread will put tuples (thread, deadline) in the queue,
+    where `thread` is the threading.Thread object to watch, and
     `deadline` is timestamp when thread should be terminated. Also tuple
     (None, None) should be put when all threads are exited and no more
     threads to watch.
@@ -563,12 +623,17 @@ def timeout_thread(queue):
     :param queue: Queue object to communicate with parent thread.
     """
 
-    all_threads = collections.deque()
+    all_threads: collections.deque[
+        tuple[threading.Thread, float] | tuple[None, None]
+    ] = collections.deque()
+    thread = None
     while True:
         if not all_threads:
             timeout = None
         else:
             thread, deadline = all_threads[0]
+            if thread is None or deadline is None:
+                return
             timeout = deadline - time.time()
         try:
             next_thread = queue.get(timeout=timeout)
@@ -576,12 +641,12 @@ def timeout_thread(queue):
         except (queue_m.Empty, ValueError):
             # NOTE(rvasilets) Empty means that timeout was occurred.
             # ValueError means that timeout lower than 0.
-            if thread.is_alive():
-                LOG.info("Thread %s is timed out. Terminating." % thread.ident)
+            if thread and thread.is_alive() and thread.ident is not None:
+                LOG.info(f"Thread {thread.ident} is timed out. Terminating.")
                 terminate_thread(thread.ident)
             all_threads.popleft()
 
-        if next_thread == (None, None,):
+        if next_thread == (None, None):
             return
 
 
@@ -597,12 +662,12 @@ class LockedDict(dict):
          d["spam"] = 42  # Works
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: t.Any, **kwargs: t.Any) -> None:
         super(LockedDict, self).__init__(*args, **kwargs)
         self._is_locked = True
         self._is_ready_to_be_unlocked = False
 
-        def lock(obj):
+        def lock(obj: t.Any) -> t.Any:
             if isinstance(obj, dict):
                 return LockedDict(obj)
             elif isinstance(obj, list):
@@ -613,16 +678,16 @@ class LockedDict(dict):
             for k, v in self.items():
                 self[k] = lock(v)
 
-    def _check_is_unlocked(self):
+    def _check_is_unlocked(self) -> None:
         if self._is_locked:
             raise RuntimeError("Trying to change read-only dict %r" % self)
 
-    def unlocked(self):
+    def unlocked(self) -> LockedDict:
         self._is_ready_to_be_unlocked = True
         return self
 
-    def __deepcopy__(self, memo=None):
-        def unlock(obj):
+    def __deepcopy__(self, memo: t.Any = None) -> LockedDict:
+        def unlock(obj: t.Any) -> t.Any:
             if isinstance(obj, LockedDict):
                 obj = dict(obj)
                 for k, v in obj.items():
@@ -632,39 +697,39 @@ class LockedDict(dict):
             return obj
         return copy.deepcopy(unlock(self), memo=memo)
 
-    def __enter__(self, *args):
+    def __enter__(self, *args: t.Any) -> None:
         if self._is_ready_to_be_unlocked:
             self._is_locked = False
 
-    def __exit__(self, *args):
+    def __exit__(self, *args: t.Any) -> None:
         self._is_ready_to_be_unlocked = False
         self._is_locked = True
 
-    def __setitem__(self, *args, **kwargs):
+    def __setitem__(self, *args: t.Any, **kwargs: t.Any) -> None:
         self._check_is_unlocked()
         return super(LockedDict, self).__setitem__(*args, **kwargs)
 
-    def __delitem__(self, *args, **kwargs):
+    def __delitem__(self, *args: t.Any, **kwargs: t.Any) -> None:
         self._check_is_unlocked()
         return super(LockedDict, self).__delitem__(*args, **kwargs)
 
-    def pop(self, *args, **kwargs):
+    def pop(self, *args: t.Any, **kwargs: t.Any) -> t.Any:
         self._check_is_unlocked()
         return super(LockedDict, self).pop(*args, **kwargs)
 
-    def popitem(self, *args, **kwargs):
+    def popitem(self, *args: t.Any, **kwargs: t.Any) -> t.Any:
         self._check_is_unlocked()
         return super(LockedDict, self).popitem(*args, **kwargs)
 
-    def update(self, *args, **kwargs):
+    def update(self, *args: t.Any, **kwargs: t.Any) -> None:
         self._check_is_unlocked()
         return super(LockedDict, self).update(*args, **kwargs)
 
-    def setdefault(self, *args, **kwargs):
+    def setdefault(self, *args: t.Any, **kwargs: t.Any) -> t.Any:
         self._check_is_unlocked()
         return super(LockedDict, self).setdefault(*args, **kwargs)
 
-    def clear(self, *args, **kwargs):
+    def clear(self, *args: t.Any, **kwargs: t.Any) -> None:
         self._check_is_unlocked()
         return super(LockedDict, self).clear(*args, **kwargs)
 
@@ -672,26 +737,26 @@ class LockedDict(dict):
 class DequeAsQueue(object):
     """Allows to use some of Queue methods on collections.deque."""
 
-    def __init__(self, deque):
+    def __init__(self, deque: collections.deque) -> None:
         self.deque = deque
 
-    def qsize(self):
+    def qsize(self) -> int:
         return len(self.deque)
 
-    def put(self, value):
+    def put(self, value: t.Any) -> None:
         self.deque.append(value)
 
-    def get(self):
+    def get(self) -> t.Any:
         return self.deque.popleft()
 
-    def empty(self):
+    def empty(self) -> bool:
         return bool(self.deque)
 
 
 class Stopwatch(object):
     """Allows to sleep till specified time since start."""
 
-    def __init__(self, stop_event=None):
+    def __init__(self, stop_event: threading.Event | None = None) -> None:
         """Creates Stopwatch.
 
         :param stop_event: optional threading.Event to use for waiting
@@ -700,10 +765,10 @@ class Stopwatch(object):
         """
         self._stop_event = stop_event
 
-    def start(self):
+    def start(self) -> None:
         self._start_time = time.time()
 
-    def sleep(self, sec):
+    def sleep(self, sec: float) -> None:
         """Sleeps till specified second since start."""
         target_time = self._start_time + sec
         current_time = time.time()
@@ -712,14 +777,14 @@ class Stopwatch(object):
         time_to_sleep = target_time - current_time
         self._sleep(time_to_sleep)
 
-    def _sleep(self, sec):
+    def _sleep(self, sec: float) -> None:
         if self._stop_event:
             self._stop_event.wait(sec)
         else:
             interruptable_sleep(sec)
 
 
-def generate_random_path(root_dir=None):
+def generate_random_path(root_dir: str | None = None) -> str:
     """Generates a vacant name for a file or dir at the specified place.
 
     :param root_dir: Name of a directory to generate path in. If None (default
@@ -735,15 +800,17 @@ def generate_random_path(root_dir=None):
 
 
 class BackupHelper(object):
-    def __init__(self):
+    def __init__(self) -> None:
         self._tempdir = generate_random_path()
 
         os.mkdir(self._tempdir)
 
-        self._stored_data = {}
-        self._rollback_actions = []
+        self._stored_data: dict[str, str] = {}
+        self._rollback_actions: list[
+            tuple[t.Callable[..., t.Any], tuple[t.Any, ...], dict[str, t.Any]]
+        ] = []
 
-    def backup(self, original_path):
+    def backup(self, original_path: str) -> None:
         if original_path in self._stored_data:
             raise exceptions.RallyException(
                 "Failed to back up %s since it was already stored."
@@ -758,7 +825,7 @@ class BackupHelper(object):
             raise
         self._stored_data[original_path] = backup_path
 
-    def rollback(self):
+    def rollback(self) -> None:
         LOG.debug("Performing rollback of stored data.")
         for original_path, stored_path in self._stored_data.copy().items():
             if os.path.exists(original_path):
@@ -770,21 +837,31 @@ class BackupHelper(object):
         for m, args, kwargs in self._rollback_actions:
             m(*args, **kwargs)
 
-    def add_rollback_action(self, method, *args, **kwargs):
+    def add_rollback_action(
+        self,
+        method: t.Callable[..., t.Any],
+        *args: t.Any,
+        **kwargs: t.Any,
+    ) -> None:
         self._rollback_actions.append((method, args, kwargs))
 
-    def __enter__(self):
+    def __enter__(self) -> BackupHelper:
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: t.Any,
+    ) -> None:
         if exc_type is not None:
             self.rollback()
 
-    def __call__(self, path):
+    def __call__(self, path: str) -> BackupHelper:
         self.backup(path)
         return self
 
-    def __del__(self):
+    def __del__(self) -> None:
         for path in self._stored_data.values():
             if os.path.exists(path):
                 LOG.debug("Deleting %s" % path)
@@ -792,5 +869,5 @@ class BackupHelper(object):
 
 
 @logging.log_deprecated("it was an inner helper.", rally_version="3.0.0")
-def prettify_xml(elem, level=0):
-    return junit._prettify_xml(elem, level=level)
+def prettify_xml(elem: t.Any, level: int = 0) -> None:
+    junit._prettify_xml(elem, level=level)

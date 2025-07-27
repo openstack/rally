@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import annotations
+
 import os
 import tempfile
 import warnings
@@ -25,7 +27,10 @@ warnings.warn(
 )
 
 
-def pack_dir(source_directory, zip_name=None):
+def pack_dir(
+    source_directory: str,
+    zip_name: str | None = None,
+) -> str:
     """Archive content of the directory into .zip
 
     Zip content of the source folder excluding root directory

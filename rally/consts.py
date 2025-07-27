@@ -144,7 +144,7 @@ class _ServiceType(utils.ImmutableMixin, utils.EnumMixin):
     CONTAINER_INFRA = "container-infra"
     INFRA_OPTIM = "infra-optim"
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.__names = {
             self.CLUSTERING: _Service.SENLIN,
             self.COMPUTE: _Service.NOVA,
@@ -172,7 +172,7 @@ class _ServiceType(utils.ImmutableMixin, utils.EnumMixin):
             self.INFRA_OPTIM: _Service.WATCHER,
         }
 
-    def __getitem__(self, service_type):
+    def __getitem__(self, service_type: str) -> str:
         """Mapping protocol to service names.
 
         :param name: str, service name
