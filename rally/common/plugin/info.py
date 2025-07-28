@@ -13,8 +13,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import annotations
+
 import re
 import sys
+import typing as t
+
+if t.TYPE_CHECKING:
+    from rally.common.plugin import plugin
 
 PARAM_OR_RETURNS_REGEX = re.compile(":(?:param|returns)")
 RETURNS_REGEX = re.compile(":returns: (?P<doc>.*)", re.S)
@@ -22,7 +28,7 @@ PARAM_REGEX = re.compile(r":param (?P<name>[\*\w]+): (?P<doc>.*?)"
                          r"(?:(?=:param)|(?=:return)|(?=:raises)|\Z)", re.S)
 
 
-def trim(docstring):
+def trim(docstring: str) -> str:
     """trim function from PEP-257"""
     if not docstring:
         return ""
@@ -56,11 +62,25 @@ def trim(docstring):
     return "\n".join(trimmed)
 
 
-def reindent(string):
+def reindent(string: str) -> str:
     return "\n".join(line.strip() for line in string.strip().split("\n"))
 
 
-def parse_docstring(docstring):
+class _ParamInfo(t.TypedDict):
+    """Type for parameter information in docstring parsing."""
+    name: str
+    doc: str
+
+
+class _DocstringInfo(t.TypedDict):
+    """Type for parsed docstring information."""
+    short_description: str
+    long_description: str
+    params: list[_ParamInfo]
+    returns: str
+
+
+def parse_docstring(docstring: str | None) -> _DocstringInfo:
     """Parse the docstring into its components.
 
     :returns: a dictionary of form
@@ -73,7 +93,7 @@ def parse_docstring(docstring):
     """
 
     short_description = long_description = returns = ""
-    params = []
+    params: list[_ParamInfo] = []
 
     if docstring:
         docstring = trim(docstring.lstrip("\n"))
@@ -94,7 +114,7 @@ def parse_docstring(docstring):
 
             if params_returns_desc:
                 params = [
-                    {"name": name, "doc": trim(doc)}
+                    _ParamInfo(name=name, doc=trim(doc))
                     for name, doc in PARAM_REGEX.findall(params_returns_desc)
                 ]
 
@@ -110,10 +130,22 @@ def parse_docstring(docstring):
     }
 
 
-class InfoMixin(object):
+class _PluginInfo(t.TypedDict):
+    """Type for plugin information returned by get_info method."""
+    name: str
+    platform: str
+    module: str
+    title: str
+    description: str
+    parameters: list[_ParamInfo]
+    schema: str | None
+    returns: str
+
+
+class InfoMixin:
 
     @classmethod
-    def _get_doc(cls):
+    def _get_doc(cls) -> str | None:
         """Return documentary of class
 
         By default it returns docstring of class, but it can be overridden
@@ -122,7 +154,9 @@ class InfoMixin(object):
         return cls.__doc__
 
     @classmethod
-    def get_info(cls):
+    def get_info(  # type: ignore[misc]
+        cls: type[plugin.Plugin]
+    ) -> _PluginInfo:
         doc = parse_docstring(cls._get_doc())
 
         return {

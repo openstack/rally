@@ -13,7 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import annotations
+
 import sys
+import typing as t
 
 from rally.common.plugin import discover
 from rally.common.plugin import info
@@ -21,7 +24,17 @@ from rally.common.plugin import meta
 from rally import exceptions
 
 
-def base():
+if t.TYPE_CHECKING:  # pragma: no cover
+    P = t.TypeVar("P", bound="Plugin")
+
+
+class DeprecationInfo(t.TypedDict):
+    """Structure for plugin deprecation information."""
+    reason: str
+    rally_version: str
+
+
+def base() -> t.Callable[[type[P]], type[P]]:
     """Mark Plugin as a base.
 
     Base Plugins are used to have better organization of plugins providing
@@ -34,7 +47,7 @@ def base():
 
     Plugin bases by default initialize _default_meta
     """
-    def wrapper(cls):
+    def wrapper(cls: type[P]) -> type[P]:
         if not issubclass(cls, Plugin):
             raise exceptions.RallyException(
                 "Plugin's Base can be only a subclass of Plugin class.")
@@ -52,7 +65,9 @@ def base():
     return wrapper
 
 
-def configure(name, platform="default", hidden=False):
+def configure(
+    name: str, platform: str = "default", hidden: bool = False
+) -> t.Callable[[type[P]], type[P]]:
     """Use this decorator to configure plugin's attributes.
 
     Plugin is not discoverable until configure() is performed.
@@ -63,14 +78,14 @@ def configure(name, platform="default", hidden=False):
         loaded only explicitly
     """
 
-    def decorator(plugin):
+    def decorator(plugin: type[P]) -> type[P]:
         plugin_id = "%s.%s" % (plugin.__module__, plugin.__name__)
         if not name:
             raise ValueError(
-                "The name of the plugin %s cannot be empty." % plugin_id)
+                f"The name of the plugin {plugin_id} cannot be empty.")
         if "@" in name:
             raise ValueError(
-                "The name of the plugin cannot contain @ symbol" % plugin_id)
+                f"The name of the plugin {plugin_id} cannot contain @ symbol")
 
         plugin._meta_init()
         try:
@@ -93,7 +108,7 @@ def configure(name, platform="default", hidden=False):
     return decorator
 
 
-def default_meta(inherit=True):
+def default_meta(inherit: bool = True) -> t.Callable[[type[P]], type[P]]:
     """Initialize default meta for particular plugin.
 
     Default Meta is inherited by all children comparing to Meta which is unique
@@ -102,24 +117,26 @@ def default_meta(inherit=True):
     :param inherit: Whatever to copy parents default meta
     """
 
-    def decorator(plugin):
+    def decorator(plugin: type[P]) -> type[P]:
         plugin._default_meta_init(inherit)
         return plugin
 
     return decorator
 
 
-def deprecated(reason, rally_version):
+def deprecated(
+    reason: str, rally_version: str
+) -> t.Callable[[type[P]], type[P]]:
     """Mark plugin as deprecated.
 
     :param reason: Message that describes reason of plugin deprecation
     :param rally_version: Deprecated since this version of Rally
     """
-    def decorator(plugin):
-        plugin._meta_set("deprecated", {
-            "reason": reason,
-            "rally_version": rally_version
-        })
+    def decorator(plugin: type[P]) -> type[P]:
+        plugin._meta_set("deprecated", DeprecationInfo(
+            reason=reason,
+            rally_version=rally_version
+        ))
         return plugin
 
     return decorator
@@ -128,17 +145,24 @@ def deprecated(reason, rally_version):
 class Plugin(meta.MetaMixin, info.InfoMixin):
     """Base class for all Plugins in Rally."""
 
+    base_ref: t.ClassVar[type[Plugin]]  # Dynamically set by @base() decorator
+
     @classmethod
-    def unregister(cls):
+    def unregister(cls) -> None:
         """Removes all plugin meta information and makes it undiscoverable."""
         cls._meta_clear()
 
     @classmethod
-    def _get_base(cls):
+    def _get_base(cls) -> type[Plugin]:
         return getattr(cls, "base_ref", Plugin)
 
     @classmethod
-    def get(cls, name, platform=None, allow_hidden=False):
+    def get(
+        cls: type[P],
+        name: str,
+        platform: str | None = None,
+        allow_hidden: bool = False
+    ) -> type[P]:
         """Return plugin by its name for specified platform.
 
         :param name: Plugin's name or fullname
@@ -172,7 +196,12 @@ class Plugin(meta.MetaMixin, info.InfoMixin):
             plugins=", ".join(p.get_fullname() for p in results))
 
     @classmethod
-    def get_all(cls, platform=None, allow_hidden=False, name=None):
+    def get_all(
+        cls: type[P],
+        platform: str | None = None,
+        allow_hidden: bool = False,
+        name: str | None = None,
+    ) -> list[type[P]]:
         """Return all subclass plugins of plugin.
 
         All plugins that are not configured will be ignored.
@@ -198,26 +227,26 @@ class Plugin(meta.MetaMixin, info.InfoMixin):
         return plugins
 
     @classmethod
-    def get_name(cls):
+    def get_name(cls) -> str:
         """Return plugin's name."""
         return cls._meta_get("name")
 
     @classmethod
-    def get_platform(cls):
+    def get_platform(cls) -> str:
         """"Return plugin's platform name."""
         return cls._meta_get("platform")
 
     @classmethod
-    def get_fullname(cls):
+    def get_fullname(cls) -> str:
         """Returns plugins's full name."""
         return "%s@%s" % (cls.get_name(), cls.get_platform() or "")
 
     @classmethod
-    def is_hidden(cls):
+    def is_hidden(cls) -> bool:
         """Returns whatever plugin is hidden or not."""
         return cls._meta_get("hidden", False)
 
     @classmethod
-    def is_deprecated(cls):
+    def is_deprecated(cls) -> DeprecationInfo | t.Literal[False]:
         """Returns deprecation details if plugin is deprecated."""
         return cls._meta_get("deprecated", False)

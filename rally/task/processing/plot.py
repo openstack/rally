@@ -110,7 +110,9 @@ def _process_workload(workload, workload_cfg, pos):
                 additive_output_charts[i].add_iteration(additive["data"])
             except IndexError:
                 chart_cls = plugin.Plugin.get(additive["chart_plugin"])
-                chart = chart_cls(
+                # FIXME(andreykurilin): we need to be more specific about
+                #   plugin class
+                chart = chart_cls(  # type: ignore[call-arg]
                     workload, title=additive["title"],
                     description=additive.get("description", ""),
                     label=additive.get("label", ""),

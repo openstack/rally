@@ -54,7 +54,9 @@ def find_exception(response: requests.Response) -> RallyException:
     global _exception_map
     if _exception_map is None:
         _exception_map = dict(
-            (e.error_code, e) for e in discover.itersubclasses(RallyException))
+            (e.error_code, e) for e in discover.itersubclasses(RallyException)
+            if hasattr(e, "error_code")
+        )
     exc_class = _exception_map.get(response.status_code, RallyException)
 
     error_data = response.json()["error"]

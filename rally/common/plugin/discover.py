@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import annotations
+
 import importlib
 import importlib.metadata
 import importlib.util
@@ -24,10 +26,17 @@ import typing as t
 import rally
 from rally.common import logging
 
+if t.TYPE_CHECKING:  # pragma: no cover
+    import types
+
+    P = t.TypeVar("P")
+
 LOG = logging.getLogger(__name__)
 
 
-def itersubclasses(cls, seen=None):
+def itersubclasses(
+    cls: type[P], seen: set[type[P]] | None = None
+) -> t.Generator[type[P], None, None]:
     """Generator over all subclasses of a given class in depth first order.
 
     NOTE: Use 'seen' to exclude cls which was reduplicated found, because
@@ -38,16 +47,15 @@ def itersubclasses(cls, seen=None):
     try:
         subs = cls.__subclasses__()
     except TypeError:   # fails only when cls is type
-        subs = cls.__subclasses__(cls)
+        subs = cls.__subclasses__(cls)  # type: ignore[call-arg]
     for sub in subs:
         if sub not in seen:
             seen.add(sub)
             yield sub
-            for sub in itersubclasses(sub, seen):
-                yield sub
+            yield from itersubclasses(sub, seen)
 
 
-def import_modules_from_package(package):
+def import_modules_from_package(package: str) -> None:
     """Import modules from package and append into sys.modules
 
     :param package: Full package name. For example: rally.plugins.openstack
@@ -64,16 +72,18 @@ def import_modules_from_package(package):
                 sys.modules[module_name] = importlib.import_module(module_name)
 
 
-def iter_entry_points():  # pragma: no cover
+def iter_entry_points() -> t.Any:  # pragma: no cover
     try:
         # Python 3.10+
-        return importlib.metadata.entry_points(group="rally_plugins")
+        return importlib.metadata.entry_points(
+            group="rally_plugins"
+        )  # type: ignore[call-arg]
     except TypeError:
         # Python 3.8-3.9
         return importlib.metadata.entry_points().get("rally_plugins", [])
 
 
-def find_packages_by_entry_point():
+def find_packages_by_entry_point() -> list[dict[str, t.Any]]:
     """Find all packages with rally_plugins entry-point"""
     packages = {}
 
@@ -97,7 +107,9 @@ def find_packages_by_entry_point():
     return list(packages.values())
 
 
-def import_modules_by_entry_point(_packages: t.Union[list, None] = None):
+def import_modules_by_entry_point(
+    _packages: list[dict[str, t.Any]] | None = None
+) -> list[dict[str, t.Any]]:
     """Import plugins by entry-point 'rally_plugins'."""
     if _packages is not None:
         loaded_packages = _packages
@@ -132,10 +144,10 @@ def import_modules_by_entry_point(_packages: t.Union[list, None] = None):
     return loaded_packages
 
 
-_loaded_modules = []
+_loaded_modules: list[types.ModuleType] = []
 
 
-def load_plugins(dir_or_file, depth=0):
+def load_plugins(dir_or_file: str, depth: int = 0) -> None:
     if os.path.isdir(dir_or_file):
         directory = dir_or_file
         LOG.info("Loading plugins from directories %s/*" %
@@ -158,6 +170,8 @@ def load_plugins(dir_or_file, depth=0):
         try:
             spec = importlib.util.spec_from_file_location(
                 module_name, plugin_file)
+            if spec is None or spec.loader is None:
+                raise ImportError(f"Could not load spec for {plugin_file}")
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
 

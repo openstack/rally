@@ -13,10 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import annotations
+
 import copy
+import typing as t
 
 
-class MetaMixin(object):
+class MetaMixin:
     """Safe way to store meta information related to class object.
 
     Allows to store information in class object instead of the instance.
@@ -61,20 +64,21 @@ class MetaMixin(object):
         >>> assert B._meta_get("a")  == 20
     """
 
-    _default_meta = (None, {})
+    _default_meta: tuple[type[MetaMixin] | None, dict[str, t.Any]] = (None, {})
+    _meta: dict[str, t.Any]  # Dynamically created by _meta_init()
 
     @classmethod
-    def _meta_init(cls):
+    def _meta_init(cls) -> None:
         """Initialize meta for this class."""
         cls._meta = copy.deepcopy(cls._default_meta[1])
 
     @classmethod
-    def _meta_clear(cls):
+    def _meta_clear(cls) -> None:
         cls._meta.clear()    # NOTE(boris-42): make sure that meta is deleted
         delattr(cls, "_meta")
 
     @classmethod
-    def _meta_is_inited(cls, raise_exc=True):
+    def _meta_is_inited(cls, raise_exc: bool = True) -> bool:
         """Check if meta is initialized.
 
         It means that this class has own cls._meta object (not pointer
@@ -89,25 +93,25 @@ class MetaMixin(object):
         return True
 
     @classmethod
-    def _meta_get(cls, key, default=None):
+    def _meta_get(cls, key: str, default: t.Any = None) -> t.Any:
         """Get value corresponding to key in meta data."""
         cls._meta_is_inited()
         return cls._meta.get(key, default)
 
     @classmethod
-    def _meta_set(cls, key, value):
+    def _meta_set(cls, key: str, value: t.Any) -> None:
         """Set value for key in meta."""
         cls._meta_is_inited()
         cls._meta[key] = value
 
     @classmethod
-    def _meta_setdefault(cls, key, value):
+    def _meta_setdefault(cls, key: str, value: t.Any) -> None:
         """Set default value for key in meta."""
         cls._meta_is_inited()
         cls._meta.setdefault(key, value)
 
     @classmethod
-    def _default_meta_init(cls, inherit=True):
+    def _default_meta_init(cls, inherit: bool = True) -> None:
         """Initialize default meta.
 
         Default Meta is used to change the behavior of _meta_init() method
@@ -121,7 +125,7 @@ class MetaMixin(object):
             cls._default_meta = (cls, {})
 
     @classmethod
-    def _default_meta_set(cls, key, value):
+    def _default_meta_set(cls, key: str, value: t.Any) -> None:
         if cls is not cls._default_meta[0]:
             raise ReferenceError(
                 "Trying to update default meta from children class.")
@@ -129,11 +133,11 @@ class MetaMixin(object):
         cls._default_meta[1][key] = value
 
     @classmethod
-    def _default_meta_get(cls, key, default=None):
+    def _default_meta_get(cls, key: str, default: t.Any = None) -> t.Any:
         return cls._default_meta[1].get(key, default)
 
     @classmethod
-    def _default_meta_setdefault(cls, key, value):
+    def _default_meta_setdefault(cls, key: str, value: t.Any) -> None:
         if cls is not cls._default_meta[0]:
             raise ReferenceError(
                 "Trying to update default meta from children class.")

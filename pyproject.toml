@@ -296,31 +296,8 @@ module = "rally.common.opts"
 disable_error_code = ["no-untyped-def", "var-annotated"]
 
 [[tool.mypy.overrides]]
-module = "rally.common.plugin.discover"
-disable_error_code = ["arg-type", "call-arg", "no-untyped-def", "union-attr"]
-
-[[tool.mypy.overrides]]
-module = "rally.common.plugin.info"
-disable_error_code = ["attr-defined", "no-untyped-def"]
-
-[[tool.mypy.overrides]]
-module = "rally.common.plugin.meta"
-disable_error_code = ["assignment", "attr-defined", "no-untyped-def", "var-annotated"]
-
-[[tool.mypy.overrides]]
-module = "rally.common.plugin.plugin"
-disable_error_code = ["no-untyped-def", "str-format"]
-
-
-[[tool.mypy.overrides]]
 module = "rally.common.streaming_algorithms"
 disable_error_code = ["no-untyped-def"]
-
-[[tool.mypy.overrides]]
-module = "rally.common.validation"
-disable_error_code = ["attr-defined", "no-untyped-def"]
-
-
 
 [[tool.mypy.overrides]]
 module = "rally.env.env_mgr"
