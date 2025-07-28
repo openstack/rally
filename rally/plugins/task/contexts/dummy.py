@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import annotations
+
 from rally import consts
 from rally import exceptions
 from rally.task import context
@@ -31,10 +33,12 @@ class DummyContext(context.Context):
         "additionalProperties": False,
     }
 
-    def setup(self):
+    config: dict[str, bool]
+
+    def setup(self) -> None:
         if self.config.get("fail_setup", False):
             raise exceptions.RallyException("Oops...setup is failed")
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         if self.config.get("fail_cleanup", False):
             raise exceptions.RallyException("Oops...cleanup is failed")

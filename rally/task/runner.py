@@ -13,28 +13,51 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import annotations
+
 import abc
 import collections
 import copy
 import multiprocessing
 import time
+import typing as t
 
 from rally.common import logging
 from rally.common.plugin import plugin
 from rally.common import utils as rutils
 from rally.common import validation
+from rally.task import atomic
 from rally.task import scenario
 from rally.task import types
 from rally.task import utils
+
+if t.TYPE_CHECKING:  # pragma: no cover
+    from rally.common import objects
+    from rally.common.utils import DequeAsQueue
+
+    R = t.TypeVar("R", bound="ScenarioRunner")
+
+
+class ScenarioRunnerResult(t.TypedDict):
+    """Result structure for scenario iteration."""
+    duration: float
+    timestamp: float
+    idle_duration: float
+    error: list[str]
+    output: scenario._Output
+    atomic_actions: list[dict[str, t.Any]] | list[atomic.AtomicAction]
 
 
 LOG = logging.getLogger(__name__)
 configure = plugin.configure
 
 
-def format_result_on_timeout(exc, timeout):
+def format_result_on_timeout(
+    exc: Exception, timeout: float
+) -> ScenarioRunnerResult:
     return {
         "duration": timeout,
+        "timestamp": time.time(),
         "idle_duration": 0,
         "output": {"additive": [], "complete": []},
         "atomic_actions": [],
@@ -42,14 +65,21 @@ def format_result_on_timeout(exc, timeout):
     }
 
 
-def _get_scenario_context(iteration, context_obj):
+def _get_scenario_context(
+    iteration: int, context_obj: dict[str, t.Any]
+) -> dict[str, t.Any]:
     context_obj = copy.deepcopy(context_obj)
     context_obj["iteration"] = iteration + 1  # Numeration starts from `1'
     return context_obj
 
 
-def _run_scenario_once(cls, method_name, context_obj, scenario_kwargs,
-                       event_queue):
+def _run_scenario_once(
+    cls: type[scenario.Scenario],
+    method_name: str,
+    context_obj: dict[str, t.Any],
+    scenario_kwargs: dict[str, t.Any],
+    event_queue: multiprocessing.Queue[dict[str, t.Any]] | DequeAsQueue
+) -> ScenarioRunnerResult:
     iteration = context_obj["iteration"]
     event_queue.put({
         "type": "iteration",
@@ -85,13 +115,19 @@ def _run_scenario_once(cls, method_name, context_obj, scenario_kwargs,
                 "atomic_actions": scenario_inst.atomic_actions()}
 
 
-def _worker_thread(queue, cls, method_name, context_obj, scenario_kwargs,
-                   event_queue):
+def _worker_thread(
+    queue: multiprocessing.Queue[ScenarioRunnerResult],
+    cls: type[scenario.Scenario],
+    method_name: str,
+    context_obj: dict[str, t.Any],
+    scenario_kwargs: dict[str, t.Any],
+    event_queue: multiprocessing.Queue[dict[str, t.Any]]
+) -> None:
     queue.put(_run_scenario_once(cls, method_name, context_obj,
                                  scenario_kwargs, event_queue))
 
 
-def _log_worker_info(**info):
+def _log_worker_info(**info: t.Any) -> None:
     """Log worker parameters for debugging.
 
     :param info: key-value pairs to be logged
@@ -123,7 +159,9 @@ class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin,
         "additionalProperties": True
     }
 
-    def __init__(self, task, config, batch_size=0):
+    def __init__(
+        self, task: objects.Task, config: dict[str, t.Any], batch_size: int = 0
+    ) -> None:
         """Runner constructor.
 
         It sets task and config to local variables. Also initialize
@@ -131,18 +169,27 @@ class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin,
 
         :param task: Instance of objects.Task
         :param config: Dict with runner section of input task
+        :param batch_size: Size of result batches
         """
         self.task = task
         self.config = config
-        self.result_queue = collections.deque()
-        self.event_queue = collections.deque()
+        self.result_queue: collections.deque[list[ScenarioRunnerResult]] = (
+            collections.deque())
+        self.event_queue: collections.deque[dict[str, t.Any]] = (
+            collections.deque())
         self.aborted = multiprocessing.Event()
         self.run_duration = 0.0
         self.batch_size = batch_size
-        self.result_batch = []
+        self.result_batch: list[ScenarioRunnerResult] = []
 
     @abc.abstractmethod
-    def _run_scenario(self, cls, method_name, context, args):
+    def _run_scenario(
+        self,
+        cls: type[scenario.Scenario],
+        method_name: str,
+        context: dict[str, t.Any],
+        args: dict[str, t.Any]
+    ) -> None:
         """Runs the specified scenario with given arguments.
 
         :param cls: The Scenario class where the scenario is implemented
@@ -150,12 +197,11 @@ class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin,
         :param context: dict object that contains data created
                         by contexts plugins
         :param args: Arguments to call the scenario plugin with
-
-        :returns: List of results fore each single scenario iteration,
-                  where each result is a dictionary
         """
 
-    def run(self, name, context, args):
+    def run(
+        self, name: str, context: dict[str, t.Any], args: dict[str, t.Any]
+    ) -> None:
         scenario_plugin = scenario.Scenario.get(name)
 
         # NOTE(boris-42): processing @types decorators
@@ -167,13 +213,16 @@ class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin,
 
         self.run_duration = timer.duration()
 
-    def abort(self):
+    def abort(self) -> None:
         """Abort the execution of further scenario iterations."""
         self.aborted.set()
 
     @staticmethod
-    def _create_process_pool(processes_to_start, worker_process,
-                             worker_args_gen):
+    def _create_process_pool(
+        processes_to_start: int,
+        worker_process: t.Callable[..., t.Any],
+        worker_args_gen: t.Iterator[tuple[t.Any, ...]]
+    ) -> collections.deque[multiprocessing.Process]:
         """Create a pool of processes with some defined target function.
 
         :param processes_to_start: number of processes to create in the pool
@@ -181,7 +230,8 @@ class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin,
         :param worker_args_gen: generator of arguments for the target function
         :returns: the process pool as a deque
         """
-        process_pool = collections.deque()
+        process_pool: collections.deque[multiprocessing.Process] = (
+            collections.deque())
 
         for i in range(processes_to_start):
             kwrgs = {"processes_to_start": processes_to_start,
@@ -194,7 +244,12 @@ class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin,
 
         return process_pool
 
-    def _join_processes(self, process_pool, result_queue, event_queue):
+    def _join_processes(
+        self,
+        process_pool: collections.deque[multiprocessing.Process],
+        result_queue: multiprocessing.Queue[ScenarioRunnerResult],
+        event_queue: multiprocessing.Queue[dict[str, t.Any]]
+    ) -> None:
         """Join the processes in the pool and send their results to the queue.
 
         :param process_pool: pool of processes to join
@@ -219,13 +274,14 @@ class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin,
         result_queue.close()
         event_queue.close()
 
-    def _flush_results(self):
+    def _flush_results(self) -> None:
         if self.result_batch:
-            sorted_batch = sorted(self.result_batch)
+            sorted_batch = sorted(self.result_batch,
+                                  key=lambda r: r["timestamp"])
             self.result_queue.append(sorted_batch)
             del self.result_batch[:]
 
-    def _send_result(self, result):
+    def _send_result(self, result: ScenarioRunnerResult) -> None:
         """Store partial result to send it to consumer later.
 
         :param result: Result dict to be sent. It should match the
@@ -244,11 +300,11 @@ class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin,
 
         if len(self.result_batch) >= self.batch_size:
             sorted_batch = sorted(self.result_batch,
-                                  key=lambda r: result["timestamp"])
+                                  key=lambda r: r["timestamp"])
             self.result_queue.append(sorted_batch)
             del self.result_batch[:]
 
-    def send_event(self, type, value=None):
+    def send_event(self, type: str, value: t.Any = None) -> None:
         """Store event to send it to consumer later.
 
         :param type: Event type
@@ -257,7 +313,7 @@ class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin,
         self.event_queue.append({"type": type,
                                  "value": value})
 
-    def _log_debug_info(self, **info):
+    def _log_debug_info(self, **info: t.Any) -> None:
         """Log runner parameters for debugging.
 
         The method logs the runner name, the task id as well as the values

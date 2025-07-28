@@ -452,21 +452,25 @@ class MainStatsTable(Table):
                 data["<no-name-action>"] = {"duration": 0, "count": 1,
                                             "failed": True, "children": {}}
         total_duration = iteration["duration"] + iteration["idle_duration"]
-        data["total"] = {"duration": total_duration,
-                         "count": 1,
-                         "failed": bool(iteration["error"]),
-                         "children": collections.OrderedDict(
-                             [("duration", {
-                                 "duration": iteration["duration"],
-                                 "count": 1,
-                                 "failed": bool(iteration["error"]),
-                                 "children": []}),
-                              ("idle_duration", {
-                                  "duration": iteration["idle_duration"],
-                                  "count": 1,
-                                  "failed": bool(iteration["error"]),
-                                  "children": []})
-                              ])}
+        data["total"] = {
+            "duration": total_duration,
+            "count": 1,
+            "failed": bool(iteration["error"]),
+            "children": dict(
+                duration={
+                    "duration": iteration["duration"],
+                    "count": 1,
+                    "failed": bool(iteration["error"]),
+                    "children": {}
+                },
+                idle_duration={
+                    "duration": iteration["idle_duration"],
+                    "count": 1,
+                    "failed": bool(iteration["error"]),
+                    "children": {}
+                }
+            )
+        }
 
         self._add_data(data)
 

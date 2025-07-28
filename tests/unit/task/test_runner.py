@@ -39,7 +39,8 @@ class ScenarioRunnerHelpersTestCase(test.TestCase):
             "idle_duration": 0,
             "output": {"additive": [], "complete": []},
             "atomic_actions": [],
-            "error": mock_format_exc.return_value
+            "error": mock_format_exc.return_value,
+            "timestamp": mock.ANY
         }
 
         self.assertEqual(expected,

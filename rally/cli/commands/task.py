@@ -429,8 +429,8 @@ class TaskCommands(object):
                     for name, action in iterations_actions:
                         atomic_actions = atomic.merge_atomic_actions(
                             itr["atomic_actions"])
-                        row[action] = atomic_actions.get(name, {}).get(
-                            "duration", 0)
+                        action_info = atomic_actions.get(name, {})
+                        row[action] = action_info.get("duration", 0)
                     iterations.append(row)
 
                 if "output" in itr:

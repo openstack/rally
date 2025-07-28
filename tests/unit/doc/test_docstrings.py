@@ -129,6 +129,7 @@ class DocstringsTestCase(test.TestCase):
                 docstring = base.__doc__
 
             print(name)
+            print(type(docstring))
             parsed_docstring = utils.parse_rst(docstring)
             self._iterate_parsed_rst(name,
                                      parsed_docstring,

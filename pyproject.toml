@@ -307,7 +307,6 @@ disable_error_code = ["attr-defined", "index", "no-untyped-def", "var-annotated"
 module = "rally.env.platform"
 disable_error_code = ["no-untyped-def"]
 
-
 [[tool.mypy.overrides]]
 module = "rally.plugins"
 disable_error_code = ["no-untyped-def"]
@@ -315,10 +314,6 @@ disable_error_code = ["no-untyped-def"]
 [[tool.mypy.overrides]]
 module = "rally.plugins.common.validators"
 disable_error_code = ["arg-type", "assignment", "no-untyped-def"]
-
-[[tool.mypy.overrides]]
-module = "rally.plugins.task.contexts.dummy"
-disable_error_code = ["dict-item", "no-untyped-def"]
 
 [[tool.mypy.overrides]]
 module = "rally.plugins.task.exporters.elastic.client"
@@ -362,18 +357,6 @@ disable_error_code = ["dict-item", "no-untyped-def"]
 
 [[tool.mypy.overrides]]
 module = "rally.plugins.task.hooks.sys_call"
-disable_error_code = ["no-untyped-def"]
-
-[[tool.mypy.overrides]]
-module = "rally.plugins.task.runners.constant"
-disable_error_code = ["assignment", "no-untyped-def", "var-annotated"]
-
-[[tool.mypy.overrides]]
-module = "rally.plugins.task.runners.rps"
-disable_error_code = ["no-untyped-def", "var-annotated"]
-
-[[tool.mypy.overrides]]
-module = "rally.plugins.task.runners.serial"
 disable_error_code = ["no-untyped-def"]
 
 [[tool.mypy.overrides]]
@@ -425,14 +408,6 @@ module = "rally.plugins.verification.testr"
 disable_error_code = ["no-untyped-def"]
 
 [[tool.mypy.overrides]]
-module = "rally.task.atomic"
-disable_error_code = ["no-untyped-def"]
-
-[[tool.mypy.overrides]]
-module = "rally.task.context"
-disable_error_code = ["assignment", "no-untyped-def"]
-
-[[tool.mypy.overrides]]
 module = "rally.task.engine"
 disable_error_code = ["no-untyped-def"]
 
@@ -461,14 +436,6 @@ module = "rally.task.processing.utils"
 disable_error_code = ["no-untyped-def"]
 
 [[tool.mypy.overrides]]
-module = "rally.task.runner"
-disable_error_code = ["no-untyped-def", "var-annotated"]
-
-[[tool.mypy.overrides]]
-module = "rally.task.scenario"
-disable_error_code = ["attr-defined", "no-untyped-def", "var-annotated"]
-
-[[tool.mypy.overrides]]
 module = "rally.task.service"
 disable_error_code = ["call-overload", "no-untyped-def", "var-annotated"]
 
@@ -492,11 +459,9 @@ disable_error_code = ["index", "no-untyped-def"]
 module = "rally.ui.utils"
 disable_error_code = ["no-untyped-def"]
 
-
 [[tool.mypy.overrides]]
 module = "rally.utils.sshutils"
 disable_error_code = ["assignment", "attr-defined", "no-untyped-def"]
-
 
 [[tool.mypy.overrides]]
 module = "rally.verification.context"

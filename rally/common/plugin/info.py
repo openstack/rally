@@ -114,7 +114,7 @@ def parse_docstring(docstring: str | None) -> _DocstringInfo:
 
             if params_returns_desc:
                 params = [
-                    _ParamInfo(name=name, doc=trim(doc))
+                    {"name": name, "doc": trim(doc)}
                     for name, doc in PARAM_REGEX.findall(params_returns_desc)
                 ]
 

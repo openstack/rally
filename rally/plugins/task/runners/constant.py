@@ -13,11 +13,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import annotations
+
 import collections
 import multiprocessing
 import queue as Queue
 import threading
 import time
+import typing as t
 
 from rally.common import utils
 from rally.common import validation
@@ -25,9 +28,21 @@ from rally import consts
 from rally.task import runner
 
 
-def _worker_process(queue, iteration_gen, timeout, concurrency, times,
-                    duration, context, cls, method_name, args, event_queue,
-                    aborted, info):
+def _worker_process(
+    queue: multiprocessing.Queue[runner.ScenarioRunnerResult],
+    iteration_gen: t.Iterator[int],
+    timeout: float | None,
+    concurrency: int,
+    times: int | None,
+    duration: float | None,
+    context: dict[str, t.Any],
+    cls: type[runner.scenario.Scenario],
+    method_name: str,
+    args: dict[str, t.Any],
+    event_queue: multiprocessing.Queue[dict[str, t.Any]],
+    aborted: multiprocessing.synchronize.Event,
+    info: dict[str, t.Any]
+) -> None:
     """Start the scenario within threads.
 
     Spawn threads to support scenario execution.
@@ -53,8 +68,13 @@ def _worker_process(queue, iteration_gen, timeout, concurrency, times,
                     the flag is set
     :param info: info about all processes count and counter of launched process
     """
-    def _to_be_continued(iteration, current_duration, aborted, times=None,
-                         duration=None):
+    def _to_be_continued(
+        iteration: int,
+        current_duration: float,
+        aborted: multiprocessing.synchronize.Event,
+        times: int | None = None,
+        duration: float | None = None
+    ) -> bool:
         if times is not None:
             return iteration < times and not aborted.is_set()
         elif duration is not None:
@@ -65,7 +85,7 @@ def _worker_process(queue, iteration_gen, timeout, concurrency, times,
     if times is None and duration is None:
         raise ValueError("times or duration must be specified")
 
-    pool = collections.deque()
+    pool: collections.deque[threading.Thread] = collections.deque()
     alive_threads_in_pool = 0
     finished_threads_in_pool = 0
 
@@ -74,7 +94,9 @@ def _worker_process(queue, iteration_gen, timeout, concurrency, times,
                             method_name=method_name, args=args)
 
     if timeout:
-        timeout_queue = Queue.Queue()
+        timeout_queue: Queue.Queue[
+            tuple[threading.Thread, float] | tuple[None, None]
+        ] = Queue.Queue()
         collector_thr_by_timeout = threading.Thread(
             target=utils.timeout_thread,
             args=(timeout_queue, )
@@ -85,7 +107,7 @@ def _worker_process(queue, iteration_gen, timeout, concurrency, times,
     start_time = time.time()
     # NOTE(msimonin): keep the previous behaviour
     # > when duration is 0, scenario executes exactly 1 time
-    current_duration = -1
+    current_duration = -1.0
     while _to_be_continued(iteration, current_duration, aborted,
                            times=times, duration=duration):
 
@@ -105,8 +127,8 @@ def _worker_process(queue, iteration_gen, timeout, concurrency, times,
         while alive_threads_in_pool == concurrency:
             prev_finished_threads_in_pool = finished_threads_in_pool
             finished_threads_in_pool = 0
-            for t in pool:
-                if not t.is_alive():
+            for thread in pool:
+                if not thread.is_alive():
                     finished_threads_in_pool += 1
 
             alive_threads_in_pool -= finished_threads_in_pool
@@ -131,7 +153,7 @@ def _worker_process(queue, iteration_gen, timeout, concurrency, times,
         pool.popleft().join()
 
     if timeout:
-        timeout_queue.put((None, None,))
+        timeout_queue.put((None, None))
         collector_thr_by_timeout.join()
 
 
@@ -139,9 +161,17 @@ def _worker_process(queue, iteration_gen, timeout, concurrency, times,
 class CheckConstantValidator(validation.Validator):
     """Additional schema validation for constant runner"""
 
-    def validate(self, context, config, plugin_cls, plugin_cfg):
-        if plugin_cfg.get("concurrency", 1) > plugin_cfg.get("times", 1):
-            return self.fail(
+    def validate(
+        self,
+        context: dict[str, t.Any],
+        config: dict[str, t.Any] | None,
+        plugin_cls: type[runner.plugin.Plugin],
+        plugin_cfg: dict[str, t.Any] | None
+    ) -> None:
+        if (plugin_cfg
+                and plugin_cfg.get("concurrency", 1)
+                > plugin_cfg.get("times", 1)):
+            self.fail(
                 "Parameter 'concurrency' means a number of parallel "
                 "executions of iterations. Parameter 'times' means total "
                 "number of iteration executions. It is redundant "
@@ -192,7 +222,13 @@ class ConstantScenarioRunner(runner.ScenarioRunner):
         "additionalProperties": False
     }
 
-    def _run_scenario(self, cls, method_name, context, args):
+    def _run_scenario(
+        self,
+        cls: type[runner.scenario.Scenario],
+        method_name: str,
+        context: dict[str, t.Any],
+        args: dict[str, t.Any]
+    ) -> None:
         """Runs the specified scenario with given arguments.
 
         This method generates a constant load on the cloud under test by
@@ -229,10 +265,14 @@ class ConstantScenarioRunner(runner.ScenarioRunner):
                              concurrency_per_worker=concurrency_per_worker,
                              concurrency_overhead=concurrency_overhead)
 
-        result_queue = multiprocessing.Queue()
-        event_queue = multiprocessing.Queue()
+        result_queue: multiprocessing.Queue[runner.ScenarioRunnerResult] = (
+            multiprocessing.Queue())
+        event_queue: multiprocessing.Queue[dict[str, t.Any]] = (
+            multiprocessing.Queue())
 
-        def worker_args_gen(concurrency_overhead):
+        def worker_args_gen(
+            concurrency_overhead: int
+        ) -> t.Generator[tuple[t.Any, ...], None, None]:
             while True:
                 yield (result_queue, iteration_gen, timeout,
                        concurrency_per_worker + (concurrency_overhead and 1),
@@ -287,7 +327,13 @@ class ConstantForDurationScenarioRunner(runner.ScenarioRunner):
         "additionalProperties": False
     }
 
-    def _run_scenario(self, cls, method_name, context, args):
+    def _run_scenario(
+        self,
+        cls: type[runner.scenario.Scenario],
+        method_name: str,
+        context: dict[str, t.Any],
+        args: dict[str, t.Any]
+    ) -> None:
         """Runs the specified scenario with given arguments.
 
         This method generates a constant load on the cloud under test by
@@ -324,10 +370,14 @@ class ConstantForDurationScenarioRunner(runner.ScenarioRunner):
                              concurrency_per_worker=concurrency_per_worker,
                              concurrency_overhead=concurrency_overhead)
 
-        result_queue = multiprocessing.Queue()
-        event_queue = multiprocessing.Queue()
+        result_queue: multiprocessing.Queue[runner.ScenarioRunnerResult] = (
+            multiprocessing.Queue())
+        event_queue: multiprocessing.Queue[dict[str, t.Any]] = (
+            multiprocessing.Queue())
 
-        def worker_args_gen(concurrency_overhead):
+        def worker_args_gen(
+            concurrency_overhead: int
+        ) -> t.Generator[tuple[t.Any, ...], None, None]:
             while True:
                 yield (result_queue, iteration_gen, timeout,
                        concurrency_per_worker + (concurrency_overhead and 1),

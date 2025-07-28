@@ -133,7 +133,7 @@ def deprecated(
     :param rally_version: Deprecated since this version of Rally
     """
     def decorator(plugin: type[P]) -> type[P]:
-        plugin._meta_set("deprecated", DeprecationInfo(
+        plugin._meta_set("deprecated", dict(
             reason=reason,
             rally_version=rally_version
         ))

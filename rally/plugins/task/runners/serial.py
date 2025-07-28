@@ -13,9 +13,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import annotations
+
+import typing as t
+
 from rally.common import utils as rutils
 from rally import consts
 from rally.task import runner
+
+if t.TYPE_CHECKING:  # pragma: no cover
+    from rally.task import scenario
 
 
 @runner.configure(name="serial")
@@ -43,7 +50,13 @@ class SerialScenarioRunner(runner.ScenarioRunner):
         "additionalProperties": True
     }
 
-    def _run_scenario(self, cls, method_name, context, args):
+    def _run_scenario(
+        self,
+        cls: type[scenario.Scenario],
+        method_name: str,
+        context: dict[str, t.Any],
+        args: dict[str, t.Any]
+    ) -> None:
         """Runs the specified scenario with given arguments.
 
         The scenario iterations are executed one-by-one in the same python

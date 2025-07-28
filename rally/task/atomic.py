@@ -13,8 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import annotations
+
 import collections
 import functools
+import typing as t
+import typing_extensions as te
 
 from rally.common import logging
 from rally.common import utils
@@ -22,16 +26,33 @@ from rally.common import utils
 LOG = logging.getLogger(__name__)
 
 
-class ActionTimerMixin(object):
+class AtomicAction(t.TypedDict):
+    """Structure for atomic action data."""
+    name: str
+    children: list[AtomicAction]
+    started_at: float | None
+    finished_at: te.NotRequired[float]
+    failed: te.NotRequired[bool]
 
-    def __init__(self):
-        self._atomic_actions = []
 
-    def atomic_actions(self):
+class MergedAtomicAction(t.TypedDict):
+    """Structure for merged atomic action data."""
+    duration: float
+    count: int
+    children: dict[str, MergedAtomicAction]
+    failed: te.NotRequired[bool]
+
+
+class ActionTimerMixin:
+
+    def __init__(self) -> None:
+        self._atomic_actions: list[AtomicAction] = []
+
+    def atomic_actions(self) -> list[AtomicAction]:
         """Returns the content of each atomic action."""
         return self._atomic_actions
 
-    def reset_atomic_actions(self):
+    def reset_atomic_actions(self) -> None:
         """Clean all atomic action data."""
         self._atomic_actions = []
 
@@ -47,7 +68,7 @@ class ActionTimer(utils.Timer):
             self.clients(<client>).<operation>
     """
 
-    def __init__(self, instance, name):
+    def __init__(self, instance: ActionTimerMixin, name: str) -> None:
         """Create a new instance of the AtomicAction.
 
         :param instance: instance of subclass of ActionTimerMixin
@@ -57,36 +78,50 @@ class ActionTimer(utils.Timer):
         self.instance = instance
         self.name = name
         self._root = self._find_parent(self.instance._atomic_actions)
-        self.atomic_action = {"name": self.name,
-                              "children": [],
-                              "started_at": None}
+        self.atomic_action: AtomicAction = {
+            "name": self.name,
+            "children": [],
+            "started_at": None
+        }
         self._root.append(self.atomic_action)
 
-    def _find_parent(self, atomic_actions):
+    def _find_parent(
+        self, atomic_actions: list[AtomicAction]
+    ) -> list[AtomicAction]:
         while atomic_actions and "finished_at" not in atomic_actions[-1]:
             atomic_actions = atomic_actions[-1]["children"]
         return atomic_actions
 
-    def __enter__(self):
+    def __enter__(self) -> ActionTimer:
         super(ActionTimer, self).__enter__()
         self.atomic_action["started_at"] = self.start
+        return self
 
-    def __exit__(self, type_, value, tb):
+    def __exit__(
+        self,
+        type_: type[BaseException] | None,
+        value: BaseException | None,
+        tb: t.Any
+    ) -> None:
         super(ActionTimer, self).__exit__(type_, value, tb)
         self.atomic_action["finished_at"] = self.finish
         if type_:
             self.atomic_action["failed"] = True
 
 
-def action_timer(name):
+def action_timer(
+    name: str
+) -> t.Callable[[t.Callable[..., t.Any]], t.Callable[..., t.Any]]:
     """Provide measure of execution time.
 
     Decorates methods of the Scenario class.
     This provides duration in seconds of each atomic action.
     """
-    def wrap(func):
+    def wrap(func: t.Callable[..., t.Any]) -> t.Callable[..., t.Any]:
         @functools.wraps(func)
-        def func_atomic_actions(self, *args, **kwargs):
+        def func_atomic_actions(
+            self: ActionTimerMixin, *args: t.Any, **kwargs: t.Any
+        ) -> t.Any:
             with ActionTimer(self, name):
                 f = func(self, *args, **kwargs)
             return f
@@ -94,8 +129,12 @@ def action_timer(name):
     return wrap
 
 
-def merge_atomic_actions(atomic_actions, root=None, depth=0,
-                         depth_of_processing=2):
+def merge_atomic_actions(
+    atomic_actions: list[AtomicAction],
+    root: collections.OrderedDict[str, MergedAtomicAction] | None = None,
+    depth: int = 0,
+    depth_of_processing: int = 2
+) -> collections.OrderedDict[str, MergedAtomicAction]:
     """Merge duplicates of atomic actions into one atomic action.
 
     :param atomic_actions: a list with atomic action
@@ -106,22 +145,31 @@ def merge_atomic_actions(atomic_actions, root=None, depth=0,
     :param depth_of_processing: the depth of processing of inner atomic actions
         (defaults to 2)
     """
-    p_atomics = collections.OrderedDict() if root is None else root
+    p_atomics: collections.OrderedDict[str, MergedAtomicAction] = (
+        collections.OrderedDict() if root is None else root
+    )
     for action in atomic_actions:
         if action["name"] not in p_atomics:
             p_atomics[action["name"]] = {
                 "duration": 0,
                 "count": 0,
-                "children": collections.OrderedDict()}
-        duration = action["finished_at"] - action["started_at"]
+                "children": collections.OrderedDict()
+            }
+        started_at = action.get("started_at")
+        if started_at is not None:
+            duration = action["finished_at"] - started_at
+        else:
+            duration = 0.0
         p_atomics[action["name"]]["duration"] += duration
         p_atomics[action["name"]]["count"] += 1
         if action.get("failed"):
             p_atomics[action["name"]]["failed"] = True
         if action["children"] and depth < depth_of_processing:
-            merge_atomic_actions(
-                action["children"],
-                root=p_atomics[action["name"]]["children"],
-                depth=depth + 1)
+            children_dict = p_atomics[action["name"]]["children"]
+            if isinstance(children_dict, collections.OrderedDict):
+                merge_atomic_actions(
+                    action["children"],
+                    root=children_dict,
+                    depth=depth + 1)
 
     return p_atomics

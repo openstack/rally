@@ -66,7 +66,7 @@ class TestrContext(context.VerifierContext):
         load_list = self.context.get("load_list")
         skip_list = self.context.get("skip_list")
 
-        if skip_list:
+        if skip_list and load_list:
             load_list = set(load_list) - set(skip_list)
         if load_list:
             load_list_file = common_utils.generate_random_path()
