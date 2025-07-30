@@ -15,12 +15,9 @@
 
 from __future__ import annotations
 
-import bisect
 import collections
 import copy
 import ctypes
-import heapq
-import inspect
 import io
 import multiprocessing
 import os
@@ -35,7 +32,6 @@ import time
 import typing as t
 import uuid
 
-from rally.common.io import junit
 from rally.common import logging
 from rally import exceptions
 
@@ -186,47 +182,6 @@ class RAMInt:
     def reset(self) -> None:
         with self.__int._lock:  # type: ignore[attr-defined]
             self.__int.value = 0
-
-
-@logging.log_deprecated("it was an inner helper.", rally_version="3.0.0")
-def get_method_class(func: t.Any) -> type | None:
-    """Return the class that defined the given method.
-
-    :param func: function to get the class for.
-    :returns: class object or None if func is not an instance method.
-    """
-    if hasattr(func, "im_class"):
-        # this check works in Python 2
-        for cls in inspect.getmro(func.im_class):  # type: ignore[attr-defined]
-            if func.__name__ in cls.__dict__:
-                return cls
-    elif hasattr(func, "__qualname__") and inspect.isfunction(func):
-        # this check works in Python 3
-        cls = getattr(
-            inspect.getmodule(func),
-            func.__qualname__.split(".<locals>.", 1)[0].rsplit(".", 1)[0])
-        if isinstance(cls, type):
-            return cls
-    else:
-        return None
-
-
-@logging.log_deprecated("it was an inner helper.", rally_version="3.0.0")
-def first_index(
-    lst: list[t.Any],
-    predicate: t.Callable[[t.Any], bool],
-) -> int | None:
-    """Return the index of the first element that matches a predicate.
-
-    :param lst: list to find the matching element in.
-    :param predicate: predicate object.
-    :returns: the index of the first matching element or None if no element
-              matches the predicate.
-    """
-    for i, e in enumerate(lst):
-        if predicate(e):
-            return i
-    return None
 
 
 def retry(
@@ -481,86 +436,6 @@ def make_name_matcher(*names: str) -> type[RandomNameGeneratorMixin]:
             return name in cls.NAMES
 
     return CustomNameMatcher
-
-
-@logging.log_deprecated("it was an inner helper.", rally_version="3.0.0")
-def merge(length: int, *sources: t.Any) -> t.Any:
-    """Merge lists of lists.
-
-    Each source produces (or contains) lists of ordered items.
-    Items of each list must be greater or equal to all items of
-    the previous list (that implies that items must be comparable).
-
-    The function merges the sources into lists with the length
-    equal to given one, except the last list which can be shorter.
-
-    Example:
-        it1 = iter([[1, 3, 5], [5, 7, 9, 14], [17, 21, 36, 41]])
-        it2 = iter([[2, 2, 4], [9, 10], [16, 19, 23, 26, 91]])
-        it3 = iter([[5], [5, 7, 11, 14, 14, 19, 23]])
-
-        it = merge(10, it1, it2, it3)
-
-        for i in it:
-            print i
-
-    prints out:
-        [1, 2, 2, 3, 4, 5, 5, 5, 5, 7, 7, 9, 9, 10]
-        [11, 14, 14, 14, 16, 17, 19, 19, 21, 23, 23]
-        [26, 36, 41, 91]
-
-    :param: length, length of generated lists, except the last one.
-    :param: sources, generators that produce lists of items to merge
-    """
-
-    streams = [
-        {"data": [], "gen": src}
-        for src in sources]
-
-    out_chunk: list[t.Any] = []
-    while True:
-        while len(out_chunk) < length:
-
-            # Least right item among streams
-            lri = None
-
-            # Refresh data if needed
-            for s in streams:
-                if s["gen"] and not s["data"]:
-                    try:
-                        while not s["data"]:
-                            s["data"] = next(s["gen"])
-                    except StopIteration:
-                        s["gen"] = None
-
-                # ... and define least right item
-                if s["data"]:
-                    rightmost_item = s["data"][-1]
-                    if (lri is None) or (rightmost_item < lri):
-                        lri = rightmost_item
-
-            # No more data to merge
-            if lri is None:
-                break
-
-            to_merge = []
-            for s in streams:
-                if s["data"]:
-                    pos = bisect.bisect_right(s["data"], lri)
-                    to_merge.append(s["data"][:pos])
-                    s["data"] = s["data"][pos:]
-
-            out_chunk += heapq.merge(*to_merge)
-
-        if out_chunk:
-            if len(out_chunk) > length:
-                yield out_chunk[:length]
-                out_chunk = out_chunk[length:]
-            else:
-                yield out_chunk
-                out_chunk = []
-        else:
-            return
 
 
 def interruptable_sleep(sleep_time: float, atomic_delay: float = 0.1) -> None:
@@ -866,8 +741,3 @@ class BackupHelper(object):
             if os.path.exists(path):
                 LOG.debug("Deleting %s" % path)
                 shutil.rmtree(path)
-
-
-@logging.log_deprecated("it was an inner helper.", rally_version="3.0.0")
-def prettify_xml(elem: t.Any, level: int = 0) -> None:
-    junit._prettify_xml(elem, level=level)

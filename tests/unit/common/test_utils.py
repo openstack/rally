@@ -18,7 +18,6 @@ import string
 import sys
 import threading
 import time
-import unittest
 from unittest import mock
 
 import ddt
@@ -117,37 +116,6 @@ class TimerTestCase(test.TestCase):
             pass
         self.assertEqual(3, len(timer.error))
         self.assertEqual(timer.error[0], type(Exception()))
-
-
-def module_level_method():
-    pass
-
-
-class MethodClassTestCase(test.TestCase):
-
-    @unittest.skipIf(sys.version_info > (2, 9), "Problems with access to "
-                                                "class from <locals>")
-    def test_method_class_for_class_level_method(self):
-        class A(object):
-            def m(self):
-                pass
-        self.assertEqual(A, utils.get_method_class(A.m))
-
-    def test_method_class_for_module_level_method(self):
-        self.assertIsNone(utils.get_method_class(module_level_method))
-
-
-class FirstIndexTestCase(test.TestCase):
-
-    def test_list_with_existing_matching_element(self):
-        lst = [1, 3, 5, 7]
-        self.assertEqual(0, utils.first_index(lst, lambda e: e == 1))
-        self.assertEqual(2, utils.first_index(lst, lambda e: e == 5))
-        self.assertEqual(3, utils.first_index(lst, lambda e: e == 7))
-
-    def test_list_with_non_existing_matching_element(self):
-        lst = [1, 3, 5, 7]
-        self.assertIsNone(utils.first_index(lst, lambda e: e == 2))
 
 
 class TenantIteratorTestCase(test.TestCase):
@@ -383,58 +351,6 @@ class RandomNameTestCase(test.TestCase):
         self.assertTrue(matcher.name_matches_object("foo", task_id="task"))
         self.assertTrue(matcher.name_matches_object("bar", task_id="task"))
         self.assertFalse(matcher.name_matches_object("foo1", task_id="task"))
-
-
-@ddt.ddt
-class MergeTestCase(test.TestCase):
-    @ddt.data(
-        # regular data
-        {"sources": [[[1, 3, 5], [5, 7, 9, 14], [17, 21, 36, 41]],
-                     [[2, 2, 4], [9, 10], [16, 19, 23, 26, 91]],
-                     [[5], [5, 7, 11, 14, 14, 19, 23]]],
-         "expected_output": [[1, 2, 2, 3, 4, 5, 5, 5, 5, 7],
-                             [7, 9, 9, 10, 11, 14, 14, 14, 16, 17],
-                             [19, 19, 21, 23, 23, 26, 36, 41, 91]]},
-        # with one empty source
-        {"sources": [[[1, 3, 5], [5, 7, 9, 14], [17, 21, 36, 41]],
-                     [[2, 2, 4], [9, 10], [16, 19, 23, 26, 91]],
-                     [[5], [5, 7, 11, 14, 14, 19, 23]],
-                     []],
-         "expected_output": [[1, 2, 2, 3, 4, 5, 5, 5, 5, 7],
-                             [7, 9, 9, 10, 11, 14, 14, 14, 16, 17],
-                             [19, 19, 21, 23, 23, 26, 36, 41, 91]]},
-        # with one source that produces an empty list
-        {"sources": [[[1, 3, 5], [5, 7, 9, 14], [17, 21, 36, 41]],
-                     [[2, 2, 4], [9, 10], [16, 19, 23, 26, 91]],
-                     [[5], [5, 7, 11, 14, 14, 19, 23]],
-                     [[]]],
-         "expected_output": [[1, 2, 2, 3, 4, 5, 5, 5, 5, 7],
-                             [7, 9, 9, 10, 11, 14, 14, 14, 16, 17],
-                             [19, 19, 21, 23, 23, 26, 36, 41, 91]]},
-        # with empty lists appered in sources
-        {"sources": [[[1, 3, 5], [], [], [5, 7, 9, 14], [17, 21, 36, 41]],
-                     [[], [2, 2, 4], [9, 10], [16, 19, 23, 26, 91]],
-                     [[5], [5, 7, 11, 14, 14, 19, 23], []]],
-         "expected_output": [[1, 2, 2, 3, 4, 5, 5, 5, 5, 7],
-                             [7, 9, 9, 10, 11, 14, 14, 14, 16, 17],
-                             [19, 19, 21, 23, 23, 26, 36, 41, 91]]},
-        # only one source
-        {"sources": [[[1, 3, 5], [5, 7, 9, 14], [17, 21, 36, 41]]],
-         "expected_output": [[1, 3, 5, 5, 7, 9, 14, 17, 21, 36], [41]]},
-        # no sources passed in
-        {"sources": [],
-         "expected_output": []},
-        # several sources, all empty
-        {"sources": [[], [], [], []],
-         "expected_output": []}
-
-    )
-    @ddt.unpack
-    def test_merge(self, sources, expected_output):
-        in_iters = [iter(src) for src in sources]
-
-        out = list(utils.merge(10, *in_iters))
-        self.assertEqual(expected_output, out)
 
 
 class TimeoutThreadTestCase(test.TestCase):

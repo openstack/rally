@@ -39,6 +39,9 @@ Removed
 
 * Support for Python3.8 is dropped
 * Support for SQLAlchemy <2
+* Methods `get_method_class`, `first_index`, `merge` and `prettify_xml`
+  of `rally/common/utils.py` module were deprecated in Rally 3.0.0
+  and they are gone now.
 
 [4.1.0] - 2024-04-29
 --------------------
