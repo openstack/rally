@@ -10,6 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import typing as t
+
 import requests
 
 from rally.task import atomic
@@ -20,7 +22,9 @@ class RequestScenario(scenario.Scenario):
     """Base class for Request scenarios with basic atomic actions."""
 
     @atomic.action_timer("requests.check_request")
-    def _check_request(self, url, method, status_code, **kwargs):
+    def _check_request(
+        self, url: str, method: str, status_code: int, **kwargs: t.Any
+    ) -> None:
         """Compare request status code with specified code
 
         :param status_code: Expected status code of request

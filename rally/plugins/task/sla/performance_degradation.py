@@ -19,10 +19,17 @@ SLA (Service-level agreement) is set of details for determining compliance
 with contracted values such as maximum error rate or minimum response time.
 """
 
+from __future__ import annotations
+
+import typing as t
+
 from rally.common import streaming_algorithms
 from rally import consts
 from rally.task import sla
 from rally.utils import strutils
+
+if t.TYPE_CHECKING:  # pragma: no cover
+    from rally.task import runner
 
 
 @sla.configure(name="performance_degradation")
@@ -49,22 +56,22 @@ class PerformanceDegradation(sla.SLA):
         "additionalProperties": False,
     }
 
-    def __init__(self, criterion_value):
+    def __init__(self, criterion_value: dict[str, float]) -> None:
         super(PerformanceDegradation, self).__init__(criterion_value)
         self.max_degradation = self.criterion_value["max_degradation"]
         self.degradation = streaming_algorithms.DegradationComputation()
 
-    def add_iteration(self, iteration):
+    def add_iteration(self, iteration: runner.ScenarioRunnerResult) -> bool:
         if not iteration.get("error"):
             self.degradation.add(iteration["duration"])
         self.success = self.degradation.result() <= self.max_degradation
         return self.success
 
-    def merge(self, other):
+    def merge(self, other: PerformanceDegradation) -> bool:
         self.degradation.merge(other.degradation)
         self.success = self.degradation.result() <= self.max_degradation
         return self.success
 
-    def details(self):
+    def details(self) -> str:
         res = strutils.format_float_to_str(self.degradation.result() or 0.0)
         return "Current degradation: %s%% - %s" % (res, self.status())

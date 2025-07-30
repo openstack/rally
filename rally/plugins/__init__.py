@@ -13,16 +13,24 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import annotations
+
 import functools
 import os
+import typing as t
+import typing_extensions as te
 
 from rally.common.plugin import discover
+
+if t.TYPE_CHECKING:
+    P = te.ParamSpec("P")
+    R = t.TypeVar("R")
 
 
 PLUGINS_LOADED = False
 
 
-def load():
+def load() -> None:
     global PLUGINS_LOADED
 
     if not PLUGINS_LOADED:
@@ -52,9 +60,9 @@ def load():
     PLUGINS_LOADED = True
 
 
-def ensure_plugins_are_loaded(func):
+def ensure_plugins_are_loaded(func: t.Callable[P, R]) -> t.Callable[P, R]:
     @functools.wraps(func)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args: t.Any, **kwargs: t.Any) -> R:
         load()
         return func(*args, **kwargs)
     return wrapper

@@ -36,7 +36,7 @@ class SerialScenarioRunnerTestCase(test.TestCase):
         runner = serial.SerialScenarioRunner(mock.MagicMock(),
                                              {"times": times})
 
-        runner._run_scenario(fakes.FakeScenario, "do_it",
+        runner._run_scenario(fakes.FakeScenario, "run",
                              fakes.FakeContext().context, {})
 
         self.assertEqual(times, len(runner.result_queue))
@@ -48,7 +48,7 @@ class SerialScenarioRunnerTestCase(test.TestCase):
             ctxt["iteration"] = i + 1
             ctxt["task"] = mock.ANY
             expected_calls.append(
-                mock.call(fakes.FakeScenario, "do_it", ctxt, {},
+                mock.call(fakes.FakeScenario, "run", ctxt, {},
                           deque_as_queue_inst)
             )
         mock__run_scenario_once.assert_has_calls(expected_calls)
@@ -58,7 +58,7 @@ class SerialScenarioRunnerTestCase(test.TestCase):
         runner = serial.SerialScenarioRunner(mock.MagicMock(),
                                              {"times": 5})
         runner.abort()
-        runner._run_scenario(fakes.FakeScenario, "do_it",
+        runner._run_scenario(fakes.FakeScenario, "run",
                              fakes.FakeContext().context, {})
         self.assertEqual(0, len(runner.result_queue))
 

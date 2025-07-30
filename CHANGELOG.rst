@@ -24,6 +24,7 @@ Added
 ~~~~~
 
 * CI jobs for checking compatibility with python 3.12
+* Python type hints for task-related plugins and base classes
 
 Changed
 ~~~~~~~

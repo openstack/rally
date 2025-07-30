@@ -75,7 +75,7 @@ def _get_scenario_context(
 
 def _run_scenario_once(
     cls: type[scenario.Scenario],
-    method_name: str,
+    method_name: t.Literal["run"],
     context_obj: dict[str, t.Any],
     scenario_kwargs: dict[str, t.Any],
     event_queue: multiprocessing.Queue[dict[str, t.Any]] | DequeAsQueue
@@ -118,7 +118,7 @@ def _run_scenario_once(
 def _worker_thread(
     queue: multiprocessing.Queue[ScenarioRunnerResult],
     cls: type[scenario.Scenario],
-    method_name: str,
+    method_name: t.Literal["run"],
     context_obj: dict[str, t.Any],
     scenario_kwargs: dict[str, t.Any],
     event_queue: multiprocessing.Queue[dict[str, t.Any]]
@@ -186,7 +186,7 @@ class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin,
     def _run_scenario(
         self,
         cls: type[scenario.Scenario],
-        method_name: str,
+        method_name: t.Literal["run"],
         context: dict[str, t.Any],
         args: dict[str, t.Any]
     ) -> None:

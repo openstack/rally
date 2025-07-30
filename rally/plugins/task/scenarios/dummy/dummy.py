@@ -10,7 +10,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import annotations
+
 import random
+import typing as t
 
 from rally.common import utils
 from rally.common import validation
@@ -30,7 +33,13 @@ class DummyScenarioException(exceptions.RallyException):
 @scenario.configure(name="Dummy.failure")
 class DummyFailure(scenario.Scenario):
 
-    def run(self, sleep=0.1, from_iteration=0, to_iteration=0, each=1):
+    def run(
+        self,
+        sleep: float = 0.1,
+        from_iteration: int = 0,
+        to_iteration: int = 0,
+        each: int = 1,
+    ) -> None:
         """Raise errors in some iterations.
 
         :param sleep: float iteration sleep time in seconds
@@ -52,14 +61,14 @@ class DummyFailure(scenario.Scenario):
 class Dummy(scenario.Scenario):
 
     @atomic.action_timer("bar")
-    def bar(self, sleep):
+    def bar(self, sleep: float) -> None:
         utils.interruptable_sleep(sleep)
 
     @atomic.action_timer("foo")
-    def foo(self, sleep):
+    def foo(self, sleep: float) -> None:
         self.bar(sleep)
 
-    def run(self, sleep=0):
+    def run(self, sleep: float = 0, **kwargs: t.Any) -> None:
         """Do nothing and sleep for the given number of seconds (0 by default).
 
         Dummy.dummy can be used for testing performance of different
@@ -76,7 +85,12 @@ class Dummy(scenario.Scenario):
 @scenario.configure(name="Dummy.dummy_exception")
 class DummyException(scenario.Scenario):
 
-    def run(self, size_of_message=1, sleep=1, message=""):
+    def run(
+        self,
+        size_of_message: int = 1,
+        sleep: float = 1,
+        message: str = ""
+    ) -> None:
         """Throws an exception.
 
         Dummy.dummy_exception used for testing if exceptions are processed
@@ -99,7 +113,7 @@ class DummyException(scenario.Scenario):
 @scenario.configure(name="Dummy.dummy_exception_probability")
 class DummyExceptionProbability(scenario.Scenario):
 
-    def run(self, exception_probability=0.5):
+    def run(self, exception_probability: float = 0.5) -> None:
         """Throws an exception with given probability.
 
         Dummy.dummy_exception_probability used for testing if exceptions are
@@ -119,7 +133,7 @@ class DummyExceptionProbability(scenario.Scenario):
 @scenario.configure(name="Dummy.dummy_output")
 class DummyOutput(scenario.Scenario):
 
-    def run(self, random_range=25):
+    def run(self, random_range: int = 25) -> None:
         """Generate dummy output.
 
         This scenario generates example of output data.
@@ -198,7 +212,7 @@ class DummyOutput(scenario.Scenario):
 class DummyRandomFailInAtomic(scenario.Scenario):
     """Randomly throw exceptions in atomic actions."""
 
-    def _play_roulette(self, exception_probability):
+    def _play_roulette(self, exception_probability: float) -> None:
         """Throw an exception with given probability.
 
         :raises KeyError: when exception_probability is bigger
@@ -206,7 +220,7 @@ class DummyRandomFailInAtomic(scenario.Scenario):
         if random.random() < exception_probability:
             raise KeyError("Dummy test exception")
 
-    def run(self, exception_probability=0.5):
+    def run(self, exception_probability: float = 0.5) -> None:
         """Dummy.dummy_random_fail_in_atomic in dummy actions.
 
         Can be used to test atomic actions
@@ -232,7 +246,12 @@ class DummyRandomFailInAtomic(scenario.Scenario):
 @scenario.configure(name="Dummy.dummy_random_action")
 class DummyRandomAction(scenario.Scenario):
 
-    def run(self, actions_num=5, sleep_min=0, sleep_max=0):
+    def run(
+        self,
+        actions_num: int = 5,
+        sleep_min: float = 0,
+        sleep_max: float = 0
+    ) -> None:
         """Sleep random time in dummy actions.
 
         :param actions_num: int number of actions to generate
@@ -248,7 +267,11 @@ class DummyRandomAction(scenario.Scenario):
 @scenario.configure(name="Dummy.dummy_timed_atomic_actions")
 class DummyTimedAtomicAction(scenario.Scenario):
 
-    def run(self, number_of_actions=5, sleep_factor=1):
+    def run(
+        self,
+        number_of_actions: int = 5,
+        sleep_factor: float = 1
+    ) -> None:
         """Run some sleepy atomic actions for SLA atomic action tests.
 
         :param number_of_actions: int number of atomic actions to create

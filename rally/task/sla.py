@@ -19,36 +19,56 @@ SLA (Service-level agreement) is set of details for determining compliance
 with contracted values such as maximum error rate or minimum response time.
 """
 
+from __future__ import annotations
+
 import abc
 import itertools
+import typing as t
 
 from rally.common.plugin import plugin
 from rally.common import validation
+
+if t.TYPE_CHECKING:  # pragma: no cover
+
+    from rally.task import runner
+
+    S = t.TypeVar("S", bound="SLA")
 
 
 configure = plugin.configure
 
 
-def _format_result(criterion_name, success, detail):
+class SLAResult(t.TypedDict):
+    """Structure for SLA result data."""
+    criterion: str
+    success: bool
+    detail: str
+
+
+def _format_result(
+    criterion_name: str, success: bool, detail: str
+) -> SLAResult:
     """Returns the SLA result dict corresponding to the current state."""
     return {"criterion": criterion_name,
             "success": success,
             "detail": detail}
 
 
-class SLAChecker(object):
+class SLAChecker:
     """Base SLA checker class."""
 
-    def __init__(self, config):
+    def __init__(self, config: dict[str, t.Any]) -> None:
         self.config = config
-        self.unexpected_failure = None
+        self.unexpected_failure: Exception | None = None
         self.aborted_on_sla = False
         self.aborted_manually = False
-        self.sla_criteria = [SLA.get(name)(criterion_value)
-                             for name, criterion_value
-                             in config.get("sla", {}).items()]
+        self.sla_criteria: list[SLA] = [
+            SLA.get(name)(criterion_value)
+            for name, criterion_value
+            in config.get("sla", {}).items()
+        ]
 
-    def add_iteration(self, iteration):
+    def add_iteration(self, iteration: runner.ScenarioRunnerResult) -> bool:
         """Process the result of a single iteration.
 
         The call to add_iteration() will return True if all the SLA checks
@@ -58,7 +78,7 @@ class SLAChecker(object):
         """
         return all([sla.add_iteration(iteration) for sla in self.sla_criteria])
 
-    def merge(self, other):
+    def merge(self, other: SLAChecker) -> bool:
         self._validate_config(other)
         self._validate_sla_types(other)
 
@@ -66,12 +86,12 @@ class SLAChecker(object):
                     for self_sla, other_sla
                     in zip(self.sla_criteria, other.sla_criteria)])
 
-    def _validate_sla_types(self, other):
+    def _validate_sla_types(self, other: SLAChecker) -> None:
         for self_sla, other_sla in itertools.zip_longest(
                 self.sla_criteria, other.sla_criteria):
             self_sla.validate_type(other_sla)
 
-    def _validate_config(self, other):
+    def _validate_config(self, other: SLAChecker) -> None:
         self_config = self.config.get("sla", {})
         other_config = other.config.get("sla", {})
         if self_config != other_config:
@@ -80,7 +100,7 @@ class SLAChecker(object):
                 "Only SLACheckers with the same config could be merged."
                 % (self_config, other_config))
 
-    def results(self):
+    def results(self) -> list[SLAResult]:
         results = [sla.result() for sla in self.sla_criteria]
         if self.aborted_on_sla:
             results.append(_format_result(
@@ -99,13 +119,13 @@ class SLAChecker(object):
 
         return results
 
-    def set_aborted_on_sla(self):
+    def set_aborted_on_sla(self) -> None:
         self.aborted_on_sla = True
 
-    def set_aborted_manually(self):
+    def set_aborted_manually(self) -> None:
         self.aborted_manually = True
 
-    def set_unexpected_failure(self, exc):
+    def set_unexpected_failure(self, exc: Exception) -> None:
         self.unexpected_failure = exc
 
 
@@ -115,14 +135,14 @@ class SLA(plugin.Plugin, validation.ValidatablePluginMixin,
           metaclass=abc.ABCMeta):
     """Factory for criteria classes."""
 
-    CONFIG_SCHEMA = {"type": "null"}
+    CONFIG_SCHEMA: dict = {"type": "null"}
 
-    def __init__(self, criterion_value):
+    def __init__(self, criterion_value: t.Any) -> None:
         self.criterion_value = criterion_value
         self.success = True
 
     @abc.abstractmethod
-    def add_iteration(self, iteration):
+    def add_iteration(self, iteration: runner.ScenarioRunnerResult) -> bool:
         """Process the result of a single iteration and perform a SLA check.
 
         The call to add_iteration() will return True if the SLA check passed,
@@ -132,20 +152,20 @@ class SLA(plugin.Plugin, validation.ValidatablePluginMixin,
         :returns: True if the SLA check passed, False otherwise
         """
 
-    def result(self):
+    def result(self) -> SLAResult:
         """Returns the SLA result dict corresponding to the current state."""
         return _format_result(self.get_name(), self.success, self.details())
 
     @abc.abstractmethod
-    def details(self):
+    def details(self) -> str:
         """Returns the string describing the current results of the SLA."""
 
-    def status(self):
+    def status(self) -> str:
         """Return "Passed" or "Failed" depending on the current SLA status."""
         return "Passed" if self.success else "Failed"
 
     @abc.abstractmethod
-    def merge(self, other):
+    def merge(self: S, other: S) -> bool:
         """Merge aggregated data from another SLA instance into self.
 
         Process the results of several iterations aggregated in another
@@ -177,7 +197,7 @@ class SLA(plugin.Plugin, validation.ValidatablePluginMixin,
         :returns: True if the SLA check passed, False otherwise
         """
 
-    def validate_type(self, other):
+    def validate_type(self: S, other: S) -> None:
         if type(self) is not type(other):
             raise TypeError(
                 "Error merging SLAs of types %s, %s. Only SLAs of the same "

@@ -19,9 +19,16 @@ SLA (Service-level agreement) is set of details for determining compliance
 with contracted values such as maximum error rate or minimum response time.
 """
 
+from __future__ import annotations
+
+import typing as t
+
 from rally.common import streaming_algorithms
 from rally import consts
 from rally.task import sla
+
+if t.TYPE_CHECKING:  # pragma: no cover
+    from rally.task import runner
 
 
 @sla.configure(name="outliers")
@@ -43,7 +50,7 @@ class Outliers(sla.SLA):
         "additionalProperties": False,
     }
 
-    def __init__(self, criterion_value):
+    def __init__(self, criterion_value: dict[str, t.Any]) -> None:
         super(Outliers, self).__init__(criterion_value)
         self.max_outliers = self.criterion_value.get("max", 0)
         # NOTE(msdubov): Having 3 as default is reasonable (need enough data).
@@ -51,11 +58,11 @@ class Outliers(sla.SLA):
         self.sigmas = self.criterion_value.get("sigmas", 3.0)
         self.iterations = 0
         self.outliers = 0
-        self.threshold = None
+        self.threshold: float | None = None
         self.mean_comp = streaming_algorithms.MeanComputation()
         self.std_comp = streaming_algorithms.StdDevComputation()
 
-    def add_iteration(self, iteration):
+    def add_iteration(self, iteration: runner.ScenarioRunnerResult) -> bool:
         # NOTE(ikhudoshyn): This method can not be implemented properly.
         # After adding a new iteration, both mean and standard deviation
         # may change. Hence threshold will change as well. In this case we
@@ -84,7 +91,7 @@ class Outliers(sla.SLA):
         self.success = self.outliers <= self.max_outliers
         return self.success
 
-    def merge(self, other):
+    def merge(self, other: Outliers) -> bool:
         # NOTE(ikhudoshyn): This method can not be implemented properly.
         # After merge, both mean and standard deviation may change.
         # Hence threshold will change as well. In this case we
@@ -106,6 +113,6 @@ class Outliers(sla.SLA):
         self.success = self.outliers <= self.max_outliers
         return self.success
 
-    def details(self):
+    def details(self) -> str:
         return ("Maximum number of outliers %i <= %i - %s" %
                 (self.outliers, self.max_outliers, self.status()))

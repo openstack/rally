@@ -264,7 +264,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
     def test__run_scenario(self, mock_sleep, config):
         runner_obj = rps.RPSScenarioRunner(self.task, config)
 
-        runner_obj._run_scenario(fakes.FakeScenario, "do_it",
+        runner_obj._run_scenario(fakes.FakeScenario, "run",
                                  {"task": {"uuid": 1}}, {})
 
         self.assertEqual(config["times"], len(runner_obj.result_queue))
@@ -278,8 +278,8 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         config = {"times": 4, "rps": 10}
         runner_obj = rps.RPSScenarioRunner(self.task, config)
 
-        runner_obj._run_scenario(fakes.FakeScenario, "something_went_wrong",
-                                 {"task": {"uuid": 1}}, {})
+        runner_obj._run_scenario(fakes.FakeScenario, "run",
+                                 {"task": {"uuid": 1}}, {"raise_exc": True})
         self.assertEqual(config["times"], len(runner_obj.result_queue))
         for result_batch in runner_obj.result_queue:
             for result in result_batch:
@@ -291,7 +291,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         runner_obj = rps.RPSScenarioRunner(self.task, config)
 
         runner_obj.abort()
-        runner_obj._run_scenario(fakes.FakeScenario, "do_it",
+        runner_obj._run_scenario(fakes.FakeScenario, "run",
                                  {}, {})
 
         self.assertEqual(0, len(runner_obj.result_queue))
@@ -381,7 +381,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
 
             runner_obj = rps.RPSScenarioRunner(self.task, sample["input"])
 
-            runner_obj._run_scenario(fakes.FakeScenario, "do_it", {}, {})
+            runner_obj._run_scenario(fakes.FakeScenario, "run", {}, {})
 
             mock_cpu_count.assert_called_once_with()
             mock__log_debug_info.assert_called_once_with(

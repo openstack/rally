@@ -37,7 +37,7 @@ def _worker_process(
     duration: float | None,
     context: dict[str, t.Any],
     cls: type[runner.scenario.Scenario],
-    method_name: str,
+    method_name: t.Literal["run"],
     args: dict[str, t.Any],
     event_queue: multiprocessing.Queue[dict[str, t.Any]],
     aborted: multiprocessing.synchronize.Event,
@@ -225,7 +225,7 @@ class ConstantScenarioRunner(runner.ScenarioRunner):
     def _run_scenario(
         self,
         cls: type[runner.scenario.Scenario],
-        method_name: str,
+        method_name: t.Literal["run"],
         context: dict[str, t.Any],
         args: dict[str, t.Any]
     ) -> None:
@@ -330,7 +330,7 @@ class ConstantForDurationScenarioRunner(runner.ScenarioRunner):
     def _run_scenario(
         self,
         cls: type[runner.scenario.Scenario],
-        method_name: str,
+        method_name: t.Literal["run"],
         context: dict[str, t.Any],
         args: dict[str, t.Any]
     ) -> None:

@@ -210,6 +210,20 @@ class Scenario(plugin.Plugin,
                     key  # type: ignore[literal-required]
                 ].append(value)
 
+    if not t.TYPE_CHECKING:
+        def run(self, **kwargs: t.Any) -> None:
+            """Execute the scenario's workload.
+
+            This method must be implemented by all scenario plugins.
+            It defines the actual workload that the scenario will execute.
+
+            :param kwargs: Scenario-specific arguments from task configuration
+            """
+            raise NotImplementedError()
+    else:
+        run: t.Callable
+
     @classmethod
-    def _get_doc(cls) -> str | None:
-        return getattr(cls, "run", None).__doc__ or ""
+    def _get_doc(cls) -> str:
+        """Get scenario documentation from run method."""
+        return cls.run.__doc__ or ""

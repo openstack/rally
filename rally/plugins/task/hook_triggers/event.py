@@ -13,6 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import annotations
+
+import typing as t
+
 from rally import consts
 from rally.task import hook
 
@@ -63,12 +67,12 @@ class EventTrigger(hook.HookTrigger):
         ]
     }
 
-    def get_listening_event(self):
+    def get_listening_event(self) -> str:
         return self.config["unit"]
 
-    def on_event(self, event_type, value=None):
+    def on_event(self, event_type: str, value: t.Any = None) -> bool:
         if not (event_type == self.get_listening_event()
                 and value in self.config["at"]):
             # do nothing
-            return
-        super(EventTrigger, self).on_event(event_type, value)
+            return False
+        return super(EventTrigger, self).on_event(event_type, value)

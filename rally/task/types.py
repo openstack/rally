@@ -13,21 +13,30 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import annotations
+
 import abc
 import copy
 import operator
 import re
+import typing as t
 
 from rally.common import logging
 from rally.common.plugin import plugin
 from rally import exceptions
 from rally.task import scenario
 
+if t.TYPE_CHECKING:  # pragma: no cover
+    RT = t.TypeVar("RT", bound="ResourceType")
+    S = t.TypeVar("S", bound=scenario.Scenario)
+
 
 LOG = logging.getLogger(__name__)
 
 
-def convert(**kwargs):
+def convert(
+    **kwargs: dict[str, t.Any]
+) -> t.Callable[[type[S]], type[S]]:
     """Decorator to define resource transformation(s) on scenario parameters.
 
     The ``kwargs`` passed as arguments are used to map a key in the
@@ -42,7 +51,7 @@ def convert(**kwargs):
     may be added in the future.
     """
 
-    def wrapper(cls):
+    def wrapper(cls: type[S]) -> type[S]:
         for k, v in kwargs.items():
             if "type" not in v:
                 LOG.warning(
@@ -56,7 +65,11 @@ def convert(**kwargs):
     return wrapper
 
 
-def preprocess(name, context, args):
+def preprocess(
+    name: str,
+    context: dict[str, t.Any],
+    args: dict[str, t.Any]
+) -> dict[str, t.Any]:
     """Run preprocessor on scenario arguments.
 
     :param name: Scenario plugin name
@@ -72,8 +85,8 @@ def preprocess(name, context, args):
 
     processed_args = copy.deepcopy(args)
 
-    cache = {}
-    resource_types = {}
+    cache: dict[str, t.Any] = {}
+    resource_types: dict[str, ResourceType] = {}
     for src, type_cfg in preprocessors.items():
         if type_cfg["type"] not in resource_types:
             resource_cls = ResourceType.get(type_cfg["type"])
@@ -92,14 +105,18 @@ def preprocess(name, context, args):
 class ResourceType(plugin.Plugin, metaclass=abc.ABCMeta):
     """A helper plugin for pre-processing input data of resources."""
 
-    def __init__(self, context, cache=None):
+    def __init__(
+        self, context: dict[str, t.Any], cache: dict[str, t.Any] | None = None
+    ) -> None:
         self._context = context
         self._global_cache = cache if cache is not None else {}
         self._global_cache.setdefault(self.get_name(), {})
         self._cache = self._global_cache[self.get_name()]
 
     @abc.abstractmethod
-    def pre_process(self, resource_spec, config):
+    def pre_process(
+        self, resource_spec: t.Any, config: dict[str, t.Any]
+    ) -> t.Any:
         """Pre-process resource.
 
         :param resource_spec: A specification of the resource from the task
@@ -107,7 +124,11 @@ class ResourceType(plugin.Plugin, metaclass=abc.ABCMeta):
         """
 
 
-def obj_from_name(resource_config, resources, typename):
+def obj_from_name(
+    resource_config: dict[str, t.Any],
+    resources: t.Iterable[t.Any],
+    typename: str
+) -> t.Any:
     """Return the resource whose name matches the pattern.
 
     resource_config has to contain `name`, as it is used to lookup a resource.
@@ -164,7 +185,11 @@ def obj_from_name(resource_config, resources, typename):
     return matching[0]
 
 
-def obj_from_id(resource_config, resources, typename):
+def obj_from_id(
+    resource_config: dict[str, t.Any],
+    resources: t.Iterable[t.Any],
+    typename: str
+) -> t.Any:
     """Return the resource whose name matches the id.
 
     resource_config has to contain `id`, as it is used to lookup a resource.
@@ -190,7 +215,12 @@ def obj_from_id(resource_config, resources, typename):
                 typename=typename.title(), resource_config=resource_config))
 
 
-def _id_from_name(resource_config, resources, typename, id_attr="id"):
+def _id_from_name(
+    resource_config: dict[str, t.Any],
+    resources: t.Iterable[t.Any],
+    typename: str,
+    id_attr: str = "id"
+) -> t.Any:
     """Return the id of the resource whose name matches the pattern.
 
     resource_config has to contain `name`, as it is used to lookup an id.
@@ -215,7 +245,11 @@ def _id_from_name(resource_config, resources, typename, id_attr="id"):
                 attr=id_attr, type=typename))
 
 
-def _name_from_id(resource_config, resources, typename):
+def _name_from_id(
+    resource_config: dict[str, t.Any],
+    resources: t.Iterable[t.Any],
+    typename: str
+) -> str:
     """Return the name of the resource which has the id.
 
     resource_config has to contain `id`, as it is used to lookup a name.

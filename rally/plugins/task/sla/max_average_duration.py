@@ -19,9 +19,16 @@ SLA (Service-level agreement) is set of details for determining compliance
 with contracted values such as maximum error rate or minimum response time.
 """
 
+from __future__ import annotations
+
+import typing as t
+
 from rally.common import streaming_algorithms
 from rally import consts
 from rally.task import sla
+
+if t.TYPE_CHECKING:  # pragma: no cover
+    from rally.task import runner
 
 
 @sla.configure(name="max_avg_duration")
@@ -33,24 +40,24 @@ class MaxAverageDuration(sla.SLA):
         "exclusiveMinimum": 0.0
     }
 
-    def __init__(self, criterion_value):
+    def __init__(self, criterion_value: float) -> None:
         super(MaxAverageDuration, self).__init__(criterion_value)
         self.avg = 0.0
         self.avg_comp = streaming_algorithms.MeanComputation()
 
-    def add_iteration(self, iteration):
+    def add_iteration(self, iteration: runner.ScenarioRunnerResult) -> bool:
         if not iteration.get("error"):
             self.avg_comp.add(iteration["duration"])
             self.avg = self.avg_comp.result()
         self.success = self.avg <= self.criterion_value
         return self.success
 
-    def merge(self, other):
+    def merge(self, other: MaxAverageDuration) -> bool:
         self.avg_comp.merge(other.avg_comp)
         self.avg = self.avg_comp.result() or 0.0
         self.success = self.avg <= self.criterion_value
         return self.success
 
-    def details(self):
+    def details(self) -> str:
         return ("Average duration of one iteration %.2fs <= %.2fs - %s" %
                 (self.avg, self.criterion_value, self.status()))

@@ -24,43 +24,31 @@ from rally.task import context
 from rally.task import scenario
 
 
-class FakeScenario(scenario.Scenario):
-
-    def idle_time(self):
-        return 0
-
-    def do_it(self, **kwargs):
-        pass
-
-    def with_output(self, **kwargs):
-        return {"data": {"a": 1}, "error": None}
-
-    def with_add_output(self):
-        self.add_output(additive={"title": "Additive",
-                                  "description": "Additive description",
-                                  "data": [["a", 1]],
-                                  "chart_plugin": "FooPlugin"},
-                        complete={"title": "Complete",
-                                  "description": "Complete description",
-                                  "data": [["a", [[1, 2], [2, 3]]]],
-                                  "chart_plugin": "BarPlugin"})
-
-    def too_long(self, **kwargs):
-        pass
-
-    def something_went_wrong(self, **kwargs):
-        raise Exception("Something went wrong")
-
-    def raise_timeout(self, **kwargs):
-        raise multiprocessing.TimeoutError()
-
-
 @scenario.configure(name="classbased.fooscenario")
-class FakeClassBasedScenario(FakeScenario):
+class FakeScenario(scenario.Scenario):
     """Fake class-based scenario."""
 
-    def run(self, *args, **kwargs):
-        pass
+    def run(
+        self,
+        *args,
+        raise_exc: bool = False,
+        raise_timeout_err: bool = False,
+        with_add_output: bool = False,
+        **kwargs
+    ) -> None:
+        if raise_exc:
+            raise Exception("Something went wrong")
+        if raise_timeout_err:
+            raise multiprocessing.TimeoutError()
+        if with_add_output:
+            self.add_output(additive={"title": "Additive",
+                                      "description": "Additive description",
+                                      "data": [["a", 1]],
+                                      "chart_plugin": "FooPlugin"},
+                            complete={"title": "Complete",
+                                      "description": "Complete description",
+                                      "data": [["a", [[1, 2], [2, 3]]]],
+                                      "chart_plugin": "BarPlugin"})
 
 
 class FakeTimer(rally_utils.Timer):

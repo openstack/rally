@@ -36,7 +36,7 @@ class SysCallHook(hook.HookAction):
         "description": "Command to execute."
     }
 
-    def run(self):
+    def run(self) -> None:
         LOG.debug("sys_call hook: Running command %s" % self.config)
         proc = subprocess.Popen(shlex.split(self.config),
                                 stdout=subprocess.PIPE,

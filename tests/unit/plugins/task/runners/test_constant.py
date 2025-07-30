@@ -122,7 +122,7 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
         runner_obj = constant.ConstantScenarioRunner(self.task, self.config)
 
         runner_obj._run_scenario(
-            fakes.FakeScenario, "do_it", self.context, self.args)
+            fakes.FakeScenario, "run", self.context, self.args)
         self.assertEqual(self.config["times"], len(runner_obj.result_queue))
         for result_batch in runner_obj.result_queue:
             for result in result_batch:
@@ -131,8 +131,10 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
     def test__run_scenario_exception(self):
         runner_obj = constant.ConstantScenarioRunner(self.task, self.config)
 
-        runner_obj._run_scenario(fakes.FakeScenario, "something_went_wrong",
-                                 self.context, self.args)
+        runner_obj._run_scenario(
+            fakes.FakeScenario, "run", self.context,
+            args=dict(raise_exc=True, **self.args)
+        )
         self.assertEqual(self.config["times"], len(runner_obj.result_queue))
         for result_batch in runner_obj.result_queue:
             for result in result_batch:
@@ -143,8 +145,9 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
         runner_obj = constant.ConstantScenarioRunner(self.task, self.config)
 
         runner_obj.abort()
-        runner_obj._run_scenario(fakes.FakeScenario, "do_it", self.context,
-                                 self.args)
+        runner_obj._run_scenario(
+            fakes.FakeScenario, "run", self.context, self.args
+        )
         self.assertEqual(0, len(runner_obj.result_queue))
 
     @mock.patch(RUNNERS + "constant.multiprocessing.Queue")
@@ -222,7 +225,7 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
             runner_obj = constant.ConstantScenarioRunner(self.task,
                                                          sample["input"])
 
-            runner_obj._run_scenario(fakes.FakeScenario, "do_it", self.context,
+            runner_obj._run_scenario(fakes.FakeScenario, "run", self.context,
                                      self.args)
 
             mock_cpu_count.assert_called_once_with()
@@ -279,7 +282,7 @@ class ConstantForDurationScenarioRunnerTestCase(test.TestCase):
         runner_obj = constant.ConstantForDurationScenarioRunner(
             mock.MagicMock(), self.config)
 
-        runner_obj._run_scenario(fakes.FakeScenario, "do_it",
+        runner_obj._run_scenario(fakes.FakeScenario, "run",
                                  self.context, self.args)
         # NOTE(mmorais/msimonin): when duration is 0, scenario executes exactly
         # 1 time per unit of parrallelism
@@ -293,8 +296,10 @@ class ConstantForDurationScenarioRunnerTestCase(test.TestCase):
         runner_obj = constant.ConstantForDurationScenarioRunner(
             mock.MagicMock(), self.config)
 
-        runner_obj._run_scenario(fakes.FakeScenario, "something_went_wrong",
-                                 self.context, self.args)
+        runner_obj._run_scenario(
+            fakes.FakeScenario, "run", self.context,
+            args=dict(raise_exc=True, **self.args)
+        )
         # NOTE(mmorais/msimonin): when duration is 0, scenario executes exactly
         # 1 time per unit of parrallelism
         expected_times = self.config["concurrency"]
@@ -308,8 +313,10 @@ class ConstantForDurationScenarioRunnerTestCase(test.TestCase):
         runner_obj = constant.ConstantForDurationScenarioRunner(
             mock.MagicMock(), self.config)
 
-        runner_obj._run_scenario(fakes.FakeScenario, "raise_timeout",
-                                 self.context, self.args)
+        runner_obj._run_scenario(
+            fakes.FakeScenario, "run", self.context,
+            args=dict(raise_timeout_err=True, **self.args)
+        )
         # NOTE(mmorais/msimonin): when duration is 0, scenario executes exactly
         # 1 time per unit of parrallelism
         expected_times = self.config["concurrency"]
@@ -324,7 +331,7 @@ class ConstantForDurationScenarioRunnerTestCase(test.TestCase):
                                                                 self.config)
 
         runner_obj.abort()
-        runner_obj._run_scenario(fakes.FakeScenario, "do_it",
+        runner_obj._run_scenario(fakes.FakeScenario, "run",
                                  self.context, self.args)
         self.assertEqual(0, len(runner_obj.result_queue))
 

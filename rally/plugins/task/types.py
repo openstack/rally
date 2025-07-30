@@ -13,6 +13,7 @@
 #    under the License.
 
 import os
+import typing as t
 
 import requests
 
@@ -25,7 +26,7 @@ from rally.task import types
 class PathOrUrl(types.ResourceType):
     """Check whether file exists or url available."""
 
-    def pre_process(self, resource_spec, config):
+    def pre_process(self, resource_spec: str, config: dict[str, t.Any]) -> str:
         path = os.path.expanduser(resource_spec)
         if os.path.isfile(path):
             return path
@@ -44,7 +45,7 @@ class PathOrUrl(types.ResourceType):
 class FileType(types.ResourceType):
     """Return content of the file by its path."""
 
-    def pre_process(self, resource_spec, config):
+    def pre_process(self, resource_spec: str, config: dict[str, t.Any]) -> str:
         with open(os.path.expanduser(resource_spec), "r") as f:
             return f.read()
 
@@ -53,7 +54,7 @@ class FileType(types.ResourceType):
 class ExpandUserPath(types.ResourceType):
     """Expands user path."""
 
-    def pre_process(self, resource_spec, config):
+    def pre_process(self, resource_spec: str, config: dict[str, t.Any]) -> str:
         return os.path.expanduser(resource_spec)
 
 
@@ -61,8 +62,10 @@ class ExpandUserPath(types.ResourceType):
 class FileTypeDict(types.ResourceType):
     """Return the dictionary of items with file path and file content."""
 
-    def pre_process(self, resource_spec, config):
-        file_type_dict = {}
+    def pre_process(
+        self, resource_spec: list[str], config: dict[str, t.Any]
+    ) -> dict[str, str]:
+        file_type_dict: dict[str, str] = {}
         for file_path in resource_spec:
             file_path = os.path.expanduser(file_path)
             with open(file_path, "r") as f:

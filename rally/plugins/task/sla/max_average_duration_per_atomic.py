@@ -19,34 +19,49 @@ SLA (Service-level agreement) is set of details for determining compliance
 with contracted values such as maximum error rate or minimum response time.
 """
 
+from __future__ import annotations
+
 import collections
+import typing as t
 
 from rally.common import streaming_algorithms
 from rally import consts
 from rally.task import sla
 
+if t.TYPE_CHECKING:  # pragma: no cover
+    from rally.task import runner
+
 
 @sla.configure(name="max_avg_duration_per_atomic")
 class MaxAverageDurationPerAtomic(sla.SLA):
     """Maximum average duration of one iterations atomic actions in seconds."""
-    CONFIG_SCHEMA = {"type": "object", "$schema": consts.JSON_SCHEMA,
-                     "patternProperties": {".*": {
-                         "type": "number",
-                         "description": "The name of atomic action."}},
-                     "minProperties": 1,
-                     "additionalProperties": False}
+    CONFIG_SCHEMA = {
+        "type": "object",
+        "$schema": consts.JSON_SCHEMA,
+        "patternProperties": {
+            ".*": {
+                "type": "number",
+                "description": "The name of atomic action."
+            }
+        },
+        "minProperties": 1,
+        "additionalProperties": False
+    }
 
-    def __init__(self, criterion_value):
+    def __init__(self, criterion_value: dict[str, float]) -> None:
         super(MaxAverageDurationPerAtomic, self).__init__(criterion_value)
-        self.avg_by_action = collections.defaultdict(float)
-        self.avg_comp_by_action = collections.defaultdict(
-            streaming_algorithms.MeanComputation)
+        self.avg_by_action: dict[str, float] = collections.defaultdict(float)
+        self.avg_comp_by_action: collections.defaultdict[
+            str, streaming_algorithms.MeanComputation
+        ] = collections.defaultdict(streaming_algorithms.MeanComputation)
         self.criterion_items = self.criterion_value.items()
 
-    def add_iteration(self, iteration):
+    def add_iteration(self, iteration: runner.ScenarioRunnerResult) -> bool:
         if not iteration.get("error"):
             for action in iteration["atomic_actions"]:
-                duration = action["finished_at"] - action["started_at"]
+                started_at = action["started_at"] or 0.0
+                finished_at = action["finished_at"] or started_at
+                duration = finished_at - started_at
                 self.avg_comp_by_action[action["name"]].add(duration)
                 result = self.avg_comp_by_action[action["name"]].result()
                 self.avg_by_action[action["name"]] = result
@@ -54,7 +69,7 @@ class MaxAverageDurationPerAtomic(sla.SLA):
                            for atom, val in self.criterion_items)
         return self.success
 
-    def merge(self, other):
+    def merge(self, other: MaxAverageDurationPerAtomic) -> bool:
         for atom, comp in self.avg_comp_by_action.items():
             if atom in other.avg_comp_by_action:
                 comp.merge(other.avg_comp_by_action[atom])
@@ -64,7 +79,7 @@ class MaxAverageDurationPerAtomic(sla.SLA):
                            for atom, val in self.criterion_items)
         return self.success
 
-    def details(self):
+    def details(self) -> str:
         strs = ["Action: '%s'. %.2fs <= %.2fs" %
                 (atom, self.avg_by_action[atom], val)
                 for atom, val in self.criterion_items]

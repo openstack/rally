@@ -19,8 +19,15 @@ SLA (Service-level agreement) is set of details for determining compliance
 with contracted values such as maximum error rate or minimum response time.
 """
 
+from __future__ import annotations
+
+import typing as t
+
 from rally import consts
 from rally.task import sla
+
+if t.TYPE_CHECKING:  # pragma: no cover
+    from rally.task import runner
 
 
 @sla.configure(name="failure_rate")
@@ -37,7 +44,7 @@ class FailureRate(sla.SLA):
         "additionalProperties": False,
     }
 
-    def __init__(self, criterion_value):
+    def __init__(self, criterion_value: dict[str, float]) -> None:
         super(FailureRate, self).__init__(criterion_value)
         self.min_percent = self.criterion_value.get("min", 0)
         self.max_percent = self.criterion_value.get("max", 100)
@@ -45,7 +52,7 @@ class FailureRate(sla.SLA):
         self.total = 0
         self.error_rate = 0.0
 
-    def add_iteration(self, iteration):
+    def add_iteration(self, iteration: runner.ScenarioRunnerResult) -> bool:
         self.total += 1
         if iteration["error"]:
             self.errors += 1
@@ -53,7 +60,7 @@ class FailureRate(sla.SLA):
         self.success = self.min_percent <= self.error_rate <= self.max_percent
         return self.success
 
-    def merge(self, other):
+    def merge(self, other: FailureRate) -> bool:
         self.total += other.total
         self.errors += other.errors
         if self.total:
@@ -61,7 +68,7 @@ class FailureRate(sla.SLA):
         self.success = self.min_percent <= self.error_rate <= self.max_percent
         return self.success
 
-    def details(self):
+    def details(self) -> str:
         return ("Failure rate criteria %.2f%% <= %.2f%% <= %.2f%% - %s" %
                 (self.min_percent, self.error_rate,
                  self.max_percent, self.status()))

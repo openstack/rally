@@ -308,14 +308,6 @@ module = "rally.env.platform"
 disable_error_code = ["no-untyped-def"]
 
 [[tool.mypy.overrides]]
-module = "rally.plugins"
-disable_error_code = ["no-untyped-def"]
-
-[[tool.mypy.overrides]]
-module = "rally.plugins.common.validators"
-disable_error_code = ["arg-type", "assignment", "no-untyped-def"]
-
-[[tool.mypy.overrides]]
 module = "rally.plugins.task.exporters.elastic.client"
 disable_error_code = ["no-untyped-def"]
 
@@ -348,58 +340,6 @@ module = "rally.plugins.task.exporters.trends"
 disable_error_code = ["no-untyped-def"]
 
 [[tool.mypy.overrides]]
-module = "rally.plugins.task.hook_triggers.event"
-disable_error_code = ["dict-item", "no-untyped-def"]
-
-[[tool.mypy.overrides]]
-module = "rally.plugins.task.hook_triggers.periodic"
-disable_error_code = ["dict-item", "no-untyped-def"]
-
-[[tool.mypy.overrides]]
-module = "rally.plugins.task.hooks.sys_call"
-disable_error_code = ["no-untyped-def"]
-
-[[tool.mypy.overrides]]
-module = "rally.plugins.task.scenarios.dummy.dummy"
-disable_error_code = ["no-untyped-def"]
-
-[[tool.mypy.overrides]]
-module = "rally.plugins.task.scenarios.requests.http_requests"
-disable_error_code = ["no-untyped-def"]
-
-[[tool.mypy.overrides]]
-module = "rally.plugins.task.scenarios.requests.utils"
-disable_error_code = ["no-untyped-def"]
-
-[[tool.mypy.overrides]]
-module = "rally.plugins.task.sla.failure_rate"
-disable_error_code = ["dict-item", "no-untyped-def"]
-
-[[tool.mypy.overrides]]
-module = "rally.plugins.task.sla.iteration_time"
-disable_error_code = ["dict-item", "no-untyped-def"]
-
-[[tool.mypy.overrides]]
-module = "rally.plugins.task.sla.max_average_duration"
-disable_error_code = ["dict-item", "no-untyped-def"]
-
-[[tool.mypy.overrides]]
-module = "rally.plugins.task.sla.max_average_duration_per_atomic"
-disable_error_code = ["assignment", "dict-item", "no-untyped-def"]
-
-[[tool.mypy.overrides]]
-module = "rally.plugins.task.sla.outliers"
-disable_error_code = ["dict-item", "no-untyped-def"]
-
-[[tool.mypy.overrides]]
-module = "rally.plugins.task.sla.performance_degradation"
-disable_error_code = ["dict-item", "no-untyped-def"]
-
-[[tool.mypy.overrides]]
-module = "rally.plugins.task.types"
-disable_error_code = ["no-untyped-def"]
-
-[[tool.mypy.overrides]]
 module = "rally.plugins.verification.reporters"
 disable_error_code = ["no-untyped-def"]
 
@@ -420,10 +360,6 @@ module = "rally.task.functional"
 disable_error_code = ["no-untyped-def"]
 
 [[tool.mypy.overrides]]
-module = "rally.task.hook"
-disable_error_code = ["no-untyped-def"]
-
-[[tool.mypy.overrides]]
 module = "rally.task.processing.charts"
 disable_error_code = ["index", "no-untyped-def", "override", "var-annotated"]
 
@@ -440,16 +376,8 @@ module = "rally.task.service"
 disable_error_code = ["call-overload", "no-untyped-def", "var-annotated"]
 
 [[tool.mypy.overrides]]
-module = "rally.task.sla"
-disable_error_code = ["no-untyped-def"]
-
-[[tool.mypy.overrides]]
 module = "rally.task.task_cfg"
 disable_error_code = ["assignment", "attr-defined", "no-untyped-def"]
-
-[[tool.mypy.overrides]]
-module = "rally.task.types"
-disable_error_code = ["no-untyped-def", "var-annotated"]
 
 [[tool.mypy.overrides]]
 module = "rally.task.utils"

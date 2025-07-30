@@ -76,7 +76,7 @@ class ScenarioRunnerHelpersTestCase(test.TestCase):
     @mock.patch(BASE + "rutils.Timer", side_effect=fakes.FakeTimer)
     def test_run_scenario_once_without_scenario_output(self, mock_timer):
         result = runner._run_scenario_once(
-            fakes.FakeScenario, "do_it", mock.MagicMock(), {},
+            fakes.FakeScenario, "run", mock.MagicMock(), {},
             mock.MagicMock())
 
         expected_result = {
@@ -92,8 +92,8 @@ class ScenarioRunnerHelpersTestCase(test.TestCase):
     @mock.patch(BASE + "rutils.Timer", side_effect=fakes.FakeTimer)
     def test_run_scenario_once_with_added_scenario_output(self, mock_timer):
         result = runner._run_scenario_once(
-            fakes.FakeScenario, "with_add_output", mock.MagicMock(), {},
-            mock.MagicMock())
+            fakes.FakeScenario, "run", mock.MagicMock(),
+            {"with_add_output": True}, mock.MagicMock())
 
         expected_result = {
             "duration": fakes.FakeTimer().duration(),
@@ -115,7 +115,7 @@ class ScenarioRunnerHelpersTestCase(test.TestCase):
     @mock.patch(BASE + "rutils.Timer", side_effect=fakes.FakeTimer)
     def test_run_scenario_once_exception(self, mock_timer):
         result = runner._run_scenario_once(
-            fakes.FakeScenario, "something_went_wrong", mock.MagicMock(), {},
+            fakes.FakeScenario, "run", mock.MagicMock(), {"raise_exc": True},
             mock.MagicMock())
         expected_error = result.pop("error")
         expected_result = {
@@ -139,7 +139,7 @@ class ScenarioRunnerTestCase(test.TestCase):
 
     @mock.patch(BASE + "rutils.Timer.duration", return_value=10)
     def test_run(self, mock_timer_duration):
-        scenario_class = fakes.FakeClassBasedScenario
+        scenario_class = fakes.FakeScenario
         runner_obj = serial.SerialScenarioRunner(
             mock.MagicMock(),
             mock.MagicMock())

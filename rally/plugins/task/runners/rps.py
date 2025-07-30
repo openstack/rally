@@ -254,7 +254,7 @@ class RPSScenarioRunner(runner.ScenarioRunner):
     def _run_scenario(
         self,
         cls: type[scenario.Scenario],
-        method_name: str,
+        method_name: t.Literal["run"],
         context: dict[str, t.Any],
         args: dict[str, t.Any]
     ) -> None:

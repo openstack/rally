@@ -11,6 +11,7 @@
 #    under the License.
 
 import random
+import typing as t
 
 from rally.plugins.task.scenarios.requests import utils
 from rally.task import scenario
@@ -22,7 +23,9 @@ from rally.task import scenario
 @scenario.configure(name="HttpRequests.check_request")
 class HttpRequestsCheckRequest(utils.RequestScenario):
 
-    def run(self, url, method, status_code, **kwargs):
+    def run(
+        self, url: str, method: str, status_code: int, **kwargs: t.Any
+    ) -> None:
         """Standard way for testing web services using HTTP requests.
 
         This scenario is used to make request and check it with expected
@@ -40,7 +43,11 @@ class HttpRequestsCheckRequest(utils.RequestScenario):
 @scenario.configure(name="HttpRequests.check_random_request")
 class HttpRequestsCheckRandomRequest(utils.RequestScenario):
 
-    def run(self, requests, status_code):
+    def run(
+        self,
+        requests: list[dict[str, t.Any]],
+        status_code: int,
+    ) -> None:
         """Executes random HTTP requests from provided list.
 
         This scenario takes random url from list of requests, and raises
@@ -48,7 +55,7 @@ class HttpRequestsCheckRandomRequest(utils.RequestScenario):
 
         :param requests: List of request dicts
         :param status_code: Expected Response Code it will
-        be used only if we doesn't specified it in request proper
+            be used only if we doesn't specified it in request proper
         """
 
         request = random.choice(requests)

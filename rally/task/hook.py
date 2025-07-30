@@ -13,9 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import annotations
+
 import abc
 import collections
 import threading
+import typing as t
+import typing_extensions as te
 
 from rally.common import logging
 from rally.common.plugin import plugin
@@ -24,7 +28,14 @@ from rally.common import validation
 from rally import consts
 from rally import exceptions
 from rally.task.processing import charts
+from rally.task import scenario
 from rally.task import utils
+
+if t.TYPE_CHECKING:  # pragma: no cover
+    from rally.common import objects
+
+    A = t.TypeVar("A", bound="HookAction")
+    T = t.TypeVar("T", bound="HookTrigger")
 
 
 LOG = logging.getLogger(__name__)
@@ -33,14 +44,32 @@ LOG = logging.getLogger(__name__)
 configure = plugin.configure
 
 
-class HookExecutor(object):
+class HookResult(t.TypedDict):
+    """Structure for hook execution result."""
+    status: str
+    started_at: float
+    finished_at: float
+    triggered_by: dict[str, t.Any]
+    error: te.NotRequired[dict[str, str]]
+    output: te.NotRequired[scenario._Output]
+
+
+class TriggerResults(t.TypedDict):
+    """Structure for trigger results collection."""
+    config: dict[str, t.Any]
+    results: list[HookResult]
+    summary: dict[str, int]
+
+
+class HookExecutor:
     """Runs hooks and collects results from them."""
 
-    def __init__(self, config, task):
+    def __init__(self, config: dict[str, t.Any], task: objects.Task) -> None:
         self.config = config
         self.task = task
 
-        self.triggers = collections.defaultdict(list)
+        self.triggers: collections.defaultdict[str, list[HookTrigger]] = (
+            collections.defaultdict(list))
         for hook_cfg in config.get("hooks", []):
             action_name = hook_cfg["action"][0]
             trigger_name = hook_cfg["trigger"][0]
@@ -54,7 +83,7 @@ class HookExecutor(object):
             self._timer_thread = threading.Thread(target=self._timer_method)
             self._timer_stop_event = threading.Event()
 
-    def _timer_method(self):
+    def _timer_method(self) -> None:
         """Timer thread method.
 
         It generates events with type "time" to inform HookExecutor
@@ -68,15 +97,15 @@ class HookExecutor(object):
             seconds_since_start += 1
             stopwatch.sleep(seconds_since_start)
 
-    def _start_timer(self):
+    def _start_timer(self) -> None:
         self._timer_thread.start()
 
-    def _stop_timer(self):
+    def _stop_timer(self) -> None:
         self._timer_stop_event.set()
         if self._timer_thread.ident is not None:
             self._timer_thread.join()
 
-    def on_event(self, event_type, value):
+    def on_event(self, event_type: str, value: t.Any) -> None:
         """Notify about event.
 
         This method should be called to inform HookExecutor that
@@ -95,7 +124,7 @@ class HookExecutor(object):
                          % (trigger_obj.hook_cls.__name__, self.task["uuid"],
                             event_type, value))
 
-    def results(self):
+    def results(self) -> list[TriggerResults]:
         """Returns list of dicts with hook results."""
         if "time" in self.triggers:
             self._stop_timer()
@@ -114,25 +143,32 @@ class HookAction(plugin.Plugin, validation.ValidatablePluginMixin,
 
     CONFIG_SCHEMA = {"type": "null"}
 
-    def __init__(self, task, config, triggered_by):
+    def __init__(
+        self,
+        task: objects.Task,
+        config: t.Any,
+        triggered_by: dict[str, t.Any]
+    ) -> None:
         self.task = task
         self.config = config
         self._triggered_by = triggered_by
         self._thread = threading.Thread(target=self._thread_method)
         self._started_at = 0.0
         self._finished_at = 0.0
-        self._result = {
+        self._result: HookResult = {
             "status": consts.HookStatus.SUCCESS,
             "started_at": self._started_at,
             "finished_at": self._finished_at,
             "triggered_by": self._triggered_by,
         }
 
-    def _thread_method(self):
+    def _thread_method(self) -> None:
         # Run hook synchronously
         self.run_sync()
 
-    def set_error(self, exception_name, description, details):
+    def set_error(
+        self, exception_name: str, description: str, details: str
+    ) -> None:
         """Set error related information to result.
 
         :param exception_name: name of exception as string
@@ -143,11 +179,15 @@ class HookAction(plugin.Plugin, validation.ValidatablePluginMixin,
         self._result["error"] = {"etype": exception_name,
                                  "msg": description, "details": details}
 
-    def set_status(self, status):
+    def set_status(self, status: str) -> None:
         """Set status to result."""
         self._result["status"] = status
 
-    def add_output(self, additive=None, complete=None):
+    def add_output(
+        self,
+        additive: dict[str, t.Any] | None = None,
+        complete: dict[str, t.Any] | None = None
+    ) -> None:
         """Save custom output.
 
         :param additive: dict with additive output
@@ -161,13 +201,15 @@ class HookAction(plugin.Plugin, validation.ValidatablePluginMixin,
                 message = charts.validate_output(key, value)
                 if message:
                     raise exceptions.RallyException(message)
-                self._result["output"][key].append(value)
+                self._result["output"][
+                    key  # type: ignore[literal-required]
+                ].append(value)
 
-    def run_async(self):
+    def run_async(self) -> None:
         """Run hook asynchronously."""
         self._thread.start()
 
-    def run_sync(self):
+    def run_sync(self) -> None:
         """Run hook synchronously."""
         try:
             with rutils.Timer() as timer:
@@ -182,7 +224,7 @@ class HookAction(plugin.Plugin, validation.ValidatablePluginMixin,
         self._result["finished_at"] = self._finished_at
 
     @abc.abstractmethod
-    def run(self):
+    def run(self) -> None:
         """Run method.
 
         This method should be implemented in plugin.
@@ -195,12 +237,12 @@ class HookAction(plugin.Plugin, validation.ValidatablePluginMixin,
             add_output - provide data for report
         """
 
-    def result(self):
+    def result(self) -> HookResult:
         """Wait and return result of hook."""
         if self._thread.ident is not None:
             # hook is still running, wait for result
             self._thread.join()
-        return self._result
+        return t.cast(HookResult, self._result)
 
 
 @validation.add_default("jsonschema")
@@ -209,20 +251,25 @@ class HookTrigger(plugin.Plugin, validation.ValidatablePluginMixin,
                   metaclass=abc.ABCMeta):
     """Factory for hook trigger classes."""
 
-    CONFIG_SCHEMA = {"type": "null"}
+    CONFIG_SCHEMA: dict = {"type": "null"}
 
-    def __init__(self, hook_cfg, task, hook_cls):
+    def __init__(
+        self,
+        hook_cfg: dict[str, t.Any],
+        task: objects.Task,
+        hook_cls: type[HookAction]
+    ) -> None:
         self.hook_cfg = hook_cfg
         self.config = self.hook_cfg["trigger"][1]
         self.task = task
         self.hook_cls = hook_cls
-        self._runs = []
+        self._runs: list[HookAction] = []
 
     @abc.abstractmethod
-    def get_listening_event(self):
+    def get_listening_event(self) -> str:
         """Returns event type to listen."""
 
-    def on_event(self, event_type, value=None):
+    def on_event(self, event_type: str, value: t.Any = None) -> bool:
         """Launch hook on specified event."""
         LOG.info("Hook action %s is triggered for Task %s by %s=%s"
                  % (self.hook_cls.get_name(), self.task["uuid"],
@@ -232,11 +279,14 @@ class HookTrigger(plugin.Plugin, validation.ValidatablePluginMixin,
                                {"event_type": event_type, "value": value})
         action.run_async()
         self._runs.append(action)
+        return True
 
-    def get_results(self):
-        results = {"config": self.hook_cfg,
-                   "results": [],
-                   "summary": {}}
+    def get_results(self) -> TriggerResults:
+        results: TriggerResults = {
+            "config": self.hook_cfg,
+            "results": [],
+            "summary": {}
+        }
         for action in self._runs:
             action_result = action.result()
             results["results"].append(action_result)
