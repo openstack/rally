@@ -125,6 +125,7 @@ class BaseContext(plugin.Plugin, functional.FunctionalMixin,
     RESOURCE_NAME_FORMAT = "c_rally_XXXXXXXX_XXXXXXXX"
 
     CONFIG_SCHEMA: dict[str, t.Any] = {"type": "null"}
+    config: t.Any
 
     def __init__(self, ctx: dict[str, t.Any]) -> None:
         super(BaseContext, self).__init__()

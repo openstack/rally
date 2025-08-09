@@ -141,7 +141,7 @@ class HookAction(plugin.Plugin, validation.ValidatablePluginMixin,
                  metaclass=abc.ABCMeta):
     """Factory for hook classes."""
 
-    CONFIG_SCHEMA = {"type": "null"}
+    CONFIG_SCHEMA: dict = {"type": "null"}
 
     def __init__(
         self,
