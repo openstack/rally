@@ -1,13 +1,21 @@
 {
-    "Dummy.dummy": [
+    "version": 2,
+    "title": "SLA criteria sample",
+    "description": "Sample task demonstrating various SLA criteria usage",
+    "tags": ["sla", "sample", "dummy"],
+    "subtasks": [
         {
-            "args": {
-                "sleep": 5
+            "title": "Dummy scenario with multiple SLA criteria",
+            "scenario": {
+                "Dummy.dummy": {
+                    "sleep": 5
+                }
             },
             "runner": {
-                "type": "constant",
-                "times": 20,
-                "concurrency": 5
+                "constant": {
+                    "times": 20,
+                    "concurrency": 5
+                }
             },
             "sla": {
                 "max_seconds_per_iteration": 4.0,

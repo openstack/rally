@@ -1,13 +1,18 @@
 ---
-  Dummy.dummy:
-    -
-      args:
+version: 2
+title: "Context usage sample"
+description: "Sample task demonstrating context usage with dummy_context"
+tags: ["context", "sample", "dummy"]
+subtasks:
+  - title: "Dummy scenario with context"
+    scenario:
+      Dummy.dummy:
         sleep: 0.1
-      runner:
-        type: "constant"
+    runner:
+      constant:
         times: 4
         concurrency: 2
-      context:
-        dummy_context:
-          fail_setup: false
-          fail_cleanup: false
+    contexts:
+      dummy_context:
+        fail_setup: false
+        fail_cleanup: false

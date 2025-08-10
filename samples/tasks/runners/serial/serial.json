@@ -1,12 +1,20 @@
 {
-    "Dummy.dummy": [
+    "version": 2,
+    "title": "Serial runner sample",
+    "description": "Sample task demonstrating serial runner usage for sequential execution",
+    "tags": ["runner", "serial", "sample"],
+    "subtasks": [
         {
-            "args": {
-                "sleep": 5
+            "title": "Dummy scenario with serial runner",
+            "scenario": {
+                "Dummy.dummy": {
+                    "sleep": 5
+                }
             },
             "runner": {
-                "type": "serial",
-                "times": 20
+                "serial": {
+                    "times": 20
+                }
             }
         }
     ]

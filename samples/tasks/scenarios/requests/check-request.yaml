@@ -1,15 +1,20 @@
 ---
-  HttpRequests.check_request:
-    -
-      args:
+version: 2
+title: "HTTP request check sample"
+description: "Sample task demonstrating HTTP request validation scenario"
+tags: ["http", "requests", "sample"]
+subtasks:
+  - title: "HTTP request validation"
+    scenario:
+      HttpRequests.check_request:
         url: "http://www.example.com"
         method: "GET"
         status_code: 200
         allow_redirects: False
-      runner:
-        type: "constant"
+    runner:
+      constant:
         times: 20
         concurrency: 5
-      sla:
-        failure_rate:
-          max: 0
+    sla:
+      failure_rate:
+        max: 0

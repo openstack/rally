@@ -1,15 +1,23 @@
 {
-    "Dummy.dummy": [
+    "version": 2,
+    "title": "Context usage sample",
+    "description": "Sample task demonstrating context usage with dummy_context",
+    "tags": ["context", "sample", "dummy"],
+    "subtasks": [
         {
-            "args": {
-                "sleep": 0.1
+            "title": "Dummy scenario with context",
+            "scenario": {
+                "Dummy.dummy": {
+                    "sleep": 0.1
+                }
             },
             "runner": {
-                "type": "constant",
-                "times": 4,
-                "concurrency": 2
+                "constant": {
+                    "times": 4,
+                    "concurrency": 2
+                }
             },
-            "context": {
+            "contexts": {
                 "dummy_context": {
                     "fail_setup": false,
                     "fail_cleanup": false

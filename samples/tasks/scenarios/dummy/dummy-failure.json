@@ -1,16 +1,24 @@
 {
-    "Dummy.failure": [
+    "version": 2,
+    "title": "Dummy failure scenario sample",
+    "description": "Sample task demonstrating Dummy.failure scenario with iteration-based failures",
+    "tags": ["dummy", "failure", "sample"],
+    "subtasks": [
         {
-            "args": {
-                "sleep": 0.2,
-                "from_iteration": 5,
-                "to_iteration": 10,
-                "each": 2
+            "title": "Dummy scenario with controlled failures",
+            "scenario": {
+                "Dummy.failure": {
+                    "sleep": 0.2,
+                    "from_iteration": 5,
+                    "to_iteration": 10,
+                    "each": 2
+                }
             },
             "runner": {
-                "type": "constant",
-                "times": 20,
-                "concurrency": 5
+                "constant": {
+                    "times": 20,
+                    "concurrency": 5
+                }
             },
             "sla": {
                 "failure_rate": {

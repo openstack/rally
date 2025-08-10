@@ -1,13 +1,21 @@
 {
-    "Dummy.dummy": [
+    "version": 2,
+    "title": "Constant for duration runner sample",
+    "description": "Sample task demonstrating constant_for_duration runner usage",
+    "tags": ["runner", "constant_for_duration", "sample"],
+    "subtasks": [
         {
-            "args": {
-                "sleep": 5
+            "title": "Dummy scenario with constant_for_duration runner",
+            "scenario": {
+                "Dummy.dummy": {
+                    "sleep": 5
+                }
             },
             "runner": {
-                "type": "constant_for_duration",
-                "concurrency": 5,
-                "duration": 30
+                "constant_for_duration": {
+                    "concurrency": 5,
+                    "duration": 30
+                }
             }
         }
     ]

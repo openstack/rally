@@ -1,10 +1,15 @@
 ---
-  Dummy.dummy:
-    -
-      args:
+version: 2
+title: "RPS runner sample"
+description: "Sample task demonstrating RPS (Requests Per Second) runner usage"
+tags: ["runner", "rps", "sample"]
+subtasks:
+  - title: "Dummy scenario with RPS runner"
+    scenario:
+      Dummy.dummy:
         sleep: 5
-      runner:
-        type: "rps"
+    runner:
+      rps:
         times: 20
         rps: 3
         timeout: 6

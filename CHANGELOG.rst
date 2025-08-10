@@ -33,6 +33,7 @@ Changed
   for plugins discovery and loading.
 * Implements pep-517 (pyproject.toml) and replaces pbr dependency
   with setuptools-scm
+* Ported all samples to Task format v2
 
 Removed
 ~~~~~~~

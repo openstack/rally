@@ -1,18 +1,23 @@
 ---
-  Dummy.dummy:
-    -
-      args:
+version: 2
+title: "SLA criteria sample"
+description: "Sample task demonstrating various SLA criteria usage"
+tags: ["sla", "sample", "dummy"]
+subtasks:
+  - title: "Dummy scenario with multiple SLA criteria"
+    scenario:
+      Dummy.dummy:
         sleep: 5
-      runner:
-        type: "constant"
+    runner:
+      constant:
         times: 20
         concurrency: 5
-      sla:
-        max_seconds_per_iteration: 4.0
-        failure_rate:
-          max: 1
-        max_avg_duration: 3.0
-        outliers:
-          max: 1
-          min_iterations: 10
-          sigmas: 10
+    sla:
+      max_seconds_per_iteration: 4.0
+      failure_rate:
+        max: 1
+      max_avg_duration: 3.0
+      outliers:
+        max: 1
+        min_iterations: 10
+        sigmas: 10

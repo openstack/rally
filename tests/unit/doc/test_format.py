@@ -16,6 +16,10 @@ import os
 import re
 import unittest
 
+import rally
+
+ROOT_DIR = os.path.dirname(os.path.dirname(rally.__file__))
+
 
 class TestFormat(unittest.TestCase):
     def _check_lines_wrapping(self, doc_file, raw):
@@ -65,8 +69,7 @@ class TestFormat(unittest.TestCase):
     def test_lines(self):
 
         files = []
-        docs_dir = os.path.join(os.path.dirname(__file__), os.pardir,
-                                os.pardir, os.pardir, "doc")
+        docs_dir = os.path.join(ROOT_DIR, "doc")
         for root, dirnames, filenames in os.walk(docs_dir):
             for filename in fnmatch.filter(filenames, "*.rst"):
                 files.append(os.path.join(root, filename))

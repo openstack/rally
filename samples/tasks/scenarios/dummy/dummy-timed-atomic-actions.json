@@ -1,14 +1,22 @@
 {
-    "Dummy.dummy_timed_atomic_actions": [
+    "version": 2,
+    "title": "Dummy scenario with timed atomic actions",
+    "description": "Sample task demonstrating dummy scenario with timed atomic actions functionality",
+    "tags": ["dummy", "timed", "atomic", "actions", "sample"],
+    "subtasks": [
         {
-            "args": {
-                "number_of_actions": 1,
-                "sleep_factor": 1
+            "title": "Dummy scenario with timed atomic actions and SLA monitoring",
+            "scenario": {
+                "Dummy.dummy_timed_atomic_actions": {
+                    "number_of_actions": 1,
+                    "sleep_factor": 1
+                }
             },
             "runner": {
-                "type": "constant",
-                "times": 5,
-                "concurrency": 5
+                "constant": {
+                    "times": 5,
+                    "concurrency": 5
+                }
             },
             "sla": {
                 "max_avg_duration_per_atomic": {

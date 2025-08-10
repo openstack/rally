@@ -1,12 +1,17 @@
 ---
-  Dummy.dummy:
-    -
-      args:
+version: 2
+title: "Dummy scenario sample"
+description: "Sample task demonstrating basic Dummy.dummy scenario usage with constant runner"
+tags: ["dummy", "sample", "basic"]
+subtasks:
+  - title: "Dummy.dummy basic scenario"
+    scenario:
+      Dummy.dummy:
         sleep: 5
-      runner:
-        type: "constant"
+    runner:
+      constant:
         times: 20
         concurrency: 5
-      sla:
-        failure_rate:
-          max: 0
+    sla:
+      failure_rate:
+        max: 0

@@ -1,11 +1,17 @@
-  Dummy.dummy_random_fail_in_atomic:
-    -
-      args:
+---
+version: 2
+title: "Dummy scenario with random atomic action failures"
+description: "Sample task demonstrating dummy scenario with random atomic action failures functionality"
+tags: ["dummy", "random", "atomic", "failure", "sample"]
+subtasks:
+  - title: "Dummy scenario with 50% atomic action failure probability"
+    scenario:
+      Dummy.dummy_random_fail_in_atomic:
         exception_probability: 0.5
-      runner:
-        type: "constant"
+    runner:
+      constant:
         times: 100
         concurrency: 10
-      sla:
-        failure_rate:
-          max: 0
+    sla:
+      failure_rate:
+        max: 0

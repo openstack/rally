@@ -1,8 +1,13 @@
 ---
-  Dummy.dummy:
-    -
-      args:
+version: 2
+title: "Serial runner sample"
+description: "Sample task demonstrating serial runner usage for sequential execution"
+tags: ["runner", "serial", "sample"]
+subtasks:
+  - title: "Dummy scenario with serial runner"
+    scenario:
+      Dummy.dummy:
         sleep: 5
-      runner:
-        type: "serial"
+    runner:
+      serial:
         times: 20

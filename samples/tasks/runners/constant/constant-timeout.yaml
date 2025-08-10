@@ -1,10 +1,15 @@
 ---
-  Dummy.dummy:
-    -
-      args:
+version: 2
+title: "Constant runner with timeout sample"
+description: "Sample task demonstrating constant runner with timeout configuration"
+tags: ["runner", "constant", "timeout", "sample"]
+subtasks:
+  - title: "Dummy scenario with constant runner and timeout"
+    scenario:
+      Dummy.dummy:
         sleep: 10
-      runner:
-        type: "constant"
+    runner:
+      constant:
         times: 20
         concurrency: 5
         timeout: 5

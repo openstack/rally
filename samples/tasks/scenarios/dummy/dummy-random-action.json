@@ -1,15 +1,23 @@
 {
-    "Dummy.dummy_random_action": [
+    "version": 2,
+    "title": "Dummy scenario with random action selection",
+    "description": "Sample task demonstrating dummy scenario with random action selection functionality",
+    "tags": ["dummy", "random", "action", "sample"],
+    "subtasks": [
         {
-            "args": {
-                "actions_num": 5,
-                "sleep_min": 0,
-                "sleep_max": 2
+            "title": "Dummy scenario with random action selection and timing",
+            "scenario": {
+                "Dummy.dummy_random_action": {
+                    "actions_num": 5,
+                    "sleep_min": 0,
+                    "sleep_max": 2
+                }
             },
             "runner": {
-                "type": "constant",
-                "times": 5,
-                "concurrency": 5
+                "constant": {
+                    "times": 5,
+                    "concurrency": 5
+                }
             },
             "sla": {
                 "failure_rate": {

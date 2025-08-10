@@ -1,12 +1,17 @@
 ---
-  Dummy.dummy_exception_probability:
-    -
-      args:
+version: 2
+title: "Dummy scenario with probabilistic exceptions"
+description: "Sample task demonstrating dummy scenario with exception probability functionality"
+tags: ["dummy", "exception", "probability", "sample"]
+subtasks:
+  - title: "Dummy scenario with 50% exception probability"
+    scenario:
+      Dummy.dummy_exception_probability:
         exception_probability: 0.5
-      runner:
-        type: "constant"
+    runner:
+      constant:
         times: 1000
         concurrency: 1
-      sla:
-        failure_rate:
-          max: 0
+    sla:
+      failure_rate:
+        max: 0

@@ -1,12 +1,17 @@
 ---
-  Dummy.dummy_exception:
-    -
-      args:
+version: 2
+title: "Dummy exception scenario sample"
+description: "Sample task demonstrating Dummy.dummy_exception scenario usage"
+tags: ["dummy", "exception", "sample"]
+subtasks:
+  - title: "Dummy scenario that raises exception"
+    scenario:
+      Dummy.dummy_exception:
         size_of_message: 5
-      runner:
-        type: "constant"
+    runner:
+      constant:
         times: 20
         concurrency: 5
-      sla:
-        failure_rate:
-          max: 0
+    sla:
+      failure_rate:
+        max: 0

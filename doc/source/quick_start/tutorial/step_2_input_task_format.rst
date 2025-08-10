@@ -28,7 +28,35 @@ Rally comes with a really great collection of
 :ref:`plugins <tutorial_step_8_discovering_more_plugins>` and in most
 real-world cases you will use multiple plugins to test your OpenStack cloud.
 Rally makes it very easy to run **different test cases defined in a single
-task**. To do so, use the following syntax:
+task**.
+
+**Current format (v2)**: Rally currently uses task format version 2, which
+provides better organization, metadata support, and flexibility:
+
+.. code-block:: json
+
+    {
+        "version": 2,
+        "title": "Task title",
+        "description": "Task description",
+        "tags": ["tag1", "tag2"],
+        "subtasks": [
+            {
+                "title": "Subtask title",
+                "scenario": {
+                    "ScenarioName": { <scenario-specific arguments> }
+                },
+                "runner": {
+                    "runner_type": { <runner parameters> }
+                },
+                "contexts": { <contexts needed for this scenario> },
+                "sla": { <different SLA configs> }
+            }
+        ]
+    }
+
+**Legacy format (v1) - DEPRECATED**: The old format is still supported but
+deprecated:
 
 .. code-block:: json
 
@@ -37,7 +65,7 @@ task**. To do so, use the following syntax:
         "<ScenarioName2>": [<config>, ...]
     }
 
-where *<config>*, as before, is a dictionary:
+where *<config>*, in the legacy format, is a dictionary:
 
 .. code-block:: json
 
@@ -48,6 +76,11 @@ where *<config>*, as before, is a dictionary:
         "sla": { <different SLA configs> }
     }
 
+.. note::
+   The legacy v1 format is deprecated. New tasks should use v2 format for better
+   organization and metadata support.
+   Rally automatically converts v1 to v2 internally for compatibility.
+
 Multiple subtasks in a single task
 ----------------------------------
 
@@ -55,11 +88,64 @@ As an example, let's edit our configuration file from
 :ref:`step 1 <tutorial_step_1_setting_up_env_and_running_benchmark_from_samples>`
 so that it prescribes Rally to launch not only the
 **NovaServers.boot_and_delete_server** scenario, but also the
-**KeystoneBasic.create_delete_user** scenario. All we have to do is to append
-the configuration of the second scenario as yet another top-level key of our
-JSON file:
+**KeystoneBasic.create_delete_user** scenario.
 
-*multiple-scenarios.json*
+**Using v2 format (recommended):**
+
+*multiple-scenarios-v2.json*
+
+.. code-block:: json
+
+    {
+        "version": 2,
+        "title": "Multiple scenarios example",
+        "description": "Example demonstrating multiple scenarios in a single task",
+        "tags": ["nova", "keystone", "example"],
+        "subtasks": [
+            {
+                "title": "Nova server lifecycle test",
+                "scenario": {
+                    "NovaServers.boot_and_delete_server": {
+                        "flavor": {
+                            "name": "m1.tiny"
+                        },
+                        "image": {
+                            "name": "^cirros.*-disk$"
+                        },
+                        "force_delete": false
+                    }
+                },
+                "runner": {
+                    "constant": {
+                        "times": 10,
+                        "concurrency": 2
+                    }
+                },
+                "contexts": {
+                    "users": {
+                        "tenants": 3,
+                        "users_per_tenant": 2
+                    }
+                }
+            },
+            {
+                "title": "Keystone user management test",
+                "scenario": {
+                    "KeystoneBasic.create_delete_user": {}
+                },
+                "runner": {
+                    "constant": {
+                        "times": 10,
+                        "concurrency": 3
+                    }
+                }
+            }
+        ]
+    }
+
+**Legacy v1 format (deprecated but still supported):**
+
+*multiple-scenarios-v1.json*
 
 .. code-block:: json
 
@@ -100,11 +186,11 @@ JSON file:
         ]
     }
 
-Now you can start this task as usually:
+Now you can start this task as usually (using v2 format):
 
 .. code-block:: console
 
-    $ rally task start multiple-scenarios.json
+    $ rally task start multiple-scenarios-v2.json
     ...
     +--------------------+-----------+-----------+-----------+---------------+---------------+---------+-------+
     | action             | min (sec) | avg (sec) | max (sec) | 90 percentile | 95 percentile | success | count |
@@ -148,13 +234,81 @@ Multiple configurations of the same scenario
 --------------------------------------------
 
 Yet another thing you can do in Rally is to launch **the same scenario multiple
-times with different configurations**. That's why our configuration file stores
-a list for the key *"NovaServers.boot_and_delete_server"*: you can just append
-a different configuration of this scenario to this list to get it. Let's say,
+times with different configurations**. In v2 format, this is done by creating
+multiple subtasks with the same scenario but different parameters. Let's say,
 you want to run the **boot_and_delete_server** scenario twice: first using the
 *"m1.tiny"* flavor and then using the *"m1.small"* flavor:
 
-*multiple-configurations.json*
+**Using v2 format (recommended):**
+
+*multiple-configurations-v2.json*
+
+.. code-block:: json
+
+    {
+        "version": 2,
+        "title": "Multiple configurations example",
+        "description": "Running the same scenario with different configurations",
+        "tags": ["nova", "flavors", "configurations"],
+        "subtasks": [
+            {
+                "title": "Boot server with m1.tiny flavor",
+                "scenario": {
+                    "NovaServers.boot_and_delete_server": {
+                        "flavor": {
+                            "name": "m1.tiny"
+                        },
+                        "image": {
+                            "name": "^cirros.*-disk$"
+                        },
+                        "force_delete": false
+                    }
+                },
+                "runner": {
+                    "constant": {
+                        "times": 10,
+                        "concurrency": 2
+                    }
+                },
+                "contexts": {
+                    "users": {
+                        "tenants": 3,
+                        "users_per_tenant": 2
+                    }
+                }
+            },
+            {
+                "title": "Boot server with m1.small flavor",
+                "scenario": {
+                    "NovaServers.boot_and_delete_server": {
+                        "flavor": {
+                            "name": "m1.small"
+                        },
+                        "image": {
+                            "name": "^cirros.*-disk$"
+                        },
+                        "force_delete": false
+                    }
+                },
+                "runner": {
+                    "constant": {
+                        "times": 10,
+                        "concurrency": 2
+                    }
+                },
+                "contexts": {
+                    "users": {
+                        "tenants": 3,
+                        "users_per_tenant": 2
+                    }
+                }
+            }
+        ]
+    }
+
+**Legacy v1 format (deprecated):**
+
+*multiple-configurations-v1.json*
 
 .. code-block:: json
 
@@ -193,7 +347,7 @@ That's it! You will get again the results for each configuration separately:
 
 .. code-block:: console
 
-    $ rally task start --task=multiple-configurations.json
+    $ rally task start --task=multiple-configurations-v2.json
     ...
     +--------------------+-----------+-----------+-----------+---------------+---------------+---------+-------+
     | action             | min (sec) | avg (sec) | max (sec) | 90 percentile | 95 percentile | success | count |

@@ -14,7 +14,6 @@
 #    under the License.
 
 import inspect
-import itertools
 import os
 import traceback
 from unittest import mock
@@ -59,12 +58,17 @@ class TaskSampleTestCase(test.TestCase):
             if "tasks/scenarios" not in path:
                 continue
             with open(path) as task_file:
-                task_config = yaml.safe_load(
-                    self.rapi.task.render_template(
-                        task_template=task_file.read()))
-                for workload in itertools.chain(*task_config.values()):
-                    if not workload.get("sla", {}):
-                        failures.append(path)
+                rendered_config = self.rapi.task.render_template(
+                    task_template=task_file.read())
+                raw_config = yaml.safe_load(rendered_config)
+                # Use TaskConfig to get normalized format
+                task_config_obj = task_cfg.TaskConfig(raw_config)
+
+                # Extract workloads from normalized v2 format
+                for subtask in task_config_obj.subtasks:
+                    for workload in subtask["workloads"]:
+                        if not workload.get("sla", {}):
+                            failures.append(path)
         if failures:
             self.fail("One or several workloads from the list of samples below"
                       " doesn't have SLA section: \n  %s" %
@@ -77,20 +81,27 @@ class TaskSampleTestCase(test.TestCase):
             with open(path) as task_file:
                 try:
                     try:
-                        task_config = yaml.safe_load(
-                            self.rapi.task.render_template(
-                                task_template=task_file.read()))
+                        rendered_config = self.rapi.task.render_template(
+                            task_template=task_file.read())
+                        raw_config = yaml.safe_load(rendered_config)
                     except Exception:
                         print(traceback.format_exc())
                         self.fail("Invalid JSON file: %s" % path)
-                    eng = engine.TaskEngine(task_cfg.TaskConfig(task_config),
+
+                    # Use TaskConfig to get normalized format and validate
+                    task_config_obj = task_cfg.TaskConfig(raw_config)
+                    eng = engine.TaskEngine(task_config_obj,
                                             mock.MagicMock(), mock.Mock())
                     eng.validate(only_syntax=True)
+
+                    # Extract scenario names from normalized format
+                    for subtask in task_config_obj.subtasks:
+                        for workload in subtask["workloads"]:
+                            scenarios.add(workload["name"])
+
                 except Exception:
                     print(traceback.format_exc())
                     self.fail("Invalid task file: %s" % path)
-                else:
-                    scenarios.update(task_config.keys())
 
         missing = set(s.get_name() for s in scenario.Scenario.get_all())
         missing -= scenarios

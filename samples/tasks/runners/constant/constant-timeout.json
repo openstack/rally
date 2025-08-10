@@ -1,14 +1,22 @@
 {
-    "Dummy.dummy": [
+    "version": 2,
+    "title": "Constant runner with timeout sample",
+    "description": "Sample task demonstrating constant runner with timeout configuration",
+    "tags": ["runner", "constant", "timeout", "sample"],
+    "subtasks": [
         {
-            "args": {
-                "sleep": 10
+            "title": "Dummy scenario with constant runner and timeout",
+            "scenario": {
+                "Dummy.dummy": {
+                    "sleep": 10
+                }
             },
             "runner": {
-                "type": "constant",
-                "times": 20,
-                "concurrency": 5,
-                "timeout": 5
+                "constant": {
+                    "times": 20,
+                    "concurrency": 5,
+                    "timeout": 5
+                }
             }
         }
     ]

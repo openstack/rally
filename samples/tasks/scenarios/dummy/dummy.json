@@ -1,13 +1,21 @@
 {
-    "Dummy.dummy": [
+    "version": 2,
+    "title": "Dummy scenario sample",
+    "description": "Sample task demonstrating basic Dummy.dummy scenario usage with constant runner",
+    "tags": ["dummy", "sample", "basic"],
+    "subtasks": [
         {
-            "args": {
-                "sleep": 5
+            "title": "Dummy.dummy basic scenario",
+            "scenario": {
+                "Dummy.dummy": {
+                    "sleep": 5
+                }
             },
             "runner": {
-                "type": "constant",
-                "times": 20,
-                "concurrency": 5
+                "constant": {
+                    "times": 20,
+                    "concurrency": 5
+                }
             },
             "sla": {
                 "failure_rate": {

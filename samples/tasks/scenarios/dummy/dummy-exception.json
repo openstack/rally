@@ -1,13 +1,21 @@
 {
-    "Dummy.dummy_exception": [
+    "version": 2,
+    "title": "Dummy exception scenario sample",
+    "description": "Sample task demonstrating Dummy.dummy_exception scenario usage",
+    "tags": ["dummy", "exception", "sample"],
+    "subtasks": [
         {
-            "args": {
-                "size_of_message": 5
+            "title": "Dummy scenario that raises exception",
+            "scenario": {
+                "Dummy.dummy_exception": {
+                    "size_of_message": 5
+                }
             },
             "runner": {
-                "type": "constant",
-                "times": 20,
-                "concurrency": 5
+                "constant": {
+                    "times": 20,
+                    "concurrency": 5
+                }
             },
             "sla": {
                 "failure_rate": {
