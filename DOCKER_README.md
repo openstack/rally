@@ -17,7 +17,7 @@ additional plugins:
     #   for rally user is used.
     #
     # Tags of the image are the same as releases of xRally/Rally
-    FROM xrally/xrally:5.0.0
+    FROM xrally/xrally:4.1.0
     
     # "rally" user (which is selected by-default) is owner of "/rally" directory,
     #   so there is no need to call chown or switch the user
@@ -40,8 +40,8 @@ details)
 First, you need to pull the container. We suggest using the last tagged 
 version:
 
-    # pull the 5.0.0 image (the latest release at the point of writing the note)
-    $ docker pull xrally/xrally:5.0.0
+    # pull the 4.1.0 image (the latest release at the point of writing the note)
+    $ docker pull xrally/xrally:4.1.0
 
 **WARNING: never attach folders and volumes to `/rally` inside the container. It can break everything.**
 
@@ -57,7 +57,7 @@ docker volumes or mount the directory.
 * use docker volumes. It is the easiest way. You just need to do something like:
 
       $ docker volume create --name rally_volume
-      $ docker run -v rally_volume:/home/rally/.rally xrally/xrally:5.0.0 env create --name "foo"
+      $ docker run -v rally_volume:/home/rally/.rally xrally/xrally:4.1.0 env create --name "foo"
 
 
 * mount outer directory inside the container
