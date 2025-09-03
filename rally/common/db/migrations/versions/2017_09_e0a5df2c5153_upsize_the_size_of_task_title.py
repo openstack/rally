@@ -31,7 +31,7 @@ branch_labels = None
 depends_on = None
 
 
-def upgrade():
+def upgrade() -> None:
     with op.batch_alter_table("tasks") as batch_op:
         batch_op.alter_column(
             "title", type_=sa.String(128), existing_type=sa.String(64))
@@ -41,5 +41,5 @@ def upgrade():
             "title", type_=sa.String(128), existing_type=sa.String(64))
 
 
-def downgrade():
+def downgrade() -> None:
     raise exceptions.DowngradeNotSupported()

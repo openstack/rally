@@ -100,7 +100,7 @@ taghelper = sa.Table(
 )
 
 
-def upgrade():
+def upgrade() -> None:
     conn = op.get_bind()
 
     subtask_table = op.create_table(
@@ -466,5 +466,5 @@ def upgrade():
     op.drop_table("task_results")
 
 
-def downgrade():
+def downgrade() -> None:
     raise exceptions.DowngradeNotSupported()

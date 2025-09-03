@@ -20,6 +20,7 @@ Create Date: 2016-09-12 15:47:11.279610
 
 """
 
+from __future__ import annotations
 import json
 
 from alembic import op
@@ -49,18 +50,18 @@ task_helper = sa.Table(
 )
 
 
-def _make_trace(etype, emsg, raw_trace=None):
+def _make_trace(etype: str, emsg: str, raw_trace: str | None = None) -> str:
     trace = "Traceback (most recent call last):\n"
     if raw_trace is None:
         trace += "\n\t\t...n/a..\n\n"
     else:
         trace += "".join(json.loads(raw_trace))
 
-    trace += "%s: %s" % (etype, emsg)
+    trace += f"{etype}: {emsg}"
     return trace
 
 
-def upgrade():
+def upgrade() -> None:
     connection = op.get_bind()
     for task in connection.execute(task_helper.select()):
         verification_log = task.verification_log
@@ -102,5 +103,5 @@ def upgrade():
                 verification_log=json.dumps(new_value)))
 
 
-def downgrade():
+def downgrade() -> None:
     raise exceptions.DowngradeNotSupported()

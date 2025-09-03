@@ -51,7 +51,7 @@ workload_data_helper = sa.Table(
 )
 
 
-def upgrade():
+def upgrade() -> None:
     connection = op.get_bind()
     for workload in connection.execute(workload_helper.select()):
         # NOTE(andreykurilin): the cases of "wrong" values for min_duration
@@ -76,5 +76,5 @@ def upgrade():
                 min_duration=None, max_duration=None))
 
 
-def downgrade():
+def downgrade() -> None:
     raise exceptions.DowngradeNotSupported()

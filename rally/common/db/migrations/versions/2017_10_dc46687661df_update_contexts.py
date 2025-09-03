@@ -20,6 +20,8 @@ Create Date: 2017-10-24 15:50:17.493354
 
 """
 
+from __future__ import annotations
+
 from alembic import op
 import sqlalchemy as sa
 
@@ -61,7 +63,7 @@ workload_helper = sa.Table(
 )
 
 
-def _process_contexts(w_context):
+def _process_contexts(w_context: dict) -> list[str] | None:
     """Put the contexts setup and cleanup methods in the order of execution."""
     try:
         plugins.load()
@@ -70,17 +72,17 @@ def _process_contexts(w_context):
             ctx_cls = context.Context.get(ctx_name)
             ctxs.append((ctx_cls.get_order(), ctx_cls.get_fullname()))
         ctxs.sort()
-        ctxs = ["%s.setup" % ctx_name for _i, ctx_name in ctxs]
-        ctxs.extend([ctx.replace(".setup", ".cleanup")
-                     for ctx in reversed(ctxs)])
-        return ctxs
+        result = ["%s.setup" % ctx_name for _i, ctx_name in ctxs]
+        result.extend([ctx.replace(".setup", ".cleanup")
+                       for ctx in reversed(result)])
+        return result
     except Exception:
         # the proper of context can be missed while applying the migration, it
         # should not stop us from migrating the database
         return None
 
 
-def upgrade():
+def upgrade() -> None:
     with op.batch_alter_table("subtasks") as batch_op:
         batch_op.add_column(sa.Column("contexts",
                                       sa_types.MutableJSONEncodedDict(),
@@ -108,6 +110,7 @@ def upgrade():
         #   context. Let's do not add random data, since no data is better
         #   that the wrong one.
 
+        contexts_results: list[dict]
         if workload.start_time is None:
             # The load did not start in workload. It can mean that one of
             #   contexts had failed or some error had happened in the runner
@@ -190,5 +193,5 @@ def upgrade():
         batch_op.drop_column("context")
 
 
-def downgrade():
+def downgrade() -> None:
     raise exceptions.DowngradeNotSupported()

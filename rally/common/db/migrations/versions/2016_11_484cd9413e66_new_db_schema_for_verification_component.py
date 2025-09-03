@@ -21,6 +21,7 @@ Create Date: 2016-11-04 17:04:24.614075
 """
 
 import datetime as dt
+import typing as t
 
 from alembic import op
 import sqlalchemy as sa
@@ -77,7 +78,7 @@ results_helper = sa.Table(
 )
 
 
-def upgrade():
+def upgrade() -> None:
     connection = op.get_bind()
 
     # create new table to store all verifiers
@@ -157,9 +158,12 @@ def upgrade():
                     "updated_at": dt.datetime.utcnow()
                 }]
             )
-            default_verifier = connection.execute(
-                verifiers_table.select().where(
-                    verifiers_table.c.uuid == vuuid)).first()
+            default_verifier = t.cast(
+                sa.Row,
+                connection.execute(
+                    verifiers_table.select().where(
+                        verifiers_table.c.uuid == vuuid)).first()
+            )
 
         data = vresult.data
         if "errors" in data:
@@ -180,6 +184,9 @@ def upgrade():
                 verification_helper.c.uuid == vresult.verification_uuid))
         # for each verification result we have single verification object
         verification = verifications.first()
+        # this check is needed only for mypy
+        if not verification:
+            continue
 
         connection.execute(
             verifications_table.insert(),
@@ -208,5 +215,5 @@ def upgrade():
         "verification_uuid", "verifications", ["uuid"], unique=True)
 
 
-def downgrade():
+def downgrade() -> None:
     raise exceptions.DowngradeNotSupported()

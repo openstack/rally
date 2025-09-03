@@ -41,7 +41,7 @@ verifications_helper = sa.Table(
 )
 
 
-def upgrade():
+def upgrade() -> None:
     connection = op.get_bind()
     for v in connection.execute(verifications_helper.select()):
         tests = v.tests
@@ -54,5 +54,5 @@ def upgrade():
                 verifications_helper.c.id == v.id).values(tests=tests))
 
 
-def downgrade():
+def downgrade() -> None:
     raise exceptions.DowngradeNotSupported()

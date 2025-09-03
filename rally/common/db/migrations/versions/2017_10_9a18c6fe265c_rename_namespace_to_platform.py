@@ -31,10 +31,10 @@ branch_labels = None
 depends_on = None
 
 
-def upgrade():
+def upgrade() -> None:
     with op.batch_alter_table("verifiers") as batch_op:
         batch_op.alter_column("namespace", new_column_name="platform")
 
 
-def downgrade():
+def downgrade() -> None:
     raise exceptions.DowngradeNotSupported()

@@ -44,7 +44,7 @@ deployments_helper = sa.Table(
 )
 
 
-def upgrade():
+def upgrade() -> None:
     with op.batch_alter_table("deployments", schema=None) as batch_op:
         batch_op.add_column(
             sa.Column("credentials", sa.PickleType(), nullable=True))
@@ -72,5 +72,5 @@ def upgrade():
         batch_op.drop_column("users")
 
 
-def downgrade():
+def downgrade() -> None:
     raise exceptions.DowngradeNotSupported()

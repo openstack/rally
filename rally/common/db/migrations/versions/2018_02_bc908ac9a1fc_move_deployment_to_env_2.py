@@ -124,7 +124,7 @@ verifications_helper = sa.Table(
 )
 
 
-def upgrade():
+def upgrade() -> None:
     connection = op.get_bind()
     inspector = sa.inspect(connection)
     if "deployments" not in inspector.get_table_names():
@@ -237,5 +237,5 @@ def upgrade():
     op.drop_table("deployments")
 
 
-def downgrade():
+def downgrade() -> None:
     raise exceptions.DowngradeNotSupported()

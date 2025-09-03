@@ -42,10 +42,10 @@ task_results_helper = sa.Table(
 )
 
 
-def upgrade():
+def upgrade() -> None:
     connection = op.get_bind()
     for task_result in connection.execute(task_results_helper.select()):
-        data = task_result.data
+        data: dict = task_result.data
         data["hooks"] = []
         connection.execute(
             task_results_helper.update().where(
@@ -53,5 +53,5 @@ def upgrade():
                     data=data))
 
 
-def downgrade():
+def downgrade() -> None:
     raise exceptions.DowngradeNotSupported()

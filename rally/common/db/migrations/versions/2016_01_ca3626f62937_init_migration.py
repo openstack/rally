@@ -21,12 +21,18 @@ Revises:
 Create Date: 2016-01-07 00:27:39.687814
 
 """
+
+import typing as t
+
 from alembic import op
 import sqlalchemy as sa
 
 from rally.common.db import api
 from rally.common.db import sa_types
 from rally import exceptions
+
+if t.TYPE_CHECKING:
+    import sqlalchemy.schema
 
 
 # revision identifiers, used by Alembic.
@@ -36,10 +42,10 @@ branch_labels = None
 depends_on = None
 
 
-def upgrade():
+def upgrade() -> None:
     dialect = api.get_engine().dialect
 
-    deployments_columns = [
+    deployments_columns: list[sa.schema.SchemaItem] = [
         sa.Column("created_at", sa.DateTime(), nullable=True),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.Column("id", sa.Integer(), nullable=False),
@@ -186,5 +192,5 @@ def upgrade():
     # end Alembic commands
 
 
-def downgrade():
+def downgrade() -> None:
     raise exceptions.DowngradeNotSupported()

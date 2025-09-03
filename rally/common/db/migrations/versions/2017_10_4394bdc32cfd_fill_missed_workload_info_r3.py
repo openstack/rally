@@ -55,7 +55,7 @@ workload_data_helper = sa.Table(
 )
 
 
-def _mark_the_last_as_an_error(atomic_actions):
+def _mark_the_last_as_an_error(atomic_actions: list[dict]) -> None:
     """Mark the last atomic action as failed."""
     if atomic_actions:
         atomic_actions[-1]["failed"] = True
@@ -66,7 +66,7 @@ def _mark_the_last_as_an_error(atomic_actions):
         _mark_the_last_as_an_error(atomic_actions[-1]["children"])
 
 
-def upgrade():
+def upgrade() -> None:
     connection = op.get_bind()
 
     for workload in connection.execute(workload_helper.select()):
@@ -132,5 +132,5 @@ def upgrade():
                 statistics={"durations": durations_stat.to_dict()}))
 
 
-def downgrade():
+def downgrade() -> None:
     raise exceptions.DowngradeNotSupported()

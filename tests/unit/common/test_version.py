@@ -32,13 +32,15 @@ class ModuleTestCase(test.TestCase):
             version.version_info.semantic_version().version_tuple()
         )
 
-    @mock.patch("setuptools_scm.get_version")
+    @mock.patch("pbr.version.VersionInfo")
     @mock.patch("importlib.metadata.version")
-    def test_version_string(self, mock_version, mock_get_version):
+    def test_version_string(self, mock_version, mock_version_info):
         self.addCleanup(lambda: importlib.reload(version))
 
         mock_version.return_value = "foo_version"
-        mock_get_version.return_value = "bar_version"
+        mock_version_info.return_value.version_string.return_value = (
+            "pbr_version"
+        )
 
         # reload module, so it can rediscover version
         importlib.reload(version)
@@ -49,26 +51,26 @@ class ModuleTestCase(test.TestCase):
         self.assertEqual("foo_version", version.__version__)
 
         mock_version.assert_called_once_with("rally")
-        self.assertFalse(mock_get_version.called)
+        self.assertFalse(mock_version_info.called)
 
         # check fallback
         mock_version.reset_mock()
         mock_version.side_effect = Exception("oops")
 
         importlib.reload(version)
-        self.assertEqual("bar_version", version.__version__)
+        self.assertEqual("pbr_version", version.__version__)
         mock_version.assert_called_once_with("rally")
-        mock_get_version.assert_called_once_with()
+        mock_version_info.assert_called_once_with("rally")
 
         # check fallback 2
         mock_version.reset_mock()
-        mock_get_version.reset_mock()
-        mock_get_version.side_effect = Exception("oops2")
+        mock_version_info.reset_mock()
+        mock_version_info.side_effect = Exception("oops2")
 
         importlib.reload(version)
         self.assertEqual("0.0.0", version.__version__)
         mock_version.assert_called_once_with("rally")
-        mock_get_version.assert_called_once_with()
+        mock_version_info.assert_called_once_with("rally")
 
     @mock.patch("rally.common.db.schema.schema_revision", return_value="foo")
     def test_database_revision(self, mock_schema_revision):

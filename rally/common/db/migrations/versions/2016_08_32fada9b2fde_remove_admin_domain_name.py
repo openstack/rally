@@ -46,7 +46,7 @@ deployments_helper = sa.Table(
 )
 
 
-def upgrade():
+def upgrade() -> None:
     connection = op.get_bind()
     for deployment in connection.execute(deployments_helper.select()):
         conf = deployment.config
@@ -71,5 +71,5 @@ def upgrade():
                     config=conf))
 
 
-def downgrade():
+def downgrade() -> None:
     raise exceptions.DowngradeNotSupported()

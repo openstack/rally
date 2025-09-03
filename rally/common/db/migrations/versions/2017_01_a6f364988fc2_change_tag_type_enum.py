@@ -43,7 +43,7 @@ tag_helper = sa.Table(
 )
 
 
-def upgrade():
+def upgrade() -> None:
     with op.batch_alter_table("tags") as batch_op:
         batch_op.add_column(
             sa.Column("new_type", sa.String(36)))
@@ -60,5 +60,5 @@ def upgrade():
     op.create_index("d_type_tag", "tags", ["uuid", "type", "tag"], unique=True)
 
 
-def downgrade():
+def downgrade() -> None:
     raise exceptions.DowngradeNotSupported()

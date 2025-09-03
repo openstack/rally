@@ -20,8 +20,10 @@ Create Date: 2017-09-14 15:58:28.950132
 
 """
 
-from alembic import op
 import json
+import typing as t
+
+from alembic import op
 import sqlalchemy as sa
 
 from rally import exceptions
@@ -44,13 +46,13 @@ workload_helper = sa.Table(
 )
 
 
-def upgrade():
+def upgrade() -> None:
     connection = op.get_bind()
 
     for workload in connection.execute(workload_helper.select()):
         runner = json.loads(workload.runner)
         runner.pop("type")
-        values = {"runner": json.dumps(runner)}
+        values: dict[str, t.Any] = {"runner": json.dumps(runner)}
         hooks = workload.hooks
         if hooks:
             values["hooks"] = []
@@ -68,5 +70,5 @@ def upgrade():
             **values))
 
 
-def downgrade():
+def downgrade() -> None:
     raise exceptions.DowngradeNotSupported()

@@ -31,8 +31,7 @@ Changed
 
 * Replaced deprecated `pkg_resources` library with `importlib` & `packaging`
   for plugins discovery and loading.
-* Implements pep-517 (pyproject.toml) and replaces pbr dependency
-  with setuptools-scm
+* Implements pep-517 (pyproject.toml)
 * Ported all samples to Task format v2
 
 Removed

@@ -34,7 +34,7 @@ branch_labels = None
 depends_on = None
 
 
-def upgrade():
+def upgrade() -> None:
     op.create_table(
         "envs",
         sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
@@ -82,5 +82,5 @@ def upgrade():
     op.create_index("platform_env_uuid", "platforms", ["env_uuid"])
 
 
-def downgrade():
+def downgrade() -> None:
     raise exceptions.DowngradeNotSupported()

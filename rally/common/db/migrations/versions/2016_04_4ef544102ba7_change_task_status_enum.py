@@ -111,7 +111,7 @@ subtask = sa.Table(
 )
 
 
-def upgrade():
+def upgrade() -> None:
     # Workaround for Alemic bug #89
     # https://bitbucket.org/zzzeek/alembic/issue/89
 
@@ -164,5 +164,5 @@ def upgrade():
     op.create_index("subtask_status", "subtasks", ["status"])
 
 
-def downgrade():
+def downgrade() -> None:
     raise exceptions.DowngradeNotSupported()

@@ -43,7 +43,7 @@ deployments_helper = sa.Table(
 )
 
 
-def upgrade():
+def upgrade() -> None:
     with op.batch_alter_table("deployments") as batch_op:
         batch_op.add_column(
             sa.Column("new_credentials", sa_types.MutableJSONEncodedDict,
@@ -51,7 +51,7 @@ def upgrade():
 
     connection = op.get_bind()
     for deployment in connection.execute(deployments_helper.select()):
-        creds = {}
+        creds: dict[str, list] = {}
         for cred_type, cred_obj in deployment.credentials:
             creds.setdefault(cred_type, [])
             creds[cred_type].append(cred_obj)
@@ -68,5 +68,5 @@ def upgrade():
                               nullable=False)
 
 
-def downgrade():
+def downgrade() -> None:
     raise exceptions.DowngradeNotSupported()

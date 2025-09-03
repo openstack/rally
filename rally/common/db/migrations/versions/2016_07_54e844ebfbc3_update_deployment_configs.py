@@ -22,6 +22,8 @@ Create Date: 2016-07-24 14:53:39.323105
 
 """
 
+from __future__ import annotations
+
 from alembic import op  # noqa
 import sqlalchemy as sa  # noqa
 
@@ -48,7 +50,7 @@ deployments_helper = sa.Table(
 )
 
 
-def _check_user_entry(user):
+def _check_user_entry(user: dict[str, str]) -> bool | None:
     """Fixes wrong format of users."""
     if "tenant_name" in user:
         keys = set(user.keys())
@@ -67,7 +69,7 @@ def _check_user_entry(user):
                 return True
 
 
-def upgrade():
+def upgrade() -> None:
     connection = op.get_bind()
     for deployment in connection.execute(deployments_helper.select()):
         conf = deployment.config
@@ -94,5 +96,5 @@ def upgrade():
                     config=conf))
 
 
-def downgrade():
+def downgrade() -> None:
     raise exceptions.DowngradeNotSupported()

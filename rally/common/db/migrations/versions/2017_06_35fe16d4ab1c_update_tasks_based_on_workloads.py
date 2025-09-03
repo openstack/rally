@@ -66,9 +66,9 @@ workload_helper = sa.Table(
 )
 
 
-def upgrade():
-    tasks = {}
-    subtasks = {}
+def upgrade() -> None:
+    tasks: dict[str, dict] = {}
+    subtasks: dict[str, dict] = {}
 
     with op.batch_alter_table("workloads") as batch_op:
         # change type of column
@@ -100,5 +100,5 @@ def upgrade():
             task_helper.c.id == task.id).values(**values))
 
 
-def downgrade():
+def downgrade() -> None:
     raise exceptions.DowngradeNotSupported()
