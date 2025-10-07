@@ -17,13 +17,13 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
-unreleased
------------
+[5.0.1] - 2025-10-07
+--------------------
 
-Changed
-~~~~~~~
+Fixed
+~~~~~
 
-* Include only rally package (pyproject.toml)
+* Fix `include` section of pyproject.toml to include only rally file
 
 [5.0.0] - 2025-09-03
 --------------------
