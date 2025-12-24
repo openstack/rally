@@ -59,7 +59,6 @@ Here is an example of base class for all pluggable validators.
 .. code-block:: python
 
     import abc
-    import six
 
     from rally.common.plugin import plugin
     from rally.task import validation
@@ -68,9 +67,9 @@ Here is an example of base class for all pluggable validators.
     def configure(name, platform="default"):
         return plugin.configure(name=name, platform=platform)
 
-    @six.add_metaclass(abc.ABCMeta)
+
     @configure(name="base_validator")
-    class Validator(plugin.Plugin):
+    class Validator(plugin.Plugin, metaclass=abc.ABCMeta):
 
         def validate(self, cache, deployment, cfg, plugin_cfg):
             """
@@ -92,6 +91,7 @@ Here is an example of base class for all pluggable validators.
             :param plugin_cfg: dict, with exact configuration of the plugin
             """
             pass
+
 
     def add(name, **kwargs):
         """
@@ -163,7 +163,6 @@ plugin.
 
         def validate(self, cache, deployment, cfg, plugin_cfg):
             jsonschema.validate(plugin_cfg, self.schema)
-
 
 
     @validator.add("jsonschema", schema="<here_json_schema>")
