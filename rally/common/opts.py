@@ -46,7 +46,6 @@ _registered_paths = []
 
 
 def register_options_from_path(path):
-    global _registered_paths
     if path not in _registered_paths:
         if ":" not in path:
             return
