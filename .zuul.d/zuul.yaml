@@ -13,6 +13,7 @@
         - rally-tox-py310
         - rally-tox-py311
         - rally-tox-py312
+        - rally-tox-py313
         - rally-tox-zuul-ansible-lint:
             files:
               - tests/ci/playbooks/*

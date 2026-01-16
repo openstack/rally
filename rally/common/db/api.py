@@ -90,6 +90,12 @@ def get_engine():
 def engine_reset():
     global _FACADE, _CONTEXT
 
+    if _FACADE is not None:
+        try:
+            engine = _FACADE.get_engine()
+            engine.dispose()
+        except Exception:
+            pass
     _FACADE = None
     _CONTEXT = None
 

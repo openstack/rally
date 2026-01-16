@@ -73,8 +73,23 @@
 - job:
     name: rally-tox-py312
     parent: rally-tox-base
+    description: |
+      Run unit test for rally project.
+
+      Uses tox with the ``py312`` environment.
     vars:
       tox_env: py312
+
+- job:
+    name: rally-tox-py313
+    parent: rally-tox-base
+    description: |
+      Run unit test for rally project.
+
+      Uses tox with the ``py313`` environment.
+    vars:
+      tox_env: py313
+    nodeset: debian-trixie-8GB
 
 - job:
     name: rally-tox-mypy

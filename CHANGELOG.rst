@@ -22,6 +22,11 @@ Changelog
 Unreleased
 ----------
 
+Added
+~~~~~
+
+* CI jobs for checking compatibility with python 3.13
+
 Removed
 ~~~~~~~
 
