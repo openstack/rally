@@ -49,17 +49,6 @@
       tox_env: self
 
 - job:
-    name: rally-tox-py39
-    parent: rally-tox-base
-    description: |
-      Run unit test for rally project.
-
-      Uses tox with the ``py39`` environment.
-    vars:
-      tox_env: py39
-    nodeset: ubuntu-focal
-
-- job:
     name: rally-tox-py310
     parent: rally-tox-base
     description: |

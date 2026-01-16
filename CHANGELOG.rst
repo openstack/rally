@@ -17,6 +17,16 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
+[unreleased]
+
+Unreleased
+----------
+
+Removed
+~~~~~~~
+
+* Support for Python 3.9
+
 [5.0.1] - 2025-10-07
 --------------------
 

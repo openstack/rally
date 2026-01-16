@@ -22,13 +22,12 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
 dynamic = ["version", "dependencies"]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 
 [project.urls]
 Homepage = "https://rally.readthedocs.io/"
@@ -72,7 +71,7 @@ rally = "rally.common.opts:update_opt_defaults"
 files = [
     "rally",
 ]
-python_version = "3.9"
+python_version = "3.10"
 disallow_untyped_defs = true
 check_untyped_defs = true
 allow_redefinition = true

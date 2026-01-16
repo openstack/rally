@@ -10,7 +10,6 @@
         - rally-tox-docs
         - rally-tox-mypy
         - rally-tox-pep8
-        - rally-tox-py39
         - rally-tox-py310
         - rally-tox-py311
         - rally-tox-py312
@@ -22,7 +21,6 @@
         - rally-tox-self
         - rally-install-ubuntu-jammy
         - rally-install-ubuntu-noble
-        - rally-install-centos-9s
         - rally-docker-build
     gate: *queue
     post:
