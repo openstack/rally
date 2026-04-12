@@ -2,7 +2,7 @@ FROM python:3.9-slim
 
 RUN apt-get update && apt-get install --yes sudo vim git-core && \
     apt clean && \
-    python3 -m pip --no-cache-dir install --upgrade pip setuptools && \
+    python3 -m pip install --no-cache-dir "pip<24" "setuptools<70" && \
     useradd -u 65500 -m rally && \
     usermod -aG sudo rally && \
     echo "rally ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/00-rally-user && \
