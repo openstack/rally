@@ -28,6 +28,11 @@ class DocstringsTestCase(test.TestCase):
     def setUp(self):
         super(DocstringsTestCase, self).setUp()
         plugins.load()
+        # validate every plugin's argument schema strictly
+        scenario.CONF.set_override("strict_type_annotations", True)
+        self.addCleanup(
+            scenario.CONF.clear_override, "strict_type_annotations"
+        )
 
     def _validate_code_block(self, plg_cls, code_block):
         ignored_params = ["self", "scenario_obj"]
@@ -39,13 +44,11 @@ class DocstringsTestCase(test.TestCase):
         for param in params:
             if param not in ignored_params:
                 if param not in documented_params:
-                    msg = ("Class: %(class)s Docstring for "
-                           "%(scenario)s should"
-                           " describe the '%(param)s' parameter"
-                           " in the :param <name>: clause."
-                           % {"class": plg_cls.__name__,
-                              "scenario": plg_cls.get_name(),
-                              "param": param})
+                    msg = (
+                        f"Class: {plg_cls.__name__} Docstring for "
+                        f"{plg_cls.get_name()} should describe the {param} "
+                        f"parameter in the :param <name>: clause."
+                    )
                     result.append(msg)
         return result
 
@@ -129,7 +132,6 @@ class DocstringsTestCase(test.TestCase):
                 docstring = base.__doc__
 
             print(name)
-            print(type(docstring))
             parsed_docstring = utils.parse_rst(docstring)
             self._iterate_parsed_rst(name,
                                      parsed_docstring,

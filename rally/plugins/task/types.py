@@ -26,7 +26,13 @@ from rally.task import types
 class PathOrUrl(types.ResourceType):
     """Check whether file exists or url available."""
 
-    def pre_process(self, resource_spec: str, config: dict[str, t.Any]) -> str:
+    def pre_process(
+        self,
+        *,
+        resource_spec: str,
+        config: types.ConvertConfig,
+        output_type: t.Any,
+    ) -> str:
         path = os.path.expanduser(resource_spec)
         if os.path.isfile(path):
             return path
@@ -35,17 +41,23 @@ class PathOrUrl(types.ResourceType):
             if head.status_code == 200:
                 return path
             raise exceptions.InvalidScenarioArgument(
-                "Url %s unavailable (code %s)" % (path, head.status_code))
+                f"Url {path} unavailable (code {head.status_code})")
         except Exception as ex:
             raise exceptions.InvalidScenarioArgument(
-                "Url error %s (%s)" % (path, ex))
+                f"Url error {path} ({ex})")
 
 
 @plugin.configure(name="file")
 class FileType(types.ResourceType):
     """Return content of the file by its path."""
 
-    def pre_process(self, resource_spec: str, config: dict[str, t.Any]) -> str:
+    def pre_process(
+        self,
+        *,
+        resource_spec: str,
+        config: types.ConvertConfig,
+        output_type: t.Any,
+    ) -> str:
         with open(os.path.expanduser(resource_spec), "r") as f:
             return f.read()
 
@@ -54,7 +66,13 @@ class FileType(types.ResourceType):
 class ExpandUserPath(types.ResourceType):
     """Expands user path."""
 
-    def pre_process(self, resource_spec: str, config: dict[str, t.Any]) -> str:
+    def pre_process(
+        self,
+        *,
+        resource_spec: str,
+        config: types.ConvertConfig,
+        output_type: t.Any,
+    ) -> str:
         return os.path.expanduser(resource_spec)
 
 
@@ -63,7 +81,11 @@ class FileTypeDict(types.ResourceType):
     """Return the dictionary of items with file path and file content."""
 
     def pre_process(
-        self, resource_spec: list[str], config: dict[str, t.Any]
+        self,
+        *,
+        resource_spec: list[str],
+        config: types.ConvertConfig,
+        output_type: t.Any,
     ) -> dict[str, str]:
         file_type_dict: dict[str, str] = {}
         for file_path in resource_spec:

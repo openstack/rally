@@ -86,6 +86,14 @@ class HintToSchemaTestCase(test.TestCase):
     def test_union_with_any_member_is_unconstrained(self):
         self.assertIsNone(typeutils.hint_to_schema(t.Union[int, t.Any]))
 
+    def test_make_nullable_is_idempotent(self):
+        # a schema that already admits null, or has no type/anyOf, is unchanged
+        type_list = {"type": ["string", "null"]}
+        self.assertEqual(type_list, typeutils._make_nullable(type_list))
+        any_of = {"anyOf": [{"type": "string"}, {"type": "null"}]}
+        self.assertEqual(any_of, typeutils._make_nullable(any_of))
+        self.assertEqual({}, typeutils._make_nullable({}))
+
     def test_homogeneous_tuple(self):
         self.assertEqual({"type": "array", "items": {"type": "integer"}},
                          typeutils.hint_to_schema(tuple[int, ...]))

@@ -89,6 +89,7 @@ class ArgsValidatorTestCase(test.TestCase):
     @ddt.data(
         ({"image": {"name": "x"}, "count": 5, "mode": "l3"}, None),
         ({"image": {"id": "abc"}}, None),  # converter ok (id)
+        ({"image": {"bad": "y"}}, "is not valid under any"),  # bad conv shape
         ({"image": {"name": "x"}, "note": None}, None),  # nullable -> None ok
         ({"image": {"name": "x"}, "extra": 1}, None),  # **kwargs -> extra ok
         ({"image": {"name": "x"}, "tags": ["a", "b"]}, None),  # list[str] ok
@@ -113,9 +114,15 @@ class ArgsValidatorTestCase(test.TestCase):
             count: te.NotRequired[int]
             admin_pass: te.NotRequired[te.Never]  # forbidden
 
+        class _ByName(te.TypedDict, closed=True):
+            name: str
+
+        class _ById(te.TypedDict, closed=True):
+            id: str
+
         @plugin.configure(name="test_image_for_annotations")
         class ImageType(types.ResourceType):
-            def pre_process(self, resource_spec, config):
+            def pre_process(self, resource_spec: _ByName | _ById, config):
                 return resource_spec
 
         @types.convert(image={"type": "test_image_for_annotations"})

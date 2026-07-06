@@ -90,23 +90,26 @@ def _run_scenario_once(
     # provide arguments isolation between iterations
     scenario_kwargs = copy.deepcopy(scenario_kwargs)
 
-    LOG.info("Task %(task)s | ITER: %(iteration)s START" %
-             {"task": context_obj["task"]["uuid"], "iteration": iteration})
+    task_uuid = context_obj["task"]["uuid"]
+    LOG.info(f"Task {task_uuid} | ITER: {iteration} START")
 
     scenario_inst = cls(context_obj)
     error = []
     try:
         with rutils.Timer() as timer:
+            # resolve any per-iteration argument now that this iteration's
+            # scenario (its narrowed user, project and clients) exists
+            for kw_name, kw_value in list(scenario_kwargs.items()):
+                if isinstance(kw_value, types.DeferredResource):
+                    scenario_kwargs[kw_name] = kw_value.resolve(scenario_inst)
             getattr(scenario_inst, method_name)(**scenario_kwargs)
     except Exception as e:
         error = utils.format_exc(e)
         if logging.is_debug():
-            LOG.exception("Iteration %s raised Exception" % iteration)
+            LOG.exception(f"Iteration {iteration} raised Exception")
     finally:
-        status = "Error %s: %s" % tuple(error[0:2]) if error else "OK"
-        LOG.info("Task %(task)s | ITER: %(iteration)s END: %(status)s" %
-                 {"task": context_obj["task"]["uuid"], "iteration": iteration,
-                  "status": status})
+        status = f"Error {error[0]}: {error[1]}" if error else "OK"
+        LOG.info(f"Task {task_uuid} | ITER: {iteration} END: {status}")
 
         return {"duration": timer.duration() - scenario_inst.idle_duration(),
                 "timestamp": timer.timestamp(),
@@ -135,7 +138,7 @@ def _log_worker_info(**info: t.Any) -> None:
     """
     info_message = "\n\t".join(["%s: %s" % (k, v)
                                 for k, v in info.items()])
-    LOG.debug("Starting a worker.\n\t%s" % info_message)
+    LOG.debug(f"Starting a worker.\n\t{info_message}")
 
 
 @validation.add_default("jsonschema")

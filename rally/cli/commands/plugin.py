@@ -31,7 +31,7 @@ plugin_app = typer.Typer(
     help="Discover and inspect installed plugins.")
 
 
-def _schema_type_label(prop: dict) -> str:
+def _schema_type_label(prop: dict[str, t.Any]) -> str:
     """Short type label for an arg schema property (blank if not simple)."""
     if not prop:
         return ""

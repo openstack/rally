@@ -28,6 +28,7 @@ from rally.common import validation
 from rally.common.plugin import plugin
 from rally.task import atomic
 from rally.task import functional
+from rally.task import types
 from rally.task.processing import charts
 from rally.utils import typeutils
 
@@ -249,10 +250,11 @@ class Scenario(plugin.Plugin,
     def _arg_property_schemas(cls) -> tuple[dict[str, t.Any], bool]:
         """Return the per-argument schemas and whether extra args are allowed.
 
-        The schemas come from the ``run()`` type annotations. An argument bound
-        to a converter (``@types.convert``) is left unconstrained, since the
-        user supplies the pre-conversion spec rather than the post-conversion
-        ``run()`` type. The flag is True when ``run()`` accepts ``**kwargs``.
+        The schemas come from the ``run()`` type annotations, plus the input
+        schema of any converted argument. A converter describes the value the
+        user writes before conversion, which overrides the post-conversion type
+        from the annotation. The flag is True when ``run()`` accepts
+        ``**kwargs``.
         """
         properties: dict[str, t.Any] = {}
         additional = False
@@ -260,8 +262,10 @@ class Scenario(plugin.Plugin,
         try:
             hints = t.get_type_hints(cls.run, include_extras=True)
         except Exception as e:
-            LOG.debug(f"Cannot resolve type hints for {cls.__name__}.run(): "
-                      f"{e}")
+            msg = f"Cannot resolve type hints for {cls.__name__}.run(): {e}"
+            if CONF.strict_type_annotations:
+                raise exceptions.InvalidScenarioArgument(msg)
+            LOG.warning(msg)
             return properties, additional
 
         for name, param in inspect.signature(cls.run).parameters.items():
@@ -293,10 +297,17 @@ class Scenario(plugin.Plugin,
                 if schema is not None:
                     properties[name] = schema
 
-        preprocessors: dict[str, t.Any] = cls._meta_get("preprocessors",
-                                                        default={})
-        for arg in preprocessors:
-            properties[arg] = {}  # converted arg: pre-conversion spec is Any
+        preprocessors = types.collect_scenario_args_preprocessors(cls, hints)
+        for arg, type_cfg in preprocessors.items():
+            type_name = type_cfg.get("type")
+            if not type_name:
+                continue
+            try:
+                resource_cls = types.ResourceType.get(type_name)
+            except exceptions.PluginNotFound:
+                continue
+
+            properties[arg] = types._compose_jsonschema(resource_cls)
 
         return properties, additional
 

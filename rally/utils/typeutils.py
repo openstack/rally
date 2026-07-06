@@ -74,12 +74,16 @@ def _make_nullable(schema: dict[str, t.Any]) -> dict[str, t.Any]:
     if "type" in schema:
         types_ = schema["type"]
         if isinstance(types_, list):
-            return (schema if "null" in types_
-                    else {**schema, "type": [*types_, "null"]})
+            if "null" in types_:
+                return schema
+            else:
+                return {**schema, "type": [*types_, "null"]}
         return {**schema, "type": [types_, "null"]}
     if "anyOf" in schema:
-        return (schema if any(m.get("type") == "null" for m in schema["anyOf"])
-                else {**schema, "anyOf": [*schema["anyOf"], {"type": "null"}]})
+        if any(m.get("type") == "null" for m in schema["anyOf"]):
+            return schema
+        else:
+            return {**schema, "anyOf": [*schema["anyOf"], {"type": "null"}]}
     return schema
 
 

@@ -20,8 +20,10 @@ from unittest import mock
 import typing_extensions as te
 
 from rally import exceptions
+from rally.common.plugin import plugin
 from rally.task import context
 from rally.task import scenario
+from rally.task import types
 from tests.unit import test
 
 
@@ -224,12 +226,13 @@ class ScenarioConfigureTestCase(test.TestCase):
         m_warn.assert_called_once()
         self.assertIn("weird", m_warn.call_args[0][0])
 
-        # Strict mode turns the two warn-cases above into hard errors.
+        # Strict mode turns the warn-cases above into hard errors.
         opt = "strict_type_annotations"
         scenario.CONF.set_override(opt, True)
         self.addCleanup(scenario.CONF.clear_override, opt)
         self.assertRaises(exceptions.InvalidScenarioArgument, Ghost.get_info)
         self.assertRaises(exceptions.InvalidScenarioArgument, BadType.get_info)
+        self.assertRaises(exceptions.InvalidScenarioArgument, BadAnn.get_info)
 
     def test_get_title_skips_schema_build(self):
         @scenario.configure(name="fooscenario.titled")
@@ -246,6 +249,63 @@ class ScenarioConfigureTestCase(test.TestCase):
                 TitledScenario, "_arg_property_schemas") as m_build:
             self.assertEqual("My title.", TitledScenario.get_title())
             m_build.assert_not_called()
+
+    def test_get_info(self):
+
+        @plugin.configure(name="test_struct_conv")
+        class StructConv(types.ResourceType):
+            def pre_process(
+                    self, *, resource_spec: str | dict, config, output_type
+            ):
+                return resource_spec
+
+        # a converter that does not declare CONFIG_SCHEMA inherits the
+        # permissive default ({}) -> the argument is in the schema but carries
+        # no type constraint (rendered as "Any").
+        @plugin.configure(name="test_any_conv")
+        class AnyConv(types.ResourceType):
+            def pre_process(self, *, resource_spec, config, output_type):
+                return resource_spec
+
+        @types.convert(
+            spec={"type": "test_struct_conv"},
+            thing={"type": "test_any_conv"},
+            path={"type": "no_such_resource_type"},
+        )
+        @scenario.configure(name="fooscenario.conv")
+        class ConvScenario(scenario.Scenario):
+            def run(self, spec, thing, path):
+                """Do it.
+
+                :param spec: a structured converted arg
+                :param thing: a thing
+                :param path: a path
+                """
+
+        self.addCleanup(AnyConv.unregister)
+        self.addCleanup(ConvScenario.unregister)
+        self.addCleanup(StructConv.unregister)
+
+
+        props = ConvScenario.get_info()["schema"]["properties"]
+
+        self.assertDictEqual(
+            {
+                "description": "a structured converted arg\n",
+                "type": ["string", "object"]
+            },
+            props["spec"]
+        )
+        self.assertDictEqual(
+            # converter without declared type is fine
+            {"description": "a thing\n"},
+            props["thing"]
+        )
+        self.assertDictEqual(
+            # unknown converter should not result in scenario get_info failure
+            {"description": "a path"},
+            props["path"]
+        )
 
 
 class ScenarioTestCase(test.TestCase):

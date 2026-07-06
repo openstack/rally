@@ -21,6 +21,7 @@ import ddt
 
 from rally.plugins.task.runners import serial
 from rally.task import runner
+from rally.task import types
 from tests.unit import fakes
 from tests.unit import test
 
@@ -128,6 +129,30 @@ class ScenarioRunnerHelpersTestCase(test.TestCase):
         self.assertEqual(expected_result, result)
         self.assertEqual(expected_error[:2],
                          ["Exception", "Something went wrong"])
+
+    @mock.patch(BASE + "rutils.Timer", side_effect=fakes.FakeTimer)
+    def test_run_scenario_once_resolves_deferred(self, mock_timer):
+        # a DeferredResource argument is resolved per iteration against the
+        # freshly built scenario; plain arguments pass through untouched.
+        class RecordingScenario(fakes.FakeScenario):
+            received = None
+
+            def run(self, **kwargs):
+                RecordingScenario.received = dict(kwargs)
+
+        class IterationSelector(types.DeferredResource):
+            def resolve(self, scenario):
+                return scenario.context["iteration"]
+
+        for iteration in (1, 2):
+            context = {"iteration": iteration, "task": {"uuid": "u"}}
+            runner._run_scenario_once(
+                RecordingScenario, "run", context,
+                {"img": IterationSelector(), "plain": "keep"},
+                mock.MagicMock())
+            # deferred arg resolved to THIS iteration's value
+            self.assertEqual(iteration, RecordingScenario.received["img"])
+            self.assertEqual("keep", RecordingScenario.received["plain"])
 
 
 def noop_worker_process(i):

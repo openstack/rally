@@ -62,6 +62,21 @@ Changed
 * New ``[DEFAULT]strict_type_annotations`` option to fail, rather than warn, on a
   scenario argument type Rally cannot map to a JSON Schema.
 
+* Resource types (the plugins that convert a task argument into the value a
+  scenario receives, such as a file path into its contents) have been reworked.
+  An argument can be bound to one inline in its annotation with
+  ``types.Convert("<name>")``, and the specification a resource type accepts is
+  now validated and documented from the ``resource_spec`` annotation of its
+  ``pre_process``. A resource type may implement a richer keyword-only
+  ``pre_process(self, *, resource_spec, config, output_type)`` (with a
+  ``scenario_cls`` constructor argument) to resolve a value per iteration by
+  returning a ``types.DeferredResource`` or to shape the result to the
+  argument's declared type. These signature changes are backward compatible:
+  the legacy ``pre_process(resource_spec, config)`` and ``__init__(context,
+  cache)`` forms are detected automatically and keep working, with a
+  deprecation warning. See the resource type plugin docs.
+
+
 Deprecated
 ~~~~~~~~~~
 

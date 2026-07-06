@@ -144,6 +144,29 @@ Two independent axes control the object schema:
    and is honored by Rally. Add ``# type: ignore[call-arg]`` if that check is
    enforced in your project.
 
+Some inputs cannot be used as raw values; they must first be transformed or
+discovered (a file path read into its contents, an image name resolved to an
+id). Rally does this through a pluggable pre-processing step called a *resource
+type*; bind an argument to one inline with ``types.Convert(...)``:
+
+.. code-block:: python
+
+    import typing as t
+
+    from rally.task import types
+
+
+    def run(
+        self,
+        image: t.Annotated[str, types.Convert("glance_image")],
+    ) -> None:
+        ...
+
+The value is then validated against the schema derived from the resource
+type's ``resource_spec`` annotation (the schema of the specification), not the
+``run()`` annotation. See :ref:`plugins_resource_type_plugin` for how resource
+types work, the available types, and the ``@types.convert`` decorator form.
+
 Usage
 ^^^^^
 

@@ -26,7 +26,9 @@ class PathOrUrlTestCase(test.TestCase):
     @mock.patch("requests.head")
     def test_preprocess_file(self, mock_requests_head, mock_isfile):
         mock_isfile.return_value = True
-        path = types.PathOrUrl({}, {}).pre_process("fake_path", {})
+        rt = types.PathOrUrl(context={}, cache={}, scenario_cls=mock.Mock())
+        path = rt.pre_process(
+            resource_spec="fake_path", config={}, output_type=None)
         self.assertEqual("fake_path", path)
 
     @mock.patch("os.path.isfile")
@@ -34,9 +36,10 @@ class PathOrUrlTestCase(test.TestCase):
     def test_preprocess_bogus(self, mock_requests_head, mock_isfile):
         mock_isfile.return_value = False
         mock_requests_head.return_value = mock.Mock(status_code=500)
-        self.assertRaises(exceptions.InvalidScenarioArgument,
-                          types.PathOrUrl({}, {}).pre_process,
-                          "fake_path", {})
+        rt = types.PathOrUrl(context={}, cache={}, scenario_cls=mock.Mock())
+        self.assertRaises(
+            exceptions.InvalidScenarioArgument, rt.pre_process,
+            resource_spec="fake_path", config={}, output_type=None)
         mock_requests_head.assert_called_once_with(
             "fake_path", verify=False, allow_redirects=True)
 
@@ -45,7 +48,9 @@ class PathOrUrlTestCase(test.TestCase):
     def test_preprocess_url(self, mock_requests_head, mock_isfile):
         mock_isfile.return_value = False
         mock_requests_head.return_value = mock.Mock(status_code=200)
-        path = types.PathOrUrl({}, {}).pre_process("fake_url", {})
+        rt = types.PathOrUrl(context={}, cache={}, scenario_cls=mock.Mock())
+        path = rt.pre_process(
+            resource_spec="fake_url", config={}, output_type=None)
         self.assertEqual("fake_url", path)
 
 
@@ -55,17 +60,17 @@ class FileTypeTestCase(test.TestCase):
                 side_effect=mock.mock_open(read_data="file_context"),
                 create=True)
     def test_preprocess_by_path(self, mock_open):
-        resource_spec = "file.yaml"
-        file_context = types.FileType({}, {}).pre_process(resource_spec, {})
+        rt = types.FileType(context={}, cache={}, scenario_cls=mock.Mock())
+        file_context = rt.pre_process(
+            resource_spec="file.yaml", config={}, output_type=None)
         self.assertEqual("file_context", file_context)
 
     @mock.patch("builtins.open", side_effect=IOError, create=True)
     def test_preprocess_by_path_no_match(self, mock_open):
-        resource_spec = "nonexistant.yaml"
-        self.assertRaises(IOError,
-                          types.FileType({}, {}).pre_process,
-                          resource_spec=resource_spec,
-                          config={})
+        rt = types.FileType(context={}, cache={}, scenario_cls=mock.Mock())
+        self.assertRaises(
+            IOError, rt.pre_process,
+            resource_spec="nonexistant.yaml", config={}, output_type=None)
 
 
 class FileTypeDictTestCase(test.TestCase):
@@ -74,14 +79,14 @@ class FileTypeDictTestCase(test.TestCase):
                 side_effect=mock.mock_open(read_data="file_context"),
                 create=True)
     def test_preprocess_by_path(self, mock_open):
-        resource_spec = ["file.yaml"]
-        file_context = types.FileTypeDict({}, {}).pre_process(resource_spec,
-                                                              {})
+        rt = types.FileTypeDict(context={}, cache={}, scenario_cls=mock.Mock())
+        file_context = rt.pre_process(
+            resource_spec=["file.yaml"], config={}, output_type=None)
         self.assertEqual({"file.yaml": "file_context"}, file_context)
 
     @mock.patch("builtins.open", side_effect=IOError, create=True)
     def test_preprocess_by_path_no_match(self, mock_open):
-        resource_spec = ["nonexistant.yaml"]
-        self.assertRaises(IOError,
-                          types.FileTypeDict({}, {}).pre_process,
-                          resource_spec=resource_spec, config={})
+        rt = types.FileTypeDict(context={}, cache={}, scenario_cls=mock.Mock())
+        self.assertRaises(
+            IOError, rt.pre_process,
+            resource_spec=["nonexistant.yaml"], config={}, output_type=None)

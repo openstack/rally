@@ -146,6 +146,35 @@ will be more consistent with ``rally.task.types.preprocess`` and will
 make it easier to add a second resource type resolution hook,
 described below.
 
+Preprocessing signature, as implemented
+---------------------------------------
+
+The ``context``/``clients`` signature above was the original proposal and
+is now the *legacy*, deprecated form. As implemented, the abstract
+``ResourceType.pre_process`` takes keyword-only arguments and is
+platform-neutral:
+
+.. code-block:: python
+
+    def pre_process(self, *, resource_spec, config, output_type):
+
+``resource_spec`` is the specification the user wrote in the task,
+``config`` is the ``{"type": ...}`` mapping from ``types.convert`` /
+``types.Convert``, and ``output_type`` is the base type of the argument's
+annotation. The running scenario class is workload-constant, so it is
+constructor state (``self._scenario_cls``) alongside ``self._context`` and
+``self._cache``, not a ``pre_process`` parameter. No ``clients`` object is
+passed; a resource type that needs platform clients obtains them itself (in
+rally-openstack), which is what divorces the types subsystem from OpenStack.
+
+A resource type simply implements this signature; Rally detects the contract
+from the ``pre_process`` signature (the presence of ``output_type``), so no
+registration flag is needed. The two-argument ``pre_process(self,
+resource_spec, config)`` form, and the ``__init__(self, context, cache)``
+constructor, are still supported for backward compatibility but are deprecated
+and warn when used. The jsonschema of the accepted specification is derived
+from the ``resource_spec`` annotation.
+
 Add ``ResourceType.map_for_scenario()``
 ---------------------------------------
 
@@ -222,8 +251,8 @@ This demonstrates two different workflows.
 Flavors, which exist globally for all users and tenants, can be easily
 resolved once, at preprocessing time, and ``map_for_scenario()`` needs
 only to substitute the single, canonical flavor ID on each
-iteration. This does lead to some redundancy -- flavor arguments will
-be rewritten on each iteration, for instance -- but as it's only a
+iteration. This does lead to some redundancy (flavor arguments will
+be rewritten on each iteration, for instance), but as it's only a
 matter of changing a few values in the argument dict, the performance
 penalty will be minimal.
 
@@ -232,6 +261,24 @@ basis, and remain invisible to other users. In order to properly
 resolve image IDs, we must first find all images in ``preprocess()``,
 and then select the correct image for each iteration (and for the user
 that maps to each iteration) in ``map_for_scenario()``.
+
+Per-iteration resolution, as implemented
+----------------------------------------
+
+The two-hook ``map_for_scenario()`` design above was not implemented as
+proposed. Per-iteration resolution is instead handled with a returned
+value object rather than a second method: ``pre_process`` may return a
+``types.DeferredResource``, a small abstract base class with a single
+``resolve(scenario)`` method. The runner, in ``_run_scenario_once``,
+replaces any argument that is a ``DeferredResource`` with
+``resolve(scenario_instance)`` once the iteration's scenario (its narrowed
+user/tenant and clients) exists, between building the scenario and calling
+``run``.
+
+The expensive listing is still done once in ``pre_process``; the wrapper
+carries only plain, picklable data (it is deep-copied per iteration and sent
+to worker processes), and ``resolve`` only selects the entry for the
+iteration's user.
 
 Remove deprecated code
 ----------------------
@@ -248,7 +295,9 @@ the context object instead of rewriting scenario arguments. This is
 less straightforward, though; the scenario author would then need to
 know where to look in the context to find the resource object, even
 though for any given iteration there is exactly one resource object
-that is appropriate.
+that is appropriate. The implemented ``DeferredResource`` is a variant of
+the single-step approach: the resolved value is still substituted into the
+scenario arguments, but the substitution is deferred to each iteration.
 
 Implementation
 ==============
@@ -271,9 +320,11 @@ Work Items
   ``ResourceType.preprocess()`` and create a new abstract intermediate
   subclass, ``OpenStackResourceType``, to which to offload OpenStack
   client creation.
-* Add the ``ResourceType.map_for_scenario()`` hook.
-* Rewrite any resource types that need to take advantage of the new
-  ``map_for_scenario()`` hook. This will likely be limited to
+* Add per-iteration resolution. Implemented as the ``DeferredResource``
+  value object returned from ``pre_process`` rather than the proposed
+  ``ResourceType.map_for_scenario()`` hook.
+* Rewrite any resource types that need to take advantage of
+  per-iteration resolution. This will likely be limited to
   ``ImageResourceType``  and ``EC2ImageResourceType``. If there are
   obvious patterns that can be abstracted out, then add a new abstract
   intermediate subclass.
