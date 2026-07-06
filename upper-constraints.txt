@@ -40,7 +40,7 @@ python-dateutil===2.9.0.post0
 python-subunit===1.4.4
 PyYAML===6.0.2
 referencing===0.36.2
-requests===2.32.4
+requests===2.33.0
 rfc3986===2.0.0
 rpds-py===0.26.0
 setuptools===80.9.0
