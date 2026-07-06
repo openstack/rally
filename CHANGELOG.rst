@@ -37,6 +37,11 @@ Changed
 Removed
 ~~~~~~~
 
+* The deprecated compatibility shims under *rally.plugins.common* (the
+  *exporters*, *hook*, *runners*, *scenarios*, *sla* and *verification*
+  subpackages, along with *rally.plugins.common.types*). Use the
+  *rally.plugins.task* and *rally.plugins.verification* packages instead.
+
 * Support for Python 3.9
 
 [5.0.1] - 2025-10-07

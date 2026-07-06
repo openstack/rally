@@ -14,7 +14,7 @@
 import os
 
 from rally import consts
-from rally.plugins.common.verification import testr
+from rally.plugins.verification import testr
 from rally.verification import manager
 
 

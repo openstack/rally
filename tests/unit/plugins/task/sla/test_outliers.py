@@ -119,7 +119,7 @@ class OutliersTestCase(test.TestCase):
         # self.assertEqual(single_sla.threshold, merged_sla.threshold)
 
         # NOTE(ikhudoshyn): We are unable to implement
-        # rally.plugins.common.sla.outliers.Outliers.merge(..) correctly
+        # rally.plugins.task.sla.outliers.Outliers.merge(..) correctly
         # (see my comment for the method)
         # The assert above will fail with the majority of data
         # The line below passes with this particular data
