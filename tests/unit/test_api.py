@@ -22,10 +22,10 @@ from unittest import mock
 import ddt
 
 from rally import api
-from rally.common import cfg
-from rally.common import objects
 from rally import consts
 from rally import exceptions
+from rally.common import cfg
+from rally.common import objects
 from tests.unit import fakes
 from tests.unit import test
 

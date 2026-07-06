@@ -21,10 +21,11 @@ import operator
 import re
 import typing as t
 
+from rally import exceptions
 from rally.common import logging
 from rally.common.plugin import plugin
-from rally import exceptions
 from rally.task import scenario
+
 
 if t.TYPE_CHECKING:  # pragma: no cover
     RT = t.TypeVar("RT", bound="ResourceType")

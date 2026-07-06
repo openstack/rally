@@ -23,10 +23,10 @@ import abc
 
 import jsonschema
 
-from rally.common import logging
-from rally.common.plugin import plugin
-from rally.common import validation
 from rally import consts
+from rally.common import logging
+from rally.common import validation
+from rally.common.plugin import plugin
 
 
 LOG = logging.getLogger(__name__)

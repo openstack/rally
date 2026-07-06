@@ -3,6 +3,7 @@
 # process, which may cause wedges in the gate later.
 
 hacking>=4.0                                           # Apache Software License
+ruff                                                   # MIT
 
 fixtures                                               # Apache-2.0 or BSD
 pytest                                                 # MIT

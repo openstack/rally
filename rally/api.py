@@ -25,15 +25,15 @@ import jinja2.meta
 import requests
 from requests.packages import urllib3
 
+from rally import consts
+from rally import exceptions
 from rally.common import cfg
 from rally.common import logging
 from rally.common import objects
 from rally.common import opts
-from rally.common.plugin import discover
 from rally.common import utils
 from rally.common import version as rally_version
-from rally import consts
-from rally import exceptions
+from rally.common.plugin import discover
 from rally.task import engine
 from rally.task import exporter as texporter
 from rally.task import task_cfg

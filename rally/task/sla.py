@@ -25,8 +25,9 @@ import abc
 import itertools
 import typing as t
 
-from rally.common.plugin import plugin
 from rally.common import validation
+from rally.common.plugin import plugin
+
 
 if t.TYPE_CHECKING:  # pragma: no cover
 

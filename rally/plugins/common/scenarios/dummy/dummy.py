@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.plugins.task.scenarios.dummy.dummy import *  # noqa: F401,F403
+from rally.plugins.task.scenarios.dummy.dummy import *  # noqa: F401,F403,I001
 from rally.plugins.task.scenarios.dummy import dummy as _new
 
 # import it as last item to be sure that we use the right module

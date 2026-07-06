@@ -19,10 +19,10 @@ import datetime as dt
 import uuid
 
 import sqlalchemy as sa
-import sqlalchemy.orm   # noqa (used as sa.orm)
+import sqlalchemy.orm  # used as sa.orm
 
-from rally.common.db import sa_types
 from rally import consts
+from rally.common.db import sa_types
 
 
 BASE = sa.orm.declarative_base()

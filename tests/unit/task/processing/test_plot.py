@@ -22,6 +22,7 @@ import ddt
 from rally.task.processing import plot
 from tests.unit import test
 
+
 PLOT = "rally.task.processing.plot."
 
 

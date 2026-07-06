@@ -18,6 +18,7 @@ from alembic import context
 from rally.common.db import api
 from rally.common.db import models
 
+
 # add your model's MetaData object here
 # for 'autogenerate' support
 # from myapp import mymodel

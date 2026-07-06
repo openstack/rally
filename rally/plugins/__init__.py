@@ -18,9 +18,11 @@ from __future__ import annotations
 import functools
 import os
 import typing as t
+
 import typing_extensions as te
 
 from rally.common.plugin import discover
+
 
 if t.TYPE_CHECKING:
     P = te.ParamSpec("P")

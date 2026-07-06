@@ -22,11 +22,12 @@ import threading
 import time
 import typing as t
 
+from rally import consts
 from rally.common import logging
 from rally.common import utils
 from rally.common import validation
-from rally import consts
 from rally.task import runner
+
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from rally.task import scenario

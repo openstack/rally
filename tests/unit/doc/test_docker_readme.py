@@ -13,13 +13,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from docutils import nodes
 import os
 import re
 
+from docutils import nodes
+
 import rally
-from tests.unit.doc import utils
 from tests.unit import test
+from tests.unit.doc import utils
 
 
 ROOT_DIR = os.path.dirname(os.path.dirname(rally.__file__))

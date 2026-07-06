@@ -28,6 +28,7 @@ from rally.task import scenario
 from rally.task import task_cfg
 from tests.unit import test
 
+
 RALLY_PATH = os.path.dirname(os.path.dirname(rally.__file__))
 
 

@@ -19,11 +19,11 @@ import threading
 import time
 import traceback
 
+from rally import consts
+from rally import exceptions
 from rally.common import cfg
 from rally.common import logging
 from rally.common import objects
-from rally import consts
-from rally import exceptions
 from rally.task import context
 from rally.task import hook
 from rally.task import runner

@@ -32,8 +32,9 @@ import time
 import typing as t
 import uuid
 
-from rally.common import logging
 from rally import exceptions
+from rally.common import logging
+
 
 if t.TYPE_CHECKING:  # pragma: no cover
     import threading

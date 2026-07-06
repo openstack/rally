@@ -18,11 +18,11 @@ import io
 import os
 from unittest import mock
 
-from rally.cli import cliutils
-from rally.cli.commands import deployment
-from rally.cli import envutils
 from rally import consts
 from rally import exceptions
+from rally.cli import cliutils
+from rally.cli import envutils
+from rally.cli.commands import deployment
 from tests.unit import fakes
 from tests.unit import test
 

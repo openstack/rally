@@ -19,11 +19,11 @@ import alembic.config
 import alembic.migration
 import alembic.script
 import sqlalchemy as sa
-import sqlalchemy.schema  # noqa
+import sqlalchemy.schema
 
+from rally import exceptions
 from rally.common.db import api
 from rally.common.db import models
-from rally import exceptions
 
 
 INITIAL_REVISION_UUID = "ca3626f62937"

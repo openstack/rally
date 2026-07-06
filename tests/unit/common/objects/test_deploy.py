@@ -18,10 +18,10 @@
 import datetime as dt
 from unittest import mock
 
-from rally.common import objects
 from rally import consts
-from rally.env import env_mgr
 from rally import exceptions
+from rally.common import objects
+from rally.env import env_mgr
 from tests.unit import test
 
 

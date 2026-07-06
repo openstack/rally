@@ -26,9 +26,10 @@ import typing as t
 from alembic import op
 import sqlalchemy as sa
 
+from rally import exceptions
 from rally.common.db import models
 from rally.common.db import sa_types
-from rally import exceptions
+
 
 # revision identifiers, used by Alembic.
 revision = "484cd9413e66"

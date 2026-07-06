@@ -21,6 +21,9 @@ import os
 import sys
 import webbrowser
 
+from rally import consts
+from rally import exceptions
+from rally import plugins
 from rally.cli import cliutils
 from rally.cli import envutils
 from rally.cli import task_results_loader
@@ -28,9 +31,6 @@ from rally.cli import yamlutils as yaml
 from rally.common import logging
 from rally.common import utils as rutils
 from rally.common import version
-from rally import consts
-from rally import exceptions
-from rally import plugins
 from rally.task import atomic
 from rally.task.processing import charts
 from rally.utils import strutils

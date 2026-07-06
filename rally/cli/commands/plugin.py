@@ -13,11 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.cli import cliutils
-from rally.common.plugin import plugin
-from rally.common import utils
 from rally import exceptions
 from rally import plugins
+from rally.cli import cliutils
+from rally.common import utils
+from rally.common.plugin import plugin
 
 
 class PluginCommands(object):

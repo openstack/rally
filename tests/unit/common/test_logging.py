@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging   # noqa
+import logging
 from unittest import mock
 
 from rally.common import logging as rally_logging

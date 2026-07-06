@@ -18,10 +18,11 @@
 import datetime as dt
 from unittest import mock
 
-from rally.common import db
 from rally import consts
 from rally import exceptions
+from rally.common import db
 from tests.unit import test
+
 
 NOW = dt.datetime.now()
 

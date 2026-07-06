@@ -25,10 +25,11 @@ from __future__ import annotations
 from alembic import op
 import sqlalchemy as sa
 
-from rally.common.db import sa_types
 from rally import exceptions
 from rally import plugins
+from rally.common.db import sa_types
 from rally.task import context
+
 
 # revision identifiers, used by Alembic.
 revision = "dc46687661df"

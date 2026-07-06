@@ -23,8 +23,8 @@ Create Date: 2017-12-27 13:37:10.144970
 from alembic import op
 import sqlalchemy as sa
 
-from rally.common.db import sa_types
 from rally import exceptions
+from rally.common.db import sa_types
 
 
 # revision identifiers, used by Alembic.

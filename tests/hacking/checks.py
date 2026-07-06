@@ -29,6 +29,7 @@ import tokenize
 
 from hacking import core
 
+
 re_assert_equal_end_with_true_or_false = re.compile(
     r"assertEqual\(.*?, \s+(True|False)\)$")
 re_assert_equal_start_with_true_or_false = re.compile(
@@ -72,7 +73,6 @@ re_raises = re.compile(
 re_db_import = re.compile(r"^from rally.common import db")
 re_objects_import = re.compile(r"^from rally.common import objects")
 re_old_type_class = re.compile(r"^\s*class \w+(\(\))?:")
-re_datetime_alias = re.compile(r"^(from|import) datetime(?!\s+as\s+dt$)")
 re_log_warn = re.compile(r"(.)*LOG\.(warn)\(\s*('|\"|_)")
 
 
@@ -142,52 +142,6 @@ def check_assert_methods_from_mock(logical_line, filename, noqa=False):
                     "error_number": error_number,
                     "method": method_name,
                     "custom_msg": custom_msg})
-
-
-@core.flake8ext
-def check_import_of_logging(logical_line, filename, noqa=False):
-    """Check correctness import of logging module
-
-    N310
-    """
-    if noqa:
-        return
-
-    excluded_files = ["./rally/common/logging.py",
-                      "./tests/unit/common/test_logging.py",
-                      "./tests/ci/rally_verify.py",
-                      "./tests/ci/sync_requirements.py"]
-
-    forbidden_imports = ["from oslo_log",
-                         "import oslo_log",
-                         "import logging"]
-
-    if filename not in excluded_files:
-        for forbidden_import in forbidden_imports:
-            if logical_line.startswith(forbidden_import):
-                yield (0, "N310 Wrong module for logging is imported. Please "
-                          "use `rally.common.logging` instead.")
-
-
-@core.flake8ext
-def check_import_of_config(logical_line, filename, noqa=False):
-    """Check correctness import of config module
-
-    N311
-    """
-    if noqa:
-        return
-
-    excluded_files = ["./rally/common/cfg.py"]
-
-    forbidden_imports = ["from oslo_config",
-                         "import oslo_config"]
-
-    if filename not in excluded_files:
-        for forbidden_import in forbidden_imports:
-            if logical_line.startswith(forbidden_import):
-                yield (0, "N311 Wrong module for config is imported. Please "
-                          "use `rally.common.cfg` instead.")
 
 
 @core.flake8ext
@@ -370,61 +324,6 @@ def check_no_oslo_deprecated_import(logical_line, noqa=False):
 
 
 @core.flake8ext
-def check_quotes(logical_line, noqa=False):
-    """Check that single quotation marks are not used
-
-    N350
-    """
-    if noqa:
-        return
-
-    in_string = False
-    in_multiline_string = False
-    single_quotas_are_used = False
-
-    check_tripple = (
-        lambda line, i, char: (
-            i + 2 < len(line)
-            and (char == line[i] == line[i + 1] == line[i + 2])
-        )
-    )
-
-    i = 0
-    while i < len(logical_line):
-        char = logical_line[i]
-
-        if in_string:
-            if char == "\"":
-                in_string = False
-            if char == "\\":
-                i += 1  # ignore next char
-
-        elif in_multiline_string:
-            if check_tripple(logical_line, i, "\""):
-                i += 2  # skip next 2 chars
-                in_multiline_string = False
-
-        elif char == "#":
-            break
-
-        elif char == "'":
-            single_quotas_are_used = True
-            break
-
-        elif char == "\"":
-            if check_tripple(logical_line, i, "\""):
-                in_multiline_string = True
-                i += 3
-                continue
-            in_string = True
-
-        i += 1
-
-    if single_quotas_are_used:
-        yield i, "N350 Remove Single quotes"
-
-
-@core.flake8ext
 def check_no_constructor_data_struct(logical_line, noqa=False):
     """Check that data structs (lists, dicts) are declared using literals
 
@@ -519,18 +418,6 @@ def check_raises(logical_line, filename, noqa=False):
         if re_raises.search(logical_line):
             yield (0, "N354 ':Please use ':raises Exception: conditions' "
                       "in docstrings.")
-
-
-@core.flake8ext
-def check_datetime_alias(logical_line, noqa=False):
-    """Ensure using ``dt`` as alias for ``datetime``
-
-    N356
-    """
-    if noqa:
-        return
-    if re_datetime_alias.search(logical_line):
-        yield 0, "N356 Please use ``dt`` as alias for ``datetime``."
 
 
 @core.flake8ext

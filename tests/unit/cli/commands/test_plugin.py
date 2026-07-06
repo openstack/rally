@@ -20,8 +20,8 @@ import ddt
 
 from rally.cli import cliutils
 from rally.cli.commands import plugin as plugin_cmd
-from rally.common.plugin import plugin
 from rally.common import utils
+from rally.common.plugin import plugin
 from tests.unit import test
 
 

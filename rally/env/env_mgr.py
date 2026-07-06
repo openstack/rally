@@ -18,12 +18,12 @@ import traceback
 
 import jsonschema
 
+from rally import exceptions
+from rally import plugins
 from rally.common import db
 from rally.common import logging
 from rally.common import utils
 from rally.env import platform
-from rally import exceptions
-from rally import plugins
 
 
 LOG = logging.getLogger(__name__)

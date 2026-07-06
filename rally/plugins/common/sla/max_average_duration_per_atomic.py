@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.plugins.task.sla.max_average_duration_per_atomic import *  # noqa: F401,F403,E501
+from rally.plugins.task.sla.max_average_duration_per_atomic import *  # noqa: F401,F403,E501,I001
 from rally.plugins.task.sla import max_average_duration_per_atomic as _new
 
 # import it as last item to be sure that we use the right module

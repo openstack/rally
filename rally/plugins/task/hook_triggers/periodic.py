@@ -20,6 +20,7 @@ import typing as t
 from rally import consts
 from rally.task import hook
 
+
 if t.TYPE_CHECKING:  # pragma: no cover
     from rally.common import objects
 

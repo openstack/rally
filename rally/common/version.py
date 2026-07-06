@@ -20,6 +20,7 @@ import typing as t
 
 from rally.common.plugin import discover as rally_discover
 
+
 RALLY_VENDOR = "OpenStack Foundation"
 RALLY_PRODUCT = "OpenStack Rally"
 

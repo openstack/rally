@@ -23,13 +23,14 @@ import time
 import typing as t
 
 from rally.common import logging
-from rally.common.plugin import plugin
 from rally.common import utils as rutils
 from rally.common import validation
+from rally.common.plugin import plugin
 from rally.task import atomic
 from rally.task import scenario
 from rally.task import types
 from rally.task import utils
+
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from rally.common import objects

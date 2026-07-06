@@ -26,6 +26,7 @@ import typing as t
 import rally
 from rally.common import logging
 
+
 if t.TYPE_CHECKING:  # pragma: no cover
     import types
 

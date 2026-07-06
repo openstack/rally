@@ -21,6 +21,7 @@ from rally.cli import cliutils
 from rally.utils import encodeutils
 from tests.unit import test
 
+
 RES_PATH = os.path.join(os.path.dirname(rally.__file__), os.pardir, "etc")
 
 

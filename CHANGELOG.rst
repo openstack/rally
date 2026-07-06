@@ -27,6 +27,13 @@ Added
 
 * CI jobs for checking compatibility with python 3.13
 
+Changed
+~~~~~~~
+
+* The ``pep8`` gate now runs ruff alongside flake8: ruff owns the pycodestyle,
+  pyflakes and import-convention checks, while flake8 keeps the remaining
+  hacking and Rally-specific rules.
+
 Removed
 ~~~~~~~
 

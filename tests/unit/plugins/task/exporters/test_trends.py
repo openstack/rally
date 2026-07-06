@@ -18,6 +18,7 @@ from unittest import mock
 from rally.plugins.task.exporters import trends
 from tests.unit import test
 
+
 PATH = "rally.plugins.task.exporters.html"
 
 

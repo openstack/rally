@@ -21,12 +21,13 @@ import json
 import os
 import webbrowser
 
+from rally import exceptions
+from rally import plugins
 from rally.cli import cliutils
 from rally.cli import envutils
 from rally.cli import yamlutils as yaml
 from rally.common import logging
-from rally import exceptions
-from rally import plugins
+
 
 TIME_FORMAT = "%Y-%m-%dT%H:%M:%S"
 

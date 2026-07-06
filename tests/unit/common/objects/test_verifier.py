@@ -15,8 +15,8 @@
 
 from unittest import mock
 
-from rally.common import objects
 from rally import exceptions
+from rally.common import objects
 from tests.unit import test
 
 

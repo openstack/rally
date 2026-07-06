@@ -13,8 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.common.plugin import plugin
 from rally import exceptions
+from rally.common.plugin import plugin
 from tests.unit import test
 
 

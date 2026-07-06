@@ -17,12 +17,12 @@ import io
 import tempfile
 from unittest import mock
 
-from rally.cli import cliutils
-from rally.cli.commands import verify
-from rally.cli import envutils
 from rally import consts
 from rally import exceptions
 from rally import plugins
+from rally.cli import cliutils
+from rally.cli import envutils
+from rally.cli.commands import verify
 from rally.verification import reporter
 from tests.unit import fakes
 from tests.unit import test

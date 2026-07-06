@@ -17,9 +17,9 @@ import datetime as dt
 import os
 from unittest import mock
 
+from rally import exceptions
 from rally.env import env_mgr
 from rally.env import platform
-from rally import exceptions
 from tests.unit import test
 
 

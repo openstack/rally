@@ -23,8 +23,8 @@ from unittest import mock
 import ddt
 import pytest
 
-from rally.common import utils
 from rally import exceptions
+from rally.common import utils
 from tests.unit import test
 
 

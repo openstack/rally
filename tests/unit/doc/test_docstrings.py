@@ -15,12 +15,12 @@
 
 from docutils import nodes
 
-from rally.common.plugin import plugin
-from rally.common import validation
 from rally import plugins
+from rally.common import validation
+from rally.common.plugin import plugin
 from rally.task import scenario
-from tests.unit.doc import utils
 from tests.unit import test
+from tests.unit.doc import utils
 
 
 class DocstringsTestCase(test.TestCase):

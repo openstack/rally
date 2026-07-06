@@ -17,8 +17,8 @@ import io
 import os
 from unittest import mock
 
-from rally.cli import envutils
 from rally import exceptions
+from rally.cli import envutils
 from tests.unit import test
 
 

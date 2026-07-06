@@ -21,9 +21,9 @@ from unittest import mock
 
 import ddt
 
-from rally.common import objects
 from rally import consts
 from rally import exceptions
+from rally.common import objects
 from tests.unit import test
 
 

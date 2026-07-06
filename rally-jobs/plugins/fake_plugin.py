@@ -17,11 +17,11 @@
 import random
 import time
 
-from rally.task import atomic
-from rally.task import scenario
-
 # This is used to test relative import
 from test_relative_import import zzz
+
+from rally.task import atomic
+from rally.task import scenario
 
 
 @scenario.configure(name="FakePlugin.testplugin")

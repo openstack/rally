@@ -21,11 +21,12 @@ Revises: 08e1515a576c
 Create Date: 2016-09-13 18:11:47.703023
 
 """
-from alembic import op  # noqa
-import sqlalchemy as sa  # noqa
+from alembic import op
+import sqlalchemy as sa
 
-from rally.common.db import sa_types
 from rally import exceptions
+from rally.common.db import sa_types
+
 
 # revision identifiers, used by Alembic.
 revision = "6ad4f426f005"

@@ -27,8 +27,9 @@ import uuid
 from alembic import op
 import sqlalchemy as sa
 
-from rally.common.db import sa_types
 from rally import exceptions
+from rally.common.db import sa_types
+
 
 # revision identifiers, used by Alembic.
 revision = "e654a0648db0"

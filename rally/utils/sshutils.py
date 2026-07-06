@@ -66,8 +66,9 @@ import time
 
 import paramiko
 
-from rally.common import logging
 from rally import exceptions
+from rally.common import logging
+
 
 LOG = logging.getLogger(__name__)
 

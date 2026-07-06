@@ -16,9 +16,9 @@
 import collections
 import json
 
+from sqlalchemy import types as sa_types
 from sqlalchemy.dialects import mysql as mysql_types
 from sqlalchemy.ext import mutable
-from sqlalchemy import types as sa_types
 
 
 class TimeStamp(sa_types.TypeDecorator):

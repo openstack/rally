@@ -46,16 +46,17 @@ import tempfile
 import threading
 import time
 
+import sqlalchemy as sa
+import sqlalchemy.orm
+
 from oslo_db import exception as db_exc
 from oslo_db import options as db_options
 from oslo_db.sqlalchemy import enginefacade
-import sqlalchemy as sa
-import sqlalchemy.orm   # noqa
 
-from rally.common import cfg
-from rally.common.db import models
 from rally import consts
 from rally import exceptions
+from rally.common import cfg
+from rally.common.db import models
 from rally.task.processing import charts
 
 

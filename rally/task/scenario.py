@@ -19,15 +19,16 @@ import copy
 import random
 import typing as t
 
+from rally import exceptions
 from rally.common import cfg
 from rally.common import logging
-from rally.common.plugin import plugin
 from rally.common import utils
 from rally.common import validation
-from rally import exceptions
+from rally.common.plugin import plugin
 from rally.task import atomic
 from rally.task import functional
 from rally.task.processing import charts
+
 
 if t.TYPE_CHECKING:  # pragma: no cover
     S = t.TypeVar("S", bound="Scenario")

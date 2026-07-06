@@ -14,14 +14,15 @@
 
 import json
 import os
-import prettytable
 import traceback
 
+import prettytable
+
+from rally import exceptions
 from rally.cli import cliutils
 from rally.cli import envutils
 from rally.cli import yamlutils as yaml
 from rally.env import env_mgr
-from rally import exceptions
 
 
 YES = u":-)"

@@ -17,8 +17,8 @@ import typing as t
 
 import requests
 
-from rally.common.plugin import plugin
 from rally import exceptions
+from rally.common.plugin import plugin
 from rally.task import types
 
 

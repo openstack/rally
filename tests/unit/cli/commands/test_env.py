@@ -19,9 +19,9 @@ import json
 from unittest import mock
 import uuid
 
+from rally import exceptions
 from rally.cli.commands import env
 from rally.env import env_mgr
-from rally import exceptions
 from tests.unit import test
 
 

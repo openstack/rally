@@ -21,12 +21,13 @@ import typing as t
 
 from rally.common import cfg
 from rally.common import logging
-from rally.common.plugin import plugin
 from rally.common import utils
 from rally.common import validation
+from rally.common.plugin import plugin
 from rally.task import atomic
 from rally.task import functional
 from rally.task import utils as task_utils
+
 
 if t.TYPE_CHECKING:  # pragma: no cover
     C = t.TypeVar("C", bound="BaseContext")

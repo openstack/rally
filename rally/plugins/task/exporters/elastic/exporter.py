@@ -18,13 +18,14 @@ import itertools
 import json
 import os
 
-from rally.common import logging
-from rally.common import validation
 from rally import consts
 from rally import exceptions
+from rally.common import logging
+from rally.common import validation
 from rally.plugins.task.exporters.elastic import client
 from rally.plugins.task.exporters.elastic import flatten
 from rally.task import exporter
+
 
 LOG = logging.getLogger(__name__)
 

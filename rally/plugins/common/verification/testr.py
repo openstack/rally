@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.plugins.verification.testr import *  # noqa: F401,F403
+from rally.plugins.verification.testr import *  # noqa: F401,F403,I001
 from rally.plugins.verification import testr as _new
 
 # import it as last item to be sure that we use the right module

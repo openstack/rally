@@ -15,6 +15,7 @@ from unittest import mock
 from rally.plugins.task.scenarios.requests import http_requests
 from tests.unit import test
 
+
 SCN = "rally.plugins.task.scenarios"
 
 

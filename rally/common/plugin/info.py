@@ -19,6 +19,7 @@ import re
 import sys
 import typing as t
 
+
 if t.TYPE_CHECKING:
     from rally.common.plugin import plugin
 

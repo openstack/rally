@@ -18,6 +18,7 @@ import re
 from rally.common.plugin import plugin
 from rally.task import context
 
+
 # all VerifierContexts should be always hidden
 configure = functools.partial(context.configure, hidden=True)
 

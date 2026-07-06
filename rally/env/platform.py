@@ -12,9 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.common.plugin import plugin
 from rally.common import utils
 from rally.common import validation
+from rally.common.plugin import plugin
 
 
 class _PlatformStatus(utils.ImmutableMixin, utils.EnumMixin):

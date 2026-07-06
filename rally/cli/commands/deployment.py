@@ -21,14 +21,14 @@ import sys
 
 import jsonschema
 
+from rally import exceptions
+from rally import plugins
 from rally.cli import cliutils
 from rally.cli import envutils
 from rally.cli import yamlutils as yaml
 from rally.common import logging
 from rally.common import utils
 from rally.env import env_mgr
-from rally import exceptions
-from rally import plugins
 
 
 class DeploymentCommands(object):

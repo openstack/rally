@@ -19,12 +19,12 @@ import hashlib
 import itertools
 import json
 
-from rally.common import objects
-from rally.common.plugin import plugin
-from rally.common import version
 from rally import exceptions
-from rally.task.processing import charts
+from rally.common import objects
+from rally.common import version
+from rally.common.plugin import plugin
 from rally.task import scenario
+from rally.task.processing import charts
 from rally.ui import utils as ui_utils
 
 

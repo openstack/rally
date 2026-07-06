@@ -24,11 +24,11 @@ import ddt
 
 import rally
 from rally import api
-from rally.cli import cliutils
-from rally.cli.commands import task
-from rally.cli import yamlutils as yaml
 from rally import consts
 from rally import exceptions
+from rally.cli import cliutils
+from rally.cli import yamlutils as yaml
+from rally.cli.commands import task
 from tests.unit import fakes
 from tests.unit import test
 

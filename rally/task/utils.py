@@ -19,9 +19,9 @@ import traceback
 
 import jsonschema
 
-from rally.common import logging
 from rally import consts
 from rally import exceptions
+from rally.common import logging
 
 
 LOG = logging.getLogger(__name__)

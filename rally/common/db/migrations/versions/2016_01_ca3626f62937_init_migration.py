@@ -27,9 +27,10 @@ import typing as t
 from alembic import op
 import sqlalchemy as sa
 
+from rally import exceptions
 from rally.common.db import api
 from rally.common.db import sa_types
-from rally import exceptions
+
 
 if t.TYPE_CHECKING:
     import sqlalchemy.schema

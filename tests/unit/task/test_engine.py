@@ -20,9 +20,9 @@ import itertools
 import threading
 from unittest import mock
 
-from rally.common import objects
 from rally import consts
 from rally import exceptions
+from rally.common import objects
 from rally.task import context
 from rally.task import engine
 from rally.task import scenario

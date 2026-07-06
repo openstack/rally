@@ -14,9 +14,9 @@
 import functools
 import inspect
 
+from rally import exceptions
 from rally.common.plugin import discover
 from rally.common.plugin import meta
-from rally import exceptions
 from rally.task import atomic
 
 

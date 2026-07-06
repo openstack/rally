@@ -24,11 +24,12 @@ Create Date: 2016-07-24 14:53:39.323105
 
 from __future__ import annotations
 
-from alembic import op  # noqa
-import sqlalchemy as sa  # noqa
+from alembic import op
+import sqlalchemy as sa
 
-from rally.common.db import sa_types
 from rally import exceptions
+from rally.common.db import sa_types
+
 
 # revision identifiers, used by Alembic.
 revision = "54e844ebfbc3"

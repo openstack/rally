@@ -23,9 +23,10 @@ from __future__ import annotations
 
 import typing as t
 
-from rally.common import streaming_algorithms
 from rally import consts
+from rally.common import streaming_algorithms
 from rally.task import sla
+
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from rally.task import runner

@@ -18,8 +18,9 @@ from unittest import mock
 
 from rally.common import version as rally_version
 from rally.plugins.task.exporters import json_exporter
-from tests.unit.plugins.task.exporters import dummy_data
 from tests.unit import test
+from tests.unit.plugins.task.exporters import dummy_data
+
 
 PATH = "rally.plugins.task.exporters.json_exporter"
 

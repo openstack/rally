@@ -16,8 +16,8 @@ import collections
 import json
 import re
 
-from rally.common.io import junit
 from rally import consts
+from rally.common.io import junit
 from rally.ui import utils as ui_utils
 from rally.verification import reporter
 

@@ -15,9 +15,9 @@ from __future__ import annotations
 import random
 import typing as t
 
+from rally import exceptions
 from rally.common import utils
 from rally.common import validation
-from rally import exceptions
 from rally.task import atomic
 from rally.task import scenario
 

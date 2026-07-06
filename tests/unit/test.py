@@ -13,17 +13,18 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import fixtures
-from fixtures._fixtures.tempdir import TempDir
 import os
 import unittest
 from unittest import mock
 import uuid
 
-from oslo_config import fixture as cfg_fixture  # noqa N311
+import fixtures
+from fixtures._fixtures.tempdir import TempDir
 
-from rally.common import db
+from oslo_config import fixture as cfg_fixture  # noqa: TID251
+
 from rally import plugins
+from rally.common import db
 
 
 class TempHomeDir(TempDir):

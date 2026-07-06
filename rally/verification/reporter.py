@@ -23,8 +23,8 @@ import abc
 
 import jsonschema
 
-from rally.common.plugin import plugin
 from rally import consts
+from rally.common.plugin import plugin
 
 
 configure = plugin.configure

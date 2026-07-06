@@ -21,6 +21,7 @@ Create Date: 2016-09-12 15:47:11.279610
 """
 
 from __future__ import annotations
+
 import json
 
 from alembic import op

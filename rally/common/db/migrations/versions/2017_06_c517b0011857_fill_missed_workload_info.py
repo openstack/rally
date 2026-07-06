@@ -24,6 +24,7 @@ Create Date: 2017-06-22 18:46:09.281312
 
 from rally import exceptions
 
+
 # revision identifiers, used by Alembic.
 revision = "c517b0011857"
 down_revision = "35fe16d4ab1c"

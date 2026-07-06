@@ -24,6 +24,7 @@ from alembic import op
 
 from rally import exceptions
 
+
 # revision identifiers, used by Alembic.
 revision = "9a18c6fe265c"
 down_revision = "046a38742e89"

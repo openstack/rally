@@ -20,6 +20,7 @@ from rally.task import context
 from rally.task import engine
 from rally.task import scenario
 
+
 CONF = cfg.CONF
 
 

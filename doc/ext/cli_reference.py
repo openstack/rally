@@ -18,9 +18,10 @@ import inspect
 
 from docutils.parsers import rst
 
-from . import utils
 from rally.cli import cliutils
 from rally.cli import main
+
+from . import utils
 
 
 class Parser(object):

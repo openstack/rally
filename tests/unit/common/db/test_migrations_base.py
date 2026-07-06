@@ -33,6 +33,7 @@ from rally.common import cfg
 from rally.common import db
 from rally.common import logging
 
+
 LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
 

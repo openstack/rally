@@ -26,10 +26,10 @@ import prettytable
 import sqlalchemy.exc
 
 from rally import api
+from rally import exceptions
 from rally.common import cfg
 from rally.common import logging
 from rally.common.plugin import info
-from rally import exceptions
 from rally.utils import encodeutils
 
 

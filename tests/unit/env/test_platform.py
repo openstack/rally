@@ -16,7 +16,6 @@ import jsonschema
 
 from rally.env import env_mgr
 from rally.env import platform
-
 from tests.unit import test
 
 

@@ -25,10 +25,10 @@ import sys
 import packaging
 import packaging.requirements
 
-from rally.common.io import subunit_v2
-from rally.common import logging
-from rally.common.plugin import plugin
 from rally import exceptions
+from rally.common import logging
+from rally.common.io import subunit_v2
+from rally.common.plugin import plugin
 from rally.verification import context
 from rally.verification import utils
 

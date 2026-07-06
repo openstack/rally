@@ -19,13 +19,14 @@ from unittest import mock
 import ddt
 import sqlalchemy.exc
 
+from rally import exceptions
 from rally.cli import cliutils
 from rally.cli.commands import deployment
 from rally.cli.commands import task
 from rally.cli.commands import verify
 from rally.common import cfg
-from rally import exceptions
 from tests.unit import test
+
 
 CONF = cfg.CONF
 

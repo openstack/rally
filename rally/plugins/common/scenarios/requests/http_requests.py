@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.plugins.task.scenarios.requests.http_requests import *  # noqa: F401,F403,E501
+from rally.plugins.task.scenarios.requests.http_requests import *  # noqa: F401,F403,E501,I001
 from rally.plugins.task.scenarios.requests import http_requests as _new
 
 # import it as last item to be sure that we use the right module

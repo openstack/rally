@@ -19,17 +19,19 @@ import abc
 import collections
 import threading
 import typing as t
+
 import typing_extensions as te
 
-from rally.common import logging
-from rally.common.plugin import plugin
-from rally.common import utils as rutils
-from rally.common import validation
 from rally import consts
 from rally import exceptions
-from rally.task.processing import charts
+from rally.common import logging
+from rally.common import utils as rutils
+from rally.common import validation
+from rally.common.plugin import plugin
 from rally.task import scenario
 from rally.task import utils
+from rally.task.processing import charts
+
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from rally.common import objects

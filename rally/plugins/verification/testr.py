@@ -18,10 +18,10 @@ import shutil
 import subprocess
 import typing as t
 
-from rally.common.io import subunit_v2
+from rally import exceptions
 from rally.common import logging
 from rally.common import utils as common_utils
-from rally import exceptions
+from rally.common.io import subunit_v2
 from rally.verification import context
 from rally.verification import manager
 from rally.verification import utils

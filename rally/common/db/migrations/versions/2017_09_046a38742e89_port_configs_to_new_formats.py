@@ -28,6 +28,7 @@ import sqlalchemy as sa
 
 from rally import exceptions
 
+
 # revision identifiers, used by Alembic.
 revision = "046a38742e89"
 down_revision = "fab4f4f31f8a"

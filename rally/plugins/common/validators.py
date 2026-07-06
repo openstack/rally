@@ -20,16 +20,17 @@ import typing as t
 
 import jsonschema
 
+from rally import exceptions
 from rally.common import logging
 from rally.common import validation
-from rally import exceptions
 from rally.task import context as context_lib
 
+
 if t.TYPE_CHECKING:  # pragma: no cover
+    import jsonschema.protocols
+
     from rally.common.plugin import plugin
     from rally.task import scenario
-
-    import jsonschema.protocols
 
 LOG = logging.getLogger(__name__)
 

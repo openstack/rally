@@ -12,12 +12,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from docutils import frontend
-from docutils.parsers import rst
-from docutils import utils
 import sys
-
 from unittest import mock
+
+from docutils import frontend
+from docutils import utils
+from docutils.parsers import rst
 
 
 @mock.patch.object(sys, "stderr")

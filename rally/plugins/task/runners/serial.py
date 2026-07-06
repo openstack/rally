@@ -17,9 +17,10 @@ from __future__ import annotations
 
 import typing as t
 
-from rally.common import utils as rutils
 from rally import consts
+from rally.common import utils as rutils
 from rally.task import runner
+
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from rally.task import scenario

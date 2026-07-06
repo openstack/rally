@@ -23,8 +23,8 @@ Create Date: 2017-07-22 08:45:25.726422
 from alembic import op
 import sqlalchemy as sa
 
-
 from rally import exceptions
+
 
 # revision identifiers, used by Alembic.
 revision = "7948b83229f6"

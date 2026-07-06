@@ -26,6 +26,7 @@ import typing as t
 from rally import consts
 from rally.task import sla
 
+
 if t.TYPE_CHECKING:  # pragma: no cover
     from rally.task import runner
 

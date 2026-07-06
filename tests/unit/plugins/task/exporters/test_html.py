@@ -16,8 +16,9 @@ import os
 from unittest import mock
 
 from rally.plugins.task.exporters import html
-from tests.unit.plugins.task.exporters import dummy_data
 from tests.unit import test
+from tests.unit.plugins.task.exporters import dummy_data
+
 
 PATH = "rally.plugins.task.exporters.html"
 

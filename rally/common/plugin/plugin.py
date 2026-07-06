@@ -18,10 +18,10 @@ from __future__ import annotations
 import sys
 import typing as t
 
+from rally import exceptions
 from rally.common.plugin import discover
 from rally.common.plugin import info
 from rally.common.plugin import meta
-from rally import exceptions
 
 
 if t.TYPE_CHECKING:  # pragma: no cover

@@ -18,10 +18,12 @@ from __future__ import annotations
 import collections
 import functools
 import typing as t
+
 import typing_extensions as te
 
 from rally.common import logging
 from rally.common import utils
+
 
 LOG = logging.getLogger(__name__)
 

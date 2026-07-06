@@ -17,8 +17,8 @@ from unittest import mock
 
 import ddt
 
-from rally.common.plugin import plugin
 from rally.common import validation
+from rally.common.plugin import plugin
 from rally.plugins.common import validators
 from rally.plugins.task.contexts import dummy as dummy_ctx
 from tests.unit import test

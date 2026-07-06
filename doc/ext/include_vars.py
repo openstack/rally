@@ -13,8 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from docutils import nodes
 import json
+
+from docutils import nodes
 
 from oslo_utils import importutils
 

@@ -17,8 +17,9 @@ from unittest import mock
 
 from rally import exceptions
 from rally.plugins.task.exporters import old_json_results
-from tests.unit.plugins.task.exporters import dummy_data
 from tests.unit import test
+from tests.unit.plugins.task.exporters import dummy_data
+
 
 PATH = "rally.plugins.task.exporters.old_json_results"
 

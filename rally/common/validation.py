@@ -19,9 +19,10 @@ import abc
 import traceback
 import typing as t
 
+from rally import exceptions
 from rally.common import logging
 from rally.common.plugin import plugin
-from rally import exceptions
+
 
 if t.TYPE_CHECKING:  # pragma: no cover
     P = t.TypeVar("P", bound=plugin.Plugin)

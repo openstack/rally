@@ -17,8 +17,8 @@ import bisect
 import collections
 import math
 
-from rally.common.plugin import plugin
 from rally.common import streaming_algorithms as streaming
+from rally.common.plugin import plugin
 from rally.task import atomic
 from rally.task.processing import utils
 

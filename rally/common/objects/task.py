@@ -18,10 +18,10 @@ import copy
 import datetime as dt
 import uuid
 
-from rally.common import db
-from rally.common import logging
 from rally import consts
 from rally import exceptions
+from rally.common import db
+from rally.common import logging
 from rally.task.processing import charts
 
 
@@ -462,7 +462,7 @@ class Task(object):
                 return False
 
             type_ = type(result["output"][key])
-            if type_ != list:
+            if type_ is not list:
                 LOG.warning(
                     "Task %(uuid)s | Value of result['output']['%(key)s'] "
                     "has wrong type '%(type)s', must be 'list'"

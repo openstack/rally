@@ -17,9 +17,9 @@ import json
 import shlex
 import subprocess
 
-from rally.common import logging
 from rally import consts
 from rally import exceptions
+from rally.common import logging
 from rally.task import hook
 
 

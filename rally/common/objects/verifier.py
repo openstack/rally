@@ -13,9 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.common import db
 from rally import consts
 from rally import exceptions
+from rally.common import db
 from rally.verification import manager
 
 

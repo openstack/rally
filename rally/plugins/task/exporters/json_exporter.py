@@ -19,6 +19,7 @@ import json
 from rally.common import version as rally_version
 from rally.task import exporter
 
+
 TIMEFORMAT = "%Y-%m-%dT%H:%M:%S"
 
 

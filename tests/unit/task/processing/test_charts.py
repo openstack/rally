@@ -22,6 +22,7 @@ from rally.common.plugin import plugin
 from rally.task.processing import charts
 from tests.unit import test
 
+
 CHARTS = "rally.task.processing.charts."
 
 

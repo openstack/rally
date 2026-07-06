@@ -16,11 +16,12 @@
 Docutils is awful library. Let's apply some hacks and aliases to simplify usage
 """
 
+import string
+
 from docutils import frontend
 from docutils import nodes
-from docutils.parsers import rst
 from docutils import utils
-import string
+from docutils.parsers import rst
 
 
 def parse_text(text):

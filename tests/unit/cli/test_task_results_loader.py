@@ -18,6 +18,7 @@ from unittest import mock
 from rally.cli import task_results_loader
 from tests.unit import test
 
+
 PATH = "rally.cli.task_results_loader"
 
 

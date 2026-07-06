@@ -13,10 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.common import logging
 from rally import consts
-from rally.env import env_mgr
 from rally import exceptions
+from rally.common import logging
+from rally.env import env_mgr
 
 
 LOG = logging.getLogger(__name__)

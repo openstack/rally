@@ -18,6 +18,7 @@ import unittest
 
 import rally
 
+
 ROOT_DIR = os.path.dirname(os.path.dirname(rally.__file__))
 
 

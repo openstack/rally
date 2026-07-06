@@ -88,27 +88,6 @@ class HackingTestCase(test.TestCase):
         self.assertEqual(4, actual_number)
         self.assertTrue(actual_msg.startswith("N303"))
 
-    def test_check_wrong_logging_import(self):
-        bad_imports = ["from oslo_log import log",
-                       "import oslo_log",
-                       "import logging"]
-        good_imports = ["from rally.common import logging",
-                        "from rally.common.logging",
-                        "import rally.common.logging"]
-
-        for bad in bad_imports:
-            checkres = checks.check_import_of_logging(bad, "fakefile")
-            self.assertIsNotNone(next(checkres))
-
-        for bad in bad_imports:
-            checkres = checks.check_import_of_logging(
-                bad, "./rally/common/logging.py")
-            self.assertEqual([], list(checkres))
-
-        for good in good_imports:
-            checkres = checks.check_import_of_logging(good, "fakefile")
-            self.assertEqual([], list(checkres))
-
     def test_no_use_conf_debug_check(self):
         bad_samples = [
             "if CONF.debug:",
@@ -253,22 +232,6 @@ class HackingTestCase(test.TestCase):
         self._assert_bad_samples(checks.check_no_oslo_deprecated_import,
                                  bad_imports)
 
-    def test_check_quotas(self):
-        bad_lines = [
-            "a = '1'",
-            "a = \"a\" + 'a'",
-            "'",
-            "\"\"\"\"\"\" + ''''''"
-        ]
-        self._assert_bad_samples(checks.check_quotes, bad_lines)
-
-        good_lines = [
-            "\"'a'\" + \"\"\"a'''fdfd'''\"\"\"",
-            "\"fdfdfd\" + \"''''''\"",
-            "a = ''   # noqa "
-        ]
-        self._assert_good_samples(checks.check_quotes, good_lines)
-
     def test_check_no_constructor_data_struct(self):
         bad_struct = [
             "= dict()",
@@ -351,20 +314,6 @@ class HackingTestCase(test.TestCase):
 
         checkres = checks.check_objects_imports_in_cli(line, "./filename")
         self.assertRaises(StopIteration, next, checkres)
-
-    def test_check_datetime_alias(self):
-        lines = ["import datetime as date",
-                 "import datetime",
-                 "import datetime as dto",
-                 "from datetime import datetime as dtime"]
-
-        for line in lines:
-            checkres = checks.check_datetime_alias(line)
-            self.assertIsNotNone(next(checkres))
-            self.assertEqual([], list(checkres))
-
-        line = "import datetime as dt"
-        checks.check_datetime_alias(line)
 
     def test_check_log_warn(self):
         bad_samples = ["LOG.warn('foo')", "LOG.warn(_('bar'))"]

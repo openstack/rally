@@ -17,10 +17,10 @@ import copy
 
 import jsonschema
 
-from rally.common import cfg
-from rally.common import logging
 from rally import consts
 from rally import exceptions
+from rally.common import cfg
+from rally.common import logging
 from rally.task import scenario
 
 

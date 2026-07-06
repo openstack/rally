@@ -27,17 +27,18 @@ import uuid
 
 import alembic
 import jsonschema
-from oslo_db.sqlalchemy import test_migrations
-from oslo_db.sqlalchemy import utils as db_utils
 import sqlalchemy as sa
 
+from oslo_db.sqlalchemy import test_migrations
+from oslo_db.sqlalchemy import utils as db_utils
+
 import rally
+from rally import consts
 from rally.common import db
 from rally.common.db import models
-from rally import consts
 from rally.task import context
-from tests.unit.common.db import test_migrations_base
 from tests.unit import test as rtest
+from tests.unit.common.db import test_migrations_base
 
 
 def b(s):

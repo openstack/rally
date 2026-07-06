@@ -18,8 +18,8 @@ import multiprocessing
 from unittest import mock
 
 from rally import api
-from rally.common import utils as rally_utils
 from rally import consts
+from rally.common import utils as rally_utils
 from rally.task import context
 from rally.task import scenario
 

@@ -14,9 +14,9 @@
 #    under the License.
 """Contains the Rally objects."""
 
-from rally.common.objects.deploy import Deployment  # noqa
-from rally.common.objects.task import Subtask  # noqa
-from rally.common.objects.task import Task  # noqa
-from rally.common.objects.task import Workload  # noqa
-from rally.common.objects.verification import Verification  # noqa
-from rally.common.objects.verifier import Verifier  # noqa
+from rally.common.objects.deploy import Deployment  # noqa: F401
+from rally.common.objects.task import Subtask  # noqa: F401
+from rally.common.objects.task import Task  # noqa: F401
+from rally.common.objects.task import Workload  # noqa: F401
+from rally.common.objects.verification import Verification  # noqa: F401
+from rally.common.objects.verifier import Verifier  # noqa: F401

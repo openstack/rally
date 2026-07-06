@@ -17,7 +17,9 @@
 from __future__ import annotations
 
 import typing as t
+
 import typing_extensions as te
+
 
 if t.TYPE_CHECKING:  # pragma: no cover
     import datetime as dt

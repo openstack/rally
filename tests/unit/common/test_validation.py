@@ -15,9 +15,9 @@
 
 import ddt
 
-from rally.common.plugin import plugin
-from rally.common import validation
 from rally import exceptions
+from rally.common import validation
+from rally.common.plugin import plugin
 from tests.unit import test
 
 

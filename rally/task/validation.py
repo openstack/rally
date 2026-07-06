@@ -16,5 +16,6 @@
 
 from rally.common import validation
 
+
 # TODO(astudenov): remove after deprecating all old validators
 add = validation.add

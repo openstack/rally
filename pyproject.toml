@@ -286,3 +286,92 @@ disable_error_code = ["no-untyped-def"]
 [[tool.mypy.overrides]]
 module = "rally.verification.utils"
 disable_error_code = ["assignment", "method-assign", "no-untyped-def"]
+
+[tool.ruff]
+line-length = 79
+target-version = "py310"
+
+[tool.ruff.lint]
+# Ruff owns pycodestyle (E/W) and pyflakes (F); flake8 runs the remaining
+# hacking (H) and Rally-specific (N3xx) checks. The rest of the selections
+# enforce Rally's style and import conventions.
+select = [
+    "E",       # pycodestyle errors
+    "W",       # pycodestyle warnings
+    "F",       # pyflakes
+    "I",       # isort: import grouping and ordering
+    "Q000",    # double-quoted inline strings
+    "Q001",    # double-quoted multiline strings
+    "Q002",    # double-quoted docstrings
+    "ICN001",  # import aliases follow the conventions below
+    "ICN003",  # forbid `from <module> import ...` for modules imported whole
+    "PGH003",  # `type: ignore` must name the specific error code
+    "PGH004",  # `noqa` must name the specific rule code
+    "TID251",  # forbid the APIs banned below
+]
+ignore = [
+    "E731",    # do not assign a lambda expression, use a def
+]
+
+[tool.ruff.lint.isort]
+# Imports are grouped: stdlib, third-party, OpenStack (oslo & friends), then
+# Rally's own code (rally + tests).
+known-first-party = ["rally", "tests"]
+force-single-line = true
+force-sort-within-sections = true
+lines-after-imports = 2
+section-order = [
+    "future",
+    "standard-library",
+    "third-party",
+    "openstack",
+    "first-party",
+    "local-folder",
+]
+
+[tool.ruff.lint.isort.sections]
+openstack = ["oslo_config", "oslo_db", "oslo_log", "oslo_utils", "subunit"]
+
+[tool.ruff.lint.flake8-quotes]
+inline-quotes = "double"
+multiline-quotes = "double"
+docstring-quotes = "double"
+
+[tool.ruff.lint.flake8-import-conventions.aliases]
+datetime = "dt"
+typing = "t"
+typing_extensions = "te"
+
+[tool.ruff.lint.flake8-import-conventions]
+# Builtins are imported as modules: forbid `from <stdlib> import ...` so the
+# standard library is imported whole (e.g. `import os`, then `os.path`).
+# `__future__` and `unittest` (`from unittest import mock`) stay allowed, as
+# does `importlib` (`from importlib.metadata import version`).
+banned-from = [
+    "abc", "argparse", "ast", "asyncio", "base64", "bisect", "builtins",
+    "calendar", "cmath", "codecs", "collections", "configparser",
+    "contextlib", "copy", "csv", "ctypes", "dataclasses", "datetime",
+    "decimal", "difflib", "dis", "email", "enum", "errno", "functools", "gc",
+    "getpass", "gettext", "glob", "gzip", "hashlib", "heapq", "hmac", "html",
+    "http", "inspect", "io", "ipaddress", "itertools", "json", "logging",
+    "math", "mimetypes", "multiprocessing", "numbers", "operator", "os",
+    "pathlib", "pickle", "platform", "pprint", "queue", "random", "re",
+    "secrets", "select", "shlex", "shutil", "signal", "socket", "sqlite3",
+    "ssl", "stat", "string", "struct", "subprocess", "sys", "tempfile",
+    "textwrap", "threading", "time", "token", "tokenize", "traceback",
+    "types", "typing", "typing_extensions", "unicodedata", "urllib", "uuid",
+    "warnings", "weakref", "xml", "zipfile", "zlib",
+]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"logging".msg = "Use rally.common.logging instead."
+"oslo_log".msg = "Use rally.common.logging instead of oslo_log."
+"oslo_config".msg = "Use rally.common.cfg instead of oslo_config."
+
+[tool.ruff.lint.per-file-ignores]
+# modules that legitimately touch the logging/config libraries directly
+"rally/common/logging.py" = ["TID251"]
+"rally/common/cfg.py" = ["TID251"]
+"tests/unit/common/test_logging.py" = ["TID251"]
+"tests/ci/rally_verify.py" = ["TID251"]
+"tests/ci/sync_requirements.py" = ["TID251"]
