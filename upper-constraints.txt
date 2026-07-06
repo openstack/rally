@@ -4,7 +4,7 @@ bcrypt===4.0.1
 certifi===2025.7.14
 cffi===1.17.1
 charset-normalizer===3.4.2
-cryptography===43.0.3
+cryptography===48.0.1
 debtcollector===3.0.0
 distlib===0.4.0
 filelock===3.18.0
