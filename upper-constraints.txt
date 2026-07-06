@@ -9,7 +9,7 @@ debtcollector===3.0.0
 distlib===0.4.0
 filelock===3.18.0
 greenlet===3.2.3
-idna===3.10
+idna===3.15
 iso8601===2.1.0
 Jinja2===3.1.6
 jsonschema===4.25.0
