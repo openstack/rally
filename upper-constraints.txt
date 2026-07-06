@@ -53,7 +53,7 @@ testscenarios===0.5.0
 testtools===2.7.2
 typing_extensions===4.14.1
 tzdata===2025.2
-urllib3===1.26.20
+urllib3===2.7.0
 virtualenv===20.31.2
 wcwidth===0.2.13
 wrapt===1.17.2
