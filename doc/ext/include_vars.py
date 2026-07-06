@@ -26,7 +26,7 @@ def include_var(name, rawtext, text, lineno, inliner, options=None,
 
     :param name: The local name of the interpreted role, the role name
                  actually used in the document.
-    :param rawtext: A string containing the enitre interpreted text input,
+    :param rawtext: A string containing the entire interpreted text input,
                     including the role and markup. Return it as a problematic
                     node linked to a system message if a problem is
                     encountered.

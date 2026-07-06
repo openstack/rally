@@ -28,6 +28,17 @@ RETURNS_REGEX = re.compile(":returns: (?P<doc>.*)", re.S)
 PARAM_REGEX = re.compile(r":param (?P<name>[\*\w]+): (?P<doc>.*?)"
                          r"(?:(?=:param)|(?=:return)|(?=:raises)|\Z)", re.S)
 
+# jsonschema primitive type -> short human label, shared by the CLI
+# (`rally plugin show`) and the Sphinx plugin reference.
+JSON_SCHEMA_TYPE_LABELS = {
+    "boolean": "bool",
+    "string": "str",
+    "number": "float",
+    "integer": "int",
+    "array": "list",
+    "object": "dict"
+}
+
 
 def trim(docstring: str) -> str:
     """trim function from PEP-257"""
@@ -82,16 +93,7 @@ class _DocstringInfo(t.TypedDict):
 
 
 def parse_docstring(docstring: str | None) -> _DocstringInfo:
-    """Parse the docstring into its components.
-
-    :returns: a dictionary of form
-              {
-                  "short_description": ...,
-                  "long_description": ...,
-                  "params": [{"name": ..., "doc": ...}, ...],
-                  "returns": ...
-              }
-    """
+    """Parse the docstring into its components."""
 
     short_description = long_description = returns = ""
     params: list[_ParamInfo] = []
@@ -139,7 +141,7 @@ class _PluginInfo(t.TypedDict):
     title: str
     description: str
     parameters: list[_ParamInfo]
-    schema: str | None
+    schema: dict[str, t.Any] | None
     returns: str
 
 
@@ -149,16 +151,41 @@ class InfoMixin:
     def _get_doc(cls) -> str | None:
         """Return documentary of class
 
-        By default it returns docstring of class, but it can be overridden
+        By default, it returns docstring of class, but it can be overridden
         for example for cases like merging own docstring with parent
         """
         return cls.__doc__
+
+    @classmethod
+    def get_title(  # type: ignore[misc]
+        cls: type[plugin.Plugin]
+    ) -> str:
+        """Return the plugin's short one-line description.
+
+        Cheaper than ``get_info()`` for plugins whose ``get_info`` does extra
+        work (e.g. scenarios build an argument schema); used by
+        ``rally plugin list``. Such plugins should override this to bypass that
+        work.
+        """
+        return cls.get_info()["title"]
 
     @classmethod
     def get_info(  # type: ignore[misc]
         cls: type[plugin.Plugin]
     ) -> _PluginInfo:
         doc = parse_docstring(cls._get_doc())
+
+        schema = getattr(cls, "CONFIG_SCHEMA", None)
+        # some schema is better than nothing :)
+        if schema is None and doc["params"]:
+            schema = {
+                "type": "object",
+                "additionalProperties": True,
+                "properties": dict(
+                    (p["name"],  {"description": p["doc"]} if p["doc"] else {})
+                    for p in doc["params"]
+                )
+            }
 
         return {
             "name": cls.get_name(),
@@ -167,6 +194,6 @@ class InfoMixin:
             "title": doc["short_description"],
             "description": doc["long_description"],
             "parameters": doc["params"],
-            "schema": getattr(cls, "CONFIG_SCHEMA", None),
+            "schema": schema,
             "returns": doc["returns"]
         }

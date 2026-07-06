@@ -53,6 +53,15 @@ Changed
   pyflakes and import-convention checks, while flake8 keeps the remaining
   hacking and Rally-specific rules.
 
+* Scenario ``run()`` arguments can be validated and documented from their Python
+  type annotations. See the scenario plugin docs for the supported annotations.
+
+* ``rally plugin show`` now lists the ``CONFIG_SCHEMA`` parameters of any plugin
+  (contexts, runners, SLAs), not only scenarios.
+
+* New ``[DEFAULT]strict_type_annotations`` option to fail, rather than warn, on a
+  scenario argument type Rally cannot map to a JSON Schema.
+
 Deprecated
 ~~~~~~~~~~
 

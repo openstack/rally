@@ -88,11 +88,13 @@ class ArgsValidator(validation.Validator):
                 and p.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD)
         ]
 
-        hint_msg = (" Use `rally plugin show --name %s --platform %s` "
-                    "to display scenario description." % (name, platform))
+        hint_msg = (f" Use `rally plugin show --name {name} --platform "
+                    f"{platform}` to display scenario description.")
 
-        if config is not None and "args" in config:
-            missed_args = sorted(set(missed_args) - set(config["args"]))
+        args = config.get("args", {}) if config is not None else {}
+
+        # keep run()-signature order (the comprehension above is ordered)
+        missed_args = [a for a in missed_args if a not in args]
         if missed_args:
             msg = ("Argument(s) '%(args)s' should be specified in task config."
                    "%(hint)s" % {"args": "', '".join(missed_args),
@@ -104,13 +106,29 @@ class ArgsValidator(validation.Validator):
             if p.kind == inspect.Parameter.VAR_KEYWORD
         )
 
-        if not support_kwargs and config is not None and "args" in config:
-            redundant_args = [p for p in config["args"] if p not in args_spec]
+        if not support_kwargs:
+            redundant_args = [p for p in args if p not in args_spec]
             if redundant_args:
                 msg = ("Unexpected argument(s) found ['%(args)s'].%(hint)s" %
                        {"args": "', '".join(redundant_args),
                         "hint": hint_msg})
                 self.fail(msg)
+
+        # Validate each provided arg against its schema separately (so the
+        # error points at a single argument). The schema is the same one
+        # exposed by get_info()["schema"]; description-only properties (e.g.
+        # unannotated args) carry no constraint and accept any value.
+        schema = scenario_cls.get_info().get("schema") or {}
+        for arg_name, prop in schema.get("properties", {}).items():
+            if arg_name not in args:
+                continue
+            try:
+                jsonschema.validate(args[arg_name], prop)
+            except jsonschema.ValidationError as e:
+                # use .message (not str(e)) to keep the error concise
+                self.fail(
+                    f"Argument '{arg_name}' is invalid: {e.message}{hint_msg}"
+                )
 
 
 @validation.configure(name="required_params")

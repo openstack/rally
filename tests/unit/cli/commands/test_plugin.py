@@ -13,8 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import typing as t
+
 from rally import exceptions
+from rally.cli.commands import plugin as plugin_cmd
 from rally.common.plugin import plugin
+from rally.task import scenario
 from tests.unit.cli import test
 
 
@@ -70,6 +74,29 @@ class PluginCommandsTestCase(test.CLITestCase):
         self.assertIn("DESCRIPTION\n\tDescription of T1", result.output)
         self.assertIn("PARAMETERS", result.output)
 
+    def test_show_scenario_renders_annotation_types(self):
+
+        @scenario.configure(name="Dummy.cli_typed", platform="cli_test")
+        class TypedScenario(scenario.Scenario):
+            def run(self,
+                    count: t.Annotated[int, scenario.Field(ge=1)] = 1):
+                """Do it.
+
+                :param count: how many
+                """
+
+        self.addCleanup(TypedScenario.unregister)
+
+        result = self.invoke(
+            ["plugin", "show", "Dummy.cli_typed", "--platform", "cli_test"])
+
+        self.assertEqual(0, result.exit_code, result.output)
+        self.assertIn("PARAMETERS", result.output)
+        # the annotation-derived schema populates the new "type" column.
+        self.assertIn("type", result.output)
+        self.assertIn("count", result.output)
+        self.assertIn("int", result.output)
+
     def test_show_not_found(self):
         for args, text in (
             (["nonex"], "Plugin nonex not found at any platform"),
@@ -113,3 +140,41 @@ class PluginCommandsTestCase(test.CLITestCase):
                 self.assertEqual(0, result.exit_code, result.output)
                 self.assertIn(present, result.output)
                 self.assertNotIn(absent, result.output)
+
+    def test_list_by_plugin_base(self):
+        # --plugin-base narrows the listing to a base class
+        result = self.invoke(["plugin", "list", "--platform", "p2_ns",
+                              "--plugin-base", "Plugin"])
+        self.assertEqual(0, result.exit_code, result.output)
+        self.assertIn("p2", result.output)
+
+        result = self.invoke(["plugin", "list", "--platform", "p2_ns",
+                              "--plugin-base", "Nonexistent"])
+        self.assertEqual(0, result.exit_code, result.output)
+        self.assertIn("not found", result.output)
+
+    def test_show_config_schema_without_properties(self):
+        # a schema that carries no "properties" falls back to the docstring
+        # parameters for the PARAMETERS listing
+        @plugin.configure("p_cfg_noprops", "p1_ns")
+        class NoProps(plugin.Plugin):
+            """No props.
+
+            :param z: z arg
+            """
+            CONFIG_SCHEMA = {"type": "object", "additionalProperties": True}
+
+        self.addCleanup(NoProps.unregister)
+        result = self.invoke(["plugin", "show", "p_cfg_noprops",
+                              "--platform", "p1_ns"])
+        self.assertEqual(0, result.exit_code, result.output)
+        self.assertIn("PARAMETERS", result.output)
+        self.assertIn("z arg", result.output)
+
+    def test_schema_type_label(self):
+        label = plugin_cmd._schema_type_label
+        self.assertEqual("", label({}))
+        self.assertEqual("Enum[a, b]", label({"enum": ["a", "b"]}))
+        self.assertEqual("int", label({"type": "integer"}))
+        self.assertEqual("int", label({"type": ["integer", "null"]}))
+        self.assertEqual("int/str", label({"type": ["integer", "string"]}))

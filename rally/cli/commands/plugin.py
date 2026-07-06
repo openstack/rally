@@ -22,12 +22,30 @@ from rally import plugins
 from rally.cli import argutils
 from rally.cli import cliutils
 from rally.common import utils
+from rally.common.plugin import info as plugin_info
 from rally.common.plugin import plugin
 
 
 plugin_app = typer.Typer(
     name="plugin", no_args_is_help=False,
     help="Discover and inspect installed plugins.")
+
+
+def _schema_type_label(prop: dict) -> str:
+    """Short type label for an arg schema property (blank if not simple)."""
+    if not prop:
+        return ""
+    if "enum" in prop:
+        values = ", ".join(str(v) for v in prop["enum"])
+        return f"Enum[{values}]"
+    labels = plugin_info.JSON_SCHEMA_TYPE_LABELS
+    json_type = prop.get("type")
+    if isinstance(json_type, list):  # e.g. ["integer", "null"], ["int", "str"]
+        parts = [labels.get(j, "") for j in json_type if j != "null"]
+        return "/".join(p for p in parts if p)
+    if not json_type:
+        return ""
+    return labels.get(json_type, "")
 
 
 def _print_plugins_list(plugin_list: list) -> None:
@@ -84,7 +102,25 @@ def show(
         if plugin_info["description"]:
             print("DESCRIPTION\n\t", end="")
             print("\n\t".join(plugin_info["description"].split("\n")))
-        if plugin_info["parameters"]:
+        schema = plugin_info["schema"]
+        props = schema.get("properties") if isinstance(schema, dict) else None
+        if props:
+            # render the argument/config schema: name, type (Any when not
+            # constrained to a simple type) and description.
+            print("PARAMETERS")
+            rows = []
+            for name, prop in props.items():
+                prop = prop if isinstance(prop, dict) else {}
+                rows.append(utils.Struct(
+                    name=name,
+                    type=_schema_type_label(prop) or "Any",
+                    description=prop.get("description", "")))
+            cliutils.print_list(rows,
+                                fields=["name", "type", "description"],
+                                sortby_index=None)
+        elif plugin_info["parameters"]:
+            # no schema (e.g. an un-annotated scenario), so fall back to the
+            # docstring parameters.
             print("PARAMETERS")
             rows = [utils.Struct(name=p["name"], description=p["doc"])
                     for p in plugin_info["parameters"]]

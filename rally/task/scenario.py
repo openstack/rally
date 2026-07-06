@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import copy
+import inspect
 import random
 import typing as t
 
@@ -28,9 +29,12 @@ from rally.common.plugin import plugin
 from rally.task import atomic
 from rally.task import functional
 from rally.task.processing import charts
+from rally.utils import typeutils
 
 
 if t.TYPE_CHECKING:  # pragma: no cover
+    from rally.common.plugin import info
+
     S = t.TypeVar("S", bound="Scenario")
 
 
@@ -43,9 +47,21 @@ CONF_OPTS = [
              "the generated random string. It must contain two separate "
              "segments of at least three 'X's; the first one will be replaced "
              "by a portion of the owner ID (i.e task/subtask ID), and the "
-             "second will be replaced with a random string.")
+             "second will be replaced with a random string."),
+    cfg.BoolOpt(
+        "strict_type_annotations",
+        default=False,
+        help="Control how a scenario run() argument annotated with a type "
+             "that Rally cannot map to a JSON Schema is handled. When False "
+             "(default), such an argument is treated as unconstrained (any "
+             "value is accepted) and a warning is logged. When True, building "
+             "the scenario's argument schema raises an error instead."),
 ]
 CONF.register_opts(CONF_OPTS)
+
+# re-exported so scenario plugins can write ``scenario.Field(...)`` next to
+# ``scenario.configure`` in run() annotations
+Field = typeutils.Field
 
 
 def configure(
@@ -228,3 +244,116 @@ class Scenario(plugin.Plugin,
     def _get_doc(cls) -> str:
         """Get scenario documentation from run method."""
         return cls.run.__doc__ or ""
+
+    @classmethod
+    def _arg_property_schemas(cls) -> tuple[dict[str, t.Any], bool]:
+        """Return the per-argument schemas and whether extra args are allowed.
+
+        The schemas come from the ``run()`` type annotations. An argument bound
+        to a converter (``@types.convert``) is left unconstrained, since the
+        user supplies the pre-conversion spec rather than the post-conversion
+        ``run()`` type. The flag is True when ``run()`` accepts ``**kwargs``.
+        """
+        properties: dict[str, t.Any] = {}
+        additional = False
+
+        try:
+            hints = t.get_type_hints(cls.run, include_extras=True)
+        except Exception as e:
+            LOG.debug(f"Cannot resolve type hints for {cls.__name__}.run(): "
+                      f"{e}")
+            return properties, additional
+
+        for name, param in inspect.signature(cls.run).parameters.items():
+            if name in ("self", "cls"):
+                continue
+            if param.kind == inspect.Parameter.VAR_KEYWORD:
+                additional = True  # **kwargs -> extra args allowed
+                continue
+            if param.kind == inspect.Parameter.VAR_POSITIONAL:
+                continue
+            if name in hints:
+                try:
+                    schema = typeutils.hint_to_schema(hints[name])
+                except typeutils.UnsupportedType:
+                    if CONF.strict_type_annotations:
+                        raise exceptions.InvalidScenarioArgument(
+                            f"'{name}' has an unsupported type annotation: "
+                            f"{hints[name]!r}"
+                        )
+                    LOG.warning(
+                        f"Scenario argument '{name}' has an unsupported "
+                        f"type annotation {hints[name]!r}; "
+                        f"it is not validated (treated as 'Any'). "
+                        f"Set [DEFAULT]strict_type_annotations=True "
+                        f"to fail instead."
+                    )
+                    schema = None
+
+                if schema is not None:
+                    properties[name] = schema
+
+        preprocessors: dict[str, t.Any] = cls._meta_get("preprocessors",
+                                                        default={})
+        for arg in preprocessors:
+            properties[arg] = {}  # converted arg: pre-conversion spec is Any
+
+        return properties, additional
+
+    @classmethod
+    def get_title(cls) -> str:
+        # `rally plugin list` only needs the title, so skip the
+        # argument-schema build that get_info would otherwise do.
+        return super(Scenario, cls).get_info()["title"]
+
+    @classmethod
+    def get_info(cls) -> info._PluginInfo:
+        """Expose the scenario ``args`` as ``info["schema"]``.
+
+        The schema is an object covering both the typed/converter arguments and
+        the documented parameters: the annotation or converter schema where we
+        have one, plus the docstring ``:param`` text as a ``description``. Both
+        argument validation and the docs/``plugin show`` renderers read from
+        this single place (``parameters`` is still populated for backward
+        compatibility).
+
+        A ``:param`` that names no real ``run()`` argument (with no
+        ``**kwargs`` to absorb it) is a docstring/signature mismatch. It is
+        still surfaced in the schema so the docs keep it, but a warning is
+        logged (or an error, under strict-type-annotations mode).
+        """
+        plugin_info = super(Scenario, cls).get_info()
+        arg_props, additional = cls._arg_property_schemas()
+        docs = {p["name"]: p["doc"] for p in plugin_info["parameters"]}
+        if arg_props or docs:
+            if not additional:
+                # no **kwargs -> every documented name must be a real argument
+                real = {n for n in inspect.signature(cls.run).parameters
+                        if n not in ("self", "cls")}
+                for name in docs:
+                    if name not in real and name not in arg_props:
+                        msg = (
+                            f"Scenario '{cls.get_name()}': ':param {name}:' "
+                            f"documents an argument that run() does not accept"
+                        )
+                        if CONF.strict_type_annotations:
+                            raise exceptions.InvalidScenarioArgument(msg)
+                        LOG.warning(
+                            f"{msg}; it is shown in the docs but not "
+                            f"validated. "
+                            f"Set [DEFAULT]strict_type_annotations=True "
+                            f"to fail instead."
+                        )
+            # documented params first (in order), then any typed args that are
+            # not documented, so an annotated arg never escapes the schema.
+            names = list(docs) + [n for n in arg_props if n not in docs]
+            properties: dict[str, t.Any] = {}
+            for name in names:
+                prop = dict(arg_props.get(name, {}))
+                if docs.get(name):
+                    prop["description"] = docs[name]
+                properties[name] = prop
+            plugin_info["schema"] = {"type": "object",
+                                     "additionalProperties": additional,
+                                     "properties": properties}
+        return plugin_info

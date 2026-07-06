@@ -16,31 +16,28 @@
 import copy
 import json
 import re
+import typing as t
 
 from docutils.parsers import rst
 
 from rally import plugins
 from rally.common import validation
 from rally.common.plugin import discover
+from rally.common.plugin import info
 from rally.common.plugin import plugin
 
 from . import utils
 
 
-JSON_SCHEMA_TYPES_MAP = {"boolean": "bool",
-                         "string": "str",
-                         "number": "float",
-                         "integer": "int",
-                         "array": "list",
-                         "object": "dict"}
+JSON_SCHEMA_TYPES_MAP = info.JSON_SCHEMA_TYPE_LABELS
 
 
-def process_jsonschema(schema):
+def process_jsonschema(schema: t.Any) -> dict:
     """Process jsonschema and make it looks like regular docstring."""
 
     if not schema:
         # nothing to parse
-        return
+        return {"doc": ""}
 
     if "type" in schema:
 
@@ -112,12 +109,14 @@ def process_jsonschema(schema):
             required_parameters = schema.get("required", [])
             if "properties" in schema:
                 for name in schema["properties"]:
-                    if isinstance(schema["properties"][name], str):
-                        pinfo = {"name": name,
-                                 "type": schema["properties"][name],
-                                 "doc": ""}
+                    prop = schema["properties"][name]
+                    if prop is False:
+                        # a forbidden key: no value validates
+                        pinfo = {"name": name, "doc": "Must not be set."}
+                    elif isinstance(prop, str):
+                        pinfo = {"name": name, "type": prop, "doc": ""}
                     else:
-                        pinfo = process_jsonschema(schema["properties"][name])
+                        pinfo = process_jsonschema(prop)
                         if name in required_parameters:
                             pinfo["required"] = True
                         pinfo["name"] = name
@@ -169,8 +168,11 @@ def process_jsonschema(schema):
     # enum
     elif "enum" in schema:
         doc = schema.get("description", "")
+        # stringify for display: enum members keep their real (typed) values in
+        # the schema; str() handles None ("None"), falsy (0, '', False) and
+        # non-str members without breaking the join.
         doc += "\nSet of expected values: '%s'." % ("', '".join(
-            [e or "None" for e in schema["enum"]]))
+            str(e) for e in schema["enum"]))
         return {"doc": doc}
 
     elif "anyOf" in schema:
@@ -184,6 +186,12 @@ def process_jsonschema(schema):
     elif "$ref" in schema:
         return {"doc": schema.get("description", "n/a"),
                 "ref": schema["$ref"]}
+
+    # a schema with only a description (or nothing) accepts any value, so
+    # there is no type to render; just carry the description.
+    elif not (set(schema.keys()) - {"description"}):
+        return {"doc": schema.get("description", "")}
+
     else:
         raise Exception("Failed to parse jsonschema: %s" % schema)
 
@@ -238,17 +246,9 @@ class PluginsReferenceDirective(rst.Directive):
                 "**Platform**: %s" % info["platform"]))
 
         if base_name:
-            ref_prefix = "%s-%s-" % (base_name, plugin_cls.get_name())
+            ref_prefix = f"{base_name}-{plugin_cls.get_name()}-"
         else:
-            ref_prefix = "%s-" % plugin_cls.get_name()
-
-        if info["parameters"]:
-            section_obj.extend(self._make_arg_items(info["parameters"],
-                                                    ref_prefix))
-
-        if info["returns"]:
-            section_obj.extend(utils.parse_text(
-                "**Returns**:\n%s" % info["returns"]))
+            ref_prefix = f"{plugin_cls.get_name()}-"
 
         if info["schema"]:
             schema = process_jsonschema(info["schema"])
@@ -282,6 +282,14 @@ class PluginsReferenceDirective(rst.Directive):
             else:
                 raise Exception("Failed to display provided schema: %s" %
                                 info["schema"])
+        # include parameters only if there is no schema
+        elif info["parameters"]:
+            section_obj.extend(self._make_arg_items(info["parameters"],
+                                                    ref_prefix))
+
+        if info["returns"]:
+            section_obj.extend(utils.parse_text(
+                "**Returns**:\n%s" % info["returns"]))
 
         if issubclass(plugin_cls, validation.ValidatablePluginMixin):
             validators = plugin_cls._meta_get("validators", default=[])

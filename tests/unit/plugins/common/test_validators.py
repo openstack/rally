@@ -13,14 +13,18 @@
 #    under the License.
 
 import os
+import typing as t
 from unittest import mock
 
 import ddt
+import typing_extensions as te
 
 from rally.common import validation
 from rally.common.plugin import plugin
 from rally.plugins.common import validators
 from rally.plugins.task.contexts import dummy as dummy_ctx
+from rally.task import scenario
+from rally.task import types
 from tests.unit import test
 
 
@@ -79,6 +83,67 @@ class ArgsValidatorTestCase(test.TestCase):
             self.assertIn(err_msg, result[0])
 
         DummyPlugin.unregister()
+
+    # A single signature (typed args, an inline converter and a TypedDict arg)
+    # exercises every outcome of the per-argument schema check.
+    @ddt.data(
+        ({"image": {"name": "x"}, "count": 5, "mode": "l3"}, None),
+        ({"image": {"id": "abc"}}, None),  # converter ok (id)
+        ({"image": {"name": "x"}, "note": None}, None),  # nullable -> None ok
+        ({"image": {"name": "x"}, "extra": 1}, None),  # **kwargs -> extra ok
+        ({"image": {"name": "x"}, "tags": ["a", "b"]}, None),  # list[str] ok
+        ({"image": {"name": "x"}, "spec": {"name": "y"}}, None),  # TypedDict
+        ({"image": {"name": "x"}, "spec": {"name": "y", "count": 2}}, None),
+        ({"image": {"name": "x"}, "count": 0}, "minimum"),  # below min
+        ({"image": {"name": "x"}, "count": "5"}, "integer"),  # wrong type
+        ({"image": {"name": "x"}, "mode": "l4"}, "is not one of"),  # bad enum
+        ({"image": {"name": "x"}, "tags": ["a", 1]}, "is not of type"),  # elem
+        ({"image": {"name": "x"}, "spec": {}}, "required"),  # missing key
+        ({"image": {"name": "x"}, "spec": {"name": "y", "count": "2"}},
+         "integer"),  # wrong value type inside the TypedDict
+        ({"image": {"name": "x"}, "spec": {"name": "y", "z": 1}},
+         "Additional"),  # closed -> no extra keys
+        ({"image": {"name": "x"}, "spec": {"name": "y", "admin_pass": "p"}},
+         "does not allow"),  # forbidden key
+    )
+    @ddt.unpack
+    def test_argument_schemas(self, args, err_msg):
+        class Spec(te.TypedDict, closed=True):  # closed -> no extra keys
+            name: str
+            count: te.NotRequired[int]
+            admin_pass: te.NotRequired[te.Never]  # forbidden
+
+        @plugin.configure(name="test_image_for_annotations")
+        class ImageType(types.ResourceType):
+            def pre_process(self, resource_spec, config):
+                return resource_spec
+
+        @types.convert(image={"type": "test_image_for_annotations"})
+        @scenario.configure(name="Dummy.annotated_for_test")
+        class AnnotatedScenario(scenario.Scenario):
+            def run(self, image,  # converter-typed, not annotated
+                    count: t.Annotated[int, scenario.Field(ge=1)] = 1,
+                    mode: t.Literal["l2", "l3"] = "l3",
+                    note: t.Optional[str] = None,
+                    tags: list[str] = None,
+                    spec: Spec = None,  # structured (TypedDict) arg
+                    **kwargs):
+                pass
+
+        self.addCleanup(AnnotatedScenario.unregister)
+        self.addCleanup(ImageType.unregister)
+
+        validator = validation.Validator.get("args-spec")()
+        if err_msg is None:
+            self.assertIsNone(
+                validator.validate({}, {"args": args}, AnnotatedScenario,
+                                   None))
+        else:
+            e = self.assertRaises(
+                validation.ValidationError,
+                validator.validate, {}, {"args": args}, AnnotatedScenario,
+                None)
+            self.assertIn(err_msg, e.message)
 
 
 @ddt.ddt

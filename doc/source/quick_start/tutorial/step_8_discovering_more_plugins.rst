@@ -58,11 +58,14 @@ information about them:
         Meter is first created and then statistics is fetched for the same
         using GET /v2/meters/(meter_name)/statistics.
     PARAMETERS
-    +--------+-----------------------------------------------+
-    | name   | description                                   |
-    +--------+-----------------------------------------------+
-    | kwargs | contains optional arguments to create a meter |
-    +--------+-----------------------------------------------+
+    +--------+------+-----------------------------------------------+
+    | name   | type | description                                   |
+    +--------+------+-----------------------------------------------+
+    | kwargs |      | contains optional arguments to create a meter |
+    +--------+------+-----------------------------------------------+
+
+The ``type`` column is populated from the scenario's ``run()`` type
+annotations; it is left blank for arguments that are not annotated.
 
 In case if multiple plugins were found, all matched elements are listed:
 

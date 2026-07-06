@@ -62,6 +62,88 @@ clients:
             self._list_flavors_as_admin()
 
 
+Validating and documenting arguments with type annotations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``run()`` method's parameters can be annotated with regular Python type
+hints. Rally derives a JSON Schema from these annotations and uses it to:
+
+* validate the input ``args`` provided in a task (before the task starts)
+* display each parameter's type in ``rally plugin show`` and the
+  :ref:`plugin-reference`.
+
+Annotating arguments is the recommended way to declare their types and
+constraints. Un-annotated scenarios keep working unchanged.
+
+Rally understands the plain types (``int``, ``float``, ``str``, ``bool``,
+``list``, ``dict``), ``typing.Optional`` / ``| None``, ``enum.Enum`` and
+``typing.Literal`` for a fixed set of values, parameterized containers such as
+``list[str]`` or ``dict[str, int]`` (whose element and value types are also
+checked), and multi-type unions like ``int | dict[str, int]`` or
+``bool | str | None``.
+
+To constrain the value itself, annotate it with ``scenario.Field``:
+
+.. code-block:: python
+
+    import typing as t
+
+    from rally.task import scenario
+
+
+    @scenario.configure(name="ScenarioPlugin.boot_servers")
+    class BootServers(scenario.Scenario):
+
+        def run(
+            self,
+            count: t.Annotated[int, scenario.Field(ge=1, le=100)] = 1,
+            flavor: str = "m1.small",
+            network: t.Literal["public", "private"] = "private",
+            description: t.Optional[str] = None,
+        ) -> None:
+            """Boot a number of servers.
+
+            :param count: how many servers to boot
+            :param flavor: flavor name to boot from
+            :param network: which network to attach
+            :param description: optional free-form description
+            """
+            ...
+
+An argument that is not annotated, or whose type Rally cannot map, accepts
+**any** value and is left unvalidated.
+
+A structured (dict) argument can be described with a ``TypedDict``, whose
+fields become individually typed properties:
+
+.. code-block:: python
+
+    import typing_extensions as te
+
+
+    class BootSpec(te.TypedDict, closed=True):
+        name: str                              # required
+        count: te.NotRequired[int]             # optional
+        admin_pass: te.NotRequired[te.Never]   # forbidden
+
+    def run(self, spec: BootSpec) -> None:
+        ...
+
+Two independent axes control the object schema:
+
+* **required keys**: ``total=False`` (or a per-field ``Required`` /
+  ``NotRequired``) marks fields optional; the rest are required.
+* **extra keys**: extra keys are allowed by default. ``closed=True``
+  (:pep:`728`) forbids any key that is not declared, and a field typed
+  ``NotRequired[Never]`` forbids that specific key even when the TypedDict is
+  open.
+
+.. note::
+
+   mypy 2.x may flag ``closed=`` as an unexpected argument; it works at runtime
+   and is honored by Rally. Add ``# type: ignore[call-arg]`` if that check is
+   enforced in your project.
+
 Usage
 ^^^^^
 
