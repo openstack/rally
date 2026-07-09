@@ -44,6 +44,11 @@ Removed
 
 * Support for Python 3.9
 
+Fixed
+~~~~~
+
+* Compatibility with paramiko 4+, which dropped the removed DSA key support.
+
 [5.0.1] - 2025-10-07
 --------------------
 

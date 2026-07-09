@@ -1312,21 +1312,21 @@ class API(object):
             object_pairs_hook=collections.OrderedDict)["result"]
 
     @property
-    def deployment(self):
+    def deployment(self) -> _Deployment:
         return self._deployment
 
     @property
-    def task(self):
+    def task(self) -> _Task:
         return self._task
 
     @property
-    def verifier(self):
+    def verifier(self) -> _Verifier:
         return self._verifier
 
     @property
-    def verification(self):
+    def verification(self) -> _Verification:
         return self._verification
 
     @property
-    def version(self):
+    def version(self) -> int:
         return 1

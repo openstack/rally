@@ -4,14 +4,14 @@ alembic!=1.2.0,!=1.6.3
 Jinja2                                                 # BSD
 jsonschema
 markupsafe
-oslo.config!=4.3.0,!=4.4.0                             # Apache Software License
+oslo.config!=4.3.0,!=4.4.0
 # do not forget to remove `testresources` from test-requirements. it is a
 # dependency of oslo.db for tests
-oslo.db                                                # Apache Software License
-oslo.log!=3.44.2,!=4.1.2,!=4.2.0,!=5.0.1,!=5.0.2,!=5.1.0  # Apache Software License
-packaging!=20.5,!=20.6,!=20.7                          # Apache Software License/BSD License
-paramiko!=2.9.0,!=2.9.1                                # LGPL
-pbr
+oslo.db                                                # Apache-2.0
+oslo.log!=3.44.2,!=4.1.2,!=4.2.0,!=5.0.1,!=5.0.2,!=5.1.0
+packaging!=20.5,!=20.6,!=20.7
+paramiko>=4.0.0
+pbr!=2.1.0                                             # Apache-2.0
 PrettyTable!=3.4.0
 pyOpenSSL                                              # Apache License, Version 2.0
 PyYAML                                                 # MIT

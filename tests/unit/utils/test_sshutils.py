@@ -61,24 +61,26 @@ class SSHTestCase(test.TestCase):
     @mock.patch("rally.utils.sshutils.paramiko")
     def test__get_pkey_invalid(self, mock_paramiko):
         mock_paramiko.SSHException = FakeParamikoException
-        rsa = mock_paramiko.rsakey.RSAKey
-        dss = mock_paramiko.dsskey.DSSKey
+        rsa = mock_paramiko.RSAKey
+        ecdsa = mock_paramiko.ECDSAKey
+        ed25519 = mock_paramiko.Ed25519Key
         rsa.from_private_key.side_effect = mock_paramiko.SSHException
-        dss.from_private_key.side_effect = mock_paramiko.SSHException
+        ecdsa.from_private_key.side_effect = mock_paramiko.SSHException
+        ed25519.from_private_key.side_effect = mock_paramiko.SSHException
         self.assertRaises(exceptions.SSHError, self.ssh._get_pkey, "key")
 
-    def test__get_pkey_dss(self):
-        private_dss_key = io.StringIO()
-        private_dss_key_obj = paramiko.DSSKey.generate(1024)
-        private_dss_key_obj.write_private_key(private_dss_key)
-        private_dss_key.seek(0)
+    def test__get_pkey_ecdsa(self):
+        private_ecdsa_key = io.StringIO()
+        private_ecdsa_key_obj = paramiko.ECDSAKey.generate()
+        private_ecdsa_key_obj.write_private_key(private_ecdsa_key)
+        private_ecdsa_key.seek(0)
         ssh = sshutils.SSH("root", "example.net")
-        self.assertIsInstance(ssh._get_pkey(private_dss_key),
-                              paramiko.DSSKey)
+        self.assertIsInstance(ssh._get_pkey(private_ecdsa_key),
+                              paramiko.ECDSAKey)
 
-        private_dss_key.seek(0)
-        self.assertIsInstance(ssh._get_pkey(private_dss_key.getvalue()),
-                              paramiko.DSSKey)
+        private_ecdsa_key.seek(0)
+        self.assertIsInstance(ssh._get_pkey(private_ecdsa_key.getvalue()),
+                              paramiko.ECDSAKey)
 
     def test__get_pkey_rsa(self):
         private_rsa_key = io.StringIO()

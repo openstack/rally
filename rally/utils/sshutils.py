@@ -108,7 +108,8 @@ class SSH(object):
             key = io.StringIO(key)
         errors = []
         key_pos = key.seek(0, 1)
-        for key_class in (paramiko.rsakey.RSAKey, paramiko.dsskey.DSSKey):
+        for key_class in (paramiko.RSAKey, paramiko.ECDSAKey,
+                          paramiko.Ed25519Key):
             try:
                 return key_class.from_private_key(key)
             except paramiko.SSHException as e:
