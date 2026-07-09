@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import functools
-import inspect
 import os
 
 from rally import exceptions
@@ -26,9 +24,7 @@ ENV_DEPLOYMENT = "RALLY_DEPLOYMENT"
 ENV_TASK = "RALLY_TASK"
 ENV_VERIFIER = "RALLY_VERIFIER"
 ENV_VERIFICATION = "RALLY_VERIFICATION"
-ENVVARS = [ENV_ENV, ENV_DEPLOYMENT, ENV_TASK, ENV_VERIFIER, ENV_VERIFICATION]
-
-MSG_MISSING_ARG = "Missing argument: --%(arg_name)s"
+ENVVARS = (ENV_ENV, ENV_DEPLOYMENT, ENV_TASK, ENV_VERIFIER, ENV_VERIFICATION)
 
 
 def _read_env_file(path, except_env=None):
@@ -45,8 +41,7 @@ def _read_env_file(path, except_env=None):
         with open(path, "r") as env_file:
             content = env_file.readlines()
             for line in content:
-                if except_env is None or not line.startswith("%s=" %
-                                                             except_env):
+                if except_env is None or not line.startswith(f"{except_env}="):
                     output.append(line)
     return output
 
@@ -96,7 +91,7 @@ def update_globals_file(key, value):
     if not os.path.exists(dir):
         os.makedirs(dir)
     expanded_path = os.path.join(dir, "globals")
-    _update_env_file(expanded_path, key, "%s\n" % value)
+    _update_env_file(expanded_path, key, f"{value}\n")
 
 
 def clear_global(global_key):
@@ -117,71 +112,21 @@ def get_global(global_key, do_raise=False):
         _load_env_file(os.path.expanduser(PATH_GLOBALS))
     value = os.environ.get(global_key)
     if not value and do_raise:
-        raise exceptions.InvalidArgumentsException("%s env is missing"
-                                                   % global_key)
+        raise exceptions.InvalidArgumentsException(
+            f"{global_key} env is missing"
+        )
     return value
 
 
-def default_from_global(arg_name, env_name,
-                        cli_arg_name,
-                        message=MSG_MISSING_ARG):
-    def wrapper(func):
+def load_globals():
+    """Load persisted Rally globals (``~/.rally/globals``) into os.environ."""
 
-        @functools.wraps(func)
-        def inner(*args, **kwargs):
-            params = list(inspect.signature(func).parameters)
-            id_arg_index = params.index(arg_name)
+    for line in _read_env_file(os.path.expanduser(PATH_GLOBALS)):
+        key, _, value = line.partition("=")
+        os.environ.setdefault(key, value.rstrip())
 
-            args = list(args)
-            if ((len(args) <= id_arg_index or args[id_arg_index] is None)
-                    and arg_name not in kwargs):
-                kwargs[arg_name] = get_global(env_name)
-                if not kwargs[arg_name]:
-                    print(message % {"arg_name": cli_arg_name})
-                    return 1
-            return func(*args, **kwargs)
-        return inner
-    return wrapper
-
-
-def with_default_env():
     # NOTE(boris-42): This allows smooth transition from deployment to env
-    #                 set ENV_ENV from ENV_DEPLOYMENT if ENV is not presented
-    #                 This should be removed with rally env command
-    if not get_global(ENV_ENV):
-        deployment = get_global(ENV_DEPLOYMENT)
-        if deployment:
-            os.environ[ENV_ENV] = deployment
-
-    return default_from_global(
-        "env", ENV_ENV, "env",
-        message="There is no default env. To set it use command:\n"
-                "\trally env use <env_uuid>|<env_name>\n"
-                "or pass uuid or name to your command using --%(arg_name)s")
-
-
-def with_default_deployment(cli_arg_name="uuid"):
-    # NOTE(boris-42): This allows smooth transition from deployment to env
-    #                 set ENV_ENV from ENV_DEPLOYMENT and use ENV_ENV
-    #                 This should be removed with rally env command
-    if not get_global(ENV_ENV):
-        deployment = get_global(ENV_DEPLOYMENT)
-        if deployment:
-            os.environ[ENV_ENV] = deployment
-
-    return default_from_global(
-        "deployment", ENV_ENV, cli_arg_name,
-        message="There is no default deployment.\n"
-                "\tPlease use command:\n"
-                "\trally deployment use <deployment_uuid>|<deployment_name>\n"
-                "or pass uuid of deployment to the --%(arg_name)s "
-                "argument of this command")
-
-
-def with_default_verifier_id(cli_arg_name="id"):
-    return default_from_global("verifier_id", ENV_VERIFIER, cli_arg_name)
-
-
-with_default_task_id = default_from_global("task_id", ENV_TASK, "uuid")
-with_default_verification_uuid = default_from_global("verification_uuid",
-                                                     ENV_VERIFICATION, "uuid")
+    # set ENV_ENV from ENV_DEPLOYMENT and use ENV_ENV
+    # This should be removed with rally env command
+    if not os.environ.get(ENV_ENV) and os.environ.get(ENV_DEPLOYMENT):
+        os.environ[ENV_ENV] = os.environ[ENV_DEPLOYMENT]

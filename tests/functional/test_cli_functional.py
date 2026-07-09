@@ -22,14 +22,14 @@ from rally.utils import encodeutils
 class CLITestCase(unittest.TestCase):
 
     def test_rally_cli(self):
+        # ``rally`` with no sub-command prints the top-level help.
         try:
-            subprocess.check_output(["rally"], stderr=subprocess.STDOUT)
+            output = encodeutils.safe_decode(
+                subprocess.check_output(["rally"], stderr=subprocess.STDOUT))
         except subprocess.CalledProcessError as e:
             output = encodeutils.safe_decode(e.output)
-        else:
-            self.fail("It should ve non-zero exit code.")
 
-        self.assertIn("the following arguments are required: category", output)
+        self.assertIn("Usage: rally", output)
 
     def test_version_cli(self):
         output = encodeutils.safe_decode(

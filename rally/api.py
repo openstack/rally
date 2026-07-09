@@ -1195,19 +1195,20 @@ class API(object):
     CONFIG_SEARCH_PATHS = [sys.prefix + "/etc/rally", "~/.rally", "/etc/rally"]
     CONFIG_FILE_NAME = "rally.conf"
 
-    def __init__(self, config_file=None, config_args=None,
-                 plugin_paths=None, skip_db_check=False):
+    def __init__(
+        self,
+        config_file: str | None = None,
+        config_args: list[str] | None = None,
+        plugin_paths: list[str] | None = None,
+        skip_db_check: bool = False
+    ):
         """Initialize Rally API instance
 
         :param config_file: Path to rally configuration file. If None, default
                             path will be selected
-        :type config_file: str
         :param config_args: Arguments for initialization current configuration
-        :type config_args: list
         :param plugin_paths: Additional custom plugin locations
-        :type plugin_paths: list
         :param skip_db_check: Allows to skip db revision check
-        :type skip_db_check: bool
         """
 
         try:

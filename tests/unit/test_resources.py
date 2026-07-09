@@ -17,7 +17,7 @@ import difflib
 import os
 
 import rally
-from rally.cli import cliutils
+from rally.cli import bashcomplete
 from rally.utils import encodeutils
 from tests.unit import test
 
@@ -29,7 +29,7 @@ class BashCompletionTestCase(test.TestCase):
     def test_bash_completion(self):
         with open(os.path.join(RES_PATH, "rally.bash_completion"), "r") as f:
             old = f.read().splitlines()
-        new = cliutils._generate_bash_completion_script().splitlines()
+        new = bashcomplete.generate().splitlines()
         if old != new:
             for line in difflib.unified_diff(old, new):
                 print(line)

@@ -26,9 +26,28 @@ Added
 ~~~~~
 
 * CI jobs for checking compatibility with python 3.13
+* ``rally task start`` and ``rally task validate`` can now read the task from
+  stdin -- pass ``-`` in place of the file name, for example
+  ``cat task.yaml | rally task start -``.
 
 Changed
 ~~~~~~~
+
+* The command-line interface has been rebuilt on `typer
+  <https://typer.tiangolo.com>`_, replacing the custom argparse/oslo.config
+  wrapper it grew up on. The change is backward compatible for documented
+  usage: every command, option and primary identifier continues to work, and
+  each primary identifier may now also be supplied positionally, for example
+  ``rally task status <uuid>`` in addition to ``rally task status --uuid
+  <uuid>``. The only user-visible differences are cosmetic: help and error
+  messages are now rendered by typer, and bash completion no longer lists the
+  primary-id flags (``--uuid``, ``--id``, ``--env``, ``--deployment``,
+  ``--task``), which still work when typed explicitly.
+
+* We no longer suppress PyMySQL's connect-time warnings. That workaround only
+  existed to hide the old ``@@tx_isolation`` deprecation warning (SQLAlchemy
+  #4120 / PyMySQL #614), which modern SQLAlchemy and PyMySQL have since fixed,
+  so the ``mysql`` extra now pins ``PyMySQL>=0.9.0``.
 
 * The ``pep8`` gate now runs ruff alongside flake8: ruff owns the pycodestyle,
   pyflakes and import-convention checks, while flake8 keeps the remaining

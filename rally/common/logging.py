@@ -13,10 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import dataclasses
 import functools
 import traceback
+import typing as t
 import warnings
 
+from oslo_log import _options as log_options
 from oslo_log import handlers
 from oslo_log import log as oslogging
 
@@ -173,7 +176,7 @@ class CatcherHandler(log.handlers.BufferingHandler):
         self.buffer.append(record)
 
 
-class LogCatcher(object):
+class LogCatcher:
     """Context manager that catches log messages.
 
     User can make an assertion on their content or fetch them all.
@@ -340,5 +343,84 @@ def log_deprecated_module(target, new_module, release):
     )
 
 
-def is_debug():
+def is_debug() -> bool:
     return CONF.debug or CONF.rally_debug
+
+
+_CLI_OPTS = [
+    *DEBUG_OPTS,                     # --rally-debug
+    *log_options.common_cli_opts,    # --debug/-d
+    *log_options.logging_cli_opts,   # --log-file, --log-dir, ...
+]
+
+_CLI_TYPES: dict[type, t.Any] = {
+    cfg.BoolOpt: bool,
+    cfg.StrOpt: str | None,
+    cfg.IntOpt: int | None,
+    cfg.ListOpt: list | None,
+    cfg.MultiStrOpt: list | None,
+}
+
+
+@dataclasses.dataclass(frozen=True)
+class _FieldInfo:
+    oslo_name: str
+    is_bool: bool
+    is_list: bool
+
+
+_CLI_FIELDS: dict[str, _FieldInfo] = {}
+
+
+def build_cli_params() -> list:
+    """Return the oslo.log CLI options as ``inspect.Parameter`` objects.
+
+    The rally CLI callback forges these onto its ``__signature__`` before typer
+    reads it, so ``--log-file``/``--log-dir``/... are generated from oslo's own
+    ``Opt`` objects (kept in sync with whatever oslo.log offers) instead of
+    hand-declared.  Also populates the metadata consumed by
+    `to_oslo_argv`.  ``typer`` is imported lazily so importing this
+    module (which happens almost everywhere) stays cheap.
+    """
+    import inspect
+
+    import typer
+
+    params = []
+    for opt in _CLI_OPTS:
+        typ = _CLI_TYPES.get(type(opt), str | None)
+        # Only booleans carry a default; every other option defaults to
+        # ``None`` and lets oslo apply its own default when it re-parses argv.
+        default = opt.default if isinstance(opt, cfg.BoolOpt) else None
+        help_text = (opt.help or "").strip().split("\n")[0]
+        option = typer.Option("--%s" % opt.name, help=help_text)
+        params.append(
+            inspect.Parameter(
+                opt.dest,
+                inspect.Parameter.KEYWORD_ONLY,
+                default=default,
+                annotation=t.Annotated[typ, option]
+            )
+        )
+        _CLI_FIELDS[opt.dest] = _FieldInfo(
+            oslo_name=opt.name,
+            is_bool=isinstance(opt, cfg.BoolOpt),
+            is_list=isinstance(opt, (cfg.ListOpt, cfg.MultiStrOpt)))
+    return params
+
+
+def to_oslo_argv(values: t.Mapping) -> list[str]:
+    """Rebuild the oslo.config ``argv`` slice from the parsed logging options.
+
+    ``values`` maps each option's ``dest`` to the value typer parsed for it.
+    """
+    argv: list[str] = []
+    for name, info in _CLI_FIELDS.items():
+        value = values.get(name)
+        if info.is_bool:
+            if value:
+                argv.append("--%s" % info.oslo_name)
+        elif value is not None:
+            for item in (value if info.is_list else [value]):
+                argv += ["--%s" % info.oslo_name, str(item)]
+    return argv

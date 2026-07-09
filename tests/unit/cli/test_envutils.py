@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import io
 import os
 from unittest import mock
 
@@ -45,19 +44,24 @@ class EnvUtilsTestCase(test.TestCase):
             mock_file.return_value.readlines.assert_called_once_with()
             mock_file.return_value.write.assert_has_calls(calls)
 
-    def test_default_from_global(self):
+    @mock.patch.dict("os.environ", values={}, clear=True)
+    @mock.patch("rally.cli.envutils._read_env_file")
+    def test_load_globals(self, mock__read_env_file):
+        mock__read_env_file.return_value = ["RALLY_TASK=t1\n",
+                                            "RALLY_DEPLOYMENT=d1\n"]
+        envutils.load_globals()
+        self.assertEqual("t1", os.environ["RALLY_TASK"])
+        self.assertEqual("d1", os.environ["RALLY_DEPLOYMENT"])
+        # RALLY_ENV was unset, so it is filled from the legacy RALLY_DEPLOYMENT
+        self.assertEqual("d1", os.environ["RALLY_ENV"])
 
-        @envutils.default_from_global("test_arg_name",
-                                      "test_env_name",
-                                      "test_missing_arg")
-        def test_function(test_arg_name=None):
-            pass
-
-        with mock.patch("sys.stdout",
-                        new_callable=io.StringIO) as mock_stdout:
-            test_function()
-            self.assertEqual("Missing argument: --test_missing_arg\n",
-                             mock_stdout.getvalue())
+    @mock.patch.dict("os.environ", values={"RALLY_ENV": "real"}, clear=True)
+    @mock.patch("rally.cli.envutils._read_env_file")
+    def test_load_globals_env_wins_over_file(self, mock__read_env_file):
+        mock__read_env_file.return_value = ["RALLY_ENV=from_file\n"]
+        envutils.load_globals()
+        # A real environment variable takes precedence over the file.
+        self.assertEqual("real", os.environ["RALLY_ENV"])
 
     @mock.patch.dict(os.environ,
                      values={envutils.ENV_DEPLOYMENT: "my_deployment_id"},

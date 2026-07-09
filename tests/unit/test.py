@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import contextlib
 import os
 import unittest
 from unittest import mock
@@ -105,6 +106,14 @@ class TestCase(fixtures.TestWithFixtures, unittest.TestCase):
         with super().assertRaises(expected_exception) as ctx:
             callable(*args, **kwargs)
         return ctx.exception
+
+    @contextlib.contextmanager
+    def assertExitCode(self, code):
+        """Assert the wrapped block raises ``typer.Exit`` with ``code``."""
+        import typer
+        with super().assertRaises(typer.Exit) as ctx:
+            yield
+        self.assertEqual(code, ctx.exception.exit_code)
 
 
 class DBTestCase(TestCase):

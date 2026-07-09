@@ -48,7 +48,7 @@ dependencies = {file = ["requirements.txt"]}
 
 [project.optional-dependencies]
 mysql = [
-  "PyMySQL>=0.7.6"  # MIT
+  "PyMySQL>=0.9.0"  # MIT
 ]
 postgres = [
   "psycopg2>=2.5"  # LGPL/ZPL
@@ -81,6 +81,11 @@ strict_equality = true
 #   declare optional result
 no_warn_no_return = true
 
+# oslo.log ships no type information (no py.typed marker).
+[[tool.mypy.overrides]]
+module = "oslo_log.*"
+ignore_missing_imports = true
+
 # FIXME(andreykurilin): all the following should be fixed
 
 [[tool.mypy.overrides]]
@@ -89,38 +94,10 @@ disable_error_code = ["attr-defined", "no-untyped-def"]
 
 [[tool.mypy.overrides]]
 module = "rally.cli.cliutils"
-disable_error_code = ["arg-type", "assignment", "import-untyped", "index", "no-untyped-def", "var-annotated"]
-
-[[tool.mypy.overrides]]
-module = "rally.cli.commands.db"
 disable_error_code = ["no-untyped-def"]
-
-[[tool.mypy.overrides]]
-module = "rally.cli.commands.deployment"
-disable_error_code = ["import-not-found", "no-untyped-def"]
-
-[[tool.mypy.overrides]]
-module = "rally.cli.commands.env"
-disable_error_code = ["arg-type", "func-returns-value", "no-untyped-def"]
-
-[[tool.mypy.overrides]]
-module = "rally.cli.commands.plugin"
-disable_error_code = ["no-untyped-def"]
-
-[[tool.mypy.overrides]]
-module = "rally.cli.commands.task"
-disable_error_code = ["no-untyped-def", "var-annotated"]
-
-[[tool.mypy.overrides]]
-module = "rally.cli.commands.verify"
-disable_error_code = ["assignment", "attr-defined", "method-assign", "no-untyped-def"]
 
 [[tool.mypy.overrides]]
 module = "rally.cli.envutils"
-disable_error_code = ["no-untyped-def"]
-
-[[tool.mypy.overrides]]
-module = "rally.cli.main"
 disable_error_code = ["no-untyped-def"]
 
 [[tool.mypy.overrides]]
@@ -307,6 +284,7 @@ select = [
     "ICN003",  # forbid `from <module> import ...` for modules imported whole
     "PGH003",  # `type: ignore` must name the specific error code
     "PGH004",  # `noqa` must name the specific rule code
+    "PLC0414", # band redundant aliases
     "TID251",  # forbid the APIs banned below
 ]
 ignore = [
@@ -341,6 +319,7 @@ docstring-quotes = "double"
 datetime = "dt"
 typing = "t"
 typing_extensions = "te"
+"rally.common.logging" = "logging"
 
 [tool.ruff.lint.flake8-import-conventions]
 # Builtins are imported as modules: forbid `from <stdlib> import ...` so the

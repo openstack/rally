@@ -13,64 +13,44 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import copy
 import inspect
+import typing as t
 
 from docutils.parsers import rst
+import typer
 
-from rally.cli import cliutils
 from rally.cli import main
 
 from . import utils
 
 
-class Parser(object):
-    """A simplified interface of argparse.ArgumentParser"""
-    def __init__(self):
-        self.parsers = {}
-        self.subparser = None
-        self.defaults = {}
-        self.arguments = []
-
-    def add_parser(self, name, help=None, description=None,
-                   formatter_class=None):
-        parser = Parser()
-        self.parsers[name] = {"description": description,
-                              "help": help,
-                              "fclass": formatter_class,
-                              "parser": parser}
-        return parser
-
-    def set_defaults(self, command_object=None, action_fn=None,
-                     action_kwargs=None):
-        if command_object:
-            self.defaults["command_object"] = command_object
-        if action_fn:
-            self.defaults["action_fn"] = action_fn
-        if action_kwargs:
-            self.defaults["action_kwargs"] = action_kwargs
-
-    def add_subparsers(self, dest):
-        # NOTE(andreykurilin): there is only one expected call
-        if self.subparser:
-            raise ValueError("Can't add one more subparser.")
-        self.subparser = Parser()
-        return self.subparser
-
-    def add_argument(self, *args, **kwargs):
-        if "action_args" in args:
-            return
-        self.arguments.append((args, kwargs))
+if t.TYPE_CHECKING:
+    from docutils import nodes
 
 
 DEFAULT_UUIDS_CMD = {
     "deployment": ["rally deployment create"],
     "task": ["rally task start"],
-    "verification": ["rally verify start", "rally verify import_results"]
+    "verification": ["rally verify start", "rally verify import"]
+}
+
+# Maps the "use"-command hint for each default-from-environment id.
+USE_CMD = {
+    "deployment": "rally deployment use",
+    "task": "rally task use",
+    "verification": "rally verify use",
+}
+
+# Maps a parameter's env var to a default-uuid id.
+_ENVVAR_DEST = {
+    "RALLY_ENV": "deployment",
+    "RALLY_DEPLOYMENT": "deployment",
+    "RALLY_TASK": "task",
+    "RALLY_VERIFICATION": "verification",
 }
 
 
-def compose_note_about_default_uuids(argument, dest):
+def compose_note_about_default_uuids(argument, dest) -> "nodes.note":
     # TODO(andreykurilin): add references to commands
     return utils.note(
         "The default value for the ``%(arg)s`` argument is taken from "
@@ -81,96 +61,97 @@ def compose_note_about_default_uuids(argument, dest):
             "cmd": "``, ``".join(DEFAULT_UUIDS_CMD[dest])})
 
 
-def compose_use_cmd_hint_msg(cmd):
+def compose_use_cmd_hint_msg(cmd: str) -> "nodes.hint":
     return utils.hint(
-        "You can set the default value by executing ``%(cmd)s <uuid>``"
-        " (ref__).\n\n __ #%(ref)s" % {"cmd": cmd,
-                                       "ref": cmd.replace(" ", "-")})
+        f"You can set the default value by executing ``{cmd} <uuid>``"
+        f" (ref__).\n\n __ #{cmd.replace(' ', '-')}"
+    )
 
 
-def make_arguments_section(category_name, cmd_name, arguments, defaults):
+def _first(value):
+    if isinstance(value, (list, tuple)):
+        return value[0] if value else None
+    return value
+
+
+def _note_dest(cmd_name, param):
+    """Return the default-uuid note key for a parameter, or None.
+
+    A parameter earns the note when it reads one of the ``RALLY_*`` env vars
+    that ``rally <thing> use`` populates.  The ``use`` command sets these
+    defaults itself, so it is excluded.
+    """
+    if cmd_name == "use":
+        return None
+    return _ENVVAR_DEST.get(_first(getattr(param, "envvar", None)))
+
+
+def _display_names(param):
+    """Return the flag(s)/name shown for a parameter."""
+    opts = list(getattr(param, "opts", None) or [])
+    if opts and opts[0].startswith("-"):
+        return opts
+    # A positional argument: show its metavar (e.g. ``UUID``) rather than the
+    # internal destination name.
+    metavar = getattr(param, "metavar", None)
+    return [metavar] if metavar else (opts or [param.name])
+
+
+def _iter_params(command):
+    """Yield the documentable parameters of a command (skip ``--help``)."""
+    for param in command.params:
+        opts = getattr(param, "opts", [])
+        if opts and opts[0] in ("--help", "-h", "--version"):
+            continue
+        if getattr(param, "name", None) == "help":
+            continue
+        yield param
+
+
+def make_arguments_section(category_name, cmd_name, command):
     elements = [utils.paragraph("**Command arguments**:")]
-    for args, kwargs in arguments:
-        # for future changes...
-        # :param args: a single command argument which can represented by
-        #       several names(for example, --uuid and --task-id) in cli.
-        # :type args: tuple
-        # :param kwargs: description of argument. Have next format:
-        #       {"dest": "action_kwarg_<name of keyword argument in code>",
-        #        "help": "just a description of argument"
-        #        "metavar": "[optional] metavar of argument. Example:"
-        #                      "Example: argument '--file'; metavar 'path' ",
-        #        "type": "[optional] class object of argument's type",
-        #        "required": "[optional] boolean value"}
-        # :type kwargs: dict
-        dest = kwargs.get("dest").replace("action_kwarg_", "")
+    for param in _iter_params(command):
+        names = _display_names(param)
+        flag = names[0]
+
         description = []
-        if cmd_name != "use":
-            # lets add notes about specific default values and hint about
-            # "use" command with reference
-            if dest in ("deployment", "task"):
-                description.append(compose_note_about_default_uuids(
-                    args[0], dest))
-                description.append(
-                    compose_use_cmd_hint_msg("rally %s use" % dest))
-            elif dest == "verification":
-                description.append(compose_note_about_default_uuids(
-                    args[0], dest))
-                description.append(
-                    compose_use_cmd_hint_msg("rally verify use"))
+        note_dest = _note_dest(cmd_name, param)
+        if note_dest is not None:
+            description.append(
+                compose_note_about_default_uuids(flag, note_dest))
+            description.append(
+                compose_use_cmd_hint_msg(USE_CMD[note_dest]))
 
-        description.append(kwargs.get("help"))
+        description.append(getattr(param, "help", None))
 
-        action = kwargs.get("action")
-        if not action:
-            arg_type = kwargs.get("type")
-            if arg_type:
-                description.append("**Type**: %s" % arg_type.__name__)
+        if not getattr(param, "is_flag", False):
+            type_name = getattr(getattr(param, "type", None), "name", None)
+            if type_name:
+                description.append("**Type**: %s" % type_name)
 
-            skip_default = dest in ("deployment",
-                                    "task_id",
-                                    "verification")
-            if not skip_default and dest in defaults:
-                description.append("**Default**: %s" % defaults[dest])
-        metavar = kwargs.get("metavar")
+            default = getattr(param, "default", None)
+            if note_dest is None and default is not None:
+                description.append("**Default**: %s" % default)
 
-        ref = "%s_%s_%s" % (category_name, cmd_name, args[0].replace("-", ""))
-
-        if metavar:
-            args = ["%s %s" % (arg, metavar) for arg in args]
-
-        elements.extend(utils.make_definition(", ".join(args),
+        ref = "%s_%s_%s" % (category_name, cmd_name,
+                            flag.replace("-", "").replace(" ", ""))
+        elements.extend(utils.make_definition(", ".join(names),
                                               ref, description))
     return elements
 
 
-def get_defaults(func):
-    """Return a map of argument:default_value for specified function."""
-    spec = inspect.getfullargspec(func)
-    if spec.defaults:
-        return dict(zip(spec.args[-len(spec.defaults):], spec.defaults))
-    return {}
-
-
-def make_command_section(category_name, name, parser):
+def make_command_section(category_name, name, command):
     section = utils.subcategory("rally %s %s" % (category_name, name))
-    section.extend(utils.parse_text(parser["description"]))
-    if parser["parser"].arguments:
-        defaults = get_defaults(parser["parser"].defaults["action_fn"])
-        section.extend(make_arguments_section(
-            category_name, name, parser["parser"].arguments, defaults))
+    description = inspect.getdoc(command.callback) or command.help or ""
+    section.extend(utils.parse_text(description))
+    if any(True for _ in _iter_params(command)):
+        section.extend(make_arguments_section(category_name, name, command))
     return section
 
 
-def make_category_section(name, parser):
+def make_category_section(name, group):
     category_obj = utils.category("Category: %s" % name)
-    # NOTE(andreykurilin): we are re-using `_add_command_parsers` method from
-    # `rally.cli.cliutils`, but, since it was designed to print help message,
-    # generated description for categories contains specification for all
-    # sub-commands. We don't need information about sub-commands at this point,
-    # so let's skip "generated description" and take it directly from category
-    # class.
-    description = parser.defaults["command_object"].__doc__
+    description = group.help or ""
     # TODO(andreykurilin): write a decorator which will mark cli-class as
     #   deprecated without changing its docstring.
     if description.startswith("[Deprecated"):
@@ -180,9 +161,10 @@ def make_category_section(name, parser):
         category_obj.append(utils.warning(msg))
     category_obj.extend(utils.parse_text(description))
 
-    for command in sorted(parser.subparser.parsers.keys()):
-        subparser = parser.subparser.parsers[command]
-        category_obj.append(make_command_section(name, command, subparser))
+    commands = getattr(group, "commands", {})
+    for command in sorted(commands):
+        category_obj.append(
+            make_command_section(name, command, commands[command]))
     return category_obj
 
 
@@ -191,17 +173,18 @@ class CLIReferenceDirective(rst.Directive):
     option_spec = {"group": str}
 
     def run(self):
-        parser = Parser()
-        categories = copy.copy(main.categories)
+        cli = typer.main.get_command(main.app)
+        groups = getattr(cli, "commands", {})
+        # only command groups (skip top-level leaf commands like ``version``)
+        categories = [c for c, g in groups.items()
+                      if getattr(g, "commands", None)]
         if "group" in self.options:
-            categories = {k: v for k, v in categories.items()
-                          if k == self.options["group"]}
-        cliutils._add_command_parsers(categories, parser)
+            categories = [c for c in categories
+                          if c == self.options["group"]]
 
         content = []
-        for cg in sorted(categories.keys()):
-            content.append(make_category_section(
-                cg, parser.parsers[cg]["parser"]))
+        for cg in sorted(categories):
+            content.append(make_category_section(cg, groups[cg]))
         return content
 
 

@@ -12,33 +12,33 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import inspect
-
-from rally.cli import main
+from rally.cli.commands import db
+from rally.cli.commands import deployment
+from rally.cli.commands import env
+from rally.cli.commands import plugin
+from rally.cli.commands import task
+from rally.cli.commands import verify
 from rally.common.plugin import info
 from tests.unit import test
 
 
+APPS = [db.db_app, deployment.deployment_app, env.env_app, plugin.plugin_app,
+        task.task_app, verify.verify_app]
+
+
 class DocstringsTestCase(test.TestCase):
 
-    @staticmethod
-    def _get_all_category_methods(category):
-        all_methods = inspect.getmembers(
-            category,
-            predicate=lambda x: inspect.ismethod(x) or inspect.isfunction(x))
-        return [m for m in all_methods if not m[0].startswith("_")]
-
     def test_params(self):
-        for category in main.categories.values():
-            all_methods = self._get_all_category_methods(category)
-            for name, method in all_methods:
-                m_info = info.parse_docstring(method.__doc__)
+        for app in APPS:
+            for command in app.registered_commands:
+                func = command.callback
+                if func is None or func.__doc__ is None:
+                    continue
+                m_info = info.parse_docstring(func.__doc__)
                 if m_info["params"]:
-                    print(m_info)
-                    self.fail("The description of parameters for CLI methods "
-                              "should be transmitted as a 'help' argument of "
-                              "`rally.cli.cliutils.arg` decorator. You should "
-                              "remove descriptions from docstring of "
-                              "`%s.%s.%s`" % (category.__module__,
-                                              category.__class__,
-                                              name))
+                    self.fail("The description of parameters for CLI commands "
+                              "should be passed as the 'help' argument of a "
+                              "`typer.Option`/`typer.Argument`. You should "
+                              "remove the parameter descriptions from the "
+                              "docstring of `%s:%s`" % (func.__module__,
+                                                        func.__qualname__))

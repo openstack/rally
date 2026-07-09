@@ -33,8 +33,8 @@ class VerifyCommandsTestCase(test.TestCase):
     def setUp(self):
         super(VerifyCommandsTestCase, self).setUp()
 
-        self.verify = verify.VerifyCommands()
         self.fake_api = fakes.FakeAPI()
+        cliutils.set_api(self.fake_api)
 
         self.deployment_name = "Some Deploy"
         self.deployment_uuid = "some-deploy-uuid"
@@ -125,7 +125,7 @@ class VerifyCommandsTestCase(test.TestCase):
     @mock.patch("rally.cli.commands.verify.logging.is_debug",
                 return_value=True)
     def test_list_plugins(self, mock_is_debug, mock_print_list):
-        self.verify.list_plugins(self.fake_api, platform="some")
+        verify.list_plugins(platform="some")
         self.fake_api.verifier.list_plugins.assert_called_once_with(
             platform="some")
 
@@ -134,9 +134,9 @@ class VerifyCommandsTestCase(test.TestCase):
         self.fake_api.verifier.create.return_value = self.verifier_uuid
         self.fake_api.verifier.get.return_value = self.verifier_data
 
-        self.verify.create_verifier(self.fake_api, "a", vtype="b",
-                                    platform="c", source="d", version="e",
-                                    system_wide=True, extra={})
+        verify.create_verifier(name="a", vtype="b", platform="c",
+                               source="d", version="e", system_wide=True,
+                               extra={})
         self.fake_api.verifier.create.assert_called_once_with(
             name="a", vtype="b", platform="c", source="d", version="e",
             system_wide=True, extra_settings={})
@@ -149,7 +149,7 @@ class VerifyCommandsTestCase(test.TestCase):
     @mock.patch("rally.cli.commands.verify.envutils.update_globals_file")
     def test_use_verifier(self, mock_update_globals_file):
         self.fake_api.verifier.get.return_value = self.verifier_data
-        self.verify.use_verifier(self.fake_api, self.verifier_uuid)
+        verify.use_verifier(verifier_id=self.verifier_uuid)
         self.fake_api.verifier.get.assert_called_once_with(
             verifier_id=self.verifier_uuid)
         mock_update_globals_file.assert_called_once_with(
@@ -158,10 +158,10 @@ class VerifyCommandsTestCase(test.TestCase):
     @mock.patch("rally.cli.commands.verify.cliutils.print_list")
     def test_list_verifiers_empty_verifiers(self, mock_print_list):
         self.fake_api.verifier.list.return_value = []
-        self.verify.list_verifiers(self.fake_api)
+        verify.list_verifiers()
 
-        self.verify.list_verifiers(self.fake_api, "foo")
-        self.verify.list_verifiers(self.fake_api)
+        verify.list_verifiers(status="foo")
+        verify.list_verifiers()
 
         self.fake_api.verifier.list.assert_has_calls(
             [mock.call(status=None), mock.call(status="foo")])
@@ -175,7 +175,7 @@ class VerifyCommandsTestCase(test.TestCase):
                              "Active"]
         additional_keys = ["normalize_field_names", "sortby_index",
                            "formatters"]
-        self.verify.list_verifiers(self.fake_api)
+        verify.list_verifiers()
         # astarove: should be replaced on mock_print_list.assert_called_once()
         self.assertEqual(1, mock_print_list.call_count)
         self.assertEqual(([self.verifier_data], additional_fields),
@@ -183,10 +183,11 @@ class VerifyCommandsTestCase(test.TestCase):
         self.assertEqual(additional_keys.sort(),
                          list(mock_print_list.call_args[1].keys()).sort())
 
+    @mock.patch("rally.cli.commands.verify._base_dir",
+                return_value="./verifiers/")
     @mock.patch("rally.cli.commands.verify.envutils.get_global")
-    def test_show_verifier(self, mock_get_global):
+    def test_show_verifier(self, mock_get_global, mock__base_dir):
         self.fake_api.verifier.get.return_value = self.verifier_data
-        self.verify._base_dir = mock.Mock(return_value="./verifiers/")
 
         # It is a hard task to mock default value of function argument, so we
         # need to apply this workaround
@@ -200,7 +201,7 @@ class VerifyCommandsTestCase(test.TestCase):
 
         with mock.patch.object(verify.cliutils, "print_dict",
                                new=print_dict):
-            self.verify.show_verifier(self.fake_api, self.verifier_uuid)
+            verify.show_verifier(self.verifier_uuid)
 
         self.assertEqual(1, len(print_dict_calls))
 
@@ -230,54 +231,54 @@ class VerifyCommandsTestCase(test.TestCase):
             verifier_id=self.verifier_uuid)
 
     def test_delete_verifier(self):
-        self.verify.delete_verifier(self.fake_api, "v_id", "d_id", force=True)
+        verify.delete_verifier(verifier_id="v_id", deployment="d_id",
+                               force=True)
         self.fake_api.verifier.delete.assert_called_once_with(
             verifier_id="v_id", deployment_id="d_id", force=True)
 
     def test_update_verifier(self):
-        self.verify.update_verifier(self.fake_api, self.verifier_uuid)
+        with self.assertExitCode(1):
+            verify.update_verifier(verifier_id=self.verifier_uuid)
         self.assertFalse(self.fake_api.verifier.update.called)
 
-        self.verify.update_verifier(self.fake_api, self.verification_uuid,
-                                    update_venv=True,
-                                    system_wide=True)
+        with self.assertExitCode(1):
+            verify.update_verifier(verifier_id=self.verification_uuid,
+                                   update_venv=True, system_wide=True)
         self.assertFalse(self.fake_api.verifier.update.called)
 
-        self.verify.update_verifier(self.fake_api, self.verification_uuid,
-                                    system_wide=True,
-                                    no_system_wide=True)
+        with self.assertExitCode(1):
+            verify.update_verifier(verifier_id=self.verification_uuid,
+                                   system_wide=True, no_system_wide=True)
         self.assertFalse(self.fake_api.verifier.update.called)
 
-        self.verify.update_verifier(self.fake_api, self.verification_uuid,
-                                    version="a",
-                                    system_wide=True)
+        verify.update_verifier(verifier_id=self.verification_uuid,
+                               version="a", system_wide=True)
         self.fake_api.verifier.update.assert_called_once_with(
             verifier_id=self.verification_uuid, system_wide=True,
-            version="a", update_venv=None)
+            version="a", update_venv=False)
 
     @mock.patch("rally.cli.commands.verify.open", create=True)
     @mock.patch("rally.cli.commands.verify.os.path.exists")
     def test_configure_verifier(self, mock_exists, mock_open):
-        self.verify.configure_verifier(self.fake_api, self.verifier_uuid,
-                                       self.deployment_uuid,
-                                       new_configuration="/p/a/t/h",
-                                       reconfigure=True,
-                                       show=True)
+        with self.assertExitCode(1):
+            verify.configure_verifier(verifier_id=self.verifier_uuid,
+                                      deployment=self.deployment_uuid,
+                                      new_configuration="/p/a/t/h",
+                                      reconfigure=True, show=True)
         self.assertFalse(self.fake_api.verifier.configure.called)
 
         mock_exists.return_value = False
-        self.verify.configure_verifier(self.fake_api, self.verifier_uuid,
-                                       self.deployment_uuid,
-                                       new_configuration="/p/a/t/h",
-                                       show=True)
+        with self.assertExitCode(1):
+            verify.configure_verifier(verifier_id=self.verifier_uuid,
+                                      deployment=self.deployment_uuid,
+                                      new_configuration="/p/a/t/h", show=True)
         self.assertFalse(self.fake_api.verifier.override_configuration.called)
 
         mock_exists.return_value = True
         mock_open.return_value = mock.mock_open(read_data="data").return_value
-        self.verify.configure_verifier(self.fake_api, self.verifier_uuid,
-                                       self.deployment_uuid,
-                                       new_configuration="/p/a/t/h",
-                                       show=True)
+        verify.configure_verifier(verifier_id=self.verifier_uuid,
+                                  deployment=self.deployment_uuid,
+                                  new_configuration="/p/a/t/h", show=True)
         mock_open.assert_called_once_with("/p/a/t/h")
         self.fake_api.verifier.override_configuration(self.verifier_uuid,
                                                       self.deployment_uuid,
@@ -286,37 +287,39 @@ class VerifyCommandsTestCase(test.TestCase):
         tf = tempfile.NamedTemporaryFile()
         with open(tf.name, "w") as f:
             f.write("[DEFAULT]\nopt = val\n[foo]\nopt = val")
-        self.verify.configure_verifier(self.fake_api, self.verifier_uuid,
-                                       self.deployment_uuid,
-                                       extra_options=tf.name)
+        verify.configure_verifier(verifier_id=self.verifier_uuid,
+                                  deployment=self.deployment_uuid,
+                                  extra_options=tf.name)
         expected_options = {"foo": {"opt": "val"},
                             "DEFAULT": {"opt": "val"}}
         self.fake_api.verifier.configure.assert_called_once_with(
             verifier=self.verifier_uuid, deployment_id=self.deployment_uuid,
             extra_options=expected_options, reconfigure=False)
 
-        self.verify.configure_verifier(self.fake_api, self.verifier_uuid,
-                                       self.deployment_uuid,
-                                       extra_options="{foo: {opt: val}, "
-                                                     "DEFAULT: {opt: val}}")
+        verify.configure_verifier(verifier_id=self.verifier_uuid,
+                                  deployment=self.deployment_uuid,
+                                  extra_options="{foo: {opt: val}, "
+                                                "DEFAULT: {opt: val}}")
         self.fake_api.verifier.configure.assert_called_with(
             verifier=self.verifier_uuid, deployment_id=self.deployment_uuid,
             extra_options=expected_options, reconfigure=False)
 
     def test_list_verifier_tests(self):
         self.fake_api.verifier.list_tests.return_value = ["test_1", "test_2"]
-        self.verify.list_verifier_tests(self.fake_api, self.verifier_uuid, "p")
+        verify.list_verifier_tests(verifier_id=self.verifier_uuid,
+                                   pattern="p")
 
         self.fake_api.verifier.list_tests.return_value = []
-        self.verify.list_verifier_tests(self.fake_api, self.verifier_uuid, "p")
+        verify.list_verifier_tests(verifier_id=self.verifier_uuid,
+                                   pattern="p")
 
         self.fake_api.verifier.list_tests.assert_has_calls(
             [mock.call(verifier_id=self.verifier_uuid, pattern="p"),
              mock.call(verifier_id=self.verifier_uuid, pattern="p")])
 
     def test_add_verifier_ext(self):
-        self.verify.add_verifier_ext(self.fake_api, self.verifier_uuid,
-                                     "a", "b", "c")
+        verify.add_verifier_ext(verifier_id=self.verifier_uuid, source="a",
+                                version="b", extra="c")
         self.fake_api.verifier.add_extension.assert_called_once_with(
             verifier_id=self.verifier_uuid,
             source="a", version="b", extra_settings="c")
@@ -327,9 +330,9 @@ class VerifyCommandsTestCase(test.TestCase):
     def test_list_verifier_exts_empty_list(self,
                                            mock_is_debug, mock_print_list):
         self.fake_api.verifier.list_extensions.return_value = []
-        self.verify.list_verifier_exts(self.fake_api, self.verifier_uuid)
+        verify.list_verifier_exts(verifier_id=self.verifier_uuid)
 
-        self.verify.list_verifier_exts(self.fake_api, self.verifier_uuid)
+        verify.list_verifier_exts(verifier_id=self.verifier_uuid)
 
         self.fake_api.verifier.list_extensions.assert_has_calls(
             [mock.call(verifier_id=self.verifier_uuid),
@@ -342,9 +345,9 @@ class VerifyCommandsTestCase(test.TestCase):
         ver_exts = self.fake_api.verifier.list_extensions
         ver_exts.return_value = [mock.MagicMock()]
         fields = ["Name", "Entry point"]
-        self.verify.list_verifier_exts(self.fake_api, self.verifier_uuid)
+        verify.list_verifier_exts(verifier_id=self.verifier_uuid)
 
-        self.verify.list_verifier_exts(self.fake_api, self.verifier_uuid)
+        verify.list_verifier_exts(verifier_id=self.verifier_uuid)
 
         self.fake_api.verifier.list_extensions.assert_has_calls(
             [mock.call(verifier_id=self.verifier_uuid),
@@ -362,9 +365,9 @@ class VerifyCommandsTestCase(test.TestCase):
         ver_exts = self.fake_api.verifier.list_extensions
         ver_exts.return_value = [mock.MagicMock()]
         fields = ["Name", "Entry point", "Location"]
-        self.verify.list_verifier_exts(self.fake_api, self.verifier_uuid)
+        verify.list_verifier_exts(verifier_id=self.verifier_uuid)
 
-        self.verify.list_verifier_exts(self.fake_api, self.verifier_uuid)
+        verify.list_verifier_exts(verifier_id=self.verifier_uuid)
 
         self.fake_api.verifier.list_extensions.assert_has_calls(
             [mock.call(verifier_id=self.verifier_uuid),
@@ -375,17 +378,18 @@ class VerifyCommandsTestCase(test.TestCase):
                                            normalize_field_names=True)
 
     def test_delete_verifier_ext(self):
-        self.verify.delete_verifier_ext(self.fake_api, self.verifier_uuid,
-                                        "ext_name")
+        verify.delete_verifier_ext(verifier_id=self.verifier_uuid,
+                                   name="ext_name")
         self.fake_api.verifier.delete_extension.assert_called_once_with(
             verifier_id=self.verifier_uuid, name="ext_name")
 
     @mock.patch("rally.cli.commands.verify.envutils.update_globals_file")
     @mock.patch("rally.cli.commands.verify.os.path.exists")
     def test_start(self, mock_exists, mock_update_globals_file):
-        self.verify.start(self.fake_api, self.verifier_uuid,
-                          self.deployment_uuid, pattern="pattern",
-                          load_list="load-list")
+        with self.assertExitCode(1):
+            verify.start(verifier_id=self.verifier_uuid,
+                         deployment=self.deployment_uuid, pattern="pattern",
+                         load_list="load-list")
         self.assertFalse(self.fake_api.verification.start.called)
 
         verification = self.verification_data
@@ -396,17 +400,20 @@ class VerifyCommandsTestCase(test.TestCase):
         self.fake_api.verification.get.return_value = verification
 
         mock_exists.return_value = False
-        self.verify.start(self.fake_api, self.verifier_uuid,
-                          self.deployment_uuid, load_list="/p/a/t/h")
+        with self.assertExitCode(1):
+            verify.start(verifier_id=self.verifier_uuid,
+                         deployment=self.deployment_uuid,
+                         load_list="/p/a/t/h")
         self.assertFalse(self.fake_api.verification.start.called)
 
         mock_exists.return_value = True
         tf = tempfile.NamedTemporaryFile()
         with open(tf.name, "w") as f:
             f.write("test_1\ntest_2")
-        self.verify.start(self.fake_api, self.verifier_uuid,
-                          self.deployment_uuid, tags=["foo"],
-                          load_list=tf.name)
+        with self.assertExitCode(3):
+            verify.start(verifier_id=self.verifier_uuid,
+                         deployment=self.deployment_uuid, tags=["foo"],
+                         load_list=tf.name)
         self.fake_api.verification.start.assert_called_once_with(
             verifier_id=self.verifier_uuid,
             deployment_id=self.deployment_uuid,
@@ -415,16 +422,18 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_exists.return_value = False
         self.fake_api.verification.start.reset_mock()
 
-        self.verify.start(self.fake_api, self.verifier_uuid,
-                          self.verifier_uuid, skip_list="/p/a/t/h")
+        with self.assertExitCode(1):
+            verify.start(verifier_id=self.verifier_uuid,
+                         deployment=self.verifier_uuid, skip_list="/p/a/t/h")
         self.assertFalse(self.fake_api.verification.start.called)
 
         tf = tempfile.NamedTemporaryFile()
         with open(tf.name, "w") as f:
             f.write("test_1:\ntest_2: Reason\n")
         mock_exists.return_value = True
-        self.verify.start(self.fake_api, self.verifier_uuid,
-                          self.deployment_uuid, skip_list=tf.name)
+        with self.assertExitCode(3):
+            verify.start(verifier_id=self.verifier_uuid,
+                         deployment=self.deployment_uuid, skip_list=tf.name)
         self.fake_api.verification.start.assert_called_once_with(
             verifier_id=self.verifier_uuid,
             deployment_id=self.deployment_uuid,
@@ -433,16 +442,19 @@ class VerifyCommandsTestCase(test.TestCase):
 
         mock_exists.return_value = False
         self.fake_api.verification.start.reset_mock()
-        self.verify.start(self.fake_api, self.verifier_uuid,
-                          self.deployment_uuid, xfail_list="/p/a/t/h")
+        with self.assertExitCode(1):
+            verify.start(verifier_id=self.verifier_uuid,
+                         deployment=self.deployment_uuid,
+                         xfail_list="/p/a/t/h")
         self.assertFalse(self.fake_api.verification.start.called)
 
         tf = tempfile.NamedTemporaryFile()
         with open(tf.name, "w") as f:
             f.write("test_1:\ntest_2: Reason\n")
         mock_exists.return_value = True
-        self.verify.start(self.fake_api, self.verifier_uuid,
-                          self.deployment_uuid, xfail_list=tf.name)
+        with self.assertExitCode(3):
+            verify.start(verifier_id=self.verifier_uuid,
+                         deployment=self.deployment_uuid, xfail_list=tf.name)
         self.fake_api.verification.start.assert_called_once_with(
             verifier_id=self.verifier_uuid,
             deployment_id=self.deployment_uuid, tags=None,
@@ -455,9 +467,10 @@ class VerifyCommandsTestCase(test.TestCase):
 
         self.fake_api.verification.get.reset_mock()
         mock_update_globals_file.reset_mock()
-        self.verify.start(self.fake_api, self.verifier_uuid,
-                          self.deployment_uuid, detailed=True,
-                          do_use=False)
+        with self.assertExitCode(3):
+            verify.start(verifier_id=self.verifier_uuid,
+                         deployment=self.deployment_uuid, detailed=True,
+                         no_use=True)
         self.assertFalse(self.fake_api.verification.get.called)
         self.assertFalse(mock_update_globals_file.called)
 
@@ -472,14 +485,14 @@ class VerifyCommandsTestCase(test.TestCase):
             uuid=deployment_id,
             status=consts.DeployStatus.DEPLOY_INIT)
         self.fake_api.verification.start.side_effect = exc
-        self.assertEqual(
-            1, self.verify.start(self.fake_api,
-                                 self.deployment_uuid, deployment_id))
+        with self.assertExitCode(1):
+            verify.start(verifier_id=self.deployment_uuid,
+                         deployment=deployment_id)
 
     @mock.patch("rally.cli.commands.verify.envutils.update_globals_file")
     def test_use(self, mock_update_globals_file):
         self.fake_api.verification.get.return_value = self.verification_data
-        self.verify.use(self.fake_api, self.verification_uuid)
+        verify.use(verification_uuid=self.verification_uuid)
         self.fake_api.verification.get.assert_called_once_with(
             verification_uuid=self.verification_uuid)
         mock_update_globals_file.assert_called_once_with(
@@ -493,8 +506,8 @@ class VerifyCommandsTestCase(test.TestCase):
             "tests": self.results_data["tests"]}
         self.fake_api.verification.get.return_value = self.verification_data
 
-        self.verify.rerun(self.fake_api, self.verification_uuid,
-                          self.deployment_uuid, failed=True)
+        verify.rerun(self.verification_uuid,
+                     deployment=self.deployment_uuid, failed=True)
         self.fake_api.verification.rerun.assert_called_once_with(
             verification_uuid=self.verification_uuid,
             concurrency=None,
@@ -523,7 +536,7 @@ class VerifyCommandsTestCase(test.TestCase):
 
         with mock.patch.object(verify.cliutils, "print_dict",
                                new=print_dict):
-            self.verify.show(self.fake_api, self.verifier_uuid, detailed=True)
+            verify.show(self.verifier_uuid, detailed=True)
 
         self.assertEqual(1, len(print_dict_calls))
 
@@ -580,7 +593,7 @@ class VerifyCommandsTestCase(test.TestCase):
 
         with mock.patch.object(verify.cliutils, "print_dict",
                                new=print_dict):
-            self.verify.show(self.fake_api, self.verifier_uuid, detailed=False)
+            verify.show(self.verifier_uuid, detailed=False)
         self.assertEqual(2, len(print_dict_calls))
 
         self.assertEqual(
@@ -639,12 +652,13 @@ class VerifyCommandsTestCase(test.TestCase):
     @mock.patch("rally.cli.commands.verify.cliutils.print_list")
     def test_list_empty_verifications(self, mock_print_list):
         self.fake_api.verification.list.return_value = []
-        self.verify.list(self.fake_api, self.verifier_uuid,
-                         self.deployment_uuid)
+        verify.list_(verifier_id=self.verifier_uuid,
+                     deployment=self.deployment_uuid)
 
-        self.verify.list(self.fake_api, self.verifier_uuid,
-                         self.deployment_uuid, "foo", "bar")
-        self.verify.list(self.fake_api)
+        verify.list_(verifier_id=self.verifier_uuid,
+                     deployment=self.deployment_uuid, tags="foo",
+                     status="bar")
+        verify.list_()
 
         self.fake_api.verification.list.assert_has_calls(
             [mock.call(verifier_id=self.verifier_uuid,
@@ -659,8 +673,8 @@ class VerifyCommandsTestCase(test.TestCase):
     @mock.patch("rally.cli.commands.verify.cliutils.print_list")
     def test_list(self, mock_print_list):
         self.fake_api.verification.list.return_value = [self.verification_data]
-        self.verify.list(self.fake_api, self.verifier_uuid,
-                         self.deployment_uuid)
+        verify.list_(verifier_id=self.verifier_uuid,
+                     deployment=self.deployment_uuid)
 
         additional_fields = ["UUID", "Tags", "Verifier name",
                              "Deployment name", "Started at", "Finished at",
@@ -675,11 +689,11 @@ class VerifyCommandsTestCase(test.TestCase):
                          list(mock_print_list.call_args[1].keys()).sort())
 
     def test_delete(self):
-        self.verify.delete(self.fake_api, "v_uuid")
+        verify.delete(verification_uuid=["v_uuid"])
         self.fake_api.verification.delete.assert_called_once_with(
             verification_uuid="v_uuid")
 
-        self.verify.delete(self.fake_api, ["v1_uuid", "v2_uuid"])
+        verify.delete(verification_uuid=["v1_uuid", "v2_uuid"])
         self.fake_api.verification.delete.assert_has_calls(
             [mock.call(verification_uuid="v1_uuid"),
              mock.call(verification_uuid="v2_uuid")])
@@ -695,10 +709,9 @@ class VerifyCommandsTestCase(test.TestCase):
             "files": {output_dest: content}, "open": output_dest}
         mock_os.path.exists.return_value = False
 
-        self.verify.report(self.fake_api,
-                           verification_uuid=self.verifier_uuid,
-                           output_type=output_type,
-                           output_dest=output_dest, open_it=True)
+        verify.report(verification_uuid=[self.verifier_uuid],
+                      output_type=output_type,
+                      output_dest=output_dest, open_it=True)
         self.fake_api.verification.report.assert_called_once_with(
             uuids=[self.verifier_uuid], output_type=output_type,
             output_dest=output_dest)
@@ -715,20 +728,22 @@ class VerifyCommandsTestCase(test.TestCase):
         self.fake_api.verification.report.return_value = {
             "files": {output_dest: content}, "print": "foo"}
 
-        self.verify.report(self.fake_api, self.verifier_uuid,
-                           output_type=output_type,
-                           output_dest=output_dest)
+        verify.report(verification_uuid=self.verifier_uuid,
+                      output_type=output_type,
+                      output_dest=output_dest)
 
         self.assertFalse(mock_open_new_tab.called)
         self.assertFalse(mock_os.makedirs.called)
 
-    @mock.patch("rally.cli.commands.verify.VerifyCommands.use")
+    @mock.patch("rally.cli.commands.verify._use")
     @mock.patch("rally.cli.commands.verify.open", create=True)
     @mock.patch("rally.cli.commands.verify.os.path.exists")
-    def test_import_results(self, mock_exists, mock_open, mock_use):
+    def test_import_results(self, mock_exists, mock_open, mock__use):
         mock_exists.return_value = False
-        self.verify.import_results(self.fake_api, self.verifier_uuid,
-                                   self.deployment_uuid)
+        with self.assertExitCode(1):
+            verify.import_results(verifier_id=self.verifier_uuid,
+                                  deployment=self.deployment_uuid,
+                                  file_to_parse="/p/a/t/h")
         self.assertFalse(self.fake_api.verification.import_results.called)
 
         verification = self.verification_data
@@ -738,21 +753,21 @@ class VerifyCommandsTestCase(test.TestCase):
 
         mock_exists.return_value = True
         mock_open.return_value = mock.mock_open(read_data="data").return_value
-        self.verify.import_results(self.fake_api,
-                                   verifier_id=self.verifier_uuid,
-                                   deployment=self.deployment_uuid,
-                                   file_to_parse="/p/a/t/h")
+        verify.import_results(verifier_id=self.verifier_uuid,
+                              deployment=self.deployment_uuid,
+                              file_to_parse="/p/a/t/h")
         mock_open.assert_called_once_with("/p/a/t/h", "r")
         self.fake_api.verification.import_results.assert_called_once_with(
             verifier_id=self.verifier_uuid,
             deployment_id=self.deployment_uuid,
             data="data")
 
-        mock_use.assert_called_with(self.fake_api, self.verification_uuid)
+        mock__use.assert_called_with(self.fake_api, self.verification_uuid)
 
-        mock_use.reset_mock()
-        self.verify.import_results(self.fake_api, "v_id", "d_id", do_use=False)
-        self.assertFalse(mock_use.called)
+        mock__use.reset_mock()
+        verify.import_results(verifier_id="v_id", deployment="d_id",
+                              file_to_parse="/p/a/t/h", no_use=True)
+        self.assertFalse(mock__use.called)
 
     @plugins.ensure_plugins_are_loaded
     def test_default_reporters(self):

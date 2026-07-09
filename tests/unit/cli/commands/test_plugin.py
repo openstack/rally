@@ -18,6 +18,7 @@ from unittest import mock
 
 import ddt
 
+from rally import exceptions
 from rally.cli import cliutils
 from rally.cli.commands import plugin as plugin_cmd
 from rally.common import utils
@@ -30,7 +31,6 @@ class PluginCommandsTestCase(test.TestCase):
 
     def setUp(self):
         super(PluginCommandsTestCase, self).setUp()
-        self.plugin_cmd = plugin_cmd.PluginCommands()
 
         @plugin.configure("p1", "p1_ns")
         class Plugin1(plugin.Plugin):
@@ -75,7 +75,7 @@ class PluginCommandsTestCase(test.TestCase):
 
         with mock.patch.object(plugin_cmd.cliutils, "print_list",
                                new=print_list):
-            plugin_cmd.PluginCommands._print_plugins_list(
+            plugin_cmd._print_plugins_list(
                 [self.Plugin1, self.Plugin2])
 
         self.assertEqual(
@@ -88,7 +88,7 @@ class PluginCommandsTestCase(test.TestCase):
 
     def test_show(self):
         with utils.StdOutCapture() as out:
-            plugin_cmd.PluginCommands().show(None, "p1", "p1_ns")
+            plugin_cmd.show("p1", platform="p1_ns")
             output = out.getvalue()
 
             self.assertIn("NAME\n\tp1", output)
@@ -112,20 +112,26 @@ class PluginCommandsTestCase(test.TestCase):
     @ddt.unpack
     def test_show_not_found(self, name, platform, text):
         with utils.StdOutCapture() as out:
-            plugin_cmd.PluginCommands().show(None, name, platform)
+            with self.assertExitCode(exceptions.PluginNotFound.error_code):
+                plugin_cmd.show(name, platform=platform)
             self.assertEqual(out.getvalue(), text)
 
-    @mock.patch("rally.cli.commands.plugin.PluginCommands._print_plugins_list")
-    def test_show_many(self, mock_plugin_commands__print_plugins_list):
+    @mock.patch("rally.cli.commands.plugin._print_plugins_list")
+    def test_show_many(self, mock__print_plugins_list):
         with utils.StdOutCapture() as out:
             with mock.patch("rally.cli.commands.plugin.plugin.Plugin."
                             "get_all") as mock_plugin_get_all:
-                mock_plugin_get_all.return_value = [self.Plugin2, self.Plugin3]
-                plugin_cmd.PluginCommands().show(None, "p", "p2_ns")
-                self.assertEqual("Multiple plugins found:\n", out.getvalue())
-                mock_plugin_get_all.assert_called_once_with(platform="p2_ns")
+                mock_plugin_get_all.return_value = [self.Plugin2,
+                                                    self.Plugin3]
+                with self.assertExitCode(
+                        exceptions.MultiplePluginsFound.error_code):
+                    plugin_cmd.show("p", platform="p2_ns")
+                self.assertEqual("Multiple plugins found:\n",
+                                 out.getvalue())
+                mock_plugin_get_all.assert_called_once_with(
+                    platform="p2_ns")
 
-        mock_plugin_commands__print_plugins_list.assert_called_once_with([
+        mock__print_plugins_list.assert_called_once_with([
             self.Plugin2, self.Plugin3])
 
     @ddt.data(
@@ -144,17 +150,17 @@ class PluginCommandsTestCase(test.TestCase):
     def test_list_not_found(self, name, platform, text):
 
         with utils.StdOutCapture() as out:
-            plugin_cmd.PluginCommands().list(None, name, platform)
+            plugin_cmd.list_(name, platform=platform)
             self.assertEqual(text, out.getvalue())
 
-    @mock.patch("rally.cli.commands.plugin.PluginCommands._print_plugins_list")
-    def test_list(self, mock_plugin_commands__print_plugins_list):
+    @mock.patch("rally.cli.commands.plugin._print_plugins_list")
+    def test_list(self, mock__print_plugins_list):
 
-        plugin_cmd.PluginCommands().list(None, None, "p1_ns")
-        plugin_cmd.PluginCommands().list(None, "p1", "p1_ns")
-        plugin_cmd.PluginCommands().list(None, "p2", None)
+        plugin_cmd.list_(None, platform="p1_ns")
+        plugin_cmd.list_("p1", platform="p1_ns")
+        plugin_cmd.list_("p2")
 
-        mock_plugin_commands__print_plugins_list.assert_has_calls([
+        mock__print_plugins_list.assert_has_calls([
             mock.call([self.Plugin1]),
             mock.call([self.Plugin1]),
             mock.call([self.Plugin2])

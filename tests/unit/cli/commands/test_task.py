@@ -38,8 +38,8 @@ class TaskCommandsTestCase(test.TestCase):
 
     def setUp(self):
         super(TaskCommandsTestCase, self).setUp()
-        self.task = task.TaskCommands()
         self.fake_api = fakes.FakeAPI()
+        cliutils.set_api(self.fake_api)
 
         with mock.patch("rally.api.API.check_db_revision"):
             self.real_api = api.API()
@@ -53,14 +53,14 @@ class TaskCommandsTestCase(test.TestCase):
             mock.mock_open(read_data=input_task).return_value,
             mock.mock_open(read_data="{'test': 1}").return_value
         ]
-        task_conf = self.task._load_and_validate_task(
+        task_conf = task._load_and_validate_task(
             self.real_api, "in_task", args_file="in_args_path")
         self.assertEqual({"ab": 1}, task_conf)
 
         mock_open.side_effect = [
             mock.mock_open(read_data=input_task).return_value
         ]
-        task_conf = self.task._load_and_validate_task(
+        task_conf = task._load_and_validate_task(
             self.real_api, "in_task", raw_args=input_args)
         self.assertEqual({"ab": 2}, task_conf)
 
@@ -68,7 +68,7 @@ class TaskCommandsTestCase(test.TestCase):
             mock.mock_open(read_data=input_task).return_value,
             mock.mock_open(read_data="{'test': 1}").return_value
         ]
-        task_conf = self.task._load_and_validate_task(
+        task_conf = task._load_and_validate_task(
             self.real_api, "in_task", raw_args=input_args,
             args_file="any_file")
         self.assertEqual({"ab": 2}, task_conf)
@@ -77,7 +77,7 @@ class TaskCommandsTestCase(test.TestCase):
             mock.mock_open(read_data=input_task).return_value,
             mock.mock_open(read_data="{'test': 1}").return_value
         ]
-        task_conf = self.task._load_and_validate_task(
+        task_conf = task._load_and_validate_task(
             self.real_api, "in_task", raw_args="test=2",
             args_file="any_file")
         self.assertEqual({"ab": 2}, task_conf)
@@ -96,7 +96,7 @@ class TaskCommandsTestCase(test.TestCase):
         mock_open.side_effect = open_return_value
 
         e = self.assertRaises(task.FailedToLoadTask,
-                              self.task._load_and_validate_task,
+                              task._load_and_validate_task,
                               self.fake_api, task_file="in_task",
                               args_file="in_args_path")
         self.assertEqual("Invalid --task-args-file passed:\n\n\t Error "
@@ -109,7 +109,7 @@ class TaskCommandsTestCase(test.TestCase):
         task_file = __file__
 
         e = self.assertRaises(task.FailedToLoadTask,
-                              self.task._load_and_validate_task, self.real_api,
+                              task._load_and_validate_task, self.real_api,
                               task_file, raw_args="{'test': {}")
         self.assertEqual("Invalid --task-args passed:\n\n\t Value has to be "
                          "YAML or JSON. Details:\n\nfoo", e.format_message())
@@ -118,7 +118,7 @@ class TaskCommandsTestCase(test.TestCase):
         # the case #2
         mock_safe_load.reset_mock()
         e = self.assertRaises(task.FailedToLoadTask,
-                              self.task._load_and_validate_task, self.real_api,
+                              task._load_and_validate_task, self.real_api,
                               task_file, raw_args="[]")
         self.assertEqual("Invalid --task-args passed:\n\n\t Value has to be "
                          "YAML or JSON. Details:\n\nfoo", e.format_message())
@@ -127,7 +127,7 @@ class TaskCommandsTestCase(test.TestCase):
         # the case #3
         mock_safe_load.reset_mock()
         e = self.assertRaises(task.FailedToLoadTask,
-                              self.task._load_and_validate_task, self.real_api,
+                              task._load_and_validate_task, self.real_api,
                               task_file, raw_args="foo")
         self.assertEqual("Invalid --task-args passed:\n\n\t Value has to be "
                          "YAML or JSON. Details:\n\nfoo", e.format_message())
@@ -139,11 +139,11 @@ class TaskCommandsTestCase(test.TestCase):
             mock.mock_open(read_data="{'test': {{t}}}").return_value
         ]
         e = self.assertRaises(task.FailedToLoadTask,
-                              self.task._load_and_validate_task, self.real_api,
+                              task._load_and_validate_task, self.real_api,
                               "in_task")
-        self.assertEqual("Invalid --task passed:\n\n\t Failed to render task "
-                         "template.\n\nPlease specify template task argument: "
-                         "t", e.format_message())
+        self.assertEqual("Invalid task file passed:\n\n\t Failed to render "
+                         "task template.\n\nPlease specify template task "
+                         "argument: t", e.format_message())
 
     @mock.patch("rally.cli.commands.task.yaml")
     @mock.patch("rally.cli.commands.task.open", create=True)
@@ -154,9 +154,9 @@ class TaskCommandsTestCase(test.TestCase):
         mock_yaml.safe_load.side_effect = Exception("ERROR!!!PANIC!!!")
 
         e = self.assertRaises(task.FailedToLoadTask,
-                              self.task._load_and_validate_task, self.fake_api,
+                              task._load_and_validate_task, self.fake_api,
                               "in_task")
-        self.assertEqual("Invalid --task passed:\n\n\t Wrong format of "
+        self.assertEqual("Invalid task file passed:\n\n\t Wrong format of "
                          "rendered input task. It should be YAML or JSON. "
                          "Details:\n\nERROR!!!PANIC!!!", e.format_message())
 
@@ -166,8 +166,8 @@ class TaskCommandsTestCase(test.TestCase):
             "samples/tasks/scenarios/dummy/dummy.json")
         input_task = "{%% include \"%s\" %%}" % os.path.basename(
             other_template_path)
-        expect = self.task._load_and_validate_task(self.real_api,
-                                                   other_template_path)
+        expect = task._load_and_validate_task(self.real_api,
+                                              other_template_path)
 
         with mock.patch("rally.cli.commands.task.open",
                         create=True) as mock_open:
@@ -176,8 +176,8 @@ class TaskCommandsTestCase(test.TestCase):
             ]
             input_task_file = os.path.join(
                 os.path.dirname(other_template_path), "input_task.json")
-            actual = self.task._load_and_validate_task(self.real_api,
-                                                       input_task_file)
+            actual = task._load_and_validate_task(self.real_api,
+                                                  input_task_file)
         self.assertEqual(expect, actual)
 
     @mock.patch("rally.cli.commands.task.open", create=True)
@@ -185,20 +185,20 @@ class TaskCommandsTestCase(test.TestCase):
         mock_open.side_effect = IOError
 
         e = self.assertRaises(task.FailedToLoadTask,
-                              self.task._load_and_validate_task,
+                              task._load_and_validate_task,
                               api=self.fake_api, task_file="some_task",
                               raw_args="task_args", args_file="task_args_file")
         self.assertEqual(
-            "Invalid --task passed:\n\n\t Error reading some_task: ",
+            "Invalid task file passed:\n\n\t Error reading some_task: ",
             e.format_message())
 
     @mock.patch("rally.cli.commands.task.version")
-    @mock.patch("rally.cli.commands.task.TaskCommands.use")
-    @mock.patch("rally.cli.commands.task.TaskCommands._detailed")
-    @mock.patch("rally.cli.commands.task.TaskCommands._load_and_validate_task",
+    @mock.patch("rally.cli.commands.task._use")
+    @mock.patch("rally.cli.commands.task._detailed")
+    @mock.patch("rally.cli.commands.task._load_and_validate_task",
                 return_value={"some": "json"})
     def test_start(self, mock__load_and_validate_task, mock__detailed,
-                   mock_use, mock_version):
+                   mock__use, mock_version):
         deployment_id = "e0617de9-77d1-4875-9b49-9d5789e29f20"
         task_path = "path_to_config.json"
         fake_task = fakes.FakeTask(uuid="some_new_uuid", tags=["tag"])
@@ -207,9 +207,8 @@ class TaskCommandsTestCase(test.TestCase):
         self.fake_api.task.validate.return_value = fakes.FakeTask(
             some="json", uuid="some_uuid", temporary=True)
 
-        val = self.task.start(self.fake_api, task_path,
-                              deployment_id, do_use=True)
-        self.assertEqual(2, val)
+        with self.assertExitCode(2):
+            task.start(task_path, deployment=deployment_id)
         mock_version.version_string.assert_called_once_with()
         self.fake_api.task.create.assert_called_once_with(
             deployment=deployment_id, tags=None)
@@ -220,16 +219,14 @@ class TaskCommandsTestCase(test.TestCase):
             abort_on_sla_failure=False)
         mock__load_and_validate_task.assert_called_once_with(
             self.fake_api, task_path, args_file=None, raw_args=None)
-        mock_use.assert_called_once_with(self.fake_api, "some_new_uuid")
+        mock__use.assert_called_once_with(self.fake_api, "some_new_uuid")
         mock__detailed.assert_called_once_with(self.fake_api,
                                                task_id=fake_task["uuid"])
         mock__detailed.return_value = 0
-        val1 = self.task.start(self.fake_api, task_path,
-                               deployment_id, do_use=True)
-        self.assertEqual(0, val1)
+        task.start(task_path, deployment=deployment_id)
 
-    @mock.patch("rally.cli.commands.task.TaskCommands._detailed")
-    @mock.patch("rally.cli.commands.task.TaskCommands._load_and_validate_task",
+    @mock.patch("rally.cli.commands.task._detailed")
+    @mock.patch("rally.cli.commands.task._load_and_validate_task",
                 return_value="some_config")
     def test_start_on_unfinished_deployment(self, mock__load_and_validate_task,
                                             mock__detailed):
@@ -244,13 +241,12 @@ class TaskCommandsTestCase(test.TestCase):
             uuid=deployment_id,
             status=consts.DeployStatus.DEPLOY_INIT)
         self.fake_api.task.create.side_effect = exc
-        self.assertEqual(1, self.task.start(self.fake_api, task_path,
-                                            deployment="any",
-                                            tags=["some_tag"]))
+        with self.assertExitCode(1):
+            task.start(task_path, deployment="any", tags=["some_tag"])
         self.assertFalse(mock__detailed.called)
 
-    @mock.patch("rally.cli.commands.task.TaskCommands._detailed")
-    @mock.patch("rally.cli.commands.task.TaskCommands._load_and_validate_task",
+    @mock.patch("rally.cli.commands.task._detailed")
+    @mock.patch("rally.cli.commands.task._load_and_validate_task",
                 return_value="some_config")
     def test_start_with_task_args(self, mock__load_and_validate_task,
                                   mock__detailed):
@@ -259,13 +255,14 @@ class TaskCommandsTestCase(test.TestCase):
             uuid="new_uuid", tags=["some_tag"])
         self.fake_api.task.validate.return_value = fakes.FakeTask(
             uuid="some_id")
+        mock__detailed.return_value = 0
 
         task_path = "path_to_config.json"
         task_args = "task_args"
         task_args_file = "task_args_file"
-        self.task.start(self.fake_api, task_path, deployment="any",
-                        task_args=task_args, task_args_file=task_args_file,
-                        tags=["some_tag"])
+        task.start(task_path, deployment="any",
+                   task_args=task_args, task_args_file=task_args_file,
+                   tags=["some_tag"])
 
         mock__load_and_validate_task.assert_called_once_with(
             self.fake_api, task_path, raw_args=task_args,
@@ -282,14 +279,8 @@ class TaskCommandsTestCase(test.TestCase):
         self.fake_api.task.create.assert_called_once_with(
             deployment="any", tags=["some_tag"])
 
-    @mock.patch("rally.cli.commands.task.envutils.get_global")
-    def test_start_no_deployment_id(self, mock_get_global):
-        mock_get_global.side_effect = exceptions.InvalidArgumentsException
-        self.assertRaises(exceptions.InvalidArgumentsException,
-                          self.task.start, "path_to_config.json", None)
-
-    @mock.patch("rally.cli.commands.task.TaskCommands._detailed")
-    @mock.patch("rally.cli.commands.task.TaskCommands._load_and_validate_task")
+    @mock.patch("rally.cli.commands.task._detailed")
+    @mock.patch("rally.cli.commands.task._load_and_validate_task")
     def test_start_invalid_task(self, mock__load_and_validate_task,
                                 mock__detailed):
         task_obj = fakes.FakeTask(temporary=False, tag="tag", uuid="uuid")
@@ -299,8 +290,8 @@ class TaskCommandsTestCase(test.TestCase):
         mock__load_and_validate_task.side_effect = exc
 
         self.assertRaises(exceptions.InvalidTaskException,
-                          self.task.start, self.fake_api, "task_path",
-                          "deployment", tags=["tag"])
+                          task.start, "task_path",
+                          deployment="deployment", tags=["tag"])
 
         self.assertFalse(self.fake_api.task.create.called)
         self.assertFalse(self.fake_api.task.start.called)
@@ -311,8 +302,8 @@ class TaskCommandsTestCase(test.TestCase):
         self.fake_api.task.start.side_effect = KeyError()
 
         self.assertRaises(KeyError,
-                          self.task.start, self.fake_api, "task_path",
-                          "deployment", tags=["tag"])
+                          task.start, "task_path",
+                          deployment="deployment", tags=["tag"])
 
         self.fake_api.task.create.assert_called_once_with(
             deployment="deployment", tags=["tag"])
@@ -324,7 +315,7 @@ class TaskCommandsTestCase(test.TestCase):
 
         self.assertFalse(mock__detailed.called)
 
-    @mock.patch("rally.cli.commands.task.TaskCommands._start_task")
+    @mock.patch("rally.cli.commands.task._start_task")
     @ddt.data({"scenario": None},
               {"scenario": "scenario_name"},
               {"scenario": "none_name"})
@@ -350,17 +341,13 @@ class TaskCommandsTestCase(test.TestCase):
             ]
         }
         if scenario == "none_name":
-            self.assertEqual(
-                1,
-                self.task.restart(self.fake_api, "deployment_uuid",
-                                  "task_uuid", scenarios=scenario)
-            )
+            with self.assertExitCode(1):
+                task.restart(deployment="deployment_uuid",
+                             task_id="task_uuid", scenarios=scenario)
         else:
-            self.assertEqual(
-                mock__start_task.return_value,
-                self.task.restart(self.fake_api, "deployment_uuid",
-                                  "task_uuid", scenarios=scenario)
-            )
+            mock__start_task.return_value = 0
+            task.restart(deployment="deployment_uuid",
+                         task_id="task_uuid", scenarios=scenario)
         self.fake_api.task.get.assert_called_once_with(task_id="task_uuid",
                                                        detailed=True)
 
@@ -378,37 +365,23 @@ class TaskCommandsTestCase(test.TestCase):
                 "msg": ""
             }
         }
-        self.assertEqual(
-            1,
-            self.task.restart(self.fake_api, "deployment_uuid", "task_uuid")
-        )
+        with self.assertExitCode(1):
+            task.restart(deployment="deployment_uuid", task_id="task_uuid")
         self.fake_api.task.get.assert_called_once_with(task_id="task_uuid",
                                                        detailed=True)
 
     def test_abort(self):
         test_uuid = "17860c43-2274-498d-8669-448eff7b073f"
-        self.task.abort(self.fake_api, test_uuid)
+        task.abort(test_uuid)
         self.fake_api.task.abort.assert_called_once_with(
             task_uuid=test_uuid, soft=False, wait=True)
-
-    @mock.patch("rally.cli.commands.task.envutils.get_global")
-    def test_abort_no_task_id(self, mock_get_global):
-        mock_get_global.side_effect = exceptions.InvalidArgumentsException
-        self.assertRaises(exceptions.InvalidArgumentsException,
-                          self.task.abort, self.fake_api, None)
 
     def test_status(self):
         test_uuid = "a3e7cefb-bec2-4802-89f6-410cc31f71af"
         value = {"task_id": "task", "status": "status"}
         self.fake_api.task.get.return_value = value
-        self.task.status(self.fake_api, test_uuid)
+        task.status(task_id=test_uuid)
         self.fake_api.task.get.assert_called_once_with(task_id=test_uuid)
-
-    @mock.patch("rally.cli.commands.task.envutils.get_global")
-    def test_status_no_task_id(self, mock_get_global):
-        mock_get_global.side_effect = exceptions.InvalidArgumentsException
-        self.assertRaises(exceptions.InvalidArgumentsException,
-                          self.task.status, None)
 
     @ddt.data({"iterations_data": False, "has_output": True,
                "filters": None},
@@ -549,9 +522,8 @@ class TaskCommandsTestCase(test.TestCase):
             detailed_value["subtasks"][0]["workloads"][0]["output"] = {
                 "additive": [], "complete": []}
         self.fake_api.task.get.return_value = detailed_value
-        self.task.detailed(self.fake_api, test_uuid,
-                           iterations_data=iterations_data,
-                           filters=filters)
+        task.detailed(task_id=test_uuid, iterations_data=iterations_data,
+                      filters=filters)
         self.fake_api.task.get.assert_called_once_with(
             task_id=test_uuid, detailed=True)
 
@@ -574,7 +546,7 @@ class TaskCommandsTestCase(test.TestCase):
         self.fake_api.task.get.return_value = value
 
         mock_logging.is_debug.return_value = debug
-        self.task.detailed(self.fake_api, test_uuid)
+        task.detailed(task_id=test_uuid)
         if debug:
             expected_calls = [
                 mock.call("Task test_task_id: crashed"),
@@ -599,23 +571,17 @@ class TaskCommandsTestCase(test.TestCase):
             "results": []
         }
         self.fake_api.task.get.return_value = value
-        self.task.detailed(self.fake_api, test_uuid)
+        task.detailed(task_id=test_uuid)
         expected_calls = [mock.call("Task test_task_id: init"),
                           mock.call("\nThe task test_task_id marked as "
                                     "'init'. Results available when it "
                                     "is 'finished'.")]
         mock_stdout.write.assert_has_calls(expected_calls, any_order=True)
 
-    @mock.patch("rally.cli.commands.task.envutils.get_global")
-    def test_detailed_no_task_id(self, mock_get_global):
-        mock_get_global.side_effect = exceptions.InvalidArgumentsException
-        self.assertRaises(exceptions.InvalidArgumentsException,
-                          self.task.detailed, None)
-
     def test_detailed_wrong_id(self):
         test_uuid = "eb290c30-38d8-4c8f-bbcc-fc8f74b004ae"
         self.fake_api.task.get.side_effect = None
-        self.task.detailed(self.fake_api, test_uuid)
+        task.detailed(task_id=test_uuid)
         self.fake_api.task.get.assert_called_once_with(
             task_id=test_uuid, detailed=True)
 
@@ -699,7 +665,7 @@ class TaskCommandsTestCase(test.TestCase):
 
         self.fake_api.task.get.return_value = task_obj
 
-        self.assertIsNone(self.task.results(self.fake_api, task_id))
+        self.assertIsNone(task.results(task_id=task_id))
         self.assertEqual(1, mock_json_dumps.call_count)
         self.assertEqual(1, len(mock_json_dumps.call_args[0]))
         self.assertEqual(list(result), mock_json_dumps.call_args[0][0])
@@ -721,7 +687,8 @@ class TaskCommandsTestCase(test.TestCase):
         task_obj["uuid"] = task_id
         self.fake_api.task.get.return_value = task_obj
 
-        self.assertEqual(1, self.task.results(self.fake_api, task_id))
+        with self.assertExitCode(1):
+            task.results(task_id=task_id)
 
         self.fake_api.task.get.assert_called_once_with(
             task_id=task_id, detailed=True)
@@ -733,33 +700,46 @@ class TaskCommandsTestCase(test.TestCase):
                        consts.TaskStatus.ABORTED)))
         mock_stdout.write.assert_has_calls([mock.call(expected_out)])
 
-    def test_trends(self):
-        self.task.export = mock.MagicMock()
-        self.task.trends(self.fake_api,
-                         tasks=["uuid"],
-                         out="output.html")
-        self.task.export.assert_called_once_with(
+    @mock.patch("rally.cli.commands.task._export")
+    def test_trends(self, mock__export):
+        task.trends(["uuid"], out="output.html")
+        mock__export.assert_called_once_with(
             self.fake_api, tasks=["uuid"], output_type="trends-html",
             output_dest="output.html", open_it=False)
 
-    def test_trends_no_tasks_given(self):
-        ret = self.task.trends(self.fake_api, tasks=[],
-                               out="output.html", out_format="html")
-        self.assertEqual(1, ret)
+    @mock.patch("rally.cli.commands.task._export")
+    def test_trends_html_static(self, mock__export):
+        task.trends(["uuid"], out="output.html", html_static=True)
+        mock__export.assert_called_once_with(
+            self.fake_api, tasks=["uuid"],
+            output_type="trends-html-static",
+            output_dest="output.html", open_it=False)
 
-    def test_report(self):
-        self.task.export = mock.MagicMock()
-        self.task.report(self.fake_api, tasks="uuid",
-                         out="out", open_it=False, out_format="junit-xml")
-        self.task.export.assert_called_once_with(
-            self.fake_api, tasks="uuid", output_type="junit-xml",
-            output_dest="out", open_it=False, deployment=None
-        )
+    def test_trends_no_tasks_given(self):
+        with self.assertExitCode(1):
+            task.trends([], out="output.html")
+
+    @mock.patch("rally.cli.commands.task._export")
+    def test_report(self, mock__export):
+        task.report("uuid", out="out")
+        mock__export.assert_called_once_with(
+            self.fake_api, tasks="uuid", output_type="html",
+            output_dest="out", open_it=False, deployment=None)
+
+        mock__export.reset_mock()
+        task.report("uuid", out="out", to_json=True)
+        mock__export.assert_called_once_with(
+            self.fake_api, tasks="uuid", output_type="json",
+            output_dest="out", open_it=False, deployment=None)
+
+        mock__export.reset_mock()
+        task.report("uuid", out="out", html_static=True)
+        mock__export.assert_called_once_with(
+            self.fake_api, tasks="uuid", output_type="html-static",
+            output_dest="out", open_it=False, deployment=None)
 
     @mock.patch("rally.cli.commands.task.cliutils.print_list")
-    @mock.patch("rally.cli.commands.task.envutils.get_global",
-                return_value="123456789")
-    def test_list(self, mock_get_global, mock_print_list):
+    def test_list(self, mock_print_list):
         self.fake_api.task.list.return_value = [
             {"uuid": "a",
              "created_at": "2007-01-01T00:00:01",
@@ -767,9 +747,9 @@ class TaskCommandsTestCase(test.TestCase):
              "status": consts.TaskStatus.RUNNING,
              "tags": ["d"],
              "deployment_name": "some_name"}]
-        self.task.list(self.fake_api, status="running")
+        task.list_(deployment="123456789", status="running")
         self.fake_api.task.list.assert_called_once_with(
-            deployment=mock_get_global.return_value,
+            deployment="123456789",
             status=consts.TaskStatus.RUNNING)
 
         headers = ["UUID", "Deployment name", "Created at", "Load duration",
@@ -781,9 +761,7 @@ class TaskCommandsTestCase(test.TestCase):
             sortby_index=headers.index("Created at"),
             formatters=mock.ANY)
 
-    @mock.patch("rally.cli.commands.task.envutils.get_global",
-                return_value="123456789")
-    def test_list_uuids_only(self, mock_get_global):
+    def test_list_uuids_only(self):
         self.fake_api.task.list.return_value = [
             {"uuid": "a",
              "created_at": "2007-01-01T00:00:01",
@@ -793,31 +771,31 @@ class TaskCommandsTestCase(test.TestCase):
              "deployment_name": "some_name"}]
         out = io.StringIO()
         with mock.patch.object(sys, "stdout", new=out):
-            self.task.list(self.fake_api, status="running", uuids_only=True)
+            task.list_(deployment="123456789", status="running",
+                       uuids_only=True)
             self.assertEqual("a\n", out.getvalue())
         self.fake_api.task.list.assert_called_once_with(
-            deployment=mock_get_global.return_value,
+            deployment="123456789",
             status=consts.TaskStatus.RUNNING)
 
     def test_list_wrong_status(self):
-        self.assertEqual(1, self.task.list(self.fake_api, deployment="fake",
-                                           status="wrong non existing status"))
+        with self.assertExitCode(1):
+            task.list_(deployment="fake",
+                       status="wrong non existing status")
 
     def test_list_no_results(self):
         self.fake_api.task.list.return_value = []
-        self.assertIsNone(self.task.list(self.fake_api, deployment="fake",
-                                         all_deployments=True))
+        self.assertIsNone(task.list_(deployment="fake",
+                                     all_deployments=True))
         self.fake_api.task.list.assert_called_once_with()
         self.fake_api.task.list.reset_mock()
 
-        self.assertIsNone(self.task.list(self.fake_api, deployment="d",
-                                         status=consts.TaskStatus.RUNNING))
+        self.assertIsNone(task.list_(deployment="d",
+                                     status=consts.TaskStatus.RUNNING))
         self.fake_api.task.list.assert_called_once_with(
             deployment="d", status=consts.TaskStatus.RUNNING)
 
-    @mock.patch("rally.cli.commands.task.envutils.get_global",
-                return_value="123456789")
-    def test_list_output(self, mock_get_global):
+    def test_list_output(self):
         self.fake_api.task.list.return_value = [
             {"uuid": "UUID-1",
              "created_at": "2007-01-01T00:00:01",
@@ -844,7 +822,7 @@ class TaskCommandsTestCase(test.TestCase):
 
         with mock.patch.object(task.cliutils, "print_list",
                                new=print_list):
-            self.task.list(self.fake_api, status="running")
+            task.list_(deployment="123456789", status="running")
 
         self.assertEqual(1, len(print_list_calls))
 
@@ -866,7 +844,7 @@ class TaskCommandsTestCase(test.TestCase):
     def test_delete(self):
         task_uuid = "8dcb9c5e-d60b-4022-8975-b5987c7833f7"
         force = False
-        self.task.delete(self.fake_api, task_uuid, force=force)
+        task.delete(task_id=task_uuid, force=force)
         self.fake_api.task.delete.assert_called_once_with(
             task_uuid=task_uuid, force=force)
 
@@ -876,7 +854,7 @@ class TaskCommandsTestCase(test.TestCase):
                       "6a3cb11c-ac75-41e7-8ae7-935732bfb48f",
                       "018af931-0e5a-40d5-9d6f-b13f4a3a09fc"]
         force = False
-        self.task.delete(self.fake_api, task_uuids, force=force)
+        task.delete(task_id=task_uuids, force=force)
         self.assertTrue(
             self.fake_api.task.delete.call_count == len(task_uuids))
         expected_calls = [mock.call(task_uuid=task_uuid,
@@ -892,17 +870,15 @@ class TaskCommandsTestCase(test.TestCase):
              "pos": 0, "success": False, "detail": "Max foo, actually bar"}]
 
         self.fake_api.task.get.return_value = task_obj
-        result = self.task.sla_check(self.fake_api, task_id="fake_task_id")
-        self.assertEqual(1, result)
+        with self.assertExitCode(1):
+            task.sla_check(task_id="fake_task_id")
         self.fake_api.task.get.assert_called_with(
             task_id="fake_task_id", detailed=True)
 
         task_obj["subtasks"][0]["workloads"][0]["sla_results"]["sla"][0][
             "success"] = True
 
-        result = self.task.sla_check(self.fake_api, task_id="fake_task_id",
-                                     tojson=True)
-        self.assertEqual(0, result)
+        task.sla_check(task_id="fake_task_id", tojson=True)
 
     @mock.patch("rally.cli.commands.task.os.path.isfile", return_value=True)
     @mock.patch("rally.cli.commands.task.open",
@@ -911,12 +887,12 @@ class TaskCommandsTestCase(test.TestCase):
     def test_validate(self, mock_open, mock_os_path_isfile):
         self.fake_api.task.render_template = self.real_api.task.render_template
 
-        self.task.validate(self.fake_api, "path_to_config.json", "fake_id")
+        task.validate("path_to_config.json", deployment="fake_id")
 
         self.fake_api.task.validate.assert_called_once_with(
             deployment="fake_id", config={"some": "json"})
 
-    @mock.patch("rally.cli.commands.task.TaskCommands._load_and_validate_task",
+    @mock.patch("rally.cli.commands.task._load_and_validate_task",
                 side_effect=task.FailedToLoadTask)
     def test_validate_failed_to_load_task(self, mock__load_and_validate_task):
         args = "args"
@@ -924,21 +900,21 @@ class TaskCommandsTestCase(test.TestCase):
 
         mock__load_and_validate_task.side_effect = KeyError("foo")
 
-        self.assertRaises(KeyError, self.task.validate, self.real_api,
-                          "path_to_task", "fake_deployment_id",
+        self.assertRaises(KeyError, task.validate, "path_to_task",
+                          deployment="fake_deployment_id",
                           task_args=args, task_args_file=args_file)
         self.assertFalse(self.fake_api.task.validate.called)
 
         mock__load_and_validate_task.assert_called_once_with(
-            self.real_api, "path_to_task", raw_args=args, args_file=args_file)
+            self.fake_api, "path_to_task", raw_args=args, args_file=args_file)
 
-    @mock.patch("rally.cli.commands.task.TaskCommands._load_and_validate_task")
+    @mock.patch("rally.cli.commands.task._load_and_validate_task")
     def test_validate_invalid(self, mock__load_and_validate_task):
         exc = exceptions.InvalidTaskException("foo")
         self.fake_api.task.validate.side_effect = exc
         self.assertRaises(exceptions.InvalidTaskException,
-                          self.task.validate, self.fake_api, "path_to_task",
-                          "deployment")
+                          task.validate, "path_to_task",
+                          deployment="deployment")
         self.fake_api.task.validate.assert_called_once_with(
             deployment="deployment",
             config=mock__load_and_validate_task.return_value)
@@ -946,7 +922,7 @@ class TaskCommandsTestCase(test.TestCase):
     @mock.patch("rally.cli.envutils._rewrite_env_file")
     def test_use(self, mock__rewrite_env_file):
         task_id = "80422553-5774-44bd-98ac-38bd8c7a0feb"
-        self.task.use(self.fake_api, task_id)
+        task.use(task_id)
         mock__rewrite_env_file.assert_called_once_with(
             os.path.expanduser("~/.rally/globals"),
             ["RALLY_TASK=%s\n" % task_id])
@@ -956,8 +932,8 @@ class TaskCommandsTestCase(test.TestCase):
         exc = exceptions.DBRecordNotFound(criteria="uuid: %s" % task_id,
                                           table="tasks")
         self.fake_api.task.get.side_effect = exc
-        self.assertRaises(exceptions.DBRecordNotFound, self.task.use,
-                          self.fake_api, task_id)
+        self.assertRaises(exceptions.DBRecordNotFound, task.use,
+                          task_id)
 
     @mock.patch("rally.cli.task_results_loader.load")
     @mock.patch("rally.cli.commands.task.os.path")
@@ -977,9 +953,9 @@ class TaskCommandsTestCase(test.TestCase):
         mock_open.side_effect = mock_fd
         mock_load.return_value = [{"task": "task_1"}, {"task": "task2"}]
 
-        self.task.export(self.fake_api, tasks=["uuid", "file"],
-                         output_type="json", output_dest="output_dest",
-                         open_it=True)
+        task._export(self.fake_api, tasks=["uuid", "file"],
+                     output_type="json", output_dest="output_dest",
+                     open_it=True)
 
         self.fake_api.task.export.assert_called_once_with(
             tasks=["uuid"] + mock_load.return_value,
@@ -992,7 +968,7 @@ class TaskCommandsTestCase(test.TestCase):
         # print
         self.fake_api.task.export.reset_mock()
         self.fake_api.task.export.return_value = {"print": "content"}
-        self.task.export(self.fake_api, tasks="uuid", output_type="json")
+        task._export(self.fake_api, tasks="uuid", output_type="json")
         self.fake_api.task.export.assert_called_once_with(
             tasks=["uuid"],
             output_type="json", output_dest=None
@@ -1090,7 +1066,7 @@ class TaskCommandsTestCase(test.TestCase):
             "validation_result": json.dumps([error_type, error_message,
                                              error_traceback])
         }
-        self.task.detailed(self.fake_api, test_uuid)
+        task.detailed(task_id=test_uuid)
         self.fake_api.task.get.assert_called_once_with(
             task_id=test_uuid, detailed=True)
         mock_stdout.write.assert_has_calls([
@@ -1104,9 +1080,8 @@ class TaskCommandsTestCase(test.TestCase):
         mock_os_path.expanduser = lambda path: path
         mock_load.return_value = ["results"]
 
-        self.task.import_results(self.fake_api,
-                                 "deployment_uuid",
-                                 "task_file", tags=["tag"])
+        task.import_results("task_file", deployment="deployment_uuid",
+                            tags=["tag"])
 
         mock_load.assert_called_once_with("task_file")
         self.fake_api.task.import_results.assert_called_once_with(
@@ -1115,9 +1090,6 @@ class TaskCommandsTestCase(test.TestCase):
 
         # not exist
         mock_os_path.exists.return_value = False
-        self.assertEqual(
-            1,
-            self.task.import_results(self.fake_api,
-                                     "deployment_uuid",
-                                     "task_file", ["tag"])
-        )
+        with self.assertExitCode(1):
+            task.import_results("task_file", deployment="deployment_uuid",
+                                tags=["tag"])
