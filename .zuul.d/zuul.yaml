@@ -23,6 +23,31 @@
         - rally-install-ubuntu-jammy
         - rally-install-ubuntu-noble
         - rally-docker-build
+        # ensure rally-openstack is working with latest rally
+        - rally-task-simple-job:
+            files:
+              - rally/cli/commands/task.py
+              - rally/common/*
+              - rally/plugins/common/*
+              - rally/plugins/task/*
+              - rally/task/*
+              - rally/utils/*
+              - rally/apy.py
+              - .zuul.d/*
+              - tests/ci/playbooks/*
+            vars:
+              rally_task: "{{ ansible_user_dir }}/{{ zuul.projects['opendev.org/openstack/rally-openstack'].src_dir }}/rally-jobs/simple-job.yaml"
+        - rally-verify-tempest:
+            files:
+              - rally/cli/commands/verify.py
+              - rally/common/*
+              - rally/plugins/common/*
+              - rally/plugins/verification/*
+              - rally/utils/*
+              - rally/verification/*
+              - rally/apy.py
+              - .zuul.d/*
+              - tests/ci/playbooks/*
     gate: *queue
     post:
       jobs:
