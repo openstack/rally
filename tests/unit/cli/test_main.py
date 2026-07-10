@@ -10,20 +10,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import io
 import sys
-import typing as t
 from unittest import mock
 
-import ddt
 import sqlalchemy.exc
-import typer
 
 from rally import exceptions
 from rally.cli import cliutils
 from rally.cli import main
 from rally.common import logging
-from tests.unit import test
+from tests.unit.cli import test as cli_test
 
 
 class _Boom(exceptions.RallyException):
@@ -31,173 +27,135 @@ class _Boom(exceptions.RallyException):
     msg_fmt = "boom"
 
 
-class VersionTestCase(test.TestCase):
+class VersionTestCase(cli_test.CLITestCase):
+
+    APPLY_DB_SCHEMA = False
 
     @mock.patch("rally.common.version.plugins_versions", return_value={})
     def test_print_version(self, mock_plugins_versions):
-        out = io.StringIO()
-        with mock.patch("sys.stdout", out):
-            main.print_version()
-        self.assertIn("Rally version:", out.getvalue())
-        self.assertNotIn("Installed Plugins", out.getvalue())
+        result = self.invoke(["version"])
+        self.assertEqual(0, result.exit_code, result.output)
+        self.assertIn("Rally version:", result.output)
+        self.assertNotIn("Installed Plugins", result.output)
 
     @mock.patch("rally.common.version.plugins_versions",
                 return_value={"foo": "0.1"})
     def test_print_version_with_plugins(self, mock_plugins_versions):
-        out = io.StringIO()
-        with mock.patch("sys.stdout", out):
-            main.print_version()
-        self.assertIn("Installed Plugins:", out.getvalue())
-        self.assertIn("foo: 0.1", out.getvalue())
+        result = self.invoke(["version"])
+        self.assertEqual(0, result.exit_code, result.output)
+        self.assertIn("Installed Plugins:", result.output)
+        self.assertIn("foo: 0.1", result.output)
 
-    @mock.patch("rally.cli.main.print_version")
-    def test_version_callback_set(self, mock_print_version):
-        self.assertRaises(typer.Exit, main._version_callback, True)
-        mock_print_version.assert_called_once_with()
-
-    @mock.patch("rally.cli.main.print_version")
-    def test_version_callback_unset(self, mock_print_version):
-        self.assertIsNone(main._version_callback(False))
-        self.assertFalse(mock_print_version.called)
+    @mock.patch("rally.common.version.plugins_versions", return_value={})
+    def test_version_flag(self, mock_plugins_versions):
+        # the eager --version option prints the version and exits
+        result = self.invoke(["--version"])
+        self.assertEqual(0, result.exit_code, result.output)
+        self.assertIn("Rally version:", result.output)
 
 
-@ddt.ddt
-class BootstrapTestCase(test.TestCase):
+class BootstrapTestCase(cli_test.CLITestCase):
 
-    def _ctx(self, subcommand="task"):
-        ctx = mock.Mock()
-        ctx.invoked_subcommand = subcommand
-        ctx.help_option_names = ["--help"]
-        return ctx
+    APPLY_DB_SCHEMA = False
 
     @mock.patch("rally.cli.main.rally_api.API")
-    @mock.patch("rally.cli.main.envutils.load_globals")
-    def test_builds_and_stashes_api(self, mock_load_globals, mock_api):
-        with mock.patch.object(sys, "argv", ["rally", "task", "status"]):
-            main.bootstrap(self._ctx("task"), config_file=["c.conf"],
-                           plugin_paths=["p1,p2", "p3"])
-        mock_load_globals.assert_called_once_with()
+    def test_builds_and_stashes_api(self, mock_api):
+        self.invoke(["--config-file", "c.conf", "--plugin-paths", "p1,p2",
+                     "--plugin-paths", "p3", "plugin", "list"])
         mock_api.assert_called_once_with(
             config_args=["--config-file", "c.conf"],
-            plugin_paths=["p1", "p2", "p3"], skip_db_check=False)
-        # the real ``set_api`` was used, so the handle is now retrievable
+            plugin_paths=["p1", "p2", "p3"], skip_db_check=True)
+        # bootstrap stashed the built API via the real ``set_api``
         self.assertIs(mock_api.return_value, cliutils.get_api())
 
-    @ddt.data(("db", True), ("plugin", True), ("version", True),
-              ("task", False), ("verify", False), ("deployment", False))
-    @ddt.unpack
     @mock.patch("rally.cli.main.rally_api.API")
-    @mock.patch("rally.cli.main.envutils.load_globals")
-    def test_skip_db_check_per_group(self, subcommand, skip,
-                                     mock_load_globals, mock_api):
-        with mock.patch.object(sys, "argv", ["rally", subcommand, "x"]):
-            main.bootstrap(self._ctx(subcommand))
-        self.assertEqual(skip, mock_api.call_args[1]["skip_db_check"])
+    def test_skip_db_check_per_group(self, mock_api):
+        for subcommand, skip in (("db", True), ("plugin", True),
+                                 ("version", True), ("task", False),
+                                 ("verify", False), ("deployment", False)):
+            with self.subTest(subcommand=subcommand):
+                mock_api.reset_mock()
+                self.invoke([subcommand])
+                self.assertEqual(
+                    skip, mock_api.call_args.kwargs["skip_db_check"])
 
     @mock.patch("rally.cli.main.rally_api.API")
-    @mock.patch("rally.cli.main.envutils.load_globals")
-    def test_help_returns_before_touching_config(self, mock_load_globals,
-                                                 mock_api):
-        argv = ["rally", "task", "status", "--help"]
-        with mock.patch.object(sys, "argv", argv):
-            self.assertIsNone(main.bootstrap(self._ctx("task")))
-        self.assertFalse(mock_load_globals.called)
+    def test_help_returns_before_touching_config(self, mock_api):
+        # bootstrap short-circuits on --help (detected via sys.argv) and never
+        # builds the API
+        with mock.patch.object(sys, "argv", ["rally", "task", "--help"]):
+            result = self.invoke(["task", "--help"])
+        self.assertEqual(0, result.exit_code, result.output)
         self.assertFalse(mock_api.called)
+        self.assertIn("Usage", result.output)
 
     @mock.patch("rally.cli.main.rally_api.API",
                 side_effect=exceptions.RallyException("boom"))
-    @mock.patch("rally.cli.main.envutils.load_globals")
-    def test_api_error_exits_2(self, mock_load_globals, mock_api):
-        with mock.patch.object(sys, "argv", ["rally", "task", "status"]), \
-                mock.patch("sys.stdout", io.StringIO()):
-            exc = self.assertRaises(typer.Exit, main.bootstrap,
-                                    self._ctx("task"))
-        self.assertEqual(2, exc.exit_code)
+    def test_api_error_exits_2(self, mock_api):
+        result = self.invoke(["task", "list"])
+        self.assertEqual(2, result.exit_code)
+        self.assertIn("boom", result.output)
 
 
-class InstallMultivalueTestCase(test.TestCase):
+class InstallMultivalueTestCase(cli_test.CLITestCase):
 
-    def test_space_separated_multivalue(self):
-        app = typer.Typer(no_args_is_help=False)
-        group = typer.Typer()
-        app.add_typer(group, name="task")
-        seen = {}
-
-        @group.command()
-        def go(
-            tag: t.Annotated[list[str] | None, typer.Option("--tag")] = None
-        ) -> None:
-            seen["tag"] = tag
-
-        cli = typer.main.get_command(app)
-        main._install_multivalue(cli)
-        cli(["task", "go", "--tag", "a", "b", "c"], standalone_mode=False)
-        self.assertEqual(["a", "b", "c"], seen["tag"])
+    @mock.patch("rally.api._Verification.list", return_value=[])
+    def test_space_separated_multivalue(self, mock_list):
+        # ``--tag a b c`` (space-separated) is collected into a list by the
+        # real multi-value wiring installed on the CLI
+        result = self.invoke(["verify", "list", "--tag", "a", "b", "c"])
+        self.assertEqual(0, result.exit_code, result.output)
+        self.assertEqual(["a", "b", "c"],
+                         mock_list.call_args.kwargs["tags"])
 
 
-@ddt.ddt
-class MainExceptionHandlingTestCase(test.TestCase):
+class MainExceptionHandlingTestCase(cli_test.CLITestCase):
     """Drive the real ``main()`` path; only the external API is faked."""
 
     def _run(self, task_get):
-        fake_api = mock.Mock()
-        if isinstance(task_get, BaseException):
-            fake_api.task.get.side_effect = task_get
-        else:
-            fake_api.task.get.return_value = task_get
-        out = io.StringIO()
-        with mock.patch.object(sys, "argv",
-                               ["rally", "task", "status", "the-uuid"]), \
-                mock.patch("rally.cli.main.rally_api.API",
-                           return_value=fake_api), \
-                mock.patch("rally.cli.main.envutils.load_globals"), \
-                mock.patch("sys.stdout", out), \
-                mock.patch("sys.stderr", io.StringIO()):
-            try:
-                main.main()
-                code = 0
-            except SystemExit as e:
-                code = e.code if isinstance(e.code, int) else 1
-        return code, out.getvalue()
+        # ``task status`` calls the real ``api.task.get``; patch just that one
+        # method to drive ``main()``'s error handling from a real API.
+        kwargs = ({"side_effect": task_get}
+                  if isinstance(task_get, BaseException)
+                  else {"return_value": task_get})
+        with mock.patch("rally.api._Task.get", **kwargs):
+            return self.invoke(["task", "status", "the-uuid"])
 
     def test_success(self):
-        code, out = self._run({"status": "finished"})
-        self.assertEqual(0, code)
-        self.assertIn("finished", out)
+        result = self._run({"status": "finished"})
+        self.assertEqual(0, result.exit_code)
+        self.assertIn("finished", result.output)
 
     def test_rally_exception_uses_its_error_code(self):
-        code, out = self._run(_Boom())
-        self.assertEqual(42, code)
-        self.assertIn("boom", out)
+        result = self._run(_Boom())
+        self.assertEqual(42, result.exit_code)
+        self.assertIn("boom", result.output)
 
     def test_plain_exception_defaults_to_1(self):
-        code, out = self._run(ValueError("nope"))
-        self.assertEqual(1, code)
-        self.assertIn("nope", out)
+        result = self._run(ValueError("nope"))
+        self.assertEqual(1, result.exit_code)
+        self.assertIn("nope", result.output)
 
     @mock.patch("rally.cli.main.cfg")
     def test_operational_error_hints_at_db(self, mock_cfg):
         mock_cfg.CONF.database.connection = "mysql://user:secret@host/rally"
-        code, out = self._run(
+        result = self._run(
             sqlalchemy.exc.OperationalError("s", {}, Exception("refused")))
-        self.assertEqual(1, code)
-        self.assertIn("can't connect to its DB", out)
-        self.assertIn("//**:**@host/rally", out)   # password is masked
-        self.assertNotIn("secret", out)
+        self.assertEqual(1, result.exit_code)
+        self.assertIn("can't connect to its DB", result.output)
+        self.assertIn("//**:**@host/rally", result.output)  # password masked
+        self.assertNotIn("secret", result.output)
 
     @mock.patch("rally.cli.main.logging.is_debug", return_value=True)
     def test_debug_logs_traceback_instead_of_printing(self, mock_is_debug):
         with logging.LogCatcher(main.LOG) as catcher:
-            code, out = self._run(ValueError("nope"))
-        self.assertEqual(1, code)
-        self.assertNotIn("nope", out)
+            result = self._run(ValueError("nope"))
+        self.assertEqual(1, result.exit_code)
+        # the traceback is logged (to stderr), not printed to stdout
+        self.assertNotIn("nope", result.stdout)
         catcher.assertInLogs("Unexpected exception in CLI")
 
-    def test_unexpected_exception_is_reraised(self):
-        with mock.patch.object(sys, "argv",
-                               ["rally", "task", "status", "the-uuid"]), \
-                mock.patch("rally.cli.main.rally_api.API") as mock_api, \
-                mock.patch("rally.cli.main.envutils.load_globals"), \
-                mock.patch("sys.stdout", io.StringIO()):
-            mock_api.return_value.task.get.side_effect = KeyError("x")
-            self.assertRaises(KeyError, main.main)
+    @mock.patch("rally.api._Task.get", side_effect=KeyError("x"))
+    def test_unexpected_exception_is_reraised(self, mock_get):
+        self.assertRaises(KeyError, self.invoke,
+                          ["task", "status", "the-uuid"])

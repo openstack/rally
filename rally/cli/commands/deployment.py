@@ -131,6 +131,7 @@ def create(
     fromenv: t.Annotated[
         bool,
         typer.Option(
+            "--fromenv",
             help="Read environment variables instead of config file."
         )
     ] = False,

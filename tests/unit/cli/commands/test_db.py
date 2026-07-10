@@ -13,69 +13,82 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from unittest import mock
+from rally.common import cfg
+from rally.common import db
+from tests.unit.cli import test
 
-from rally.cli.commands import db
-from tests.unit import test
 
+class DBCommandsTestCase(test.CLITestCase):
 
-class DBCommandsTestCase(test.TestCase):
+    # the db commands manage the schema themselves; start from an empty DB
+    APPLY_DB_SCHEMA = False
 
-    @mock.patch("rally.cli.commands.db._print_connection")
-    @mock.patch("rally.cli.commands.db.envutils")
-    @mock.patch("rally.cli.commands.db.db.schema")
-    def test_recreate(self, mock_db_schema, mock_envutils,
-                      mock__print_connection):
-        db.recreate()
-        db_calls = [mock.call.schema_cleanup(),
-                    mock.call.schema_create()]
-        self.assertEqual(db_calls, mock_db_schema.mock_calls)
-        envutils_calls = [mock.call.clear_env()]
-        self.assertEqual(envutils_calls, mock_envutils.mock_calls)
+    def test_recreate(self):
+        # an empty DB has no schema revision yet ("db revision" prints None)
+        self.assertEqual(
+            "None", self.invoke(["db", "revision"]).output.strip())
 
-    @mock.patch("rally.cli.commands.db._print_connection")
-    @mock.patch("rally.cli.commands.db.db.schema")
-    def test_create(self, mock_db_schema, mock__print_connection):
-        db.create()
-        calls = [mock.call.schema_create()]
-        self.assertEqual(calls, mock_db_schema.mock_calls)
+        result = self.invoke(["db", "recreate"])
 
-    @mock.patch("rally.cli.commands.db._print_connection")
-    @mock.patch("rally.cli.commands.db.db.schema")
-    def test_ensure_create(self, mock_db_schema, mock__print_connection):
-        mock_db_schema.schema_revision.return_value = None
-        db.ensure()
-        calls = [mock.call.schema_revision(),
-                 mock.call.schema_create()]
-        self.assertEqual(calls, mock_db_schema.mock_calls)
+        self.assertEqual(0, result.exit_code, result.output)
+        self.assertIn("Database deleted successfully", result.output)
+        self.assertIn("Database created successfully", result.output)
+        # recreate installed the schema -> a real revision now
+        self.assertNotEqual(
+            "None", self.invoke(["db", "revision"]).output.strip())
 
-    @mock.patch("rally.cli.commands.db._print_connection")
-    @mock.patch("rally.cli.commands.db.db.schema")
-    def test_ensure_exists(self, mock_db_schema, mock__print_connection):
-        mock_db_schema.schema_revision.return_value = "revision"
-        db.ensure()
-        calls = [mock.call.schema_revision()]
-        self.assertEqual(calls, mock_db_schema.mock_calls)
+    def test_create(self):
+        self.assertEqual(
+            "None", self.invoke(["db", "revision"]).output.strip())
 
-    @mock.patch("rally.cli.commands.db._print_connection")
-    @mock.patch("rally.cli.commands.db.db.schema")
-    def test_upgrade(self, mock_db_schema, mock__print_connection):
-        db.upgrade()
-        calls = [mock.call.schema_upgrade()]
-        mock_db_schema.assert_has_calls(calls)
+        result = self.invoke(["db", "create"])
 
-    @mock.patch("rally.cli.commands.db.db.schema")
-    def test_revision(self, mock_db_schema):
-        db.revision()
-        calls = [mock.call.schema_revision()]
-        mock_db_schema.assert_has_calls(calls)
+        self.assertEqual(0, result.exit_code, result.output)
+        self.assertIn("Database created successfully", result.output)
+        self.assertNotEqual(
+            "None", self.invoke(["db", "revision"]).output.strip())
 
-    @mock.patch("rally.cli.commands.db.print")
-    @mock.patch("rally.cli.commands.db.cfg.CONF.database")
-    def test_show(self, mock_conf_database, mock_print):
-        mock_conf_database.connection = "http://aaa:bbb@testing.com:888"
-        db.show()
-        mock_print.assert_called_once_with("http://**:**@testing.com:888")
-        mock_print.reset_mock()
-        db.show(creds=True)
-        mock_print.assert_called_once_with("http://aaa:bbb@testing.com:888")
+    def test_ensure_create(self):
+        # empty DB -> ensure creates it
+        result = self.invoke(["db", "ensure"])
+
+        self.assertEqual(0, result.exit_code, result.output)
+        self.assertIn("Database created successfully", result.output)
+
+    def test_ensure_exists(self):
+        db.schema.schema_create()
+
+        result = self.invoke(["db", "ensure"])
+
+        self.assertEqual(0, result.exit_code, result.output)
+        self.assertIn("Database already exists, nothing to do", result.output)
+
+    def test_upgrade(self):
+        db.schema.schema_create()
+
+        result = self.invoke(["db", "upgrade"])
+
+        self.assertEqual(0, result.exit_code, result.output)
+        self.assertIn("Database is already up to date", result.output)
+
+    def test_revision(self):
+        db.schema.schema_create()
+
+        result = self.invoke(["db", "revision"])
+
+        self.assertEqual(0, result.exit_code, result.output)
+        revision = result.output.strip()
+        self.assertTrue(revision)
+        self.assertNotEqual("None", revision)
+
+    def test_show(self):
+        cfg.CONF.set_default("connection", "http://aaa:bbb@testing.com:888",
+                             group="database")
+        for args, expected in (
+            ([], "http://**:**@testing.com:888"),
+            (["--creds"], "http://aaa:bbb@testing.com:888"),
+        ):
+            with self.subTest(args=args):
+                result = self.invoke(["db", "show", *args])
+                self.assertEqual(0, result.exit_code, result.output)
+                self.assertIn(expected, result.output)

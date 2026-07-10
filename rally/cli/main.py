@@ -203,14 +203,14 @@ def _install_multivalue(
                 _eat_all(param)
 
 
-def main() -> None:
+def main(args: list[str] | None = None) -> None:
     cli: "typer.core.TyperGroup" = (
         typer.main.get_command(app)  # type: ignore[assignment]
     )
     _install_multivalue(cli)
     argutils.install(cli)
     try:
-        cli()
+        cli(args=args)
     except (OSError, TypeError, ValueError, exceptions.RallyException,
             jsonschema.ValidationError) as e:
         if (logging.is_debug()

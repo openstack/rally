@@ -854,10 +854,7 @@ def show(
     ],
     sort_by: t.Annotated[
         t.Literal["name", "duration", "status"],
-        typer.Option(
-            "--sort-by",
-            help="Sort tests by 'name', 'duration' or 'status'."
-        )
+        typer.Option(help="Sort tests by 'name', 'duration' or 'status'.")
     ] = "name",
     detailed: t.Annotated[
         bool,

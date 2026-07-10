@@ -16,16 +16,18 @@
 import collections
 import datetime as dt
 import json
+import tempfile
 from unittest import mock
 import uuid
 
 from rally import exceptions
 from rally.cli.commands import env
+from rally.common import db
 from rally.env import env_mgr
-from tests.unit import test
+from tests.unit.cli import test
 
 
-class EnvCommandsTestCase(test.TestCase):
+class EnvCommandsTestCase(test.CLITestCase):
 
     @staticmethod
     def gen_env_data(uid=None, name=None, description=None,
@@ -41,6 +43,12 @@ class EnvCommandsTestCase(test.TestCase):
             "extras": extras or {}
         }
 
+    def _create_env(self, name="my-env", status=env_mgr.STATUS.READY):
+        """Insert a real environment row and return its dict."""
+        db.env_create(name=name, status=status, description="the env",
+                      extras={}, config={}, spec={}, platforms=[])
+        return db.env_get(name)
+
     @mock.patch("rally.cli.commands.env.print")
     def test__print(self, mock_print):
         env._print("Test42", silent=True)
@@ -51,55 +59,51 @@ class EnvCommandsTestCase(test.TestCase):
         mock_print.assert_has_calls([mock.call("Test42"),
                                      mock.call("Test43")])
 
-    @mock.patch("rally.env.env_mgr.EnvManager.create")
-    @mock.patch("rally.cli.commands.env._show")
-    def test_create_emtpy_use(self, mock__show,
-                              mock_env_manager_create):
-        env.create(name="test_name", description="test_description")
-        mock_env_manager_create.assert_called_once_with(
-            "test_name", {}, description="test_description", extras=None)
-        mock__show.assert_called_once_with(
-            mock_env_manager_create.return_value.data,
-            to_json=False, only_spec=False)
+    def test_create_emtpy_use(self):
+        result = self.invoke([
+            "env", "create", "--name", "test_name",
+            "--description", "test_description"])
+
+        self.assertEqual(0, result.exit_code, result.output)
+        self.assertIn("Using environment", result.output)
+        self.assertIn("test_name", result.output)
+        self.assertEqual("test_name", db.env_get("test_name")["name"])
 
     @mock.patch("rally.env.env_mgr.EnvManager.create")
-    @mock.patch("rally.cli.commands.env.open", create=True)
-    @mock.patch("rally.cli.commands.env.print")
-    def test_create_spec_and_extra_no_use_to_json(
-            self, mock_print, mock_open, mock_env_manager_create):
-        mock_open.side_effect = mock.mock_open(read_data="{\"a\": 1}")
+    def test_create_spec_and_extra_no_use_to_json(self,
+                                                  mock_env_manager_create):
+        # env creation provisions platforms -- stub that one external step
         mock_env_manager_create.return_value.data = {"test": "test"}
-        env.create(name="n", description="d",
-                   extras="{\"extra\": 123}", spec="spec.yml",
-                   to_json=True, no_use=True)
+        with tempfile.NamedTemporaryFile("w", suffix=".yml") as tf:
+            tf.write("{\"a\": 1}")
+            tf.flush()
+            result = self.invoke([
+                "env", "create", "--name", "n", "--description", "d",
+                "--extras", "{\"extra\": 123}", "--spec", tf.name,
+                "--json", "--no-use"])
 
+        self.assertEqual(0, result.exit_code, result.output)
         mock_env_manager_create.assert_called_once_with(
             "n", {"a": 1}, description="d", extras={"extra": 123})
-        mock_print.assert_called_once_with(
-            json.dumps(mock_env_manager_create.return_value.data, indent=2))
+        self.assertIn(json.dumps({"test": "test"}, indent=2), result.output)
 
-    @mock.patch("rally.cli.commands.env.print")
-    @mock.patch("rally.cli.commands.env.open", create=True)
-    def test_create_invalid_spec(self, mock_open, mock_print):
-        mock_open.side_effect = mock.mock_open(read_data="[]")
-        with self.assertExitCode(1):
-            env.create(name="n", description="d", spec="spec.yml")
-        mock_print.assert_has_calls([
-            mock.call("Env spec has wrong format:"),
-            mock.call("[]"),
-            mock.call(mock.ANY)
-        ])
+    def test_create_invalid_spec(self):
+        # a spec that is not a dict is rejected by the real manager
+        with tempfile.NamedTemporaryFile("w", suffix=".yml") as tf:
+            tf.write("[]")
+            tf.flush()
+            result = self.invoke([
+                "env", "create", "--name", "n", "--description", "d",
+                "--spec", tf.name])
 
-    @mock.patch("rally.cli.commands.env._show")
-    @mock.patch("rally.env.env_mgr.EnvManager.create_spec_from_sys_environ")
+        self.assertEqual(1, result.exit_code, result.output)
+        self.assertIn("Env spec has wrong format:", result.output)
+
     @mock.patch("rally.env.env_mgr.EnvManager.create")
-    @mock.patch("rally.cli.commands.env.open", create=True)
-    @mock.patch("rally.cli.commands.env.print")
-    def test_create_from_sys_env(
-            self, mock_print, mock_open, mock_env_manager_create,
-            mock_env_manager_create_spec_from_sys_environ,
-            mock__show):
-        result = {
+    @mock.patch("rally.env.env_mgr.EnvManager.create_spec_from_sys_environ")
+    def test_create_from_sys_env(self, mock_create_spec_from_sys_environ,
+                                 mock_env_manager_create):
+        mock_create_spec_from_sys_environ.return_value = {
             "spec": {"foo": mock.Mock()},
             "discovery_details": collections.OrderedDict([
                 ("foo", {"available": True, "message": "available"}),
@@ -107,209 +111,133 @@ class EnvCommandsTestCase(test.TestCase):
                          "traceback": "trace"})
             ])
         }
-        mock_env_manager_create_spec_from_sys_environ.return_value = result
+        mock_env_manager_create.return_value.data = {
+            **self.gen_env_data(), "platforms": {}}
 
-        env.create(name="n", description="d", spec=None,
-                   from_sysenv=True, no_use=True)
-        self.assertEqual(
-            [
-                # check that the number of listed platforms is right
-                mock.call("Your system environment includes specifications of"
-                          " 1 platform(s)."),
-                mock.call("Discovery information:"),
-                mock.call("\t - foo : available."),
-                mock.call("\t - bar : not available."),
-                mock.call("trace")
-            ], mock_print.call_args_list)
+        result = self.invoke([
+            "env", "create", "--name", "n", "--description", "d",
+            "--from-sysenv", "--no-use"])
 
-        mock_env_manager_create_spec_from_sys_environ.assert_called_once_with()
-        mock_env_manager_create.assert_called_once_with(
-            "n", result["spec"], description="d", extras=None)
-        self.assertFalse(mock_open.called)
+        self.assertEqual(0, result.exit_code, result.output)
+        for expected in (
+            "includes specifications of 1 platform(s).",
+            "Discovery information:",
+            "\t - foo : available.",
+            "\t - bar : not available.",
+            "trace",
+        ):
+            self.assertIn(expected, result.output)
+        mock_create_spec_from_sys_environ.assert_called_once_with()
 
-    @mock.patch("rally.cli.commands.env.print")
-    def test_create_with_incompatible_arguments(self, mock_print):
-        with self.assertExitCode(1):
-            env.create(name="n", description="d", spec="asd",
-                       from_sysenv=True)
+    def test_create_with_incompatible_arguments(self):
+        result = self.invoke([
+            "env", "create", "--name", "n", "--description", "d",
+            "--spec", "asd", "--from-sysenv"])
 
-    @mock.patch("rally.env.env_mgr.EnvManager.create")
-    @mock.patch("rally.cli.commands.env.print")
-    def test_create_exception(self, mock_print, mock_env_manager_create):
-        mock_env_manager_create.side_effect = Exception
-        with self.assertExitCode(1):
-            env.create(name="n", description="d")
-        mock_print.assert_has_calls([
-            mock.call("Something went wrong during env creation:"),
-            mock.call(mock.ANY)
-        ])
+        self.assertEqual(1, result.exit_code, result.output)
+        self.assertIn("cannot be used together", result.output)
 
-    @mock.patch("rally.env.env_mgr.EnvManager.get")
-    @mock.patch("rally.cli.commands.env.print")
-    def test_cleanup(self, mock_print, mock_env_manager_get):
-        env_ = mock.Mock()
-        env_inst = mock_env_manager_get.return_value
-        env_inst.cleanup.return_value = {
+    @mock.patch("rally.env.env_mgr.EnvManager.create",
+                side_effect=Exception("boom"))
+    def test_create_exception(self, mock_env_manager_create):
+        result = self.invoke([
+            "env", "create", "--name", "n", "--description", "d"])
+
+        self.assertEqual(1, result.exit_code, result.output)
+        self.assertIn("Something went wrong during env creation:",
+                      result.output)
+
+    @mock.patch("rally.env.env_mgr.EnvManager.cleanup")
+    def test_cleanup(self, mock_env_manager_cleanup):
+        env_ = self._create_env()
+        mock_env_manager_cleanup.return_value = {
             "existing@docker": {
-                "message": "Success",
-                "discovered": 5,
-                "deleted": 5,
-                "failed": 0,
-                "errors": []
-            },
+                "message": "Success", "discovered": 5, "deleted": 5,
+                "failed": 0, "errors": []},
             "existing@openstack": {
                 "message": "It is OpenStack. several failures are ok :)",
-                "discovered": 10,
-                "deleted": 8,
-                "failed": 2,
-                "errors": [
-                    {"message": "Port disappeared",
-                     "traceback": "traceback"}
-                ]
-            }
+                "discovered": 10, "deleted": 8, "failed": 2,
+                "errors": [{"message": "Port disappeared",
+                            "traceback": "traceback"}]}
         }
-        with self.assertExitCode(1):
-            env.cleanup(env=env_)
-        mock_env_manager_get.assert_called_once_with(env_)
-        env_inst.cleanup.assert_called_once_with()
 
-        actual_print = "\n".join(
-            [call_args[0]
-             for call_args, _call_kwargs in mock_print.call_args_list])
-        expected_print = (
-            "Cleaning up resources for %(env)s\n"
-            "Cleaning is finished. See the results bellow.\n"
-            "\n"
-            "Information for existing@docker platform.\n"
-            "%(hr)s\n"
-            "Status: Success\n"
-            "Total discovered: 5\n"
-            "Total deleted: 5\n"
-            "Total failed: 0\n"
-            "\n"
-            "Information for existing@openstack platform.\n"
-            "%(hr)s\n"
-            "Status: It is OpenStack. several failures are ok :)\n"
-            "Total discovered: 10\n"
-            "Total deleted: 8\n"
-            "Total failed: 2\n"
-            "Errors:\n"
-            "\t- Port disappeared" % {"env": env_inst, "hr": "=" * 80})
-        self.assertEqual(expected_print, actual_print)
+        # a plain run prints a per-platform report and exits 1 on errors
+        result = self.invoke(["env", "cleanup", env_["uuid"]])
+        self.assertEqual(1, result.exit_code, result.output)
+        for expected in (
+                "Cleaning is finished. See the results bellow.",
+                "Information for existing@docker platform.",
+                "Status: Success", "Total discovered: 5", "Total deleted: 5",
+                "Information for existing@openstack platform.",
+                "Total failed: 2", "Errors:", "Port disappeared"):
+            self.assertIn(expected, result.output)
 
-    @mock.patch("rally.env.env_mgr.EnvManager.get")
-    @mock.patch("rally.cli.commands.env.print")
-    def test_cleanup_to_json(self, mock_print, mock_env_manager_get):
-        env_ = mock.Mock()
-        env_inst = mock_env_manager_get.return_value
-        env_inst.cleanup.return_value = {
-            "existing@docker": {
-                "message": "Success",
-                "discovered": 5,
-                "deleted": 5,
-                "failed": 0,
-                "errors": []
-            },
-            "existing@openstack": {
-                "message": "It is OpenStack. several failures are ok :)",
-                "discovered": 10,
-                "deleted": 8,
-                "failed": 2,
-                "errors": [
-                    {"message": "Port disappeared",
-                     "traceback": "traceback"}
-                ]
-            }
-        }
-        with self.assertExitCode(1):
-            env.cleanup(env=env_, to_json=True)
-        mock_print.assert_called_once_with(
-            json.dumps(env_inst.cleanup.return_value, indent=2))
+        # --json dumps the raw result and still exits 1
+        result = self.invoke(["env", "cleanup", env_["uuid"], "--json"])
+        self.assertEqual(1, result.exit_code, result.output)
+        self.assertIn(
+            json.dumps(mock_env_manager_cleanup.return_value, indent=2),
+            result.output)
 
-    @mock.patch("rally.env.env_mgr.EnvManager.get")
-    @mock.patch("rally.cli.commands.env.print")
-    def test_destroy(self, mock_print, mock_env_manager_get):
-        env_ = mock.Mock()
-        env_inst = mock_env_manager_get.return_value
-        env_inst.destroy.return_value = {
-            "destroy_info": {
-                "skipped": True,
-                "message": "42"
-            }
-        }
-        with self.assertExitCode(1):
-            env.destroy(env_)
-        mock_env_manager_get.assert_called_once_with(env_)
-        env_inst.destroy.assert_called_once_with(False)
-        mock_print.assert_has_calls([
-            mock.call("Destroying %s" % env_inst),
-            mock.call(":-( Failed to destroy env %s: 42" % env_inst)
-        ])
+    @mock.patch("rally.env.env_mgr.EnvManager.destroy")
+    def test_destroy(self, mock_env_manager_destroy):
+        env_ = self._create_env()
 
-    @mock.patch("rally.env.env_mgr.EnvManager.get")
-    @mock.patch("rally.cli.commands.env.print")
-    def test_destroy_to_json(self, mock_print, mock_env_manager_get):
-        env_ = mock.Mock()
-        env_inst = mock_env_manager_get.return_value
+        # a skipped destroy is reported as a failure and exits 1
+        mock_env_manager_destroy.return_value = {
+            "destroy_info": {"skipped": True, "message": "42"}}
+        result = self.invoke(["env", "destroy", env_["uuid"]])
+        self.assertEqual(1, result.exit_code, result.output)
+        mock_env_manager_destroy.assert_called_once_with(False)
+        self.assertIn("Failed to destroy env", result.output)
 
-        env_inst.destroy.return_value = {
-            "cleanup_info": {
-                "skipped": False
-            },
-            "destroy_info": {
-                "skipped": False,
-                "message": "42"
-            }
-        }
-        env.destroy(env_, skip_cleanup=True, to_json=True)
-        env_inst.destroy.assert_called_once_with(True)
-        mock_print.assert_called_once_with(
-            json.dumps(env_inst.destroy.return_value, indent=2))
+        # --skip-cleanup --json dumps the result and succeeds
+        mock_env_manager_destroy.reset_mock()
+        mock_env_manager_destroy.return_value = {
+            "cleanup_info": {"skipped": False},
+            "destroy_info": {"skipped": False, "message": "42"}}
+        result = self.invoke([
+            "env", "destroy", env_["uuid"], "--skip-cleanup", "--json"])
+        self.assertEqual(0, result.exit_code, result.output)
+        mock_env_manager_destroy.assert_called_once_with(True)
+        self.assertIn(
+            json.dumps(mock_env_manager_destroy.return_value, indent=2),
+            result.output)
 
-    @mock.patch("rally.env.env_mgr.EnvManager.get")
-    def test_delete(self, mock_env_manager_get):
-        env_ = mock.Mock()
-        env.delete(env_)
-        mock_env_manager_get.assert_called_once_with(env_)
-        mock_env_manager_get.return_value.delete.assert_called_once_with(
-            force=False)
+    def test_delete(self):
+        # without --force the env must already be destroyed; --force deletes
+        # the records regardless of state
+        for force, status in ((False, env_mgr.STATUS.DESTROYED),
+                              (True, env_mgr.STATUS.READY)):
+            with self.subTest(force=force):
+                env_ = self._create_env(name="env-%s" % force, status=status)
+                args = ["env", "delete", env_["uuid"]]
+                if force:
+                    args.append("--force")
 
-    @mock.patch("rally.env.env_mgr.EnvManager.get")
-    def test_delete_force(self, mock_env_manager_get):
-        env_ = mock.Mock()
-        env.delete(env_, force=True)
-        mock_env_manager_get.assert_called_once_with(env_)
-        mock_env_manager_get.return_value.delete.assert_called_once_with(
-            force=True)
+                result = self.invoke(args)
+                self.assertEqual(0, result.exit_code, result.output)
+                # the record is really gone
+                self.assertRaises(exceptions.DBRecordNotFound,
+                                  db.env_get, env_["uuid"])
 
-    @mock.patch("rally.env.env_mgr.EnvManager.list")
-    @mock.patch("rally.cli.commands.env.print")
-    def test_list_empty(self, mock_print, mock_env_manager_list):
-        mock_env_manager_list.return_value = []
-        env.list_(to_json=True)
-        mock_print.assert_called_once_with("[]")
-        mock_print.reset_mock()
-        env.list_(to_json=False)
-        mock_print.assert_called_once_with(env.MSG_NO_ENVS)
+    def test_list(self):
+        # empty DB -> hint (table) or an empty JSON array
+        result = self.invoke(["env", "list", "--json"])
+        self.assertEqual(0, result.exit_code, result.output)
+        self.assertEqual("[]", result.output.strip())
 
-    @mock.patch("rally.env.env_mgr.EnvManager.list")
-    @mock.patch("rally.cli.commands.env.print")
-    def test_list(self, mock_print, mock_env_manager_list):
-        env_a = env_mgr.EnvManager(self.gen_env_data())
-        env_b = env_mgr.EnvManager(self.gen_env_data())
-        mock_env_manager_list.return_value = [env_a, env_b]
+        result = self.invoke(["env", "list"])
+        self.assertEqual(0, result.exit_code, result.output)
+        self.assertIn(env.MSG_NO_ENVS, result.output)
 
-        env.list_(to_json=True)
-        mock_env_manager_list.assert_called_once_with()
-        mock_print.assert_called_once_with(
-            json.dumps([env_a.cached_data, env_b.cached_data], indent=2))
-
-        for m in [mock_env_manager_list, mock_print]:
-            m.reset_mock()
-
-        env.list_()
-        mock_env_manager_list.assert_called_once_with()
-        mock_print.assert_called_once_with(mock.ANY)
+        # populated -> the envs are listed
+        env_a = self._create_env(name="env-a")
+        env_b = self._create_env(name="env-b")
+        result = self.invoke(["env", "list"])
+        self.assertEqual(0, result.exit_code, result.output)
+        self.assertIn(env_a["uuid"], result.output)
+        self.assertIn(env_b["uuid"], result.output)
 
     @mock.patch("rally.cli.commands.env.print")
     def test__show(self, mock_print):
@@ -340,158 +268,108 @@ class EnvCommandsTestCase(test.TestCase):
         env._show({"spec": "data"}, to_json=False, only_spec=True)
         mock_print.assert_called_once_with("\"data\"")
 
-    @mock.patch("rally.env.env_mgr.EnvManager.get")
-    @mock.patch("rally.cli.commands.env._show")
-    def test_show(self, mock__show, mock_env_manager_get):
-        env_ = mock.Mock()
-        env.show(env=env_)
-        mock_env_manager_get.assert_called_once_with(env_)
-        mock__show.assert_called_once_with(
-            mock_env_manager_get.return_value.data, to_json=False,
-            only_spec=False)
-        mock__show.reset_mock()
-        env.show(env=env_, to_json=True)
-        mock__show.assert_called_once_with(
-            mock_env_manager_get.return_value.data, to_json=True,
-            only_spec=False)
+    def test_show(self):
+        env_ = self._create_env()
 
-    @mock.patch("rally.env.env_mgr.EnvManager.get")
-    @mock.patch("rally.cli.commands.env.print")
-    def test_info_to_json(self, mock_print, mock_env_manager_get):
-        mock_env_manager_get.return_value.get_info.return_value = {
-            "p1": {"info": {"a": True}}}
+        # default table output
+        result = self.invoke(["env", "show", env_["uuid"]])
+        self.assertEqual(0, result.exit_code, result.output)
+        for expected in (env_["uuid"], "my-env", "the env"):
+            self.assertIn(expected, result.output)
 
-        env.info(env="any", to_json=True)
-        mock_env_manager_get.assert_called_once_with("any")
-        mock_print.assert_called_once_with(
-            json.dumps(mock_env_manager_get.return_value.get_info.return_value,
-                       indent=2)
-        )
-        mock_env_manager_get.return_value.get_info.return_value = {
+        # --json dumps the whole record
+        result = self.invoke(["env", "show", env_["uuid"], "--json"])
+        self.assertEqual(0, result.exit_code, result.output)
+        self.assertEqual(env_["uuid"], json.loads(result.output)["uuid"])
+
+        # --only-spec dumps just the spec
+        result = self.invoke(["env", "show", env_["uuid"], "--only-spec"])
+        self.assertEqual(0, result.exit_code, result.output)
+        self.assertEqual({}, json.loads(result.output))
+
+    @mock.patch("rally.env.env_mgr.EnvManager.get_info")
+    def test_info(self, mock_env_manager_get_info):
+        env_ = self._create_env()
+
+        # --json dumps the info; a platform error makes it exit 1
+        mock_env_manager_get_info.return_value = {"p1": {"info": {"a": True}}}
+        result = self.invoke(["env", "info", env_["uuid"], "--json"])
+        self.assertEqual(0, result.exit_code, result.output)
+        self.assertIn(
+            json.dumps(mock_env_manager_get_info.return_value, indent=2),
+            result.output)
+
+        mock_env_manager_get_info.return_value = {
             "p1": {"info": {"a": False}},
-            "p2": {"info": {}, "error": "some error"}
-        }
-        with self.assertExitCode(1):
-            env.info(env="any", to_json=True)
+            "p2": {"info": {}, "error": "some error"}}
+        result = self.invoke(["env", "info", env_["uuid"], "--json"])
+        self.assertEqual(1, result.exit_code, result.output)
 
-    @mock.patch("rally.env.env_mgr.EnvManager.get")
-    @mock.patch("rally.cli.commands.env.print")
-    def test_info(self, mock_print, mock_env_manager_get):
-        mock_env_manager_get.return_value.get_info.return_value = {
-            "p1@pl1": {"info": {"a": False}},
-            "p2@pl2": {"info": {}, "error": "some error"}
-        }
-        with self.assertExitCode(1):
-            env.info(env="any")
-        mock_print.assert_has_calls([
-            mock.call(mock_env_manager_get.return_value),
-            mock.call(
-                "+----------+--------------+------------+\n"
-                "| platform | info         | error      |\n"
-                "+----------+--------------+------------+\n"
-                "| p1@pl1   | {            |            |\n"
-                "|          |   \"a\": false |            |\n"
-                "|          | }            |            |\n"
-                "| p2@pl2   | {}           | some error |\n"
-                "+----------+--------------+------------+"
-            )
-        ])
+        # table output renders one row per platform
+        result = self.invoke(["env", "info", env_["uuid"]])
+        self.assertEqual(1, result.exit_code, result.output)
+        self.assertIn(
+            "+----------+--------------+------------+\n"
+            "| platform | info         | error      |\n"
+            "+----------+--------------+------------+\n"
+            "| p1       | {            |            |\n"
+            "|          |   \"a\": false |            |\n"
+            "|          | }            |            |\n"
+            "| p2       | {}           | some error |\n"
+            "+----------+--------------+------------+", result.output)
 
-    @mock.patch("rally.env.env_mgr.EnvManager.get")
-    @mock.patch("rally.cli.commands.env.print")
-    def test_check(self, mock_print, mock_env_manager_get):
-        mock_env_manager_get.return_value.check_health.return_value = {
-            "p1@p1": {"available": True, "message": "OK!"},
-            "p2@p2": {"available": False, "message": "BAD !"}
-        }
-        with self.assertExitCode(1):
-            env.check(env="env_42")
-        mock_env_manager_get.assert_called_once_with("env_42")
-
-        mock_print.assert_has_calls([
-            mock.call("%s :-(" % mock_env_manager_get.return_value),
-            mock.call(
-                "+-----------+----------+---------+\n"
-                "| Available | Platform | Message |\n"
-                "+-----------+----------+---------+\n"
-                "| :-)       | p1       | OK!     |\n"
-                "| :-(       | p2       | BAD !   |\n"
-                "+-----------+----------+---------+"
-            )
-        ])
-
-    @mock.patch("rally.env.env_mgr.EnvManager.get")
-    @mock.patch("rally.cli.commands.env.print")
-    def test_check_detailed(self, mock_print, mock_env_manager_get):
-        mock_env_manager_get.return_value.check_health.return_value = {
+    @mock.patch("rally.env.env_mgr.EnvManager.check_health")
+    def test_check(self, mock_env_manager_check_health):
+        env_ = self._create_env()
+        mock_env_manager_check_health.return_value = {
             "p1@p1": {"available": True, "message": "OK!"},
             "p2@p2": {"available": False, "message": "BAD !",
-                      "traceback": "Filaneme\n  Codeline\nError"}
-        }
-        with self.assertExitCode(1):
-            env.check(env="env_42", detailed=True)
-        mock_env_manager_get.assert_called_once_with("env_42")
+                      "traceback": "Filaneme\n  Codeline\nError"}}
 
-        print(mock_print.call_args_list)
-        mock_print.assert_has_calls([
-            mock.call("%s :-(" % mock_env_manager_get.return_value),
-            mock.call(
-                "+-----------+----------+---------+--------+\n"
-                "| Available | Platform | Message | Plugin |\n"
-                "+-----------+----------+---------+--------+\n"
-                "| :-)       | p1       | OK!     | p1@p1  |\n"
-                "| :-(       | p2       | BAD !   | p2@p2  |\n"
-                "+-----------+----------+---------+--------+"
-            ),
-            mock.call("----"),
-            mock.call("Plugin p2@p2 raised exception:"),
-            mock.call("Filaneme\n  Codeline\nError")
-        ])
+        # default table
+        result = self.invoke(["env", "check", env_["uuid"]])
+        self.assertEqual(1, result.exit_code, result.output)
+        self.assertIn(
+            "+-----------+----------+---------+\n"
+            "| Available | Platform | Message |\n"
+            "+-----------+----------+---------+\n"
+            "| :-)       | p1       | OK!     |\n"
+            "| :-(       | p2       | BAD !   |\n"
+            "+-----------+----------+---------+", result.output)
 
-    @mock.patch("rally.env.env_mgr.EnvManager.get")
-    @mock.patch("rally.cli.commands.env.print")
-    def test_check_to_json(self, mock_print, mock_env_manager_get):
-        mock_env_manager_get.return_value.check_health.return_value = {
-            "p1": {"available": True}}
+        # --detailed adds the Plugin column and the traceback
+        result = self.invoke(["env", "check", env_["uuid"], "--detailed"])
+        self.assertEqual(1, result.exit_code, result.output)
+        self.assertIn(
+            "+-----------+----------+---------+--------+\n"
+            "| Available | Platform | Message | Plugin |\n"
+            "+-----------+----------+---------+--------+\n"
+            "| :-)       | p1       | OK!     | p1@p1  |\n"
+            "| :-(       | p2       | BAD !   | p2@p2  |\n"
+            "+-----------+----------+---------+--------+", result.output)
+        self.assertIn("Plugin p2@p2 raised exception:", result.output)
+        self.assertIn("Filaneme\n  Codeline\nError", result.output)
 
-        env.check(env="some_env", to_json=True)
-        mock_env_manager_get.assert_called_once_with("some_env")
-        mock_print.assert_called_once_with(
-            json.dumps(
-                mock_env_manager_get.return_value.check_health.return_value,
-                indent=2)
-        )
+        # --json dumps the raw health and exits 1 when unavailable
+        result = self.invoke(["env", "check", env_["uuid"], "--json"])
+        self.assertEqual(1, result.exit_code, result.output)
+        self.assertIn(
+            json.dumps(mock_env_manager_check_health.return_value, indent=2),
+            result.output)
 
-        mock_env_manager_get.return_value.check_health.return_value = {
-            "p1": {"available": False}}
-        with self.assertExitCode(1):
-            env.check(env="some_env", to_json=True)
+    def test_use(self):
+        env_ = self._create_env()
 
-    @mock.patch("rally.env.env_mgr.EnvManager.get")
-    @mock.patch("rally.cli.commands.env._print")
-    def test_use_not_found(self, mock__print, mock_env_manager_get):
-        mock_env_manager_get.side_effect = exceptions.DBRecordNotFound(
-            criteria="", table="")
-        env_ = str(uuid.uuid4())
-        with self.assertExitCode(1):
-            env.use(env_)
-        mock_env_manager_get.assert_called_once_with(env_)
-        mock__print.assert_called_once_with(
-            "Can't use non existing environment %s." % env_, False)
+        result = self.invoke(["env", "use", env_["uuid"]])
+        self.assertEqual(0, result.exit_code, result.output)
+        self.assertIn("Using environment: %s" % env_["uuid"], result.output)
 
-    @mock.patch("rally.env.env_mgr.EnvManager.get")
-    @mock.patch("rally.cli.commands.env._use")
-    def test_use(self, mock__use, mock_env_manager_get):
-        mock_env_manager_get.side_effect = [
-            mock.Mock(uuid="aa"), mock.Mock(uuid="bb")
-        ]
-        self.assertIsNone(env.use("aa"))
-        self.assertIsNone(env.use("bb", to_json=True))
-
-        mock_env_manager_get.assert_has_calls(
-            [mock.call("aa"), mock.call("bb")])
-        mock__use.assert_has_calls(
-            [mock.call("aa", False), mock.call("bb", True)])
+        # a non-existing env cannot be used
+        missing = str(uuid.uuid4())
+        result = self.invoke(["env", "use", missing])
+        self.assertEqual(1, result.exit_code, result.output)
+        self.assertIn(
+            "Can't use non existing environment %s." % missing, result.output)
 
     @mock.patch("rally.cli.commands.env.envutils.update_globals_file")
     @mock.patch("rally.cli.commands.env.print")

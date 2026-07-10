@@ -525,6 +525,7 @@ def start(
     abort_on_sla_failure: t.Annotated[
         bool,
         typer.Option(
+            "--abort-on-sla-failure",
             help="Abort the execution of a task when any SLA check for it "
                  "fails for subtask or workload."
         )
@@ -592,6 +593,7 @@ def restart(
     abort_on_sla_failure: t.Annotated[
         bool,
         typer.Option(
+            "--abort-on-sla-failure",
             help="Abort the execution of a task when any SLA check for it "
                  "fails for subtask or workload."
         )
@@ -657,6 +659,7 @@ def abort(
     soft: t.Annotated[
         bool,
         typer.Option(
+            "--soft",
             help="Abort task after current scenario finishes execution."
         )
     ] = False,
@@ -704,6 +707,7 @@ def detailed(
     iterations_data: t.Annotated[
         bool,
         typer.Option(
+            "--iterations-data",
             help="Print detailed results for each iteration."
         )
     ] = False,
@@ -758,6 +762,7 @@ def list_(
     all_deployments: t.Annotated[
         bool,
         typer.Option(
+            "--all-deployments",
             help="List tasks from all deployments."
         )
     ] = False,
@@ -778,6 +783,7 @@ def list_(
     uuids_only: t.Annotated[
         bool,
         typer.Option(
+            "--uuids-only",
             help="List task UUIDs only."
         )
     ] = False,
@@ -907,6 +913,7 @@ def report(
     html: t.Annotated[
         bool,
         typer.Option(
+            "--html",
             help="Generate HTML report."
         )
     ] = False,
@@ -951,6 +958,7 @@ def delete(
     force: t.Annotated[
         bool,
         typer.Option(
+            "--force",
             help="force delete"
         )
     ] = False,

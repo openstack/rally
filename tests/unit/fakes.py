@@ -17,7 +17,6 @@ import itertools
 import multiprocessing
 from unittest import mock
 
-from rally import api
 from rally import consts
 from rally.common import utils as rally_utils
 from rally.task import context
@@ -130,28 +129,3 @@ class FakeTask(dict, object):
 
     def to_dict(self):
         return self
-
-
-class FakeAPI(object):
-
-    def __init__(self):
-        self._deployment = mock.create_autospec(api._Deployment)
-        self._task = mock.create_autospec(api._Task)
-        self._verifier = mock.create_autospec(api._Verifier)
-        self._verification = mock.create_autospec(api._Verification)
-
-    @property
-    def deployment(self):
-        return self._deployment
-
-    @property
-    def task(self):
-        return self._task
-
-    @property
-    def verifier(self):
-        return self._verifier
-
-    @property
-    def verification(self):
-        return self._verification

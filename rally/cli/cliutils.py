@@ -181,10 +181,20 @@ def print_list(objs, fields, formatters=None, sortby_index=0,
     out.write(encodeutils.safe_encode(table_body).decode())
 
 
-def print_dict(obj, fields=None, formatters=None, mixed_case_fields=False,
-               normalize_field_names=False, property_label="Property",
-               value_label="Value", table_label=None, print_header=True,
-               print_border=True, wrap=0, out=sys.stdout):
+def print_dict(
+    obj: t.Any,
+    fields: t.Sequence[str] | None = None,
+    formatters: dict[str, t.Callable[[t.Any], t.Any]] | None = None,
+    mixed_case_fields: t.Sequence[str] | None = None,
+    normalize_field_names: bool = False,
+    property_label: str = "Property",
+    value_label: str = "Value",
+    table_label: str | None = None,
+    print_header: bool = True,
+    print_border: bool = True,
+    wrap: int = 0,
+    out: t.IO[str] = sys.stdout,
+) -> None:
     """Print dict as a table.
 
     :param obj: dict to print

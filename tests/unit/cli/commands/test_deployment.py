@@ -14,55 +14,72 @@
 #    under the License.
 
 import collections
-import io
 import os
+import tempfile
 from unittest import mock
 
-from rally import consts
-from rally import exceptions
-from rally.cli import cliutils
-from rally.cli import envutils
-from rally.cli.commands import deployment
-from tests.unit import fakes
-from tests.unit import test
+from rally.common import db
+from rally.env import env_mgr
+from tests.unit.cli import test
 
 
-class DeploymentCommandsTestCase(test.TestCase):
-    def setUp(self):
-        super(DeploymentCommandsTestCase, self).setUp()
-        self.fake_api = fakes.FakeAPI()
-        cliutils.set_api(self.fake_api)
+# a deployment dict as the API returns it, for the create tests that stub the
+# deployment-provisioning step
+CREATED = {"uuid": "uuid", "created_at": "2016-01-01T00:00:00",
+           "name": "fake_deploy", "status": "finished", "credentials": {}}
 
-    @mock.patch.dict(os.environ, {"RALLY_DEPLOYMENT": "my_deployment_id"})
-    @mock.patch("rally.cli.commands.deployment._list_deployments")
-    @mock.patch("rally.cli.commands.deployment.open",
-                side_effect=mock.mock_open(read_data="{\"some\": \"json\"}"),
-                create=True)
-    def test_create(self, mock_open, mock__list_deployments):
-        deployment.create(name="fake_deploy",
-                          filename="path_to_config.json")
-        self.fake_api.deployment.create.assert_called_once_with(
+
+class DeploymentCommandsTestCase(test.CLITestCase):
+
+    def _create_deployment(self, name="Some Deploy", spec=None):
+        """Insert a real deployment (environment) row and return its dict."""
+        db.env_create(name=name, status=env_mgr.STATUS.READY, description="",
+                      extras={}, config={}, spec=spec or {}, platforms=[])
+        return db.env_get(name)
+
+    @mock.patch("rally.api._Deployment.create")
+    def test_create(self, mock_create):
+        mock_create.return_value = CREATED
+        with tempfile.NamedTemporaryFile("w", suffix=".json") as tf:
+            tf.write('{"some": "json"}')
+            tf.flush()
+            result = self.invoke([
+                "deployment", "create", "--name", "fake_deploy",
+                "--filename", tf.name])
+
+        self.assertEqual(0, result.exit_code, result.output)
+        mock_create.assert_called_once_with(
             config={"some": "json"}, name="fake_deploy")
 
-    @mock.patch.dict(os.environ, {"RALLY_DEPLOYMENT": "my_deployment_id"})
-    @mock.patch("rally.cli.commands.deployment._list_deployments")
-    def test_create_empty(self, mock__list_deployments):
-        deployment.create(name="fake_deploy")
-        self.fake_api.deployment.create.assert_called_once_with(
-            config={}, name="fake_deploy")
+    @mock.patch("rally.api._Deployment.create")
+    def test_create_empty(self, mock_create):
+        mock_create.return_value = CREATED
 
+        result = self.invoke([
+            "deployment", "create", "--name", "fake_deploy"])
+
+        self.assertEqual(0, result.exit_code, result.output)
+        mock_create.assert_called_once_with(config={}, name="fake_deploy")
+
+    @mock.patch("rally.api._Deployment.create")
     @mock.patch("rally.env.env_mgr.EnvManager.create_spec_from_sys_environ",
                 return_value={"spec": {"auth_url": "http://fake"}})
-    def test_create_fromenv(self, mock_create_spec_from_sys_environ):
-        deployment.create(name="from_env", fromenv=True)
-        self.fake_api.deployment.create.assert_called_once_with(
-            config={"auth_url": "http://fake"},
-            name="from_env"
-        )
+    def test_create_fromenv(self, mock_create_spec_from_sys_environ,
+                            mock_create):
+        mock_create.return_value = CREATED
 
+        result = self.invoke([
+            "deployment", "create", "--name", "from_env", "--fromenv"])
+
+        self.assertEqual(0, result.exit_code, result.output)
+        mock_create.assert_called_once_with(
+            config={"auth_url": "http://fake"}, name="from_env")
+
+    @mock.patch("rally.api._Deployment.create")
     @mock.patch("rally.env.env_mgr.EnvManager.create_spec_from_sys_environ")
-    def test_create_fromenv_openstack(self, mock_create_spec_from_sys_environ):
-
+    def test_create_fromenv_openstack(self, mock_create_spec_from_sys_environ,
+                                      mock_create):
+        mock_create.return_value = CREATED
         mock_create_spec_from_sys_environ.side_effect = lambda: {
             "spec": {
                 "existing@openstack": {
@@ -72,277 +89,178 @@ class DeploymentCommandsTestCase(test.TestCase):
             }
         }
         mock_rally_os = mock.Mock()
-        mock_rally_os.__version_tuple__ = (1, 4, 0)
 
-        with mock.patch.dict("sys.modules",
-                             {"rally_openstack": mock_rally_os}):
-            deployment.create(name="from_env", fromenv=True)
-            self.fake_api.deployment.create.assert_called_once_with(
-                config={"existing@openstack": {"another_key": "another"}},
-                name="from_env"
-            )
+        # OS_KEY is dropped for old rally-openstack, kept for newer ones
+        for version, expected in (
+            ((1, 4, 0), {"existing@openstack": {"another_key": "another"}}),
+            ((1, 5, 0), {"existing@openstack": {"another_key": "another",
+                                                "https_key": "some key"}}),
+        ):
+            with self.subTest(version=version):
+                mock_create.reset_mock()
+                mock_rally_os.__version_tuple__ = version
+                with mock.patch.dict("sys.modules",
+                                     {"rally_openstack": mock_rally_os}):
+                    result = self.invoke([
+                        "deployment", "create", "--name", "from_env",
+                        "--fromenv"])
+                self.assertEqual(0, result.exit_code, result.output)
+                mock_create.assert_called_once_with(config=expected,
+                                                    name="from_env")
 
-            self.fake_api.deployment.create.reset_mock()
-            mock_rally_os.__version_tuple__ = (1, 5, 0)
-            deployment.create(name="from_env", fromenv=True)
-            self.fake_api.deployment.create.assert_called_once_with(
-                config={"existing@openstack": {"another_key": "another",
-                                               "https_key": "some key"}},
-                name="from_env"
-            )
+    @mock.patch("rally.api._Deployment.create")
+    def test_create_and_use(self, mock_create):
+        mock_create.return_value = CREATED
+        with tempfile.NamedTemporaryFile("w", suffix=".json") as tf:
+            tf.write('{"uuid": "uuid"}')
+            tf.flush()
+            result = self.invoke([
+                "deployment", "create", "--name", "fake_deploy",
+                "--filename", tf.name])
 
-    @mock.patch("rally.cli.commands.deployment._list_deployments")
-    @mock.patch("rally.cli.commands.deployment._use")
-    @mock.patch("rally.cli.commands.deployment.open",
-                side_effect=mock.mock_open(read_data="{\"uuid\": \"uuid\"}"),
-                create=True)
-    def test_create_and_use(self, mock_open, mock__use,
-                            mock__list_deployments):
-        self.fake_api.deployment.create.return_value = dict(uuid="uuid")
-        deployment.create(name="fake_deploy",
-                          filename="path_to_config.json")
-        self.fake_api.deployment.create.assert_called_once_with(
+        self.assertEqual(0, result.exit_code, result.output)
+        mock_create.assert_called_once_with(
             config={"uuid": "uuid"}, name="fake_deploy")
-        mock__list_deployments.assert_called_once_with(
-            self.fake_api, deployment_list=[{"uuid": "uuid"}])
-        mock__use.assert_called_once_with(
-            self.fake_api, self.fake_api.deployment.create.return_value)
+        # the created deployment is listed and set as the default
+        self.assertIn("uuid", result.output)
+        self.assertIn("Using deployment: uuid", result.output)
 
     def test_recreate(self):
-        deployment_id = "43924f8b-9371-4152-af9f-4cf02b4eced4"
-        deployment.recreate(deployment=deployment_id)
-        self.fake_api.deployment.recreate.assert_called_once_with(
-            deployment=deployment_id, config=None)
+        # recreate is temporarily disabled in the API and raises for any input
+        for args in ([], ["--filename", "my.json"]):
+            with self.subTest(args=args):
+                extra = []
+                if args:
+                    tf = tempfile.NamedTemporaryFile("w", suffix=".json")
+                    self.addCleanup(tf.close)
+                    tf.write('{"some": "json"}')
+                    tf.flush()
+                    extra = ["--filename", tf.name]
+                result = self.invoke(
+                    ["deployment", "recreate", "some-uuid", *extra])
+                self.assertNotEqual(0, result.exit_code)
+                self.assertIn("temporary disabled", result.output)
 
-    @mock.patch("rally.cli.commands.deployment.open",
-                side_effect=mock.mock_open(read_data="{\"some\": \"json\"}"),
-                create=True)
-    def test_recreate_config(self, mock_open):
-        deployment_id = "43924f8b-9371-4152-af9f-4cf02b4eced4"
-        deployment.recreate(deployment=deployment_id, filename="my.json")
-        self.fake_api.deployment.recreate.assert_called_once_with(
-            deployment=deployment_id, config={"some": "json"})
+    @mock.patch("rally.api._Deployment.destroy")
+    def test_destroy(self, mock_destroy):
+        deployment = self._create_deployment()
 
-    def test_destroy(self):
-        deployment_id = "53fd0273-60ce-42e5-a759-36f1a683103e"
-        deployment.destroy(deployment=deployment_id)
-        self.fake_api.deployment.destroy.assert_called_once_with(
-            deployment=deployment_id)
+        result = self.invoke(["deployment", "destroy", deployment["uuid"]])
 
-    @mock.patch("rally.cli.commands.deployment.cliutils.print_list")
-    @mock.patch("rally.cli.commands.deployment.utils.Struct")
-    @mock.patch("rally.cli.commands.deployment.envutils.get_global")
-    def test_list_different_deployment_id(self, mock_get_global, mock_struct,
-                                          mock_print_list):
-        current_deployment_id = "26a3ce76-0efa-40e4-86e5-514574bd1ff6"
-        mock_get_global.return_value = current_deployment_id
-        fake_deployment_list = [
-            {"uuid": "fa34aea2-ae2e-4cf7-a072-b08d67466e3e",
-             "created_at": "03-12-2014",
-             "name": "dep1",
-             "status": "deploy->started",
-             "active": "False"}]
+        self.assertEqual(0, result.exit_code, result.output)
+        mock_destroy.assert_called_once_with(deployment=deployment["uuid"])
 
-        self.fake_api.deployment.list.return_value = fake_deployment_list
-        deployment.list_()
+    def test_list(self):
+        deployment = self._create_deployment()
 
-        fake_deployment = fake_deployment_list[0]
-        fake_deployment["active"] = ""
-        mock_struct.assert_called_once_with(**fake_deployment)
+        # without RALLY_DEPLOYMENT the row is not marked active; with it the
+        # matching row is flagged with "*"
+        for env, active in (({}, False),
+                            ({"RALLY_DEPLOYMENT": deployment["uuid"]}, True)):
+            with self.subTest(active=active):
+                result = self.invoke(["deployment", "list"], env=env)
+                self.assertEqual(0, result.exit_code, result.output)
+                self.assertIn(deployment["uuid"], result.output)
+                self.assertIn("Some Deploy", result.output)
+                self.assertEqual(active, "*" in result.output)
 
-        headers = ["uuid", "created_at", "name", "status", "active"]
-        mock_print_list.assert_called_once_with([mock_struct()], headers,
-                                                sortby_index=headers.index(
-                                                "created_at"))
+    def test_config(self):
+        deployment = self._create_deployment(spec={"foo": "bar"})
 
-    @mock.patch("rally.cli.commands.deployment.cliutils.print_list")
-    @mock.patch("rally.cli.commands.deployment.utils.Struct")
-    @mock.patch("rally.cli.commands.deployment.envutils.get_global")
-    def test_list_current_deployment_id(self, mock_get_global, mock_struct,
-                                        mock_print_list):
-        current_deployment_id = "64258e84-ffa1-4011-9e4c-aba07bdbcc6b"
-        mock_get_global.return_value = current_deployment_id
-        fake_deployment_list = [{"uuid": current_deployment_id,
-                                 "created_at": "13-12-2014",
-                                 "name": "dep2",
-                                 "status": "deploy->finished",
-                                 "active": "True"}]
-        self.fake_api.deployment.list.return_value = fake_deployment_list
-        deployment.list_()
+        result = self.invoke(["deployment", "config", deployment["uuid"]])
 
-        fake_deployment = fake_deployment_list[0]
-        fake_deployment["active"] = "*"
-        mock_struct.assert_called_once_with(**fake_deployment)
+        self.assertEqual(0, result.exit_code, result.output)
+        self.assertIn("foo", result.output)
+        self.assertIn("bar", result.output)
 
-        headers = ["uuid", "created_at", "name", "status", "active"]
-        mock_print_list.assert_called_once_with([mock_struct()], headers,
-                                                sortby_index=headers.index(
-                                                "created_at"))
+    @mock.patch("rally.api._Deployment.get")
+    def test_show(self, mock_get):
+        password = "S3cr3t-P@ssw0rd!"
+        mock_get.return_value = {
+            "credentials": {"openstack": [{
+                "admin": {"auth_url": "http://localhost:5000/v3",
+                          "username": "admin", "password": password,
+                          "tenant_name": "demo", "region_name": "RegionOne",
+                          "endpoint_type": "internal"},
+                "users": []}]}}
 
-    @mock.patch("json.dumps")
-    def test_config(self, mock_json_dumps):
-        deployment_id = "fa4a423e-f15d-4d83-971a-89574f892999"
-        value = {"config": "config"}
-        self.fake_api.deployment.get.return_value = value
-        deployment.config(deployment=deployment_id)
-        mock_json_dumps.assert_called_once_with(value["config"],
-                                                sort_keys=True, indent=4)
-        self.fake_api.deployment.get.assert_called_once_with(
-            deployment=deployment_id)
+        result = self.invoke(["deployment", "show", "some-uuid"])
 
-    @mock.patch("rally.cli.commands.deployment.cliutils.print_list")
-    @mock.patch("rally.cli.commands.deployment.utils.Struct")
-    def test_show(self, mock_struct, mock_print_list):
-        deployment_id = "b1a6153e-a314-4cb3-b63b-cf08c1a416c3"
-        value = {"admin": {"auth_url": "url",
-                           "username": "u",
-                           "password": "p",
-                           "tenant_name": "t",
-                           "region_name": "r",
-                           "endpoint_type": consts.EndpointType.INTERNAL},
-                 "users": []}
-        dep_get = self.fake_api.deployment.get
-        dep_get.return_value = {"credentials": {"openstack": [
-            {"admin": value["admin"],
-             "users": []}]}}
-        deployment.show(deployment=deployment_id)
-        self.fake_api.deployment.get.assert_called_once_with(
-            deployment=deployment_id)
+        self.assertEqual(0, result.exit_code, result.output)
+        # the password never leaks -- it is replaced by "***"
+        self.assertNotIn(password, result.output)
+        self.assertEqual(
+            "+--------------------------+----------+----------+"
+            "-------------+-------------+---------------+\n"
+            "| auth_url                 | username | password |"
+            " tenant_name | region_name | endpoint_type |\n"
+            "+--------------------------+----------+----------+"
+            "-------------+-------------+---------------+\n"
+            "| http://localhost:5000/v3 | admin    | ***      |"
+            " demo        | RegionOne   | internal      |\n"
+            "+--------------------------+----------+----------+"
+            "-------------+-------------+---------------+\n",
+            result.output)
 
-        headers = ["auth_url", "username", "password", "tenant_name",
-                   "region_name", "endpoint_type"]
-        fake_data = ["url", "u", "***", "t", "r", consts.EndpointType.INTERNAL]
-        mock_struct.assert_called_once_with(**dict(zip(headers, fake_data)))
-        mock_print_list.assert_called_once_with([mock_struct()], headers)
-
-    @mock.patch("os.remove")
-    @mock.patch("os.symlink")
-    @mock.patch("os.path.exists", return_value=True)
-    @mock.patch("rally.cli.envutils._update_env_file")
-    def test_use(self, mock__update_env_file, mock_path_exists,
-                 mock_symlink, mock_remove):
+    @mock.patch("rally.api._Deployment.get")
+    def test_use(self, mock_get):
         deployment_id = "593b683c-4b16-4b2b-a56b-e162bd60f10b"
-        self.fake_api.deployment.get.return_value = {
-            "uuid": deployment_id,
-            "credentials": {
-                "openstack": [{
-                    "admin": {"auth_url": "fake_auth_url",
-                              "username": "fake_username",
-                              "password": "fake_password",
-                              "tenant_name": "fake_tenant_name",
-                              "endpoint": "fake_endpoint",
-                              "region_name": None}}]}}
+        v2 = {"auth_url": "fake_auth_url", "username": "fake_username",
+              "password": "fake_password", "tenant_name": "fake_tenant_name",
+              "endpoint": "fake_endpoint", "region_name": None}
+        v3 = dict(v2, auth_url="http://localhost:5000/v3",
+                  user_domain_name="fake_user_domain",
+                  project_domain_name="fake_project_domain")
 
-        with mock.patch("rally.cli.commands.deployment.open", mock.mock_open(),
-                        create=True) as mock_file:
-            deployment.use(deployment_id)
-            self.assertEqual(3, mock_path_exists.call_count)
-            mock__update_env_file.assert_has_calls([
-                mock.call(os.path.expanduser("~/.rally/globals"),
-                          "RALLY_DEPLOYMENT", "%s\n" % deployment_id),
-                mock.call(os.path.expanduser("~/.rally/globals"),
-                          "RALLY_ENV", "%s\n" % deployment_id),
-            ])
+        for admin in (v2, v3):
+            with self.subTest(auth_url=admin["auth_url"]):
+                mock_get.return_value = {
+                    "uuid": deployment_id,
+                    "credentials": {"openstack": [{"admin": admin}]}}
 
-            mock_file.return_value.write.assert_any_call(
-                "export OS_ENDPOINT='fake_endpoint'\n")
-            mock_file.return_value.write.assert_any_call(
-                "export OS_AUTH_URL='fake_auth_url'\n"
-                "export OS_USERNAME='fake_username'\n"
-                "export OS_PASSWORD='fake_password'\n"
-                "export OS_TENANT_NAME='fake_tenant_name'\n"
-                "export OS_PROJECT_NAME='fake_tenant_name'\n")
-            mock_symlink.assert_called_once_with(
-                os.path.expanduser("~/.rally/openrc-%s" % deployment_id),
-                os.path.expanduser("~/.rally/openrc"))
-            mock_remove.assert_called_once_with(os.path.expanduser(
-                "~/.rally/openrc"))
+                result = self.invoke(["deployment", "use", deployment_id])
 
-    @mock.patch("os.remove")
-    @mock.patch("os.symlink")
-    @mock.patch("os.path.exists", return_value=True)
-    @mock.patch("rally.cli.envutils._update_env_file")
-    def test_use_with_v3_auth(self, mock__update_env_file, mock_path_exists,
-                              mock_symlink, mock_remove):
-        deployment_id = "593b683c-4b16-4b2b-a56b-e162bd60f10b"
+                self.assertEqual(0, result.exit_code, result.output)
+                self.assertIn("Using deployment: %s" % deployment_id,
+                              result.output)
+                openrc = os.path.expanduser(
+                    "~/.rally/openrc-%s" % deployment_id)
+                with open(openrc) as f:
+                    content = f.read()
+                self.assertIn("export OS_AUTH_URL='%s'\n" % admin["auth_url"],
+                              content)
+                self.assertIn("export OS_USERNAME='fake_username'\n", content)
+                if "user_domain_name" in admin:
+                    self.assertIn(
+                        "export OS_IDENTITY_API_VERSION=3\n", content)
 
-        self.fake_api.deployment.get.return_value = {
-            "uuid": deployment_id,
-            "credentials": {
-                "openstack": [{
-                    "admin": {"auth_url": "http://localhost:5000/v3",
-                              "username": "fake_username",
-                              "password": "fake_password",
-                              "tenant_name": "fake_tenant_name",
-                              "endpoint": "fake_endpoint",
-                              "region_name": None,
-                              "user_domain_name": "fake_user_domain",
-                              "project_domain_name": "fake_project_domain"}}]}}
+    @mock.patch("rally.api._Deployment.get")
+    def test_use_by_name(self, mock_get):
+        fake_credentials = {"admin": {"auth_url": "url", "username": "u",
+                                      "password": "p", "tenant_name": "t"},
+                            "users": []}
+        mock_get.return_value = {
+            "uuid": "fake_uuid",
+            "credentials": {"openstack": [fake_credentials]}}
 
-        with mock.patch("rally.cli.commands.deployment.open", mock.mock_open(),
-                        create=True) as mock_file:
-            deployment.use(deployment_id)
-            self.assertEqual(3, mock_path_exists.call_count)
-            mock__update_env_file.assert_has_calls([
-                mock.call(os.path.expanduser("~/.rally/globals"),
-                          "RALLY_DEPLOYMENT", "%s\n" % deployment_id),
-                mock.call(os.path.expanduser("~/.rally/globals"),
-                          "RALLY_ENV", "%s\n" % deployment_id)
-            ])
-            mock_file.return_value.write.assert_any_call(
-                "export OS_ENDPOINT='fake_endpoint'\n")
-            mock_file.return_value.write.assert_any_call(
-                "export OS_AUTH_URL='http://localhost:5000/v3'\n"
-                "export OS_USERNAME='fake_username'\n"
-                "export OS_PASSWORD='fake_password'\n"
-                "export OS_TENANT_NAME='fake_tenant_name'\n"
-                "export OS_PROJECT_NAME='fake_tenant_name'\n")
-            mock_file.return_value.write.assert_any_call(
-                "export OS_IDENTITY_API_VERSION=3\n"
-                "export OS_USER_DOMAIN_NAME='fake_user_domain'\n"
-                "export OS_PROJECT_DOMAIN_NAME='fake_project_domain'\n")
-            mock_symlink.assert_called_once_with(
-                os.path.expanduser("~/.rally/openrc-%s" % deployment_id),
-                os.path.expanduser("~/.rally/openrc"))
-            mock_remove.assert_called_once_with(os.path.expanduser(
-                "~/.rally/openrc"))
+        result = self.invoke(["deployment", "use", "fake_name"])
 
-    @mock.patch("rally.cli.commands.deployment."
-                "_update_openrc_deployment_file")
-    @mock.patch("rally.cli.envutils.update_globals_file")
-    def test_use_by_name(self, mock_update_globals_file,
-                         mock__update_openrc_deployment_file):
-        fake_credentials = {"admin": "foo_admin", "users": ["foo_user"]}
-        fake_deployment = {"uuid": "fake_uuid",
-                           "credentials": {"openstack": [fake_credentials]}}
-        self.fake_api.deployment.list.return_value = [fake_deployment]
-        self.fake_api.deployment.get.return_value = fake_deployment
-        status = deployment.use("fake_name")
-        self.assertIsNone(status)
-        self.fake_api.deployment.get.assert_called_once_with(
-            deployment="fake_name")
-        mock_update_globals_file.assert_has_calls([
-            mock.call(envutils.ENV_DEPLOYMENT, "fake_uuid"),
-            mock.call(envutils.ENV_ENV, "fake_uuid")
-        ])
-        mock__update_openrc_deployment_file.assert_called_once_with(
-            "fake_uuid", "foo_admin")
+        self.assertEqual(0, result.exit_code, result.output)
+        mock_get.assert_called_once_with(deployment="fake_name")
+        self.assertIn("Using deployment: fake_uuid", result.output)
 
     def test_deployment_not_found(self):
         deployment_id = "e87e4dca-b515-4477-888d-5f6103f13b42"
-        exc = exceptions.DBRecordNotFound(criteria="uuid: %s" % deployment_id,
-                                          table="deployments")
-        self.fake_api.deployment.get.side_effect = exc
-        with self.assertExitCode(1):
-            deployment.use(deployment_id)
 
-    @mock.patch("rally.cli.commands.deployment.logging.is_debug",
-                return_value=False)
-    @mock.patch("sys.stdout", new_callable=io.StringIO)
-    def test_deployment_check(self, mock_stdout, mock_is_debug):
-        deployment_uuid = "some"
-        # OrderedDict is used to predict the order of platfrom in output
-        self.fake_api.deployment.check.return_value = collections.OrderedDict([
+        result = self.invoke(["deployment", "use", deployment_id])
+
+        self.assertEqual(1, result.exit_code)
+        self.assertIn("is not found", result.output)
+
+    @mock.patch("rally.api._Deployment.check")
+    def test_deployment_check(self, mock_check):
+        # OrderedDict is used to predict the order of platforms in output
+        mock_check.return_value = collections.OrderedDict([
             ("openstack", [{"services": [
                 {"name": "nova", "type": "compute"},
                 {"name": "keystone", "type": "identity"},
@@ -361,17 +279,9 @@ class DeploymentCommandsTestCase(test.TestCase):
                      "trace": "file1\nline1"}}
             ])])
 
-        origin_print_list = cliutils.print_list
+        result = self.invoke(["deployment", "check", "some-uuid"])
 
-        def print_list(*args, **kwargs):
-            kwargs["out"] = mock_stdout
-            return origin_print_list(*args, **kwargs)
-
-        with mock.patch.object(deployment.cliutils, "print_list",
-                               new=print_list):
-            with self.assertExitCode(1):
-                deployment.check(deployment=deployment_uuid)
-
+        self.assertEqual(1, result.exit_code)
         self.assertEqual(
             "-----------------------------------------------------------------"
             "---------------\nPlatform openstack:\n"
@@ -406,15 +316,14 @@ class DeploymentCommandsTestCase(test.TestCase):
             "---------------\n\n"
             "Error while checking users credentials:\n"
             "\tProviderError: No money - no funny!",
-            mock_stdout.getvalue().strip())
+            result.output.strip())
 
     @mock.patch("rally.cli.commands.deployment.logging.is_debug",
                 return_value=True)
-    @mock.patch("sys.stdout", new_callable=io.StringIO)
-    def test_deployment_check_is_debug_turned_on(self, mock_stdout,
+    @mock.patch("rally.api._Deployment.check")
+    def test_deployment_check_is_debug_turned_on(self, mock_check,
                                                  mock_is_debug):
-        deployment_uuid = "some"
-        self.fake_api.deployment.check.return_value = {
+        mock_check.return_value = {
             "openstack": [{"services": [], "admin_error": {
                 "etype": "KeystoneError",
                 "msg": "connection refused",
@@ -422,9 +331,9 @@ class DeploymentCommandsTestCase(test.TestCase):
                          "KeystoneError: connection refused"}}]
         }
 
-        with self.assertExitCode(1):
-            deployment.check(deployment=deployment_uuid)
+        result = self.invoke(["deployment", "check", "some-uuid"])
 
+        self.assertEqual(1, result.exit_code)
         self.assertEqual(
             "-----------------------------------------------------------------"
             "---------------\nPlatform openstack:\n"
@@ -433,4 +342,4 @@ class DeploymentCommandsTestCase(test.TestCase):
             "Error while checking admin credentials:\n"
             "file1\n\tline1\n\n"
             "KeystoneError: connection refused",
-            mock_stdout.getvalue().strip())
+            result.output.strip())
