@@ -127,8 +127,8 @@ class VerifyCommandsTestCase(test.CLITestCase):
     def test_list_verifiers_empty_verifiers(self):
         for args, expected in (
             ([], "There are no verifiers."),
-            (["--status", "foo"],
-             "There are no verifiers with status 'foo'."),
+            (["--status", "installed"],
+             "There are no verifiers with status 'installed'."),
         ):
             with self.subTest(args=args):
                 result = self.invoke(["verify", "list-verifiers", *args])
@@ -229,7 +229,7 @@ class VerifyCommandsTestCase(test.CLITestCase):
         # --override cannot be combined with --reconfigure/--extend
         result = self.invoke([
             "verify", "configure-verifier", verifier.uuid,
-            "--deployment-id", env["uuid"], "--override", "/p/a/t/h",
+            "--env", env["uuid"], "--override", "/p/a/t/h",
             "--reconfigure", "--show"])
         self.assertEqual(1, result.exit_code, result.output)
         self.assertFalse(mock_configure.called)
@@ -237,7 +237,7 @@ class VerifyCommandsTestCase(test.CLITestCase):
         # a missing --override file is reported and exits 1
         result = self.invoke([
             "verify", "configure-verifier", verifier.uuid,
-            "--deployment-id", env["uuid"], "--override", "/p/a/t/h",
+            "--env", env["uuid"], "--override", "/p/a/t/h",
             "--show"])
         self.assertEqual(1, result.exit_code, result.output)
         self.assertIn("not found", result.output)
@@ -248,7 +248,7 @@ class VerifyCommandsTestCase(test.CLITestCase):
             tf.flush()
             result = self.invoke([
                 "verify", "configure-verifier", verifier.uuid,
-                "--deployment-id", env["uuid"], "--override", tf.name])
+                "--env", env["uuid"], "--override", tf.name])
         self.assertEqual(0, result.exit_code, result.output)
         mock_override_configuration.assert_called_once_with(
             verifier_id=verifier.uuid, deployment_id=env["uuid"],
@@ -260,7 +260,7 @@ class VerifyCommandsTestCase(test.CLITestCase):
             tf.flush()
             result = self.invoke([
                 "verify", "configure-verifier", verifier.uuid,
-                "--deployment-id", env["uuid"], "--extend", tf.name])
+                "--env", env["uuid"], "--extend", tf.name])
         self.assertEqual(0, result.exit_code, result.output)
         mock_configure.assert_called_once_with(
             verifier=verifier.uuid, deployment_id=env["uuid"],
@@ -270,7 +270,7 @@ class VerifyCommandsTestCase(test.CLITestCase):
         # a raw json/yaml value is parsed, and --show prints the config
         result = self.invoke([
             "verify", "configure-verifier", verifier.uuid,
-            "--deployment-id", env["uuid"], "--extend", "{foo: {opt: val}}",
+            "--env", env["uuid"], "--extend", "{foo: {opt: val}}",
             "--show"])
         self.assertEqual(0, result.exit_code, result.output)
         self.assertIn("config-body", result.output)
@@ -355,14 +355,14 @@ class VerifyCommandsTestCase(test.CLITestCase):
 
         # --pattern and --load-list are mutually exclusive
         result = self.invoke([
-            "verify", "start", verifier.uuid, "--deployment-id", env["uuid"],
+            "verify", "start", verifier.uuid, "--env", env["uuid"],
             "--pattern", "p", "--load-list", "/p/a/t/h"])
         self.assertEqual(1, result.exit_code, result.output)
         self.assertFalse(mock_start.called)
 
         # a missing list file is reported and exits 1
         result = self.invoke([
-            "verify", "start", verifier.uuid, "--deployment-id", env["uuid"],
+            "verify", "start", verifier.uuid, "--env", env["uuid"],
             "--load-list", "/p/a/t/h"])
         self.assertEqual(1, result.exit_code, result.output)
         self.assertFalse(mock_start.called)
@@ -372,7 +372,7 @@ class VerifyCommandsTestCase(test.CLITestCase):
             tf.write("test_1\ntest_2")
             tf.flush()
             result = self.invoke([
-                "verify", "start", verifier.uuid, "--deployment-id",
+                "verify", "start", verifier.uuid, "--env",
                 env["uuid"], "--tag", "foo", "--load-list", tf.name])
         self.assertEqual(0, result.exit_code, result.output)
         mock_start.assert_called_once_with(
@@ -386,7 +386,7 @@ class VerifyCommandsTestCase(test.CLITestCase):
             with self.subTest(opt=opt):
                 mock_start.reset_mock()
                 result = self.invoke([
-                    "verify", "start", verifier.uuid, "--deployment-id",
+                    "verify", "start", verifier.uuid, "--env",
                     env["uuid"], opt, "/p/a/t/h"])
                 self.assertEqual(1, result.exit_code, result.output)
                 self.assertFalse(mock_start.called)
@@ -395,7 +395,7 @@ class VerifyCommandsTestCase(test.CLITestCase):
                     tf.write("test_1:\ntest_2: Reason\n")
                     tf.flush()
                     result = self.invoke([
-                        "verify", "start", verifier.uuid, "--deployment-id",
+                        "verify", "start", verifier.uuid, "--env",
                         env["uuid"], opt, tf.name])
                 self.assertEqual(0, result.exit_code, result.output)
                 self.assertEqual({"test_1": None, "test_2": "Reason"},
@@ -409,7 +409,7 @@ class VerifyCommandsTestCase(test.CLITestCase):
             "tests": {"t": {"name": "t", "status": "fail",
                             "traceback": "boom-trace"}}}
         result = self.invoke([
-            "verify", "start", verifier.uuid, "--deployment-id", env["uuid"],
+            "verify", "start", verifier.uuid, "--env", env["uuid"],
             "--detailed", "--no-use"])
         self.assertEqual(3, result.exit_code, result.output)
         self.assertIn("boom-trace", result.output)
@@ -421,7 +421,7 @@ class VerifyCommandsTestCase(test.CLITestCase):
             "totals": {**RESULTS["totals"], "unexpected_success": 1},
             "tests": RESULTS["tests"]}
         result = self.invoke([
-            "verify", "start", verifier.uuid, "--deployment-id", env["uuid"]])
+            "verify", "start", verifier.uuid, "--env", env["uuid"]])
         self.assertEqual(2, result.exit_code, result.output)
 
     @mock.patch("rally.api._Verification.start")
@@ -432,7 +432,7 @@ class VerifyCommandsTestCase(test.CLITestCase):
             status=consts.DeployStatus.DEPLOY_INIT)
 
         result = self.invoke([
-            "verify", "start", verifier.uuid, "--deployment-id", env["uuid"]])
+            "verify", "start", verifier.uuid, "--env", env["uuid"]])
 
         self.assertEqual(1, result.exit_code, result.output)
 
@@ -453,7 +453,7 @@ class VerifyCommandsTestCase(test.CLITestCase):
             "totals": RESULTS["totals"], "tests": RESULTS["tests"]}
 
         result = self.invoke([
-            "verify", "rerun", verification["uuid"], "--deployment-id",
+            "verify", "rerun", verification["uuid"], "--env",
             env["uuid"], "--failed"])
 
         self.assertEqual(0, result.exit_code, result.output)
@@ -468,7 +468,7 @@ class VerifyCommandsTestCase(test.CLITestCase):
             "tests": {"t": {"name": "t", "status": "fail",
                             "traceback": "boom-trace"}}}
         result = self.invoke([
-            "verify", "rerun", verification["uuid"], "--deployment-id",
+            "verify", "rerun", verification["uuid"], "--env",
             env["uuid"], "--detailed", "--no-use"])
         self.assertEqual(0, result.exit_code, result.output)
         self.assertIn("boom-trace", result.output)
@@ -527,7 +527,7 @@ class VerifyCommandsTestCase(test.CLITestCase):
             "RRRRRRRRRRRRRR)          |\n"
             "| Verifier type       | fake-verifier-tool (platform: tests)     "
             "                         |\n"
-            "| Deployment name     | Some Deploy (UUID: EEEEEEEEEEEEEEEEEEEEEE"
+            "| Environment         | Some Deploy (UUID: EEEEEEEEEEEEEEEEEEEEEE"
             "EEEEEEEEEEEEEE)          |\n"
             "| Tests count         | 1                                        "
             "                         |\n"
@@ -567,8 +567,8 @@ class VerifyCommandsTestCase(test.CLITestCase):
 
         for args, expected in (
             ([], "There are no verifications."),
-            (["--id", verifier.uuid, "--deployment-id", env["uuid"],
-              "--status", "bar"],
+            (["--id", verifier.uuid, "--env", env["uuid"],
+              "--status", "finished"],
              "There are no verifications that meet specified criteria."),
         ):
             with self.subTest(args=args):
@@ -629,7 +629,7 @@ class VerifyCommandsTestCase(test.CLITestCase):
 
         # a missing input file is reported and exits 1
         result = self.invoke([
-            "verify", "import", verifier.uuid, "--deployment-id", env["uuid"],
+            "verify", "import", verifier.uuid, "--env", env["uuid"],
             "--file", "/p/a/t/h"])
         self.assertEqual(1, result.exit_code, result.output)
         self.assertFalse(mock_import_results.called)
@@ -639,7 +639,7 @@ class VerifyCommandsTestCase(test.CLITestCase):
             tf.write("data")
             tf.flush()
             result = self.invoke([
-                "verify", "import", verifier.uuid, "--deployment-id",
+                "verify", "import", verifier.uuid, "--env",
                 env["uuid"], "--file", tf.name])
         self.assertEqual(0, result.exit_code, result.output)
         mock_import_results.assert_called_once_with(
@@ -650,7 +650,7 @@ class VerifyCommandsTestCase(test.CLITestCase):
             tf.write("data")
             tf.flush()
             result = self.invoke([
-                "verify", "import", verifier.uuid, "--deployment-id",
+                "verify", "import", verifier.uuid, "--env",
                 env["uuid"], "--file", tf.name, "--no-use"])
         self.assertEqual(0, result.exit_code, result.output)
         self.assertIn("Verification UUID", result.output)

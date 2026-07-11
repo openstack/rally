@@ -393,6 +393,10 @@ def build_cli_params() -> list:
         # ``None`` and lets oslo apply its own default when it re-parses argv.
         default = opt.default if isinstance(opt, cfg.BoolOpt) else None
         help_text = (opt.help or "").strip().split("\n")[0]
+        # oslo help uses printf placeholders for its own formatter; typer
+        # shows them raw, so resolve ``%(default)s`` and unescape ``%%``.
+        help_text = help_text.replace("%(default)s", str(opt.default))
+        help_text = help_text.replace("%%", "%")
         option = typer.Option("--%s" % opt.name, help=help_text)
         params.append(
             inspect.Parameter(

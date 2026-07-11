@@ -51,12 +51,15 @@ if t.TYPE_CHECKING:
 app = typer.Typer(name="rally", help="Rally command-line interface.",
                   no_args_is_help=False, add_completion=True)
 
-app.add_typer(db_app, name="db")
-app.add_typer(deployment_app, name="deployment")
-app.add_typer(env_app, name="env")
-app.add_typer(plugin_app, name="plugin")
-app.add_typer(task_app, name="task")
-app.add_typer(verify_app, name="verify")
+# the command categories are grouped in their own help panel, separate from
+# the top-level ``version`` command
+_CATEGORIES = "Categories"
+app.add_typer(db_app, name="db", rich_help_panel=_CATEGORIES)
+app.add_typer(deployment_app, name="deployment", rich_help_panel=_CATEGORIES)
+app.add_typer(env_app, name="env", rich_help_panel=_CATEGORIES)
+app.add_typer(plugin_app, name="plugin", rich_help_panel=_CATEGORIES)
+app.add_typer(task_app, name="task", rich_help_panel=_CATEGORIES)
+app.add_typer(verify_app, name="verify", rich_help_panel=_CATEGORIES)
 
 
 @app.command(name="version")
@@ -136,7 +139,9 @@ def bootstrap(
     **kwargs: t.Any,
 ) -> None:
     """Build the API and expose it to the sub-commands."""
-    if any(opt in sys.argv[1:] for opt in ctx.help_option_names):
+    is_help = any(opt in sys.argv[1:] for opt in ctx.help_option_names)
+    cliutils.set_help_requested(is_help)
+    if is_help:
         return
     envutils.load_globals()
     config_args: list[str] = []

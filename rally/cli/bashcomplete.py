@@ -94,6 +94,7 @@ def generate() -> str:
                         and name not in ("--help", "--version"))
                 )
                 for p in params
+                if not getattr(p, "hidden", False)
             ))
 
         lines.append(f'    OPTS["{category}_{name}"]="{opts}"\n')

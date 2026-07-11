@@ -129,15 +129,33 @@ class TaskCommandsTestCase(test.CLITestCase):
         ):
             with self.subTest(extra=extra):
                 result = self.invoke(["task", "validate", task_file,
-                                      "--deployment", env["uuid"], *extra])
+                                      "--env", env["uuid"], *extra])
                 self.assertEqual(0, result.exit_code, result.output)
                 self.assertIn(expected, result.output)
+
+    @mock.patch("rally.api._Task.validate")
+    def test_env_alias_deprecation(self, mock_validate):
+        env = self._create_env()
+        task_file = self._write("{'a': 1}")
+
+        # the preferred --env flag does not warn
+        result = self.invoke(["task", "validate", task_file,
+                              "--env", env["uuid"]])
+        self.assertEqual(0, result.exit_code, result.output)
+        self.assertNotIn("deprecated", result.stderr)
+
+        # the legacy --deployment alias still works but warns towards --env
+        result = self.invoke(["task", "validate", task_file,
+                              "--deployment", env["uuid"]])
+        self.assertEqual(0, result.exit_code, result.output)
+        self.assertIn("deprecated", result.stderr)
+        self.assertIn("--env", result.stderr)
 
     def test__load_task_wrong_task_args_file(self):
         env = self._create_env()
         task_file = self._write("{}")
         result = self.invoke(["task", "validate", task_file,
-                              "--deployment", env["uuid"],
+                              "--env", env["uuid"],
                               "--task-args-file", "/no/such/args"])
         self.assertEqual(task.FailedToLoadTask.error_code, result.exit_code)
         self.assertIn("Invalid --task-args-file passed", result.output)
@@ -148,7 +166,7 @@ class TaskCommandsTestCase(test.CLITestCase):
         for raw_args in ("{'test': {}", "foo"):
             with self.subTest(raw_args=raw_args):
                 result = self.invoke(["task", "validate", task_file,
-                                      "--deployment", env["uuid"],
+                                      "--env", env["uuid"],
                                       "--task-args", raw_args])
                 self.assertEqual(task.FailedToLoadTask.error_code,
                                  result.exit_code)
@@ -158,7 +176,7 @@ class TaskCommandsTestCase(test.CLITestCase):
         env = self._create_env()
         task_file = self._write("{}")
         bad_args = self._write("{'a': {}")
-        result = self.invoke(["task", "validate", task_file, "--deployment",
+        result = self.invoke(["task", "validate", task_file, "--env",
                               env["uuid"], "--task-args-file", bad_args])
         self.assertEqual(task.FailedToLoadTask.error_code, result.exit_code)
         self.assertIn("has to be YAML or JSON", result.output)
@@ -167,7 +185,7 @@ class TaskCommandsTestCase(test.CLITestCase):
         env = self._create_env()
         task_file = self._write("{'test': {{t}}}")
         result = self.invoke(["task", "validate", task_file,
-                              "--deployment", env["uuid"]])
+                              "--env", env["uuid"]])
         self.assertEqual(task.FailedToLoadTask.error_code, result.exit_code)
         self.assertIn("Failed to render task template", result.output)
 
@@ -176,7 +194,7 @@ class TaskCommandsTestCase(test.CLITestCase):
         # renders fine (no jinja) but is not valid YAML/JSON
         task_file = self._write("{'test': {}")
         result = self.invoke(["task", "validate", task_file,
-                              "--deployment", env["uuid"]])
+                              "--env", env["uuid"]])
         self.assertEqual(task.FailedToLoadTask.error_code, result.exit_code)
         self.assertIn("Wrong format of rendered input task", result.output)
 
@@ -204,7 +222,7 @@ class TaskCommandsTestCase(test.CLITestCase):
     def test__load_and_validate_file_failed(self):
         env = self._create_env()
         result = self.invoke(["task", "validate", "/no/such/task",
-                              "--deployment", env["uuid"]])
+                              "--env", env["uuid"]])
         self.assertEqual(task.FailedToLoadTask.error_code, result.exit_code)
         self.assertIn("Error reading /no/such/task", result.output)
 
@@ -219,7 +237,7 @@ class TaskCommandsTestCase(test.CLITestCase):
                                  "pass_sla": True, "subtasks": []}
 
         result = self.invoke(["task", "start", task_file,
-                              "--deployment", env["uuid"]])
+                              "--env", env["uuid"]])
 
         self.assertEqual(0, result.exit_code, result.output)
         self.assertIn("started", result.output)
@@ -237,7 +255,7 @@ class TaskCommandsTestCase(test.CLITestCase):
             status=consts.DeployStatus.DEPLOY_INIT)
 
         result = self.invoke(["task", "start", task_file,
-                              "--deployment", env["uuid"], "--tag", "some"])
+                              "--env", env["uuid"], "--tag", "some"])
 
         self.assertEqual(1, result.exit_code, result.output)
         self.assertIn("unfinished deployment", result.output)
@@ -254,7 +272,7 @@ class TaskCommandsTestCase(test.CLITestCase):
                                  "pass_sla": True, "subtasks": []}
 
         result = self.invoke(["task", "start", task_file,
-                              "--deployment", env["uuid"],
+                              "--env", env["uuid"],
                               "--task-args-file", args_file, "--tag", "t"])
 
         self.assertEqual(0, result.exit_code, result.output)
@@ -270,7 +288,7 @@ class TaskCommandsTestCase(test.CLITestCase):
         mock_create.side_effect = exceptions.InvalidTaskException("foo")
 
         result = self.invoke(["task", "start", task_file,
-                              "--deployment", env["uuid"]])
+                              "--env", env["uuid"]])
 
         self.assertEqual(exceptions.InvalidTaskException.error_code,
                          result.exit_code)
@@ -286,7 +304,7 @@ class TaskCommandsTestCase(test.CLITestCase):
         mock_get.return_value = {"uuid": "new-uuid", "pass_sla": False,
                                  "status": "finished", "subtasks": []}
 
-        result = self.invoke(["task", "start", task_file, "--deployment",
+        result = self.invoke(["task", "start", task_file, "--env",
                               env["uuid"], "--no-use"])
 
         self.assertEqual(2, result.exit_code, result.output)
@@ -306,7 +324,7 @@ class TaskCommandsTestCase(test.CLITestCase):
                                       "runner_type": "constant",
                                       "runner": {"times": 1}, "hooks": [],
                                       "sla": {}}]}]}
-                args = ["task", "restart", "--deployment", "dep",
+                args = ["task", "restart", "--env", "dep",
                         "--uuid", "task-uuid"]
                 if scenario:
                     args += ["--scenario", scenario]
@@ -326,7 +344,7 @@ class TaskCommandsTestCase(test.CLITestCase):
             "description": "d", "tags": [], "subtasks": [],
             "validation_result": {"trace": {}, "etype": "E", "msg": "m"}}
 
-        result = self.invoke(["task", "restart", "--deployment", "dep",
+        result = self.invoke(["task", "restart", "--env", "dep",
                               "--uuid", "task-uuid"])
 
         self.assertEqual(1, result.exit_code, result.output)
@@ -343,7 +361,7 @@ class TaskCommandsTestCase(test.CLITestCase):
                     "runner_type": "c", "runner": {}, "hooks": [],
                     "sla": {}}]}]}
 
-        result = self.invoke(["task", "restart", "--deployment", "dep",
+        result = self.invoke(["task", "restart", "--env", "dep",
                               "--uuid", "task-uuid"])
 
         self.assertEqual(2, result.exit_code, result.output)
@@ -358,7 +376,7 @@ class TaskCommandsTestCase(test.CLITestCase):
 
         with mock.patch("rally.cli.commands.task.logging.is_debug",
                         return_value=True):
-            result = self.invoke(["task", "restart", "--deployment", "dep",
+            result = self.invoke(["task", "restart", "--env", "dep",
                                   "--uuid", "task-uuid"])
 
         self.assertEqual(1, result.exit_code, result.output)
@@ -515,7 +533,7 @@ class TaskCommandsTestCase(test.CLITestCase):
         mock_export.return_value = {"print": "the report body"}
 
         # --deployment lists the tasks itself; the positional is still required
-        result = self.invoke(["task", "report", "ignored", "--deployment",
+        result = self.invoke(["task", "report", "ignored", "--env",
                               "dep", "--out", "out"])
 
         self.assertEqual(0, result.exit_code, result.output)
@@ -557,7 +575,7 @@ class TaskCommandsTestCase(test.CLITestCase):
         env = self._create_env()
         task_obj = self._create_task(env=env, tags=["d"])
 
-        result = self.invoke(["task", "list", "--deployment", env["uuid"]])
+        result = self.invoke(["task", "list", "--env", env["uuid"]])
 
         self.assertEqual(0, result.exit_code, result.output)
         self.assertIn(task_obj["uuid"], result.output)
@@ -567,23 +585,24 @@ class TaskCommandsTestCase(test.CLITestCase):
         env = self._create_env()
         task_obj = self._create_task(env=env)
 
-        result = self.invoke(["task", "list", "--deployment", env["uuid"],
+        result = self.invoke(["task", "list", "--env", env["uuid"],
                               "--uuids-only"])
 
         self.assertEqual(0, result.exit_code, result.output)
         self.assertEqual("%s\n" % task_obj["uuid"], result.stdout)
 
     def test_list_wrong_status(self):
-        result = self.invoke(["task", "list", "--deployment", "fake",
-                              "--status", "wrong non existing status"])
+        # typer rejects an unknown status natively (the option is a Literal)
+        result = self.invoke(["task", "list", "--env", "fake",
+                              "--status", "bogus"])
 
-        self.assertEqual(1, result.exit_code, result.output)
-        self.assertIn("Invalid task status", result.output)
+        self.assertEqual(2, result.exit_code, result.output)
+        self.assertIn("Invalid value", result.output)
 
     def test_list_no_results(self):
         env = self._create_env()
 
-        result = self.invoke(["task", "list", "--deployment", env["uuid"]])
+        result = self.invoke(["task", "list", "--env", env["uuid"]])
 
         self.assertEqual(0, result.exit_code, result.output)
         self.assertIn("There are no tasks", result.output)
@@ -592,24 +611,29 @@ class TaskCommandsTestCase(test.CLITestCase):
         env = self._create_env()
         self._create_task(env=env)  # a task with no tags
         with self.subTest("no-tag task lists with an empty tag cell"):
-            result = self.invoke(["task", "list", "--deployment",
+            result = self.invoke(["task", "list", "--env",
                                   env["uuid"]])
             self.assertEqual(0, result.exit_code, result.output)
         with self.subTest("valid status filter with no matches"):
-            result = self.invoke(["task", "list", "--deployment",
+            result = self.invoke(["task", "list", "--env",
                                   env["uuid"], "--status", "finished"])
             self.assertEqual(0, result.exit_code, result.output)
             self.assertIn("no tasks in 'finished' status", result.output)
-        with self.subTest("all deployments + tag filter"):
-            result = self.invoke(["task", "list", "--deployment",
-                                  env["uuid"], "--all-deployments",
-                                  "--tag", "x"])
+        with self.subTest("all envs + tag filter"):
+            result = self.invoke(["task", "list", "--env",
+                                  env["uuid"], "--all-envs", "--tag", "x"])
             self.assertEqual(0, result.exit_code, result.output)
+        with self.subTest("deprecated --all-deployments still works, warns"):
+            result = self.invoke(["task", "list", "--env",
+                                  env["uuid"], "--all-deployments"])
+            self.assertEqual(0, result.exit_code, result.output)
+            self.assertIn("deprecated", result.stderr)
+            self.assertIn("--all-envs", result.stderr)
 
     def test_list_uuids_only_empty(self):
         env = self._create_env()
 
-        result = self.invoke(["task", "list", "--deployment", env["uuid"],
+        result = self.invoke(["task", "list", "--env", env["uuid"],
                               "--uuids-only"])
 
         self.assertEqual(0, result.exit_code, result.output)
@@ -667,7 +691,7 @@ class TaskCommandsTestCase(test.CLITestCase):
         task_file = self._write('{"some": "json"}')
 
         result = self.invoke(["task", "validate", task_file,
-                              "--deployment", env["uuid"]])
+                              "--env", env["uuid"]])
 
         self.assertEqual(0, result.exit_code, result.output)
         self.assertIn("Input Task is valid", result.output)
@@ -677,7 +701,7 @@ class TaskCommandsTestCase(test.CLITestCase):
     def test_validate_failed_to_load_task(self):
         env = self._create_env()
         result = self.invoke(["task", "validate", "/no/such/task",
-                              "--deployment", env["uuid"]])
+                              "--env", env["uuid"]])
 
         self.assertEqual(task.FailedToLoadTask.error_code, result.exit_code)
 
@@ -688,7 +712,7 @@ class TaskCommandsTestCase(test.CLITestCase):
         mock_validate.side_effect = exceptions.InvalidTaskException("foo")
 
         result = self.invoke(["task", "validate", task_file,
-                              "--deployment", env["uuid"]])
+                              "--env", env["uuid"]])
 
         self.assertEqual(exceptions.InvalidTaskException.error_code,
                          result.exit_code)
@@ -746,13 +770,13 @@ class TaskCommandsTestCase(test.CLITestCase):
         mock_import_results.return_value = {"uuid": "new-uuid"}
 
         result = self.invoke(["task", "import", "--file", results_file,
-                              "--deployment", env["uuid"], "--tag", "tag"])
+                              "--env", env["uuid"], "--tag", "tag"])
         self.assertEqual(0, result.exit_code, result.output)
         self.assertIn("Task UUID: new-uuid", result.output)
         mock_import_results.assert_called_once_with(
             deployment=env["uuid"], task_results="results", tags=["tag"])
 
         result = self.invoke(["task", "import", "--file", "/no/such/file",
-                              "--deployment", env["uuid"]])
+                              "--env", env["uuid"]])
         self.assertEqual(1, result.exit_code, result.output)
         self.assertIn("Invalid file name", result.output)

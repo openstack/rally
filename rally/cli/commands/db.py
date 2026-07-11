@@ -22,7 +22,7 @@ from rally.common import db
 
 db_app = typer.Typer(
     name="db", no_args_is_help=False,
-    help="Set of commands that allow you to manage Rally's database.")
+    help="Create, upgrade and inspect the database.")
 
 
 def _print_connection(show_creds: bool) -> None:

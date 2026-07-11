@@ -15,6 +15,7 @@
 
 import collections
 import os
+import sys
 import tempfile
 from unittest import mock
 
@@ -36,6 +37,19 @@ class DeploymentCommandsTestCase(test.CLITestCase):
         db.env_create(name=name, status=env_mgr.STATUS.READY, description="",
                       extras={}, config={}, spec=spec or {}, platforms=[])
         return db.env_get(name)
+
+    def test_deprecation_warning(self):
+        # running a subcommand warns that ``deployment`` is deprecated...
+        result = self.invoke(["deployment", "list"])
+        self.assertEqual(0, result.exit_code, result.output)
+        self.assertIn("deprecated", result.stderr)
+
+        # ...but merely rendering help does not (bootstrap flags --help via
+        # sys.argv)
+        with mock.patch.object(sys, "argv", ["rally", "deployment", "--help"]):
+            result = self.invoke(["deployment", "--help"])
+        self.assertEqual(0, result.exit_code, result.output)
+        self.assertNotIn("deprecated", result.stderr)
 
     @mock.patch("rally.api._Deployment.create")
     def test_create(self, mock_create):
@@ -74,39 +88,6 @@ class DeploymentCommandsTestCase(test.CLITestCase):
         self.assertEqual(0, result.exit_code, result.output)
         mock_create.assert_called_once_with(
             config={"auth_url": "http://fake"}, name="from_env")
-
-    @mock.patch("rally.api._Deployment.create")
-    @mock.patch("rally.env.env_mgr.EnvManager.create_spec_from_sys_environ")
-    def test_create_fromenv_openstack(self, mock_create_spec_from_sys_environ,
-                                      mock_create):
-        mock_create.return_value = CREATED
-        mock_create_spec_from_sys_environ.side_effect = lambda: {
-            "spec": {
-                "existing@openstack": {
-                    "https_key": "some key",
-                    "another_key": "another"
-                }
-            }
-        }
-        mock_rally_os = mock.Mock()
-
-        # OS_KEY is dropped for old rally-openstack, kept for newer ones
-        for version, expected in (
-            ((1, 4, 0), {"existing@openstack": {"another_key": "another"}}),
-            ((1, 5, 0), {"existing@openstack": {"another_key": "another",
-                                                "https_key": "some key"}}),
-        ):
-            with self.subTest(version=version):
-                mock_create.reset_mock()
-                mock_rally_os.__version_tuple__ = version
-                with mock.patch.dict("sys.modules",
-                                     {"rally_openstack": mock_rally_os}):
-                    result = self.invoke([
-                        "deployment", "create", "--name", "from_env",
-                        "--fromenv"])
-                self.assertEqual(0, result.exit_code, result.output)
-                mock_create.assert_called_once_with(config=expected,
-                                                    name="from_env")
 
     @mock.patch("rally.api._Deployment.create")
     def test_create_and_use(self, mock_create):
@@ -200,7 +181,7 @@ class DeploymentCommandsTestCase(test.CLITestCase):
             " demo        | RegionOne   | internal      |\n"
             "+--------------------------+----------+----------+"
             "-------------+-------------+---------------+\n",
-            result.output)
+            result.stdout)
 
     @mock.patch("rally.api._Deployment.get")
     def test_use(self, mock_get):
@@ -316,7 +297,7 @@ class DeploymentCommandsTestCase(test.CLITestCase):
             "---------------\n\n"
             "Error while checking users credentials:\n"
             "\tProviderError: No money - no funny!",
-            result.output.strip())
+            result.stdout.strip())
 
     @mock.patch("rally.cli.commands.deployment.logging.is_debug",
                 return_value=True)
@@ -342,4 +323,4 @@ class DeploymentCommandsTestCase(test.CLITestCase):
             "Error while checking admin credentials:\n"
             "file1\n\tline1\n\n"
             "KeystoneError: connection refused",
-            result.output.strip())
+            result.stdout.strip())

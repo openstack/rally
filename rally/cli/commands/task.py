@@ -45,7 +45,7 @@ LOG = logging.getLogger(__name__)
 
 task_app = typer.Typer(
     name="task", no_args_is_help=False,
-    help="Set of commands that allow you to manage tasks and results.")
+    help="Run scenario tests and benchmarks.")
 
 
 class FailedToLoadTask(exceptions.RallyException):
@@ -435,11 +435,13 @@ def validate(
             help="Path to the input task file (or '-' for stdin)."
         )
     ],
-    deployment: t.Annotated[
+    env: t.Annotated[
         str,
-        typer.Option(
+        argutils.DeprecatedAlias(
+            "--env",
+            deprecated=["--deployment"],
             envvar=envutils.ENV_ENV,
-            help="UUID or name of a deployment."
+            help="UUID or name of the environment."
         )
     ],
     task_args: t.Annotated[
@@ -471,7 +473,7 @@ def validate(
     task = _load_and_validate_task(api, task_file, raw_args=task_args,
                                    args_file=task_args_file)
 
-    api.task.validate(deployment=deployment, config=task)
+    api.task.validate(deployment=env, config=task)
 
     print("Input Task is valid :)")
 
@@ -486,11 +488,13 @@ def start(
             help="Path to the input task file (or '-' for stdin)."
         )
     ],
-    deployment: t.Annotated[
+    env: t.Annotated[
         str,
-        typer.Option(
+        argutils.DeprecatedAlias(
+            "--env",
+            deprecated=["--deployment"],
             envvar=envutils.ENV_ENV,
-            help="UUID or name of a deployment."
+            help="UUID or name of the environment."
         )
     ],
     task_args: t.Annotated[
@@ -544,7 +548,7 @@ def start(
                                          args_file=task_args_file)
     print("Running Rally version", version.version_string())
 
-    rc = _start_task(api, deployment, task_config=input_task, tags=tags,
+    rc = _start_task(api, env, task_config=input_task, tags=tags,
                      do_use=not no_use,
                      abort_on_sla_failure=abort_on_sla_failure)
     if rc:
@@ -554,11 +558,13 @@ def start(
 @task_app.command()
 @plugins.ensure_plugins_are_loaded
 def restart(
-    deployment: t.Annotated[
+    env: t.Annotated[
         str,
-        typer.Option(
+        argutils.DeprecatedAlias(
+            "--env",
+            deprecated=["--deployment"],
             envvar=envutils.ENV_ENV,
-            help="UUID or name of a deployment."
+            help="UUID or name of the environment."
         )
     ],
     task_id: t.Annotated[
@@ -636,7 +642,7 @@ def restart(
                 "workloads": workloads})
 
     if retask["subtasks"]:
-        rc = _start_task(api, deployment, retask, tags=tags,
+        rc = _start_task(api, env, retask, tags=tags,
                          do_use=not no_use,
                          abort_on_sla_failure=abort_on_sla_failure)
         if rc:
@@ -752,25 +758,33 @@ def results(
 
 @task_app.command(name="list")
 def list_(
-    deployment: t.Annotated[
+    env: t.Annotated[
         str,
-        typer.Option(
+        argutils.DeprecatedAlias(
+            "--env",
+            deprecated=["--deployment"],
             envvar=envutils.ENV_ENV,
-            help="UUID or name of a deployment."
+            help="UUID or name of the environment."
         )
     ],
+    all_envs: t.Annotated[
+        bool,
+        typer.Option(
+            "--all-envs",
+            help="List tasks from all environments."
+        )
+    ] = False,
     all_deployments: t.Annotated[
         bool,
         typer.Option(
             "--all-deployments",
-            help="List tasks from all deployments."
+            hidden=True
         )
     ] = False,
-    status: t.Annotated[
-        str | None,
+    status: t.Annotated[  # type: ignore[valid-type]
+        t.Literal[tuple(consts.TaskStatus)] | None,
         typer.Option(
-            help="List tasks with specified status. Available statuses: %s"
-                 % ", ".join(consts.TaskStatus)
+            help="List tasks with the specified status."
         )
     ] = None,
     tags: t.Annotated[
@@ -790,24 +804,25 @@ def list_(
 ) -> None:
     """List tasks, started and finished.
 
-    Displayed tasks can be filtered by status or deployment.  By
+    Displayed tasks can be filtered by status or environment.  By
     default 'rally task list' will display tasks from the active
-    deployment without filtering by status.
+    environment without filtering by status.
     """
     api = cliutils.get_api()
     filters: dict = {}
-    headers = ["UUID", "Deployment name", "Created at", "Load duration",
+    headers = ["UUID", "Environment", "Created at", "Load duration",
                "Status", "Tag(s)"]
 
-    if status in consts.TaskStatus:
+    if status:
         filters["status"] = status
-    elif status:
-        print("Error: Invalid task status '%s'.\nAvailable statuses: %s"
-              % (status, ", ".join(consts.TaskStatus)), file=sys.stderr)
-        raise typer.Exit(code=1)
 
-    if not all_deployments:
-        filters["deployment"] = deployment
+    if all_deployments:
+        LOG.warning("The `--all-deployments` option is deprecated; use "
+                    "`--all-envs` instead.")
+        all_envs = True
+
+    if not all_envs:
+        filters["deployment"] = env
 
     if tags:
         filters["tags"] = tags
@@ -825,6 +840,7 @@ def list_(
 
         formatters = {
             "Tag(s)": tags_formatter,
+            "Environment": lambda t: t["deployment_name"],
             "Load duration": cliutils.pretty_float_formatter(
                 "task_duration", 3),
             "Created at": lambda t: t["created_at"].replace("T", " ")
@@ -931,10 +947,12 @@ def report(
             help="Generate JSON report."
         )
     ] = False,
-    deployment: t.Annotated[
+    env: t.Annotated[
         str | None,
-        typer.Option(
-            help="Report all tasks with defined deployment"
+        argutils.DeprecatedAlias(
+            "--env",
+            deprecated=["--deployment"],
+            help="Report all tasks for the defined environment."
         )
     ] = None,
 ) -> None:
@@ -942,7 +960,7 @@ def report(
     out_format = ("json" if to_json
                   else "html-static" if html_static else "html")
     _export(cliutils.get_api(), tasks=tasks, output_type=out_format,
-            output_dest=out, open_it=open_it, deployment=deployment)
+            output_dest=out, open_it=open_it, deployment=env)
 
 
 @task_app.command()
@@ -1070,16 +1088,18 @@ def export(
                  "the report type."
         )
     ] = None,
-    deployment: t.Annotated[
+    env: t.Annotated[
         str | None,
-        typer.Option(
-            help="Report all tasks with defined deployment"
+        argutils.DeprecatedAlias(
+            "--env",
+            deprecated=["--deployment"],
+            help="Report all tasks for the defined environment."
         )
     ] = None,
 ) -> None:
     """Export task results to the custom task's exporting system."""
     _export(cliutils.get_api(), tasks=tasks, output_type=output_type,
-            output_dest=output_dest, deployment=deployment)
+            output_dest=output_dest, deployment=env)
 
 
 @task_app.command(name="import")
@@ -1092,11 +1112,13 @@ def import_results(
             help="JSON file with task results"
         )
     ],
-    deployment: t.Annotated[
+    env: t.Annotated[
         str,
-        typer.Option(
+        argutils.DeprecatedAlias(
+            "--env",
+            deprecated=["--deployment"],
             envvar=envutils.ENV_ENV,
-            help="UUID or name of a deployment."
+            help="UUID or name of the environment."
         )
     ],
     tags: t.Annotated[
@@ -1107,12 +1129,12 @@ def import_results(
         )
     ] = None,
 ) -> None:
-    """Import json results of a test into rally database."""
+    """Import JSON results of a test into the Rally database."""
     if os.path.exists(os.path.expanduser(task_file)):
         api = cliutils.get_api()
         tasks_results = task_results_loader.load(task_file)
         for task_results in tasks_results:
-            task = api.task.import_results(deployment=deployment,
+            task = api.task.import_results(deployment=env,
                                            task_results=task_results,
                                            tags=tags)
             print("Task UUID: %s." % task["uuid"])

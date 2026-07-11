@@ -28,7 +28,7 @@ from rally.env import env_mgr
 
 env_app = typer.Typer(
     name="env", no_args_is_help=False,
-    help="Set of commands that allow you to manage envs.")
+    help="Environments Rally tests against.")
 
 YES = u":-)"
 NO = u":-("

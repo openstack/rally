@@ -24,6 +24,7 @@ import webbrowser
 
 import typer
 
+from rally import consts
 from rally import exceptions
 from rally import plugins
 from rally.api import API
@@ -38,8 +39,8 @@ TIME_FORMAT = "%Y-%m-%dT%H:%M:%S"
 
 LIST_VERIFIERS_HINT = ("HINT: You can list all verifiers, executing "
                        "command `rally verify list-verifiers`.")
-LIST_DEPLOYMENTS_HINT = ("HINT: You can list all deployments, executing "
-                         "command `rally deployment list`.")
+LIST_ENVS_HINT = ("HINT: You can list all environments, executing "
+                  "command `rally env list`.")
 LIST_VERIFICATIONS_HINT = ("HINT: You can list all verifications, executing "
                            "command `rally verify list`.")
 
@@ -47,9 +48,14 @@ DEFAULT_REPORT_TYPES = ("HTML", "HTML-Static", "JSON", "JUnit-XML")
 
 ACTIVE = u":-)"
 
+# help panels grouping the subcommands in ``rally verify --help``
+VERIFIER = "Verifier management"
+VERIFIER_EXT = "Verifier extensions"
+VERIFICATION = "Verifications"
+
 verify_app = typer.Typer(
     name="verify", no_args_is_help=False,
-    help="Verify an OpenStack cloud via a verifier.")
+    help="Run external verifier test suites.")
 
 
 def _print_totals(totals: dict) -> None:
@@ -134,7 +140,7 @@ def list_plugins(
                         normalize_field_names=True)
 
 
-@verify_app.command(name="create-verifier")
+@verify_app.command(name="create-verifier", rich_help_panel=VERIFIER)
 @plugins.ensure_plugins_are_loaded
 def create_verifier(
     name: t.Annotated[
@@ -206,7 +212,7 @@ def create_verifier(
         _use_verifier(api, verifier_uuid)
 
 
-@verify_app.command(name="use-verifier")
+@verify_app.command(name="use-verifier", rich_help_panel=VERIFIER)
 def use_verifier(
     verifier_id: t.Annotated[
         str,
@@ -220,11 +226,11 @@ def use_verifier(
     _use_verifier(cliutils.get_api(), verifier_id)
 
 
-@verify_app.command(name="list-verifiers")
+@verify_app.command(name="list-verifiers", rich_help_panel=VERIFIER)
 @plugins.ensure_plugins_are_loaded
 def list_verifiers(
-    status: t.Annotated[
-        str | None,
+    status: t.Annotated[  # type: ignore[valid-type]
+        t.Literal[tuple(consts.VerifierStatus)] | None,
         typer.Option(
             help="Status to filter verifiers by."
         )
@@ -251,7 +257,7 @@ def list_verifiers(
               "command `rally verify create-verifier`.")
 
 
-@verify_app.command(name="show-verifier")
+@verify_app.command(name="show-verifier", rich_help_panel=VERIFIER)
 @plugins.ensure_plugins_are_loaded
 def show_verifier(
     verifier_id: t.Annotated[
@@ -289,7 +295,7 @@ def show_verifier(
           "virtual environment, you do it at your own risk!")
 
 
-@verify_app.command(name="delete-verifier")
+@verify_app.command(name="delete-verifier", rich_help_panel=VERIFIER)
 @plugins.ensure_plugins_are_loaded
 def delete_verifier(
     verifier_id: t.Annotated[
@@ -299,13 +305,14 @@ def delete_verifier(
             help="Verifier name or UUID. " + LIST_VERIFIERS_HINT
         )
     ],
-    deployment: t.Annotated[
+    env: t.Annotated[
         str | None,
-        typer.Option(
-            "--deployment-id",
-            help="Deployment name or UUID. If specified, only the "
-                 "deployment-specific data will be deleted for verifier. "
-                 + LIST_DEPLOYMENTS_HINT
+        argutils.DeprecatedAlias(
+            "--env",
+            deprecated=["--deployment-id"],
+            help="Environment name or UUID. If specified, only the "
+                 "environment-specific data will be deleted for verifier. "
+                 + LIST_ENVS_HINT
         )
     ] = None,
     force: t.Annotated[
@@ -321,11 +328,11 @@ def delete_verifier(
 ) -> None:
     """Delete a verifier."""
     api = cliutils.get_api()
-    api.verifier.delete(verifier_id=verifier_id, deployment_id=deployment,
+    api.verifier.delete(verifier_id=verifier_id, deployment_id=env,
                         force=force)
 
 
-@verify_app.command(name="update-verifier")
+@verify_app.command(name="update-verifier", rich_help_panel=VERIFIER)
 @plugins.ensure_plugins_are_loaded
 def update_verifier(
     verifier_id: t.Annotated[
@@ -394,7 +401,7 @@ def update_verifier(
           "command to update the config file.")
 
 
-@verify_app.command(name="configure-verifier")
+@verify_app.command(name="configure-verifier", rich_help_panel=VERIFIER)
 @plugins.ensure_plugins_are_loaded
 def configure_verifier(
     verifier_id: t.Annotated[
@@ -405,12 +412,13 @@ def configure_verifier(
             help="Verifier name or UUID. " + LIST_VERIFIERS_HINT
         )
     ],
-    deployment: t.Annotated[
+    env: t.Annotated[
         str,
-        typer.Option(
-            "--deployment-id",
+        argutils.DeprecatedAlias(
+            "--env",
+            deprecated=["--deployment-id"],
             envvar=envutils.ENV_ENV,
-            help="Deployment name or UUID. " + LIST_DEPLOYMENTS_HINT
+            help="Environment name or UUID. " + LIST_ENVS_HINT
         )
     ],
     reconfigure: t.Annotated[
@@ -463,7 +471,7 @@ def configure_verifier(
         with open(new_configuration) as f:
             config = f.read()
         api.verifier.override_configuration(verifier_id=verifier_id,
-                                            deployment_id=deployment,
+                                            deployment_id=env,
                                             new_configuration=config)
     else:
         options: object = extra_options
@@ -484,7 +492,7 @@ def configure_verifier(
                 options = yaml.safe_load(extra_options)
 
         config = api.verifier.configure(verifier=verifier_id,
-                                        deployment_id=deployment,
+                                        deployment_id=env,
                                         extra_options=options,
                                         reconfigure=reconfigure)
 
@@ -492,7 +500,7 @@ def configure_verifier(
         print("\n%s\n" % config.strip())
 
 
-@verify_app.command(name="list-verifier-tests")
+@verify_app.command(name="list-verifier-tests", rich_help_panel=VERIFIER)
 @plugins.ensure_plugins_are_loaded
 def list_verifier_tests(
     verifier_id: t.Annotated[
@@ -522,7 +530,7 @@ def list_verifier_tests(
         print("No tests found.")
 
 
-@verify_app.command(name="add-verifier-ext")
+@verify_app.command(name="add-verifier-ext", rich_help_panel=VERIFIER_EXT)
 @plugins.ensure_plugins_are_loaded
 def add_verifier_ext(
     verifier_id: t.Annotated[
@@ -561,7 +569,7 @@ def add_verifier_ext(
                                version=version, extra_settings=extra)
 
 
-@verify_app.command(name="list-verifier-exts")
+@verify_app.command(name="list-verifier-exts", rich_help_panel=VERIFIER_EXT)
 @plugins.ensure_plugins_are_loaded
 def list_verifier_exts(
     verifier_id: t.Annotated[
@@ -586,7 +594,7 @@ def list_verifier_exts(
               "extension, using command `rally verify add-verifier-ext`.")
 
 
-@verify_app.command(name="delete-verifier-ext")
+@verify_app.command(name="delete-verifier-ext", rich_help_panel=VERIFIER_EXT)
 @plugins.ensure_plugins_are_loaded
 def delete_verifier_ext(
     verifier_id: t.Annotated[
@@ -609,7 +617,7 @@ def delete_verifier_ext(
     api.verifier.delete_extension(verifier_id=verifier_id, name=name)
 
 
-@verify_app.command(name="start")
+@verify_app.command(name="start", rich_help_panel=VERIFICATION)
 @plugins.ensure_plugins_are_loaded
 def start(
     verifier_id: t.Annotated[
@@ -620,12 +628,13 @@ def start(
             help="Verifier name or UUID. " + LIST_VERIFIERS_HINT
         )
     ],
-    deployment: t.Annotated[
+    env: t.Annotated[
         str,
-        typer.Option(
-            "--deployment-id",
+        argutils.DeprecatedAlias(
+            "--env",
+            deprecated=["--deployment-id"],
             envvar=envutils.ENV_ENV,
-            help="Deployment name or UUID. " + LIST_DEPLOYMENTS_HINT
+            help="Environment name or UUID. " + LIST_ENVS_HINT
         )
     ],
     tags: t.Annotated[
@@ -729,7 +738,7 @@ def start(
 
     try:
         results = api.verification.start(
-            verifier_id=verifier_id, deployment_id=deployment,
+            verifier_id=verifier_id, deployment_id=env,
             tags=tags, **run_args)
         verification_uuid = results["verification"]["uuid"]
     except exceptions.DeploymentNotFinishedStatus as e:
@@ -753,7 +762,7 @@ def start(
         raise typer.Exit(code=3)
 
 
-@verify_app.command(name="use")
+@verify_app.command(name="use", rich_help_panel=VERIFICATION)
 def use(
     verification_uuid: t.Annotated[
         str,
@@ -767,7 +776,7 @@ def use(
     _use(cliutils.get_api(), verification_uuid)
 
 
-@verify_app.command(name="rerun")
+@verify_app.command(name="rerun", rich_help_panel=VERIFICATION)
 @plugins.ensure_plugins_are_loaded
 def rerun(
     verification_uuid: t.Annotated[
@@ -778,12 +787,13 @@ def rerun(
             help="Verification UUID. " + LIST_VERIFICATIONS_HINT
         )
     ],
-    deployment: t.Annotated[
+    env: t.Annotated[
         str,
-        typer.Option(
-            "--deployment-id",
+        argutils.DeprecatedAlias(
+            "--env",
+            deprecated=["--deployment-id"],
             envvar=envutils.ENV_ENV,
-            help="Deployment name or UUID. " + LIST_DEPLOYMENTS_HINT
+            help="Environment name or UUID. " + LIST_ENVS_HINT
         )
     ],
     failed: t.Annotated[
@@ -827,7 +837,7 @@ def rerun(
     """Rerun tests from a verification for a specific deployment."""
     api = cliutils.get_api()
     results = api.verification.rerun(verification_uuid=verification_uuid,
-                                     deployment_id=deployment,
+                                     deployment_id=env,
                                      failed=failed,
                                      tags=tags,
                                      concurrency=concur)
@@ -842,7 +852,7 @@ def rerun(
         print("Verification UUID: %s." % results["verification"]["uuid"])
 
 
-@verify_app.command(name="show")
+@verify_app.command(name="show", rich_help_panel=VERIFICATION)
 def show(
     verification_uuid: t.Annotated[
         str,
@@ -854,7 +864,7 @@ def show(
     ],
     sort_by: t.Annotated[
         t.Literal["name", "duration", "status"],
-        typer.Option(help="Sort tests by 'name', 'duration' or 'status'.")
+        typer.Option(help="Sort tests.")
     ] = "name",
     detailed: t.Annotated[
         bool,
@@ -889,7 +899,7 @@ def show(
     # Main table
     fields = ["UUID", "Status", "Started at", "Finished at", "Duration",
               "Run arguments", "Tags", "Verifier name", "Verifier type",
-              "Deployment name", "Tests count", "Tests duration, sec",
+              "Environment", "Tests count", "Tests duration, sec",
               "Success", "Skipped", "Expected failures",
               "Unexpected success", "Failures"]
     formatters = {
@@ -905,7 +915,7 @@ def show(
         "Verifier type": (
             lambda v: "%s (platform: %s)" % (verifier["type"],
                                              verifier["platform"])),
-        "Deployment name": (
+        "Environment": (
             lambda v: "%s (UUID: %s)" % (deployment["name"],
                                          deployment["uuid"])),
         "Tests duration, sec": lambda v: v["tests_duration"]
@@ -937,7 +947,7 @@ def show(
             print("\nCongratulations! Verification passed all tests ;)")
 
 
-@verify_app.command(name="list")
+@verify_app.command(name="list", rich_help_panel=VERIFICATION)
 def list_(
     verifier_id: t.Annotated[
         str | None,
@@ -946,11 +956,12 @@ def list_(
             help="Verifier name or UUID. " + LIST_VERIFIERS_HINT
         )
     ] = None,
-    deployment: t.Annotated[
+    env: t.Annotated[
         str | None,
-        typer.Option(
-            "--deployment-id",
-            help="Deployment name or UUID. " + LIST_DEPLOYMENTS_HINT
+        argutils.DeprecatedAlias(
+            "--env",
+            deprecated=["--deployment-id"],
+            help="Environment name or UUID. " + LIST_ENVS_HINT
         )
     ] = None,
     tags: t.Annotated[
@@ -960,8 +971,8 @@ def list_(
             help="Tags to filter verifications by."
         )
     ] = None,
-    status: t.Annotated[
-        str | None,
+    status: t.Annotated[  # type: ignore[valid-type]
+        t.Literal[tuple(consts.VerificationStatus)] | None,
         typer.Option(
             help="Status to filter verifications by."
         )
@@ -970,16 +981,16 @@ def list_(
     """List all verifications."""
     api = cliutils.get_api()
     verifications = api.verification.list(verifier_id=verifier_id,
-                                          deployment_id=deployment,
+                                          deployment_id=env,
                                           tags=tags, status=status)
     if verifications:
-        fields = ["UUID", "Tags", "Verifier name", "Deployment name",
+        fields = ["UUID", "Tags", "Verifier name", "Environment",
                   "Started at", "Finished at", "Duration", "Status"]
         formatters = {
             "Tags": lambda v: ", ".join(v["tags"]) or "-",
             "Verifier name": (lambda v: api.verifier.get(
                 verifier_id=v["verifier_uuid"])["name"]),
-            "Deployment name": (lambda v: api.deployment.get(
+            "Environment": (lambda v: api.deployment.get(
                 deployment=v["deployment_uuid"])["name"]),
             "Started at": lambda v: v["created_at"],
             "Finished at": lambda v: v["updated_at"],
@@ -989,14 +1000,14 @@ def list_(
         }
         cliutils.print_list(verifications, fields, formatters=formatters,
                             normalize_field_names=True, sortby_index=4)
-    elif verifier_id or deployment or status or tags:
+    elif verifier_id or env or status or tags:
         print("There are no verifications that meet specified criteria.")
     else:
         print("There are no verifications. You can start verification, "
               "using command `rally verify start`.")
 
 
-@verify_app.command(name="delete")
+@verify_app.command(name="delete", rich_help_panel=VERIFICATION)
 def delete(
     verification_uuid: t.Annotated[
         list[str],
@@ -1012,7 +1023,7 @@ def delete(
         api.verification.delete(verification_uuid=v_uuid)
 
 
-@verify_app.command(name="report")
+@verify_app.command(name="report", rich_help_panel=VERIFICATION)
 @plugins.ensure_plugins_are_loaded
 def report(
     verification_uuid: t.Annotated[
@@ -1081,7 +1092,7 @@ def report(
         print("\n%s\n%s" % (cliutils.make_header(h, len(h)), result["print"]))
 
 
-@verify_app.command(name="import")
+@verify_app.command(name="import", rich_help_panel=VERIFICATION)
 @plugins.ensure_plugins_are_loaded
 def import_results(
     verifier_id: t.Annotated[
@@ -1092,12 +1103,13 @@ def import_results(
             help="Verifier name or UUID. " + LIST_VERIFIERS_HINT
         )
     ],
-    deployment: t.Annotated[
+    env: t.Annotated[
         str,
-        typer.Option(
-            "--deployment-id",
+        argutils.DeprecatedAlias(
+            "--env",
+            deprecated=["--deployment-id"],
             envvar=envutils.ENV_ENV,
-            help="Deployment name or UUID. " + LIST_DEPLOYMENTS_HINT
+            help="Environment name or UUID. " + LIST_ENVS_HINT
         )
     ],
     file_to_parse: t.Annotated[
@@ -1133,7 +1145,7 @@ def import_results(
 
     parsed_run_args = yaml.safe_load(run_args) if run_args else {}
     verification, results = api.verification.import_results(
-        verifier_id=verifier_id, deployment_id=deployment,
+        verifier_id=verifier_id, deployment_id=env,
         data=data, **parsed_run_args)
     _print_totals(results["totals"])
 

@@ -35,9 +35,20 @@ from rally.common import utils
 from rally.env import env_mgr
 
 
+LOG = logging.getLogger(__name__)
+
 deployment_app = typer.Typer(
     name="deployment", no_args_is_help=False,
-    help="Set of commands that allow you to manage deployments.")
+    help="Legacy environments (superseded by env).")
+
+
+@deployment_app.callback()
+def _deprecation_warning(ctx: typer.Context) -> None:
+    # warn once per invocation, but not when only rendering help or when no
+    # subcommand is actually run
+    if ctx.invoked_subcommand and not cliutils.is_help_requested():
+        LOG.warning("The `deployment` commands are deprecated; use the `env` "
+                    "commands instead.")
 
 
 def _list_deployments(api: API,
@@ -186,16 +197,6 @@ def create(
     if fromenv:
         result = env_mgr.EnvManager.create_spec_from_sys_environ()
         config = result["spec"]
-        if "existing@openstack" in config:
-            # NOTE(andreykurilin): if we are here it means that
-            #   rally-openstack package is installed
-            import rally_openstack  # type: ignore[import-not-found]
-            if rally_openstack.__version_tuple__ <= (1, 4, 0):
-                if ("https_key" in config["existing@openstack"]
-                        and config["existing@openstack"]["https_key"]):
-                    print("WARNING: OS_KEY is ignored due to old version "
-                          "of rally-openstack package.")
-                    config["existing@openstack"].pop("https_key")
     else:
         if not filename:
             config = {}

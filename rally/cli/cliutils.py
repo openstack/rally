@@ -48,6 +48,20 @@ def get_api() -> "API":
     return _api.get()
 
 
+_help_requested: "contextvars.ContextVar[bool]" = contextvars.ContextVar(
+    "rally_help_requested", default=False)
+
+
+def set_help_requested(value: bool) -> None:
+    """Record whether the current invocation is a ``--help`` call."""
+    _help_requested.set(value)
+
+
+def is_help_requested() -> bool:
+    """Return True if the current invocation only renders help."""
+    return _help_requested.get()
+
+
 def iter_commands(
     command: "typer._click.core.Command",
 ) -> t.Iterator[

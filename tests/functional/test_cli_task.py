@@ -89,11 +89,6 @@ class TaskTestCase(unittest.TestCase):
             ]
         }
 
-    def _get_deployment_uuid(self, output):
-        return re.search(
-            r"Using deployment: (?P<uuid>[0-9a-f\-]{36})",
-            output).group("uuid")
-
     def _get_task_uuid(self, output):
         return re.search(
             r"\trally task report (?P<uuid>[0-9a-f\-]{36})",
@@ -505,19 +500,19 @@ class TaskTestCase(unittest.TestCase):
         rapi = api.API(config_file=rally.config_filename)
         task = rapi.task.get(task_id=task_uuid)
 
-        actual = rally("task list --deployment MAIN")
+        actual = rally("task list --env MAIN")
         duration = "%s" % round(task["task_duration"], 3)
         duration += " " * (13 - len(duration))
         expected = (
-            "+--------------------------------------+-----------------+"
+            "+--------------------------------------+-------------+"
             "---------------------+---------------+----------+--------+\n"
-            "| UUID                                 | Deployment name "
+            "| UUID                                 | Environment "
             "| Created at          | Load duration | Status   | Tag(s) |\n"
-            "+--------------------------------------+-----------------+"
+            "+--------------------------------------+-------------+"
             "---------------------+---------------+----------+--------+\n"
-            "| %(uuid)s | MAIN            | %(created_at)s "
-            "| %(duration)s | finished | 'foo'  |\n"
-            "+--------------------------------------+-----------------+"
+            "| %(uuid)s | MAIN        "
+            "| %(created_at)s | %(duration)s | finished | 'foo'  |\n"
+            "+--------------------------------------+-------------+"
             "---------------------+---------------+----------+--------+\n" % {
                 "uuid": task_uuid,
                 "created_at": task["created_at"].replace("T", " "),
@@ -536,7 +531,7 @@ class TaskTestCase(unittest.TestCase):
         self.assertIn("finished", rally("task list --status finished"))
 
         self.assertIn(
-            "Deployment name", rally("task list --all-deployments"))
+            "Environment", rally("task list --all-envs"))
 
         self.assertRaises(utils.RallyCliError,
                           rally, "task list --status not_existing_status")
@@ -554,7 +549,13 @@ class TaskTestCase(unittest.TestCase):
         task_uuid = self._get_task_uuid(res)
         self.assertEqual(
             task_uuid,
-            rally("task list --uuids-only --deployment MAIN").strip())
+            rally("task list --uuids-only --env MAIN").strip())
+        # the deprecated --deployment alias still works; no_logs sends its
+        # stderr warning to /dev/null so it can't pollute the compared output
+        self.assertEqual(
+            task_uuid,
+            rally("task list --uuids-only --deployment MAIN",
+                  no_logs=True).strip())
         self.assertIn("finished", rally("task status --uuid %s" % task_uuid))
 
         # Validate against multiple tasks
@@ -565,9 +566,9 @@ class TaskTestCase(unittest.TestCase):
             task_uuids.append(task_uuid)
             self.assertIn("finished",
                           rally("task status --uuid %s" % task_uuid))
-        res = rally("task list --uuids-only --deployment MAIN")
+        res = rally("task list --uuids-only --env MAIN")
         self.assertEqual(set(task_uuids), set(res.strip().split("\n")))
-        res2 = rally("task list --uuids-only --deployment MAIN "
+        res2 = rally("task list --uuids-only --env MAIN "
                      "--status finished")
         self.assertEqual(res, res2)
 
@@ -580,25 +581,21 @@ class TaskTestCase(unittest.TestCase):
 
     def test_validate_is_invalid(self):
         rally = utils.Rally()
-        deployment_id = utils.get_global("RALLY_DEPLOYMENT", rally.env)
+        env_id = utils.get_global("RALLY_ENV", rally.env)
         cfg = {"invalid": "config"}
         config = utils.TaskConfig(cfg)
         self.assertRaises(utils.RallyCliError,
                           rally,
-                          ("task validate --task %(task_file)s "
-                           "--deployment %(deployment_id)s") %
-                          {"task_file": config.filename,
-                           "deployment_id": deployment_id})
+                          f"task validate --task {config.filename} "
+                          f"--env {env_id}")
 
     def test_start(self):
         rally = utils.Rally()
-        deployment_id = utils.get_global("RALLY_DEPLOYMENT", rally.env)
+        env_id = utils.get_global("RALLY_ENV", rally.env)
         cfg = self._get_sample_task_config()
         config = utils.TaskConfig(cfg)
-        output = rally(("task start --task %(task_file)s "
-                        "--deployment %(deployment_id)s") %
-                       {"task_file": config.filename,
-                        "deployment_id": deployment_id})
+        output = rally(f"task start --task {config.filename} "
+                       f"--env {env_id}")
         result = re.search(
             r"(?P<task_id>[0-9a-f\-]{36}): started", output)
         self.assertIsNotNone(result)
@@ -640,12 +637,10 @@ class TaskTestCase(unittest.TestCase):
 
     def _test_start_abort_on_sla_failure_success(self, cfg, times):
         rally = utils.Rally()
-        deployment_id = utils.get_global("RALLY_DEPLOYMENT", rally.env)
+        env_id = utils.get_global("RALLY_ENV", rally.env)
         config = utils.TaskConfig(cfg)
-        rally(("task start --task %(task_file)s "
-               "--deployment %(deployment_id)s --abort-on-sla-failure") %
-              {"task_file": config.filename,
-               "deployment_id": deployment_id})
+        rally(f"task start --task {config.filename} "
+              f"--env {env_id} --abort-on-sla-failure")
         results = rally("task results", getjson=True)
         iterations_completed = len(results[0]["result"])
         self.assertEqual(times, iterations_completed)
@@ -714,14 +709,12 @@ class TaskTestCase(unittest.TestCase):
 
     def _test_start_abort_on_sla_failure(self, cfg, times):
         rally = utils.Rally()
-        deployment_id = utils.get_global("RALLY_DEPLOYMENT", rally.env)
+        env_id = utils.get_global("RALLY_ENV", rally.env)
         config = utils.TaskConfig(cfg)
         self.assertRaises(utils.RallyCliError, rally,
-                          ("task start --task %(task_file)s "
-                           "--deployment %(deployment_id)s "
-                           "--abort-on-sla-failure") %
-                          {"task_file": config.filename,
-                           "deployment_id": deployment_id})
+                          f"task start --task {config.filename} "
+                          f"--env {env_id} "
+                          f"--abort-on-sla-failure")
         results = rally("task results", getjson=True)
         self.assertEqual(1, len(results),
                          "Second subtask should not be started")
@@ -913,12 +906,9 @@ class TaskTestCase(unittest.TestCase):
         self._test_start_abort_on_sla_failure(cfg, times)
 
     def _start_task_in_new_thread(self, rally, cfg, suffix):
-        deployment_id = utils.get_global("RALLY_DEPLOYMENT", rally.env)
+        env_id = utils.get_global("RALLY_ENV", rally.env)
         config = utils.TaskConfig(cfg)
-        cmd = (("task start --task %(task_file)s "
-                "--deployment %(deployment_id)s") %
-               {"task_file": config.filename,
-                "deployment_id": deployment_id})
+        cmd = f"task start --task {config.filename} --env {env_id}"
         report_path = rally.gen_report_path(suffix=suffix)
         task = threading.Thread(target=rally, args=(cmd, ),
                                 kwargs={"report_path": report_path})
@@ -993,12 +983,10 @@ class TaskTestCase(unittest.TestCase):
 
     def test_use(self):
         rally = utils.Rally()
-        deployment_id = utils.get_global("RALLY_DEPLOYMENT", rally.env)
+        env_id = utils.get_global("RALLY_ENV", rally.env)
         config = utils.TaskConfig(self._get_sample_task_config())
-        output = rally(("task start --task %(task_file)s "
-                        "--deployment %(deployment_id)s") %
-                       {"task_file": config.filename,
-                        "deployment_id": deployment_id})
+        output = rally(f"task start --task {config.filename} "
+                       f"--env {env_id}")
         result = re.search(
             r"(?P<uuid>[0-9a-f\-]{36}): started", output)
         uuid = result.group("uuid")
@@ -1008,13 +996,11 @@ class TaskTestCase(unittest.TestCase):
 
     def test_start_v2(self):
         rally = utils.Rally()
-        deployment_id = utils.get_global("RALLY_DEPLOYMENT", rally.env)
+        env_id = utils.get_global("RALLY_ENV", rally.env)
         cfg = self._get_sample_task_config_v2()
         config = utils.TaskConfig(cfg)
-        output = rally(("task start --task %(task_file)s "
-                        "--deployment %(deployment_id)s") %
-                       {"task_file": config.filename,
-                        "deployment_id": deployment_id})
+        output = rally(f"task start --task {config.filename} "
+                       f"--env {env_id}")
         result = re.search(
             r"(?P<task_id>[0-9a-f\-]{36}): started", output)
         self.assertIsNotNone(result)
@@ -1054,13 +1040,11 @@ class TaskTestCase(unittest.TestCase):
 
     def test_restart(self):
         rally = utils.Rally()
-        deployment_id = utils.get_global("RALLY_DEPLOYMENT", rally.env)
+        env_id = utils.get_global("RALLY_ENV", rally.env)
         cfg = self._get_sample_task_config()
         config = utils.TaskConfig(cfg)
-        output = rally(("task start --task %(task_file)s "
-                        "--deployment %(deployment_id)s") %
-                       {"task_file": config.filename,
-                        "deployment_id": deployment_id})
+        output = rally(f"task start --task {config.filename} "
+                       f"--env {env_id}")
 
         output = rally("task restart")
         result = re.search(
@@ -1069,13 +1053,11 @@ class TaskTestCase(unittest.TestCase):
 
     def test_restart_with_scenario(self):
         rally = utils.Rally()
-        deployment_id = utils.get_global("RALLY_DEPLOYMENT", rally.env)
+        env_id = utils.get_global("RALLY_ENV", rally.env)
         cfg = self._get_sample_task_config()
         config = utils.TaskConfig(cfg)
-        output = rally(("task start --task %(task_file)s "
-                        "--deployment %(deployment_id)s") %
-                       {"task_file": config.filename,
-                        "deployment_id": deployment_id})
+        output = rally(f"task start --task {config.filename} "
+                       f"--env {env_id}")
 
         output = rally(
             "task restart --scenario Dummy.dummy_random_fail_in_atomic")
@@ -1088,13 +1070,11 @@ class TaskTestCase(unittest.TestCase):
 
     def test_restart_with_fake_scenario(self):
         rally = utils.Rally()
-        deployment_id = utils.get_global("RALLY_DEPLOYMENT", rally.env)
+        env_id = utils.get_global("RALLY_ENV", rally.env)
         cfg = self._get_sample_task_config()
         config = utils.TaskConfig(cfg)
-        rally(("task start --task %(task_file)s "
-               "--deployment %(deployment_id)s") %
-              {"task_file": config.filename,
-               "deployment_id": deployment_id})
+        rally(f"task start --task {config.filename} "
+              f"--env {env_id}")
         self.assertRaises(utils.RallyCliError, rally,
                           "task restart --scenario fake.fake_scenario")
 

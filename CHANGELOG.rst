@@ -53,6 +53,13 @@ Changed
   pyflakes and import-convention checks, while flake8 keeps the remaining
   hacking and Rally-specific rules.
 
+Deprecated
+~~~~~~~~~~
+
+* The ``--deployment`` / ``--deployment-id`` options of ``rally task`` and
+  ``rally verify`` are renamed to ``--env``. The old names still work but now
+  print a deprecation warning -- switch to ``--env``.
+
 Removed
 ~~~~~~~
 
@@ -62,6 +69,11 @@ Removed
   *rally.plugins.task* and *rally.plugins.verification* packages instead.
 
 * Support for Python 3.9
+
+* ``rally deployment create --fromenv`` no longer special-cases
+  rally-openstack ``<= 1.4.0`` (it used to drop ``OS_KEY``/``https_key`` for
+  those). That release is ~7 years old and predates every currently supported
+  Python -- old rally-openstack only went up to py37 -- so the shim is gone.
 
 Fixed
 ~~~~~

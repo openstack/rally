@@ -27,7 +27,7 @@ from rally.common.plugin import plugin
 
 plugin_app = typer.Typer(
     name="plugin", no_args_is_help=False,
-    help="Set of commands that allow you to manage Rally plugins.")
+    help="Discover and inspect installed plugins.")
 
 
 def _print_plugins_list(plugin_list: list) -> None:

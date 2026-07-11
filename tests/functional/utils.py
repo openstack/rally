@@ -62,11 +62,11 @@ class Rally(object):
     Usage:
 
         rally = Rally()
-        rally("deployment", "create", "--name", "Some Deployment Name")
-        output = rally("deployment list")
+        rally("env", "create", "--name", "Some Environment Name")
+        output = rally("env list")
 
     """
-    _DEPLOYMENT_CREATE_ARGS = ""
+    _ENV_CREATE_ARGS = ""
 
     def __init__(self, force_new_db=False, plugin_path=None):
 
@@ -112,7 +112,7 @@ class Rally(object):
         self.reports_root = os.environ.get("REPORTS_ROOT",
                                            "rally-cli-output-files")
         self._created_files = []
-        self("deployment create --name MAIN%s" % self._DEPLOYMENT_CREATE_ARGS,
+        self(f"env create --name MAIN{self._ENV_CREATE_ARGS}",
              write_report=False)
 
     def __del__(self):
