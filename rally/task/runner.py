@@ -93,10 +93,14 @@ def _run_scenario_once(
     task_uuid = context_obj["task"]["uuid"]
     LOG.info(f"Task {task_uuid} | ITER: {iteration} START")
 
-    scenario_inst = cls(context_obj)
+    scenario_inst = None
     error = []
     try:
         with rutils.Timer() as timer:
+            # building the scenario (e.g. creating its clients) is done inside
+            # the timer so that a failure here is recorded as a failed
+            # iteration instead of being lost together with the worker thread
+            scenario_inst = cls(context_obj)
             # resolve any per-iteration argument now that this iteration's
             # scenario (its narrowed user, project and clients) exists
             for kw_name, kw_value in list(scenario_kwargs.items()):
@@ -111,12 +115,19 @@ def _run_scenario_once(
         status = f"Error {error[0]}: {error[1]}" if error else "OK"
         LOG.info(f"Task {task_uuid} | ITER: {iteration} END: {status}")
 
-        return {"duration": timer.duration() - scenario_inst.idle_duration(),
+        idle_duration = scenario_inst.idle_duration() if scenario_inst else 0.0
+        return {"duration": timer.duration() - idle_duration,
                 "timestamp": timer.timestamp(),
-                "idle_duration": scenario_inst.idle_duration(),
+                "idle_duration": idle_duration,
                 "error": error,
-                "output": scenario_inst._output,
-                "atomic_actions": scenario_inst.atomic_actions()}
+                "output": (
+                    scenario_inst._output
+                    if scenario_inst
+                    else scenario._Output(additive=[], complete=[])
+                ),
+                "atomic_actions": (
+                    scenario_inst.atomic_actions() if scenario_inst else [])
+                }
 
 
 def _worker_thread(

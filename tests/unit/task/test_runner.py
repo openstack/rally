@@ -66,7 +66,6 @@ class ScenarioRunnerHelpersTestCase(test.TestCase):
             mock.call(context),
             mock.call().test(),
             mock.call().idle_duration(),
-            mock.call().idle_duration(),
             mock.call().atomic_actions()
         ]
         scenario_cls.assert_has_calls(expected_calls, any_order=True)
@@ -129,6 +128,29 @@ class ScenarioRunnerHelpersTestCase(test.TestCase):
         self.assertEqual(expected_result, result)
         self.assertEqual(expected_error[:2],
                          ["Exception", "Something went wrong"])
+
+    @mock.patch(BASE + "rutils.Timer", side_effect=fakes.FakeTimer)
+    def test_run_scenario_once_init_failure(self, mock_timer):
+        # A failure while building the scenario (e.g. creating its clients)
+        # must be recorded as a failed iteration instead of being lost
+        # together with the worker thread.
+        class BrokenScenario(fakes.FakeScenario):
+            def __init__(self, context):
+                raise Exception("no BlockStorage")
+
+        result = runner._run_scenario_once(
+            BrokenScenario, "run", mock.MagicMock(), {}, mock.MagicMock())
+
+        error = result.pop("error")
+        expected_result = {
+            "duration": fakes.FakeTimer().duration(),
+            "timestamp": fakes.FakeTimer().timestamp(),
+            "idle_duration": 0.0,
+            "output": {"additive": [], "complete": []},
+            "atomic_actions": []
+        }
+        self.assertEqual(expected_result, result)
+        self.assertEqual(["Exception", "no BlockStorage"], error[:2])
 
     @mock.patch(BASE + "rutils.Timer", side_effect=fakes.FakeTimer)
     def test_run_scenario_once_resolves_deferred(self, mock_timer):

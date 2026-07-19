@@ -18,9 +18,7 @@ Changelog
    was missed or can be improved, feel free to change it!
 
 [unreleased]
-
-Unreleased
-----------
+------------
 
 Added
 ~~~~~
@@ -103,6 +101,9 @@ Fixed
 ~~~~~
 
 * Compatibility with paramiko 4+, which dropped the removed DSA key support.
+
+* The failure during Scenario plugin initialization will no longer be silently
+  ignored. Such failures are now counted as interaction failures.
 
 [5.0.1] - 2025-10-07
 --------------------
