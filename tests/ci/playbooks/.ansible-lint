@@ -18,10 +18,6 @@ mock_roles:
   - bindep
   - fetch-tox-output
 
-mock_modules:
-  - synchronize
-  - zuul_return
-
 skip_list:
   - no-changed-when  # Commands should not change things if nothing needs doing
   - unnamed-task  # All tasks should be named
@@ -29,3 +25,4 @@ skip_list:
   - name[template]  # Jinja templates should only be at the end of 'name'
   - command-instead-of-shell  # Use shell only when shell functionality is required.
   - no-jinja-when  # No Jinja2 in when.
+  - role-name  # FIXME(andreykurilin): rename in-house role names to use underscore
