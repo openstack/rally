@@ -1,6 +1,25 @@
-- name: Log in to dockerhub
-  command: "docker login -u '{{ docker_credentials.username }}' -p '{{ docker_credentials.password }}'"
+- name: Create a temporary file to hold the dockerhub password
+  tempfile:
+    state: file
+    suffix: .docker-password
+  register: docker_password_file
+
+- name: Write the dockerhub password to the temporary file
+  copy:
+    dest: "{{ docker_password_file.path }}"
+    content: "{{ docker_credentials.password }}"
+    mode: "0600"
   no_log: true
+
+- name: Log in to dockerhub
+  shell: >-
+    docker login -u '{{ docker_credentials.username }}'
+    --password-stdin < {{ docker_password_file.path }}
+
+- name: Remove the temporary dockerhub password file
+  file:
+    path: "{{ docker_password_file.path }}"
+    state: absent
 
 - name: Upload image to dockerhub
   command: "docker push {{ docker_image_tag }}"
@@ -26,6 +45,16 @@
   delay: 5
   retries: 3
   until: jwt_token and jwt_token.status==200
+  ignore_errors: true
+
+- name: Ensure the dockerhub JWT token was obtained
+  assert:
+    that: "jwt_token.status == 200"
+    fail_msg: >-
+      Failed to obtain a Docker Hub JWT token
+      (HTTP {{ jwt_token.status | default('n/a') }}):
+      {{ jwt_token.json.message | default(jwt_token.json.detail
+      | default(jwt_token.msg | default('unknown error'))) }}
 
 - name: Update README at Docker HUB
   no_log: true
@@ -41,3 +70,13 @@
   delay: 5
   retries: 3
   until: repository_metadata and repository_metadata.status==200
+  ignore_errors: true
+
+- name: Ensure README at Docker HUB was updated
+  assert:
+    that: "repository_metadata.status == 200"
+    fail_msg: >-
+      Failed to update the Docker Hub README
+      (HTTP {{ repository_metadata.status | default('n/a') }}):
+      {{ repository_metadata.json.message | default(repository_metadata.json.detail
+      | default(repository_metadata.msg | default('unknown error'))) }}
