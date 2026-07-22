@@ -39,8 +39,8 @@
     method: "POST"
     body_format: json
     body:
-      identifier: '{{ docker_credentials.username }}'
-      secret: '{{ docker_credentials.password }}'
+      identifier: '{{ docker_credentials.username | trim }}'
+      secret: '{{ docker_credentials.password | trim }}'
   register: jwt_token
   delay: 5
   retries: 3
