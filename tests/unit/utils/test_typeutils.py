@@ -147,8 +147,8 @@ class ArgsOfTestCase(test.TestCase):
             {"type": "object", "additionalProperties": False,
              "required": ["name"],
              "properties": {"name": {"type": "string"},
-                            "size": {"type": "integer"},
-                            "tag": {}}},
+                            "size": {"type": "integer", "default": 1},
+                            "tag": {}}},  # None default is not emitted
             typeutils.hint_to_schema(hint))
 
     def test_ignore_drops_parameters(self):
@@ -205,11 +205,28 @@ class ArgumentsSchemaTestCase(test.TestCase):
             pass
 
         schema, _sig, _hints = typeutils.arguments_schema(target)
-        # self/*args dropped; **kw -> additional; b untyped -> {}; a required
+        # self/*args dropped; **kw -> additional; b untyped w/ default; a req.
         self.assertTrue(schema["additionalProperties"])
-        self.assertEqual({"a": {"type": "string"}, "b": {}},
+        self.assertEqual({"a": {"type": "string"}, "b": {"default": 2}},
                          schema["properties"])
         self.assertEqual(["a"], schema["required"])
+
+    def test_defaults_are_emitted(self):
+        sentinel = object()
+
+        def target(a: int, b: str = "x", c: bool = False,
+                   e: Color = Color.RED,  # enum default -> its raw value
+                   d: int = sentinel) -> None:  # non-JSON default is skipped
+            pass
+
+        schema, _sig, _hints = typeutils.arguments_schema(target)
+        self.assertEqual(
+            {"a": {"type": "integer"},  # required, no default
+             "b": {"type": "string", "default": "x"},
+             "c": {"type": "boolean", "default": False},
+             "e": {"enum": ["red", "blue"], "default": "red"},
+             "d": {"type": "integer"}},  # sentinel default not embedded
+            schema["properties"])
 
     def test_returns_schema_signature_and_hints(self):
         schema, signature, hints = typeutils.arguments_schema(_make_widget)
@@ -217,8 +234,8 @@ class ArgumentsSchemaTestCase(test.TestCase):
             {"type": "object", "additionalProperties": False,
              "required": ["name"],
              "properties": {"name": {"type": "string"},
-                            "size": {"type": "integer"},
-                            "tag": {}}},
+                            "size": {"type": "integer", "default": 1},
+                            "tag": {}}},  # None default is not emitted
             schema)
         self.assertEqual(["name", "size", "tag"],
                          list(signature.parameters))
