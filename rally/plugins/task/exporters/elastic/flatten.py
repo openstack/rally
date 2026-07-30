@@ -37,8 +37,10 @@ def _process(obj):
         try:
             yield "", "%s" % obj
         except Exception:
-            raise ValueError("Cannot transform obj of '%s' type to flatten "
-                             "structure." % type(obj))
+            raise ValueError(
+                "Cannot transform obj of '%s' type to flatten "
+                "structure." % type(obj)
+            )
 
 
 def transform(obj):

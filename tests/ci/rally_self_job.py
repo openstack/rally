@@ -39,7 +39,7 @@ def _print_with_wrapper(*messages):
     print("#" * 80)
 
 
-class Rally(object):
+class Rally:
     def __init__(self, rally_cmd):
         self._rally_cmd = rally_cmd
 

@@ -352,8 +352,7 @@ class HistogramChartTestCase(test.TestCase):
     class HistogramChart(charts.HistogramChart):
 
         def __init__(self, workload_info):
-            super(HistogramChartTestCase.HistogramChart,
-                  self).__init__(workload_info)
+            super().__init__(workload_info)
             self._data["bar"] = {"views": self._init_views(1.2, 4.2),
                                  "disabled": None}
 
@@ -508,7 +507,7 @@ class TableTestCase(test.TestCase):
         columns = ["Name", "Min", "Max", "Max rounded by 2"]
 
         def __init__(self, *args, **kwargs):
-            super(TableTestCase.Table, self).__init__(*args, **kwargs)
+            super().__init__(*args, **kwargs)
             for name in "foo", "bar":
                 self._data[name] = [
                     [charts.streaming.MinComputation(), None],

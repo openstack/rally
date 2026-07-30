@@ -52,7 +52,7 @@ FAKE_DEPLOYMENT_CONFIG = {
 
 class APIGroupTestCase(test.TestCase):
     def setUp(self):
-        super(APIGroupTestCase, self).setUp()
+        super().setUp()
         mock_api = mock.Mock()
         self.apiGroup = api.APIGroup(mock_api)
 
@@ -60,7 +60,7 @@ class APIGroupTestCase(test.TestCase):
 @ddt.ddt
 class TaskAPITestCase(test.TestCase):
     def setUp(self):
-        super(TaskAPITestCase, self).setUp()
+        super().setUp()
         self.task_uuid = "b0d9cd6c-2c94-4417-a238-35c7019d0257"
         self.task = {"uuid": self.task_uuid}
         mock_api = mock.Mock()
@@ -207,7 +207,7 @@ class TaskAPITestCase(test.TestCase):
         other_template_path = os.path.join(
             os.path.dirname(__file__),
             "..", "..", "samples/tasks/scenarios/dummy/dummy.json")
-        template = "{%% include \"%s\" %%}" % os.path.basename(
+        template = '{%% include "%s" %%}' % os.path.basename(
             other_template_path)
         with open(other_template_path) as f:
             other_template = f.read()
@@ -693,7 +693,7 @@ class TaskAPITestCase(test.TestCase):
 
 class BaseDeploymentTestCase(test.TestCase):
     def setUp(self):
-        super(BaseDeploymentTestCase, self).setUp()
+        super().setUp()
         mock_api = mock.Mock()
         mock_api.endpoint_url = None
         self.deployment_inst = api._Deployment(mock_api)
@@ -1037,7 +1037,7 @@ class APITestCase(test.TestCase):
                           api_inst._request, path=path, method=method)
 
 
-class FakeVerifierManager(object):
+class FakeVerifierManager:
     NAME = "fake_verifier"
     PLATFORM = "tests"
     TITLE = "Fake verifier which is used only for testing purpose"
@@ -1058,7 +1058,7 @@ class FakeVerifierManager(object):
 class VerifierAPITestCase(test.TestCase):
 
     def setUp(self):
-        super(VerifierAPITestCase, self).setUp()
+        super().setUp()
         mock_api = mock.Mock()
         mock_api.endpoint_url = None
         self.verifier_inst = api._Verifier(mock_api)
@@ -1663,7 +1663,7 @@ class VerificationAPITestCase(test.TestCase):
     }
 
     def setUp(self):
-        super(VerificationAPITestCase, self).setUp()
+        super().setUp()
         mock_api = mock.Mock()
         mock_api.endpoint_url = None
         self.verification_inst = api._Verification(mock_api)

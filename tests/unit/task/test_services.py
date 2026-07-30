@@ -23,7 +23,7 @@ PATH = "rally.task.service"
 
 class ServiceTestCase(test.TestCase):
     def setUp(self):
-        super(ServiceTestCase, self).setUp()
+        super().setUp()
         self.clients = mock.MagicMock()
         self.clients.cc.choose_version.return_value = 1
 
@@ -234,7 +234,7 @@ class DiscoverTestCase(test.TestCase):
 
 class UtilsTestCase(test.TestCase):
     def test_method_wrapper(self):
-        class Some(object):
+        class Some:
             @service.method_wrapper
             def foo(slf, *args, **kwargs):
                 if len(args) > 1:

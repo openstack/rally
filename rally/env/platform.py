@@ -32,10 +32,10 @@ class _PlatformStatus(utils.ImmutableMixin, utils.EnumMixin):
 
     TRANSITION_TABLE = {
         INIT: (READY, SKIPPED, FAILED_TO_CREATE),
-        READY: (DESTROYING, ),
-        FAILED_TO_CREATE: (DESTROYING, ),
+        READY: (DESTROYING,),
+        FAILED_TO_CREATE: (DESTROYING,),
         DESTROYING: (DESTROYED, FAILED_TO_DESTROY),
-        FAILED_TO_DESTROY: (DESTROYING, )
+        FAILED_TO_DESTROY: (DESTROYING,),
     }
 
 
@@ -51,6 +51,7 @@ def configure(name, platform):
     :param platform: str thing that is described by this plugin
 
     """
+
     def wrapper(cls):
         return plugin.configure(name=name, platform=platform)(cls)
 
@@ -60,14 +61,19 @@ def configure(name, platform):
 @validation.add_default("jsonschema")
 @plugin.base()
 class Platform(plugin.Plugin, validation.ValidatablePluginMixin):
-
-    def __init__(self, spec,
-                 uuid=None, plugin_data=None, platform_data=None, status=None):
+    def __init__(
+        self,
+        spec,
+        uuid=None,
+        plugin_data=None,
+        platform_data=None,
+        status=None,
+    ):
         """Create instance of platform and validates config.
 
         :param platform_config: Platform configuration file
         :param platform_data: Platform specific data returned by create method
-    """
+        """
         self.spec = spec
         self.uuid = uuid
         self.plugin_data = plugin_data
@@ -80,12 +86,14 @@ class Platform(plugin.Plugin, validation.ValidatablePluginMixin):
         :returns: Complete platform data as dictionary
         """
         raise NotImplementedError(
-            "Platform %s doesn't support create action" % self.get_fullname())
+            "Platform %s doesn't support create action" % self.get_fullname()
+        )
 
     def destroy(self):
         """Destroys platform."""
         raise NotImplementedError(
-            "Platform %s doesn't support destroy action" % self.get_fullname())
+            "Platform %s doesn't support destroy action" % self.get_fullname()
+        )
 
     def update(self, new_spec):
         """Updates existing platform config and returns new platform data.
@@ -94,23 +102,27 @@ class Platform(plugin.Plugin, validation.ValidatablePluginMixin):
         :returns: Complete platform data as dictionary
         """
         raise NotImplementedError(
-            "Platform %s doesn't support update action" % self.get_fullname())
+            "Platform %s doesn't support update action" % self.get_fullname()
+        )
 
     def cleanup(self, task_uuid=None):
         """Disaster cleanup for platform."""
         raise NotImplementedError(
-            "Platform %s doesn't support cleanup action" % self.get_fullname())
+            "Platform %s doesn't support cleanup action" % self.get_fullname()
+        )
 
     def check_health(self):
         """Check whatever platform is alive."""
         raise NotImplementedError(
             "Platform %s doesn't support health check action"
-            % self.get_fullname())
+            % self.get_fullname()
+        )
 
     def info(self):
         """Return information about platform as dictionary."""
         raise NotImplementedError(
-            "Platform %s doesn't support info action" % self.get_fullname())
+            "Platform %s doesn't support info action" % self.get_fullname()
+        )
 
     def get_validation_context(self):
         """Return a validation context for a platform."""
@@ -119,5 +131,7 @@ class Platform(plugin.Plugin, validation.ValidatablePluginMixin):
     @classmethod
     def create_spec_from_sys_environ(cls, sys_environ):
         """Check system env for credentials and return a spec if present."""
-        return {"available": False,
-                "message": "Skipped. No credentials found."}
+        return {
+            "available": False,
+            "message": "Skipped. No credentials found.",
+        }

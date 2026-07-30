@@ -38,5 +38,4 @@ class RequestScenario(scenario.Scenario):
         resp = requests.request(method, url, **kwargs)
         if status_code != resp.status_code:
             error_msg = "Expected HTTP request code is `%s` actual `%s`"
-            raise ValueError(
-                error_msg % (status_code, resp.status_code))
+            raise ValueError(error_msg % (status_code, resp.status_code))

@@ -16,8 +16,7 @@
 import math
 
 
-class GraphZipper(object):
-
+class GraphZipper:
     def __init__(self, base_size, zipped_size=1000):
         """Init graph zipper.
 
@@ -57,13 +56,14 @@ class GraphZipper(object):
         self.point_order += 1
 
         if self.point_order > self.base_size:
-            raise RuntimeError("GraphZipper is already full. "
-                               "You can't add more points.")
+            raise RuntimeError(
+                "GraphZipper is already full. You can't add more points."
+            )
 
         if not isinstance(value, (int, float)):
             value = 0
 
-        if self.compression_ratio <= 1:    # We don't need to compress
+        if self.compression_ratio <= 1:  # We don't need to compress
             self.zipped_graph.append([self.point_order, value])
         elif self.cached_ratios_sum + 1 < self.compression_ratio:
             self.cached_ratios_sum += 1

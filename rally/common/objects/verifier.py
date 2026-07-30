@@ -19,8 +19,9 @@ from rally.common import db
 from rally.verification import manager
 
 
-class Verifier(object):
+class Verifier:
     """Represents a verifier object."""
+
     TIME_FORMAT = consts.TimeFormat.ISO8601
 
     def __init__(self, verifier):
@@ -45,23 +46,47 @@ class Verifier(object):
     def to_dict(self, item=None):
         data = {}
         formatters = ["created_at", "updated_at"]
-        fields = ["status", "system_wide", "uuid", "type", "platform",
-                  "name", "source", "version", "extra_settings",
-                  "id", "description"]
+        fields = [
+            "status",
+            "system_wide",
+            "uuid",
+            "type",
+            "platform",
+            "name",
+            "source",
+            "version",
+            "extra_settings",
+            "id",
+            "description",
+        ]
         for field in fields:
             data[field] = self._db_entry.get(field, "")
         for field in formatters:
             data[field] = self._db_entry.get(field, "").strftime(
-                self.TIME_FORMAT)
+                self.TIME_FORMAT
+            )
         return data
 
     @classmethod
-    def create(cls, name, vtype, platform, source, version, system_wide,
-               extra_settings=None):
-        db_entry = db.verifier_create(name=name, vtype=vtype,
-                                      platform=platform, source=source,
-                                      version=version, system_wide=system_wide,
-                                      extra_settings=extra_settings)
+    def create(
+        cls,
+        name,
+        vtype,
+        platform,
+        source,
+        version,
+        system_wide,
+        extra_settings=None,
+    ):
+        db_entry = db.verifier_create(
+            name=name,
+            vtype=vtype,
+            platform=platform,
+            source=source,
+            version=version,
+            system_wide=system_wide,
+            extra_settings=extra_settings,
+        )
         return cls(db_entry)
 
     @classmethod
@@ -84,6 +109,7 @@ class Verifier(object):
 
     def set_env(self, env_id):
         from rally.common import objects
+
         self._deployment = objects.Deployment.get(env_id)
 
     @property
@@ -92,7 +118,8 @@ class Verifier(object):
         if self._deployment is None:
             raise exceptions.RallyException(
                 "Verifier is not linked to any deployment. Please, call "
-                "`set_env` method.")
+                "`set_env` method."
+            )
         return self._deployment
 
     @property
@@ -105,5 +132,6 @@ class Verifier(object):
         # loading plugins
         if not self._manager:
             self._manager = manager.VerifierManager.get(
-                self.type, self.platform)(self)
+                self.type, self.platform
+            )(self)
         return self._manager

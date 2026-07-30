@@ -41,6 +41,7 @@ if t.TYPE_CHECKING:  # pragma: no cover
 
 class ScenarioRunnerResult(t.TypedDict):
     """Result structure for scenario iteration."""
+
     duration: float
     timestamp: float
     idle_duration: float
@@ -62,7 +63,7 @@ def format_result_on_timeout(
         "idle_duration": 0,
         "output": {"additive": [], "complete": []},
         "atomic_actions": [],
-        "error": utils.format_exc(exc)
+        "error": utils.format_exc(exc),
     }
 
 
@@ -79,13 +80,15 @@ def _run_scenario_once(
     method_name: t.Literal["run"],
     context_obj: dict[str, t.Any],
     scenario_kwargs: dict[str, t.Any],
-    event_queue: multiprocessing.Queue[dict[str, t.Any]] | DequeAsQueue
+    event_queue: multiprocessing.Queue[dict[str, t.Any]] | DequeAsQueue,
 ) -> ScenarioRunnerResult:
     iteration = context_obj["iteration"]
-    event_queue.put({
-        "type": "iteration",
-        "value": iteration,
-    })
+    event_queue.put(
+        {
+            "type": "iteration",
+            "value": iteration,
+        }
+    )
 
     # provide arguments isolation between iterations
     scenario_kwargs = copy.deepcopy(scenario_kwargs)
@@ -116,18 +119,20 @@ def _run_scenario_once(
         LOG.info(f"Task {task_uuid} | ITER: {iteration} END: {status}")
 
         idle_duration = scenario_inst.idle_duration() if scenario_inst else 0.0
-        return {"duration": timer.duration() - idle_duration,
-                "timestamp": timer.timestamp(),
-                "idle_duration": idle_duration,
-                "error": error,
-                "output": (
-                    scenario_inst._output
-                    if scenario_inst
-                    else scenario._Output(additive=[], complete=[])
-                ),
-                "atomic_actions": (
-                    scenario_inst.atomic_actions() if scenario_inst else [])
-                }
+        return {
+            "duration": timer.duration() - idle_duration,
+            "timestamp": timer.timestamp(),
+            "idle_duration": idle_duration,
+            "error": error,
+            "output": (
+                scenario_inst._output
+                if scenario_inst
+                else scenario._Output(additive=[], complete=[])
+            ),
+            "atomic_actions": (
+                scenario_inst.atomic_actions() if scenario_inst else []
+            ),
+        }
 
 
 def _worker_thread(
@@ -136,10 +141,13 @@ def _worker_thread(
     method_name: t.Literal["run"],
     context_obj: dict[str, t.Any],
     scenario_kwargs: dict[str, t.Any],
-    event_queue: multiprocessing.Queue[dict[str, t.Any]]
+    event_queue: multiprocessing.Queue[dict[str, t.Any]],
 ) -> None:
-    queue.put(_run_scenario_once(cls, method_name, context_obj,
-                                 scenario_kwargs, event_queue))
+    queue.put(
+        _run_scenario_once(
+            cls, method_name, context_obj, scenario_kwargs, event_queue
+        )
+    )
 
 
 def _log_worker_info(**info: t.Any) -> None:
@@ -147,15 +155,15 @@ def _log_worker_info(**info: t.Any) -> None:
 
     :param info: key-value pairs to be logged
     """
-    info_message = "\n\t".join(["%s: %s" % (k, v)
-                                for k, v in info.items()])
+    info_message = "\n\t".join(["%s: %s" % (k, v) for k, v in info.items()])
     LOG.debug(f"Starting a worker.\n\t{info_message}")
 
 
 @validation.add_default("jsonschema")
 @plugin.base()
-class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin,
-                     metaclass=abc.ABCMeta):
+class ScenarioRunner(
+    plugin.Plugin, validation.ValidatablePluginMixin, metaclass=abc.ABCMeta
+):
     """Base class for all scenario runners.
 
     Scenario runner is an entity that implements a certain strategy of
@@ -171,7 +179,7 @@ class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin,
             "type": {"type": "string"},
         },
         "required": ["type"],
-        "additionalProperties": True
+        "additionalProperties": True,
     }
 
     def __init__(
@@ -189,9 +197,11 @@ class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin,
         self.task = task
         self.config = config
         self.result_queue: collections.deque[list[ScenarioRunnerResult]] = (
-            collections.deque())
+            collections.deque()
+        )
         self.event_queue: collections.deque[dict[str, t.Any]] = (
-            collections.deque())
+            collections.deque()
+        )
         self.aborted = multiprocessing.Event()
         self.run_duration = 0.0
         self.batch_size = batch_size
@@ -203,7 +213,7 @@ class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin,
         cls: type[scenario.Scenario],
         method_name: t.Literal["run"],
         context: dict[str, t.Any],
-        args: dict[str, t.Any]
+        args: dict[str, t.Any],
     ) -> None:
         """Runs the specified scenario with given arguments.
 
@@ -236,7 +246,7 @@ class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin,
     def _create_process_pool(
         processes_to_start: int,
         worker_process: t.Callable[..., t.Any],
-        worker_args_gen: t.Iterator[tuple[t.Any, ...]]
+        worker_args_gen: t.Iterator[tuple[t.Any, ...]],
     ) -> collections.deque[multiprocessing.Process]:
         """Create a pool of processes with some defined target function.
 
@@ -246,14 +256,19 @@ class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin,
         :returns: the process pool as a deque
         """
         process_pool: collections.deque[multiprocessing.Process] = (
-            collections.deque())
+            collections.deque()
+        )
 
         for i in range(processes_to_start):
-            kwrgs = {"processes_to_start": processes_to_start,
-                     "processes_counter": i}
-            process = multiprocessing.Process(target=worker_process,
-                                              args=next(worker_args_gen),
-                                              kwargs={"info": kwrgs})
+            kwrgs = {
+                "processes_to_start": processes_to_start,
+                "processes_counter": i,
+            }
+            process = multiprocessing.Process(
+                target=worker_process,
+                args=next(worker_args_gen),
+                kwargs={"info": kwrgs},
+            )
             process.start()
             process_pool.append(process)
 
@@ -263,7 +278,7 @@ class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin,
         self,
         process_pool: collections.deque[multiprocessing.Process],
         result_queue: multiprocessing.Queue[ScenarioRunnerResult],
-        event_queue: multiprocessing.Queue[dict[str, t.Any]]
+        event_queue: multiprocessing.Queue[dict[str, t.Any]],
     ) -> None:
         """Join the processes in the pool and send their results to the queue.
 
@@ -291,8 +306,9 @@ class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin,
 
     def _flush_results(self) -> None:
         if self.result_batch:
-            sorted_batch = sorted(self.result_batch,
-                                  key=lambda r: r["timestamp"])
+            sorted_batch = sorted(
+                self.result_batch, key=lambda r: r["timestamp"]
+            )
             self.result_queue.append(sorted_batch)
             del self.result_batch[:]
 
@@ -308,14 +324,16 @@ class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin,
             LOG.warning(
                 "Task %(task)s | Runner `%(runner)s` is trying to send "
                 "results in wrong format"
-                % {"task": self.task["uuid"], "runner": self.get_name()})
+                % {"task": self.task["uuid"], "runner": self.get_name()}
+            )
             return
 
         self.result_batch.append(result)
 
         if len(self.result_batch) >= self.batch_size:
-            sorted_batch = sorted(self.result_batch,
-                                  key=lambda r: r["timestamp"])
+            sorted_batch = sorted(
+                self.result_batch, key=lambda r: r["timestamp"]
+            )
             self.result_queue.append(sorted_batch)
             del self.result_batch[:]
 
@@ -325,8 +343,7 @@ class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin,
         :param type: Event type
         :param value: Optional event data
         """
-        self.event_queue.append({"type": type,
-                                 "value": value})
+        self.event_queue.append({"type": type, "value": value})
 
     def _log_debug_info(self, **info: t.Any) -> None:
         """Log runner parameters for debugging.
@@ -336,10 +353,15 @@ class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin,
 
         :param info: key-value pairs to be logged
         """
-        info_message = "\n\t".join(["%s: %s" % (k, v)
-                                    for k, v in info.items()])
-        LOG.debug("Starting the %(name)s runner (task UUID: %(task)s)."
-                  "\n\t%(info)s"
-                  % {"name": self._meta_get("name"),
-                     "task": self.task["uuid"],
-                     "info": info_message})
+        info_message = "\n\t".join(
+            ["%s: %s" % (k, v) for k, v in info.items()]
+        )
+        LOG.debug(
+            "Starting the %(name)s runner (task UUID: %(task)s)."
+            "\n\t%(info)s"
+            % {
+                "name": self._meta_get("name"),
+                "task": self.task["uuid"],
+                "info": info_message,
+            }
+        )

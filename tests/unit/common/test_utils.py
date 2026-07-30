@@ -57,7 +57,7 @@ class EnumMixinTestCase(test.TestCase):
             b = 20
             CC = "2000"
 
-        self.assertEqual(set([10, 20, "2000"]), set(list(Foo())))
+        self.assertEqual({10, 20, "2000"}, set(Foo()))
 
     def test_with_underscore(self):
 
@@ -66,7 +66,7 @@ class EnumMixinTestCase(test.TestCase):
             b = 20
             _CC = "2000"
 
-        self.assertEqual(set([10, 20]), set(list(Foo())))
+        self.assertEqual({10, 20}, set(Foo()))
 
 
 class StdIOCaptureTestCase(test.TestCase):
@@ -132,7 +132,7 @@ class TenantIteratorTestCase(test.TestCase):
         expected_result = [
             ({"id": "0", "tenant_id": str(i)}, str(i)) for i in range(
                 tenants_count)]
-        real_result = [i for i in utils.iterate_per_tenants(users)]
+        real_result = list(utils.iterate_per_tenants(users))
 
         self.assertEqual(expected_result, real_result)
 
@@ -337,13 +337,13 @@ class RandomNameTestCase(test.TestCase):
         generator.task = {"uuid": "good-task-id"}
 
         names = [generator.generate_random_name() for i in range(100)]
-        task_id_parts = set([n.split("_")[0] for n in names])
+        task_id_parts = {n.split("_")[0] for n in names}
         self.assertEqual(1, len(task_id_parts))
 
         generator.task = {"uuid": "bogus! task! id!"}
 
         names = [generator.generate_random_name() for i in range(100)]
-        task_id_parts = set([n.split("_")[0] for n in names])
+        task_id_parts = {n.split("_")[0] for n in names}
         self.assertEqual(1, len(task_id_parts))
 
     def test_make_name_matcher(self):
@@ -456,7 +456,7 @@ class LockedDictTestCase(test.TestCase):
 class DequeAsQueueTestCase(test.TestCase):
 
     def setUp(self):
-        super(DequeAsQueueTestCase, self).setUp()
+        super().setUp()
         self.deque = collections.deque()
         self.deque_as_queue = utils.DequeAsQueue(self.deque)
 
@@ -529,7 +529,7 @@ class StopwatchTestCase(test.TestCase):
 
 class BackupTestCase(test.TestCase):
     def setUp(self):
-        super(BackupTestCase, self).setUp()
+        super().setUp()
         p = mock.patch("rally.common.utils.os.mkdir")
         self.mock_mkdir = p.start()
         self.addCleanup(p.stop)

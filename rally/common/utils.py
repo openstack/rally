@@ -52,12 +52,12 @@ class ImmutableMixin:
     def __setattr__(self, key: str, value: t.Any) -> None:
         if self._inited:
             raise AttributeError("This object is immutable.")
-        super(ImmutableMixin, self).__setattr__(key, value)
+        super().__setattr__(key, value)
 
 
 class EnumMixin:
     def __iter__(self) -> t.Iterator[t.Any]:
-        for k, v in map(lambda x: (x, getattr(self, x)), dir(self)):
+        for k, v in ((x, getattr(self, x)) for x in dir(self)):
             if not k.startswith("_"):
                 yield v
 
@@ -100,9 +100,9 @@ class Timer:
     """Timer based on context manager interface."""
 
     def __enter__(self) -> Timer:
-        self.error: (
-            tuple[type[BaseException], BaseException, t.Any] | None
-        ) = None
+        self.error: tuple[type[BaseException], BaseException, t.Any] | None = (
+            None
+        )
         self.start = time.time()
         return self
 
@@ -123,12 +123,10 @@ class Timer:
             self.error = (type, value, tb)
 
     @t.overload
-    def duration(self, fmt: t.Literal[False] = False) -> float:
-        ...
+    def duration(self, fmt: t.Literal[False] = False) -> float: ...
 
     @t.overload
-    def duration(self, fmt: t.Literal[True]) -> str:
-        ...
+    def duration(self, fmt: t.Literal[True]) -> str: ...
 
     def duration(self, fmt: bool = False) -> float | str:
         duration = self.finish - self.start
@@ -226,7 +224,7 @@ def iterate_per_tenants(
             yield (user, user["tenant_id"])
 
 
-class RandomNameGeneratorMixin(object):
+class RandomNameGeneratorMixin:
     """Mixin for objects that need to generate random names.
 
     This mixin provides one method,
@@ -244,9 +242,11 @@ class RandomNameGeneratorMixin(object):
     * ``RESOURCE_NAME_ALLOWED_CHARACTERS``: A string consisting of the
       characters allowed in the random portions of the name.
     """
+
     _resource_name_placeholder_re = re.compile(
         "^(?P<prefix>.*?)(?P<task>X{3,})(?P<sep>[^X]+?)(?P<rand>X{3,})"
-        "(?P<suffix>.*)$")
+        "(?P<suffix>.*)$"
+    )
 
     RESOURCE_NAME_FORMAT = "rally_XXXXXXXX_XXXXXXXX"
     RESOURCE_NAME_ALLOWED_CHARACTERS = string.ascii_letters + string.digits
@@ -270,7 +270,8 @@ class RandomNameGeneratorMixin(object):
         """
         return "".join(
             random.choice(cls._get_resource_name_allowed_characters())
-            for i in range(length))
+            for i in range(length)
+        )
 
     @classmethod
     def _generate_task_id_part(cls, task_id: str, length: int) -> str:
@@ -279,17 +280,27 @@ class RandomNameGeneratorMixin(object):
         task_id_part = task_id.replace("-", "")[0:length]
 
         if len(task_id_part) < length:
-            LOG.debug("Task ID %(task_id)s cannot be included in a random "
-                      "name because it is too short. Format: %(format)s"
-                      % {"task_id": task_id,
-                         "format": cls._get_resource_name_format()})
-        elif any(char not in cls._get_resource_name_allowed_characters()
-                 for char in task_id_part):
-            LOG.debug("Task ID %(task_id)s cannot be included in a random "
-                      "name because it includes disallowed characters. "
-                      "Allowed characters are: %(chars)s"
-                      % {"task_id": task_id,
-                         "chars": cls._get_resource_name_allowed_characters()})
+            LOG.debug(
+                "Task ID %(task_id)s cannot be included in a random "
+                "name because it is too short. Format: %(format)s"
+                % {
+                    "task_id": task_id,
+                    "format": cls._get_resource_name_format(),
+                }
+            )
+        elif any(
+            char not in cls._get_resource_name_allowed_characters()
+            for char in task_id_part
+        ):
+            LOG.debug(
+                "Task ID %(task_id)s cannot be included in a random "
+                "name because it includes disallowed characters. "
+                "Allowed characters are: %(chars)s"
+                % {
+                    "task_id": task_id,
+                    "chars": cls._get_resource_name_allowed_characters(),
+                }
+            )
         else:
             return task_id_part
 
@@ -328,17 +339,23 @@ class RandomNameGeneratorMixin(object):
         task_id = self.get_owner_id()
 
         match = self._resource_name_placeholder_re.match(
-            self._get_resource_name_format())
+            self._get_resource_name_format()
+        )
         if match is None:
-            raise ValueError("%s is not a valid resource name format" %
-                             self._get_resource_name_format())
+            raise ValueError(
+                "%s is not a valid resource name format"
+                % self._get_resource_name_format()
+            )
         parts = match.groupdict()
-        return "".join([
-            parts["prefix"],
-            self._generate_task_id_part(task_id or "", len(parts["task"])),
-            parts["sep"],
-            self._generate_random_part(len(parts["rand"])),
-            parts["suffix"]])
+        return "".join(
+            [
+                parts["prefix"],
+                self._generate_task_id_part(task_id or "", len(parts["task"])),
+                parts["sep"],
+                self._generate_random_part(len(parts["rand"])),
+                parts["suffix"],
+            ]
+        )
 
     @classmethod
     def name_matches_object(
@@ -361,27 +378,35 @@ class RandomNameGeneratorMixin(object):
         :returns: bool
         """
         match = cls._resource_name_placeholder_re.match(
-            cls._get_resource_name_format())
+            cls._get_resource_name_format()
+        )
         if match is None:
-            raise ValueError("%s is not a valid resource name format" %
-                             cls._get_resource_name_format())
+            raise ValueError(
+                "%s is not a valid resource name format"
+                % cls._get_resource_name_format()
+            )
         parts = match.groupdict()
         subst = {
             "prefix": re.escape(parts["prefix"]),
             "sep": re.escape(parts["sep"]),
             "suffix": re.escape(parts["suffix"]),
             "chars": re.escape(cls._get_resource_name_allowed_characters()),
-            "rand_length": len(parts["rand"])}
+            "rand_length": len(parts["rand"]),
+        }
         if task_id:
-            subst["task_id"] = cls._generate_task_id_part(task_id,
-                                                          len(parts["task"]))
+            subst["task_id"] = cls._generate_task_id_part(
+                task_id, len(parts["task"])
+            )
         else:
-            subst["task_id"] = "[%s]{%s}" % (subst["chars"],
-                                             len(parts["task"]))
+            subst["task_id"] = "[%s]{%s}" % (
+                subst["chars"],
+                len(parts["task"]),
+            )
         subst["extra"] = "" if exact else ".*"
         name_re = re.compile(
             "%(prefix)s%(task_id)s%(sep)s"
-            "[%(chars)s]{%(rand_length)s}%(suffix)s%(extra)s$" % subst)
+            "[%(chars)s]{%(rand_length)s}%(suffix)s%(extra)s$" % subst
+        )
         return bool(name_re.match(name))
 
 
@@ -406,12 +431,16 @@ def name_matches_object(name: str, *objects: t.Any, **kwargs: t.Any) -> bool:
     """
     unique_rng_options = {}
     for obj in objects:
-        key = (obj._get_resource_name_format(),
-               obj._get_resource_name_allowed_characters())
+        key = (
+            obj._get_resource_name_format(),
+            obj._get_resource_name_allowed_characters(),
+        )
         if key not in unique_rng_options:
             unique_rng_options[key] = obj
-    return any(obj.name_matches_object(name, **kwargs)
-               for obj in unique_rng_options.values())
+    return any(
+        obj.name_matches_object(name, **kwargs)
+        for obj in unique_rng_options.values()
+    )
 
 
 def make_name_matcher(*names: str) -> type[RandomNameGeneratorMixin]:
@@ -421,6 +450,7 @@ def make_name_matcher(*names: str) -> type[RandomNameGeneratorMixin]:
     mechanism for cleaning up such resources, this method creates a subclass of
     RandomNameGeneratorMixin with customized `name_matches_object` method.
     """
+
     class CustomNameMatcher(RandomNameGeneratorMixin):
         # generate unique string to guarantee processing that custom names
         RESOURCE_NAME_FORMAT = str(uuid.uuid4())
@@ -479,7 +509,8 @@ def terminate_thread(
     """
 
     ctypes.pythonapi.PyThreadState_SetAsyncExc(
-        ctypes.c_long(thread_ident), ctypes.py_object(exc_type))
+        ctypes.c_long(thread_ident), ctypes.py_object(exc_type)
+    )
 
 
 def timeout_thread(
@@ -539,7 +570,7 @@ class LockedDict(dict):
     """
 
     def __init__(self, *args: t.Any, **kwargs: t.Any) -> None:
-        super(LockedDict, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._is_locked = True
         self._is_ready_to_be_unlocked = False
 
@@ -571,6 +602,7 @@ class LockedDict(dict):
             elif isinstance(obj, tuple):
                 obj = tuple([unlock(v) for v in obj])
             return obj
+
         return copy.deepcopy(unlock(self), memo=memo)
 
     def __enter__(self, *args: t.Any) -> None:
@@ -583,34 +615,34 @@ class LockedDict(dict):
 
     def __setitem__(self, *args: t.Any, **kwargs: t.Any) -> None:
         self._check_is_unlocked()
-        return super(LockedDict, self).__setitem__(*args, **kwargs)
+        return super().__setitem__(*args, **kwargs)
 
     def __delitem__(self, *args: t.Any, **kwargs: t.Any) -> None:
         self._check_is_unlocked()
-        return super(LockedDict, self).__delitem__(*args, **kwargs)
+        return super().__delitem__(*args, **kwargs)
 
     def pop(self, *args: t.Any, **kwargs: t.Any) -> t.Any:
         self._check_is_unlocked()
-        return super(LockedDict, self).pop(*args, **kwargs)
+        return super().pop(*args, **kwargs)
 
     def popitem(self, *args: t.Any, **kwargs: t.Any) -> t.Any:
         self._check_is_unlocked()
-        return super(LockedDict, self).popitem(*args, **kwargs)
+        return super().popitem(*args, **kwargs)
 
     def update(self, *args: t.Any, **kwargs: t.Any) -> None:
         self._check_is_unlocked()
-        return super(LockedDict, self).update(*args, **kwargs)
+        return super().update(*args, **kwargs)
 
     def setdefault(self, *args: t.Any, **kwargs: t.Any) -> t.Any:
         self._check_is_unlocked()
-        return super(LockedDict, self).setdefault(*args, **kwargs)
+        return super().setdefault(*args, **kwargs)
 
     def clear(self, *args: t.Any, **kwargs: t.Any) -> None:
         self._check_is_unlocked()
-        return super(LockedDict, self).clear(*args, **kwargs)
+        return super().clear(*args, **kwargs)
 
 
-class DequeAsQueue(object):
+class DequeAsQueue:
     """Allows to use some of Queue methods on collections.deque."""
 
     def __init__(self, deque: collections.deque) -> None:
@@ -629,7 +661,7 @@ class DequeAsQueue(object):
         return bool(self.deque)
 
 
-class Stopwatch(object):
+class Stopwatch:
     """Allows to sleep till specified time since start."""
 
     def __init__(self, stop_event: threading.Event | None = None) -> None:
@@ -675,7 +707,7 @@ def generate_random_path(root_dir: str | None = None) -> str:
     return path
 
 
-class BackupHelper(object):
+class BackupHelper:
     def __init__(self) -> None:
         self._tempdir = generate_random_path()
 
@@ -690,7 +722,8 @@ class BackupHelper(object):
         if original_path in self._stored_data:
             raise exceptions.RallyException(
                 "Failed to back up %s since it was already stored."
-                % original_path)
+                % original_path
+            )
         backup_path = generate_random_path(self._tempdir)
         LOG.debug("Creating backup of %s in %s" % (original_path, backup_path))
         try:

@@ -19,6 +19,7 @@ Revises: 4ef544102ba7
 Create Date: 2017-02-01 12:52:43.499663
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 
@@ -39,16 +40,22 @@ deployments_helper = sa.Table(
     sa.Column("name", sa.String(255), unique=True),
     sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
     sa.Column("credentials", sa.PickleType, nullable=True),
-    sa.Column("new_credentials", sa_types.MutableJSONEncodedDict,
-              default={}, nullable=False)
+    sa.Column(
+        "new_credentials",
+        sa_types.MutableJSONEncodedDict,
+        default={},
+        nullable=False,
+    ),
 )
 
 
 def upgrade() -> None:
     with op.batch_alter_table("deployments") as batch_op:
         batch_op.add_column(
-            sa.Column("new_credentials", sa_types.MutableJSONEncodedDict,
-                      default={}))
+            sa.Column(
+                "new_credentials", sa_types.MutableJSONEncodedDict, default={}
+            )
+        )
 
     connection = op.get_bind()
     for deployment in connection.execute(deployments_helper.select()):
@@ -58,15 +65,19 @@ def upgrade() -> None:
             creds[cred_type].append(cred_obj)
 
         connection.execute(
-            deployments_helper.update().where(
-                deployments_helper.c.id == deployment.id).values(
-                new_credentials=creds))
+            deployments_helper.update()
+            .where(deployments_helper.c.id == deployment.id)
+            .values(new_credentials=creds)
+        )
 
     with op.batch_alter_table("deployments") as batch_op:
         batch_op.drop_column("credentials")
-        batch_op.alter_column("new_credentials", new_column_name="credentials",
-                              existing_type=sa_types.MutableJSONEncodedDict,
-                              nullable=False)
+        batch_op.alter_column(
+            "new_credentials",
+            new_column_name="credentials",
+            existing_type=sa_types.MutableJSONEncodedDict,
+            nullable=False,
+        )
 
 
 def downgrade() -> None:

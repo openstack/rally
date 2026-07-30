@@ -37,7 +37,7 @@ def _parse_env_name(env_name):
             else:
                 version_info = (version_s[0], version_s[1:])
             implied_version = ".".join(version_info)
-            implied_python = "{}{}".format(base_exe, implied_version)
+            implied_python = f"{base_exe}{implied_version}"
             return implied_python
 
 

@@ -32,7 +32,6 @@ class DummyScenarioException(exceptions.RallyException):
 
 @scenario.configure(name="Dummy.failure")
 class DummyFailure(scenario.Scenario):
-
     def run(
         self,
         sleep: float = 0.1,
@@ -59,7 +58,6 @@ class DummyFailure(scenario.Scenario):
 
 @scenario.configure(name="Dummy.dummy")
 class Dummy(scenario.Scenario):
-
     @atomic.action_timer("bar")
     def bar(self, sleep: float) -> None:
         utils.interruptable_sleep(sleep)
@@ -80,16 +78,17 @@ class Dummy(scenario.Scenario):
         self.foo(sleep)
 
 
-@validation.add("number", param_name="size_of_message", minval=1,
-                integer_only=True, nullable=True)
+@validation.add(
+    "number",
+    param_name="size_of_message",
+    minval=1,
+    integer_only=True,
+    nullable=True,
+)
 @scenario.configure(name="Dummy.dummy_exception")
 class DummyException(scenario.Scenario):
-
     def run(
-        self,
-        size_of_message: int = 1,
-        sleep: float = 1,
-        message: str = ""
+        self, size_of_message: int = 1, sleep: float = 1, message: str = ""
     ) -> None:
         """Throws an exception.
 
@@ -108,11 +107,16 @@ class DummyException(scenario.Scenario):
         raise DummyScenarioException(message)
 
 
-@validation.add("number", param_name="exception_probability",
-                minval=0, maxval=1, integer_only=False, nullable=True)
+@validation.add(
+    "number",
+    param_name="exception_probability",
+    minval=0,
+    maxval=1,
+    integer_only=False,
+    nullable=True,
+)
 @scenario.configure(name="Dummy.dummy_exception_probability")
 class DummyExceptionProbability(scenario.Scenario):
-
     def run(self, exception_probability: float = 0.5) -> None:
         """Throws an exception with given probability.
 
@@ -127,12 +131,12 @@ class DummyExceptionProbability(scenario.Scenario):
         if random.random() < exception_probability:
             raise DummyScenarioException(
                 "Dummy Scenario Exception: Probability: %s"
-                % exception_probability)
+                % exception_probability
+            )
 
 
 @scenario.configure(name="Dummy.dummy_output")
 class DummyOutput(scenario.Scenario):
-
     def run(self, random_range: int = 25) -> None:
         """Generate dummy output.
 
@@ -142,70 +146,118 @@ class DummyOutput(scenario.Scenario):
         rand = lambda n: [n, random.randint(1, random_range)]
         desc = "This is a description text for %s"
 
-        self.add_output(additive={"title": "Additive StatsTable",
-                                  "description": desc % "Additive StatsTable",
-                                  "chart_plugin": "StatsTable",
-                                  "data": [rand("foo stat"), rand("bar stat"),
-                                           rand("spam stat")]})
-
-        self.add_output(additive={"title": ("Additive StackedArea "
-                                            "(no description)"),
-                                  "chart_plugin": "StackedArea",
-                                  "data": [rand("foo %d" % i)
-                                           for i in range(1, 7)],
-                                  "label": "Measure this in Foo units"})
-
-        self.add_output(additive={"title": "Additive Lines",
-                                  "description": (
-                                      desc % "Additive Lines"),
-                                  "chart_plugin": "Lines",
-                                  "data": [rand("bar %d" % i)
-                                           for i in range(1, 4)],
-                                  "label": "Measure this in Bar units"})
-        self.add_output(additive={"title": "Additive Pie",
-                                  "description": desc % "Additive Pie",
-                                  "chart_plugin": "Pie",
-                                  "data": [rand("spam %d" % i)
-                                           for i in range(1, 4)]},
-                        complete={"title": "Complete Lines",
-                                  "description": desc % "Complete Lines",
-                                  "chart_plugin": "Lines",
-                                  "data": [
-                                      [name, [rand(i) for i in range(1, 8)]]
-                                      for name in ("Foo", "Bar", "Spam")],
-                                  "label": "Measure this is some units",
-                                  "axis_label": ("This is a custom "
-                                                 "X-axis label")})
-        self.add_output(complete={"title": "Complete StackedArea",
-                                  "description": desc % "Complete StackedArea",
-                                  "chart_plugin": "StackedArea",
-                                  "data": [
-                                      [name, [rand(i) for i in range(50)]]
-                                      for name in ("alpha", "beta", "gamma")],
-                                  "label": "Yet another measurement units",
-                                  "axis_label": ("This is a custom "
-                                                 "X-axis label")})
         self.add_output(
-            complete={"title": "Arbitrary Text",
-                      "chart_plugin": "TextArea",
-                      "data": ["Lorem ipsum dolor sit amet, consectetur "
-                               "adipiscing elit, sed do eiusmod tempor "
-                               "incididunt ut labore et dolore magna "
-                               "aliqua." * 2] * 4})
-        self.add_output(
-            complete={"title": "Complete Pie (no description)",
-                      "chart_plugin": "Pie",
-                      "data": [rand("delta"), rand("epsilon"), rand("zeta"),
-                               rand("theta"), rand("lambda"), rand("omega")]})
+            additive={
+                "title": "Additive StatsTable",
+                "description": desc % "Additive StatsTable",
+                "chart_plugin": "StatsTable",
+                "data": [
+                    rand("foo stat"),
+                    rand("bar stat"),
+                    rand("spam stat"),
+                ],
+            }
+        )
 
-        data = {"cols": ["mu column", "xi column", "pi column",
-                         "tau column", "chi column"],
-                "rows": [([name + " row"] + [rand(i)[1] for i in range(4)])
-                         for name in ("iota", "nu", "rho", "phi", "psi")]}
-        self.add_output(complete={"title": "Complete Table",
-                                  "description": desc % "Complete Table",
-                                  "chart_plugin": "Table",
-                                  "data": data})
+        self.add_output(
+            additive={
+                "title": ("Additive StackedArea (no description)"),
+                "chart_plugin": "StackedArea",
+                "data": [rand("foo %d" % i) for i in range(1, 7)],
+                "label": "Measure this in Foo units",
+            }
+        )
+
+        self.add_output(
+            additive={
+                "title": "Additive Lines",
+                "description": (desc % "Additive Lines"),
+                "chart_plugin": "Lines",
+                "data": [rand("bar %d" % i) for i in range(1, 4)],
+                "label": "Measure this in Bar units",
+            }
+        )
+        self.add_output(
+            additive={
+                "title": "Additive Pie",
+                "description": desc % "Additive Pie",
+                "chart_plugin": "Pie",
+                "data": [rand("spam %d" % i) for i in range(1, 4)],
+            },
+            complete={
+                "title": "Complete Lines",
+                "description": desc % "Complete Lines",
+                "chart_plugin": "Lines",
+                "data": [
+                    [name, [rand(i) for i in range(1, 8)]]
+                    for name in ("Foo", "Bar", "Spam")
+                ],
+                "label": "Measure this is some units",
+                "axis_label": ("This is a custom X-axis label"),
+            },
+        )
+        self.add_output(
+            complete={
+                "title": "Complete StackedArea",
+                "description": desc % "Complete StackedArea",
+                "chart_plugin": "StackedArea",
+                "data": [
+                    [name, [rand(i) for i in range(50)]]
+                    for name in ("alpha", "beta", "gamma")
+                ],
+                "label": "Yet another measurement units",
+                "axis_label": ("This is a custom X-axis label"),
+            }
+        )
+        self.add_output(
+            complete={
+                "title": "Arbitrary Text",
+                "chart_plugin": "TextArea",
+                "data": [
+                    "Lorem ipsum dolor sit amet, consectetur "
+                    "adipiscing elit, sed do eiusmod tempor "
+                    "incididunt ut labore et dolore magna "
+                    "aliqua." * 2
+                ]
+                * 4,
+            }
+        )
+        self.add_output(
+            complete={
+                "title": "Complete Pie (no description)",
+                "chart_plugin": "Pie",
+                "data": [
+                    rand("delta"),
+                    rand("epsilon"),
+                    rand("zeta"),
+                    rand("theta"),
+                    rand("lambda"),
+                    rand("omega"),
+                ],
+            }
+        )
+
+        data = {
+            "cols": [
+                "mu column",
+                "xi column",
+                "pi column",
+                "tau column",
+                "chi column",
+            ],
+            "rows": [
+                ([name + " row"] + [rand(i)[1] for i in range(4)])
+                for name in ("iota", "nu", "rho", "phi", "psi")
+            ],
+        }
+        self.add_output(
+            complete={
+                "title": "Complete Table",
+                "description": desc % "Complete Table",
+                "chart_plugin": "Table",
+                "data": data,
+            }
+        )
 
 
 @scenario.configure(name="Dummy.dummy_random_fail_in_atomic")
@@ -245,12 +297,8 @@ class DummyRandomFailInAtomic(scenario.Scenario):
 
 @scenario.configure(name="Dummy.dummy_random_action")
 class DummyRandomAction(scenario.Scenario):
-
     def run(
-        self,
-        actions_num: int = 5,
-        sleep_min: float = 0,
-        sleep_max: float = 0
+        self, actions_num: int = 5, sleep_min: float = 0, sleep_max: float = 0
     ) -> None:
         """Sleep random time in dummy actions.
 
@@ -266,12 +314,7 @@ class DummyRandomAction(scenario.Scenario):
 
 @scenario.configure(name="Dummy.dummy_timed_atomic_actions")
 class DummyTimedAtomicAction(scenario.Scenario):
-
-    def run(
-        self,
-        number_of_actions: int = 5,
-        sleep_factor: float = 1
-    ) -> None:
+    def run(self, number_of_actions: int = 5, sleep_factor: float = 1) -> None:
         """Run some sleepy atomic actions for SLA atomic action tests.
 
         :param number_of_actions: int number of atomic actions to create

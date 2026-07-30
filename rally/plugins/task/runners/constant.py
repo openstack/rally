@@ -41,7 +41,7 @@ def _worker_process(
     args: dict[str, t.Any],
     event_queue: multiprocessing.Queue[dict[str, t.Any]],
     aborted: multiprocessing.synchronize.Event,
-    info: dict[str, t.Any]
+    info: dict[str, t.Any],
 ) -> None:
     """Start the scenario within threads.
 
@@ -68,12 +68,13 @@ def _worker_process(
                     the flag is set
     :param info: info about all processes count and counter of launched process
     """
+
     def _to_be_continued(
         iteration: int,
         current_duration: float,
         aborted: multiprocessing.synchronize.Event,
         times: int | None = None,
-        duration: float | None = None
+        duration: float | None = None,
     ) -> bool:
         if times is not None:
             return iteration < times and not aborted.is_set()
@@ -89,17 +90,22 @@ def _worker_process(
     alive_threads_in_pool = 0
     finished_threads_in_pool = 0
 
-    runner._log_worker_info(times=times, duration=duration,
-                            concurrency=concurrency, timeout=timeout, cls=cls,
-                            method_name=method_name, args=args)
+    runner._log_worker_info(
+        times=times,
+        duration=duration,
+        concurrency=concurrency,
+        timeout=timeout,
+        cls=cls,
+        method_name=method_name,
+        args=args,
+    )
 
     if timeout:
         timeout_queue: Queue.Queue[
             tuple[threading.Thread, float] | tuple[None, None]
         ] = Queue.Queue()
         collector_thr_by_timeout = threading.Thread(
-            target=utils.timeout_thread,
-            args=(timeout_queue, )
+            target=utils.timeout_thread, args=(timeout_queue,)
         )
         collector_thr_by_timeout.start()
 
@@ -108,15 +114,22 @@ def _worker_process(
     # NOTE(msimonin): keep the previous behaviour
     # > when duration is 0, scenario executes exactly 1 time
     current_duration = -1.0
-    while _to_be_continued(iteration, current_duration, aborted,
-                           times=times, duration=duration):
-
+    while _to_be_continued(
+        iteration, current_duration, aborted, times=times, duration=duration
+    ):
         scenario_context = runner._get_scenario_context(iteration, context)
         worker_args = (
-            queue, cls, method_name, scenario_context, args, event_queue)
+            queue,
+            cls,
+            method_name,
+            scenario_context,
+            args,
+            event_queue,
+        )
 
-        thread = threading.Thread(target=runner._worker_thread,
-                                  args=worker_args)
+        thread = threading.Thread(
+            target=runner._worker_thread, args=worker_args
+        )
 
         thread.start()
         if timeout:
@@ -166,17 +179,18 @@ class CheckConstantValidator(validation.Validator):
         context: dict[str, t.Any],
         config: dict[str, t.Any] | None,
         plugin_cls: type[runner.plugin.Plugin],
-        plugin_cfg: dict[str, t.Any] | None
+        plugin_cfg: dict[str, t.Any] | None,
     ) -> None:
-        if (plugin_cfg
-                and plugin_cfg.get("concurrency", 1)
-                > plugin_cfg.get("times", 1)):
+        if plugin_cfg and plugin_cfg.get("concurrency", 1) > plugin_cfg.get(
+            "times", 1
+        ):
             self.fail(
                 "Parameter 'concurrency' means a number of parallel "
                 "executions of iterations. Parameter 'times' means total "
                 "number of iteration executions. It is redundant "
                 "(and restricted) to have number of parallel iterations "
-                "bigger then total number of iterations.")
+                "bigger then total number of iterations."
+            )
 
 
 @validation.add("check_constant")
@@ -201,25 +215,25 @@ class ConstantScenarioRunner(runner.ScenarioRunner):
             "concurrency": {
                 "type": "integer",
                 "minimum": 1,
-                "description": "The number of parallel iteration executions."
+                "description": "The number of parallel iteration executions.",
             },
             "times": {
                 "type": "integer",
                 "minimum": 1,
-                "description": "Total number of iteration executions."
+                "description": "Total number of iteration executions.",
             },
             "timeout": {
                 "type": "number",
-                "description": "Operation's timeout."
+                "description": "Operation's timeout.",
             },
             "max_cpu_count": {
                 "type": "integer",
                 "minimum": 1,
                 "description": "The maximum number of processes to create load"
-                               " from."
-            }
+                " from.",
+            },
         },
-        "additionalProperties": False
+        "additionalProperties": False,
     }
 
     def _run_scenario(
@@ -227,7 +241,7 @@ class ConstantScenarioRunner(runner.ScenarioRunner):
         cls: type[runner.scenario.Scenario],
         method_name: t.Literal["run"],
         context: dict[str, t.Any],
-        args: dict[str, t.Any]
+        args: dict[str, t.Any],
     ) -> None:
         """Runs the specified scenario with given arguments.
 
@@ -252,38 +266,58 @@ class ConstantScenarioRunner(runner.ScenarioRunner):
         iteration_gen = utils.RAMInt()
 
         cpu_count = multiprocessing.cpu_count()
-        max_cpu_used = min(cpu_count,
-                           self.config.get("max_cpu_count", cpu_count))
+        max_cpu_used = min(
+            cpu_count, self.config.get("max_cpu_count", cpu_count)
+        )
 
         processes_to_start = min(max_cpu_used, times, concurrency)
         concurrency_per_worker, concurrency_overhead = divmod(
-            concurrency, processes_to_start)
+            concurrency, processes_to_start
+        )
 
-        self._log_debug_info(times=times, concurrency=concurrency,
-                             timeout=timeout, max_cpu_used=max_cpu_used,
-                             processes_to_start=processes_to_start,
-                             concurrency_per_worker=concurrency_per_worker,
-                             concurrency_overhead=concurrency_overhead)
+        self._log_debug_info(
+            times=times,
+            concurrency=concurrency,
+            timeout=timeout,
+            max_cpu_used=max_cpu_used,
+            processes_to_start=processes_to_start,
+            concurrency_per_worker=concurrency_per_worker,
+            concurrency_overhead=concurrency_overhead,
+        )
 
         result_queue: multiprocessing.Queue[runner.ScenarioRunnerResult] = (
-            multiprocessing.Queue())
+            multiprocessing.Queue()
+        )
         event_queue: multiprocessing.Queue[dict[str, t.Any]] = (
-            multiprocessing.Queue())
+            multiprocessing.Queue()
+        )
 
         def worker_args_gen(
-            concurrency_overhead: int
+            concurrency_overhead: int,
         ) -> t.Generator[tuple[t.Any, ...], None, None]:
             while True:
-                yield (result_queue, iteration_gen, timeout,
-                       concurrency_per_worker + (concurrency_overhead and 1),
-                       times, None, context, cls, method_name, args,
-                       event_queue, self.aborted)
+                yield (
+                    result_queue,
+                    iteration_gen,
+                    timeout,
+                    concurrency_per_worker + (concurrency_overhead and 1),
+                    times,
+                    None,
+                    context,
+                    cls,
+                    method_name,
+                    args,
+                    event_queue,
+                    self.aborted,
+                )
                 if concurrency_overhead:
                     concurrency_overhead -= 1
 
         process_pool = self._create_process_pool(
-            processes_to_start, _worker_process,
-            worker_args_gen(concurrency_overhead))
+            processes_to_start,
+            _worker_process,
+            worker_args_gen(concurrency_overhead),
+        )
         self._join_processes(process_pool, result_queue, event_queue)
 
 
@@ -308,23 +342,23 @@ class ConstantForDurationScenarioRunner(runner.ScenarioRunner):
             "concurrency": {
                 "type": "integer",
                 "minimum": 1,
-                "description": "The number of parallel iteration executions."
+                "description": "The number of parallel iteration executions.",
             },
             "duration": {
                 "type": "number",
                 "minimum": 0.0,
                 "description": "The number of seconds during which to generate"
-                               " a load. If the duration is 0, the scenario"
-                               " will run once per parallel execution."
+                " a load. If the duration is 0, the scenario"
+                " will run once per parallel execution.",
             },
             "timeout": {
                 "type": "number",
                 "minimum": 1,
-                "description": "Operation's timeout."
-            }
+                "description": "Operation's timeout.",
+            },
         },
         "required": ["duration"],
-        "additionalProperties": False
+        "additionalProperties": False,
     }
 
     def _run_scenario(
@@ -332,7 +366,7 @@ class ConstantForDurationScenarioRunner(runner.ScenarioRunner):
         cls: type[runner.scenario.Scenario],
         method_name: t.Literal["run"],
         context: dict[str, t.Any],
-        args: dict[str, t.Any]
+        args: dict[str, t.Any],
     ) -> None:
         """Runs the specified scenario with given arguments.
 
@@ -357,36 +391,56 @@ class ConstantForDurationScenarioRunner(runner.ScenarioRunner):
         iteration_gen = utils.RAMInt()
 
         cpu_count = multiprocessing.cpu_count()
-        max_cpu_used = min(cpu_count,
-                           self.config.get("max_cpu_count", cpu_count))
+        max_cpu_used = min(
+            cpu_count, self.config.get("max_cpu_count", cpu_count)
+        )
 
         processes_to_start = min(max_cpu_used, concurrency)
         concurrency_per_worker, concurrency_overhead = divmod(
-            concurrency, processes_to_start)
+            concurrency, processes_to_start
+        )
 
-        self._log_debug_info(duration=duration, concurrency=concurrency,
-                             timeout=timeout, max_cpu_used=max_cpu_used,
-                             processes_to_start=processes_to_start,
-                             concurrency_per_worker=concurrency_per_worker,
-                             concurrency_overhead=concurrency_overhead)
+        self._log_debug_info(
+            duration=duration,
+            concurrency=concurrency,
+            timeout=timeout,
+            max_cpu_used=max_cpu_used,
+            processes_to_start=processes_to_start,
+            concurrency_per_worker=concurrency_per_worker,
+            concurrency_overhead=concurrency_overhead,
+        )
 
         result_queue: multiprocessing.Queue[runner.ScenarioRunnerResult] = (
-            multiprocessing.Queue())
+            multiprocessing.Queue()
+        )
         event_queue: multiprocessing.Queue[dict[str, t.Any]] = (
-            multiprocessing.Queue())
+            multiprocessing.Queue()
+        )
 
         def worker_args_gen(
-            concurrency_overhead: int
+            concurrency_overhead: int,
         ) -> t.Generator[tuple[t.Any, ...], None, None]:
             while True:
-                yield (result_queue, iteration_gen, timeout,
-                       concurrency_per_worker + (concurrency_overhead and 1),
-                       None, duration, context, cls, method_name, args,
-                       event_queue, self.aborted)
+                yield (
+                    result_queue,
+                    iteration_gen,
+                    timeout,
+                    concurrency_per_worker + (concurrency_overhead and 1),
+                    None,
+                    duration,
+                    context,
+                    cls,
+                    method_name,
+                    args,
+                    event_queue,
+                    self.aborted,
+                )
                 if concurrency_overhead:
                     concurrency_overhead -= 1
 
         process_pool = self._create_process_pool(
-            processes_to_start, _worker_process,
-            worker_args_gen(concurrency_overhead))
+            processes_to_start,
+            _worker_process,
+            worker_args_gen(concurrency_overhead),
+        )
         self._join_processes(process_pool, result_queue, event_queue)

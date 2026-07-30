@@ -48,8 +48,12 @@ if t.TYPE_CHECKING:
 
 # ``no_args_is_help=False`` -> a bare ``rally`` / ``rally task`` errors with
 # "Missing command." (exit 2) instead of printing help.
-app = typer.Typer(name="rally", help="Rally command-line interface.",
-                  no_args_is_help=False, add_completion=True)
+app = typer.Typer(
+    name="rally",
+    help="Rally command-line interface.",
+    no_args_is_help=False,
+    add_completion=True,
+)
 
 # the command categories are grouped in their own help panel, separate from
 # the top-level ``version`` command
@@ -82,7 +86,7 @@ def _version_callback(value: bool) -> None:
 
 
 def _expand_signature(
-    build_params: t.Callable[[], list[inspect.Parameter]]
+    build_params: t.Callable[[], list[inspect.Parameter]],
 ) -> t.Callable[[t.Callable[..., t.Any]], t.Callable[..., t.Any]]:
     """Replace a function's ``**kwargs`` with dynamically-generated parameters.
 
@@ -93,13 +97,19 @@ def _expand_signature(
     ``--log-file`` etc. stay in sync).  The generated options arrive as keyword
     arguments -- i.e. in the real ``**kwargs`` at call time.
     """
+
     def decorator(func: t.Callable[..., t.Any]) -> t.Callable[..., t.Any]:
         signature = inspect.signature(func)
-        fixed = [p for p in signature.parameters.values()
-                 if p.kind is not inspect.Parameter.VAR_KEYWORD]
+        fixed = [
+            p
+            for p in signature.parameters.values()
+            if p.kind is not inspect.Parameter.VAR_KEYWORD
+        ]
         func.__signature__ = signature.replace(  # type: ignore[attr-defined]
-            parameters=fixed + list(build_params()))
+            parameters=fixed + list(build_params())
+        )
         return func
+
     return decorator
 
 
@@ -111,21 +121,19 @@ def bootstrap(
         list[str] | None,
         typer.Option(
             help="Path to a config file. Repeatable; later files take "
-                 "precedence."
-        )
+            "precedence."
+        ),
     ] = None,
     config_dir: t.Annotated[
         list[str] | None,
-        typer.Option(
-            help="Path to a config directory. Repeatable."
-        )
+        typer.Option(help="Path to a config directory. Repeatable."),
     ] = None,
     plugin_paths: t.Annotated[
         list[str] | None,
         typer.Option(
             envvar="RALLY_PLUGIN_PATHS",
-            help="Additional custom plugin locations."
-        )
+            help="Additional custom plugin locations.",
+        ),
     ] = None,
     version: t.Annotated[
         bool,
@@ -133,8 +141,8 @@ def bootstrap(
             "--version",
             callback=_version_callback,
             is_eager=True,
-            help="Print the Rally version and exit."
-        )
+            help="Print the Rally version and exit.",
+        ),
     ] = False,
     **kwargs: t.Any,
 ) -> None:
@@ -153,14 +161,16 @@ def bootstrap(
 
     paths = None
     if plugin_paths:
-        paths = [p for item in plugin_paths
-                 for p in item.split(",") if p]
+        paths = [p for item in plugin_paths for p in item.split(",") if p]
 
     # do not run database check on commands that does not need that
     skip_db_check = ctx.invoked_subcommand in ("db", "plugin", "version")
     try:
-        api = rally_api.API(config_args=config_args, plugin_paths=paths,
-                            skip_db_check=skip_db_check)
+        api = rally_api.API(
+            config_args=config_args,
+            plugin_paths=paths,
+            skip_db_check=skip_db_check,
+        )
     except exceptions.RallyException as e:
         print(e)
         raise typer.Exit(code=2)
@@ -185,13 +195,15 @@ def _eat_all(param: "typer.core.TyperOption") -> None:
                 continue
             previous_process = handler.process
 
-            def process(value: t.Any, state: t.Any,
-                        _prev: t.Any = previous_process) -> None:
+            def process(
+                value: t.Any, state: t.Any, _prev: t.Any = previous_process
+            ) -> None:
                 values = [value]
                 while state.rargs and not state.rargs[0].startswith("-"):
                     values.append(state.rargs.pop(0))
                 for item in values:
                     _prev(item, state)
+
             handler.process = process
             break
 
@@ -199,7 +211,7 @@ def _eat_all(param: "typer.core.TyperOption") -> None:
 
 
 def _install_multivalue(
-        command: "typer.core.TyperGroup | typer.core.TyperCommand"
+    command: "typer.core.TyperGroup | typer.core.TyperCommand",
 ) -> None:
     """Apply :func:`_eat_all` to every multi-value option in the tree."""
     for _path, _leaf, params in cliutils.iter_commands(command):
@@ -209,17 +221,23 @@ def _install_multivalue(
 
 
 def main(args: list[str] | None = None) -> None:
-    cli: "typer.core.TyperGroup" = (
+    cli: typer.core.TyperGroup = (
         typer.main.get_command(app)  # type: ignore[assignment]
     )
     _install_multivalue(cli)
     argutils.install(cli)
     try:
         cli(args=args)
-    except (OSError, TypeError, ValueError, exceptions.RallyException,
-            jsonschema.ValidationError) as e:
-        if (logging.is_debug()
-                and not isinstance(e, exceptions.InvalidTaskConfig)):
+    except (
+        OSError,
+        TypeError,
+        ValueError,
+        exceptions.RallyException,
+        jsonschema.ValidationError,
+    ) as e:
+        if logging.is_debug() and not isinstance(
+            e, exceptions.InvalidTaskConfig
+        ):
             LOG.exception("Unexpected exception in CLI")
         else:
             print(e)

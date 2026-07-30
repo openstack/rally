@@ -39,24 +39,21 @@ REPORT_RESPONSE_SCHEMA = {
     "properties": {
         "files": {
             "type": "object",
-            "patternProperties": {
-                ".{1,}": {"type": "string"}
-            }
+            "patternProperties": {".{1,}": {"type": "string"}},
         },
         "open": {
             "type": "string",
         },
-        "print": {
-            "type": "string"
-        }
+        "print": {"type": "string"},
     },
-    "additionalProperties": False
+    "additionalProperties": False,
 }
 
 
 @plugin.base()
-class TaskExporter(plugin.Plugin, validation.ValidatablePluginMixin,
-                   metaclass=abc.ABCMeta):
+class TaskExporter(
+    plugin.Plugin, validation.ValidatablePluginMixin, metaclass=abc.ABCMeta
+):
     """Plugin base for exporting tasks results to different systems&formats.
 
     This type of plugins is designed to provide the way to present results in
@@ -79,7 +76,7 @@ class TaskExporter(plugin.Plugin, validation.ValidatablePluginMixin,
         :param output_destination: destination of export
         :param api: an instance of rally.api.API object
         """
-        super(TaskExporter, self).__init__()
+        super().__init__()
         self.tasks_results = tasks_results
         self.output_destination = output_destination
         self.api = api
@@ -109,8 +106,7 @@ class TaskExporter(plugin.Plugin, validation.ValidatablePluginMixin,
         :param output_destination: destination of export
         :param api: an instance of rally.api.API object
         """
-        report = exporter_cls(task_results, output_destination,
-                              api).generate()
+        report = exporter_cls(task_results, output_destination, api).generate()
 
         jsonschema.validate(report, REPORT_RESPONSE_SCHEMA)
 

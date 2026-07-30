@@ -20,7 +20,7 @@ from tests.unit import test_mock
 class VariantsTestCase(test.TestCase):
     def setUp(self):
         self.variants = test_mock.Variants(["test", "foo", "bar"])
-        super(VariantsTestCase, self).setUp()
+        super().setUp()
 
     def test_print(self):
         self.assertEqual(
@@ -82,7 +82,7 @@ def test_func(self, mock_args, mock_args2, mock_some_longer_args):
     code_mock_args = ["args", "args2", "some_longer_args"]
 
     def setUp(self):
-        super(FuncMockArgsDecoratorsCheckerTestCase, self).setUp()
+        super().setUp()
         self.visitor = test_mock.FuncMockArgsDecoratorsChecker()
         self.visitor.classname_python = ""
         self.visitor.globals_["EXPR"] = "expression"

@@ -210,15 +210,20 @@ class JSONReporter(reporter.VerificationReporter):
                 if test_id not in tests:
                     # NOTE(ylobankov): It is more convenient to see test ID
                     #                  at the first place in the report.
-                    tags = sorted(result.get("tags", []), reverse=True,
-                                  key=lambda tag: tag.startswith("id-"))
-                    tests[test_id] = {"tags": tags,
-                                      "name": result["name"],
-                                      "by_verification": {}}
+                    tags = sorted(
+                        result.get("tags", []),
+                        reverse=True,
+                        key=lambda tag: tag.startswith("id-"),
+                    )
+                    tests[test_id] = {
+                        "tags": tags,
+                        "name": result["name"],
+                        "by_verification": {},
+                    }
 
                 tests[test_id]["by_verification"][v.uuid] = {
                     "status": result["status"],
-                    "duration": result["duration"]
+                    "duration": result["duration"],
                 }
 
                 reason = result.get("reason", "")
@@ -226,8 +231,9 @@ class JSONReporter(reporter.VerificationReporter):
                     match = SKIP_RE.match(reason)
                     if match:
                         link = LP_BUG_LINK % match.group("bug_number")
-                        reason = re.sub(match.group("bug_number"), link,
-                                        reason)
+                        reason = re.sub(
+                            match.group("bug_number"), link, reason
+                        )
                 traceback = result.get("traceback", "")
                 sep = "\n\n" if reason and traceback else ""
                 d = (reason + sep + traceback.strip()) or None
@@ -240,8 +246,10 @@ class JSONReporter(reporter.VerificationReporter):
         raw_report = json.dumps(self._generate(), indent=4)
 
         if self.output_destination:
-            return {"files": {self.output_destination: raw_report},
-                    "open": self.output_destination}
+            return {
+                "files": {self.output_destination: raw_report},
+                "open": self.output_destination,
+            }
         else:
             return {"print": raw_report}
 
@@ -249,6 +257,7 @@ class JSONReporter(reporter.VerificationReporter):
 @reporter.configure("html")
 class HTMLReporter(JSONReporter):
     """Generates verification report in HTML format."""
+
     INCLUDE_LIBS = False
 
     # "T" separator of ISO 8601 is not user-friendly enough.
@@ -280,7 +289,8 @@ class HTMLReporter(JSONReporter):
                         test["by_verification"][uuid]["duration"] = ""
 
                     if len(durations) > 1 and not (
-                            durations[0] == "0" and durations[-1] == "0"):
+                        durations[0] == "0" and durations[-1] == "0"
+                    ):
                         # compare result with result of the first verification
                         diff = float(durations[-1]) - float(durations[0])
                         result = "%s (" % durations[-1]
@@ -296,19 +306,24 @@ class HTMLReporter(JSONReporter):
                 show_comparison_note = True
 
         template = ui_utils.get_template("verification/report.html")
-        context = {"uuids": list(uuids),
-                   "verifications": report["verifications"],
-                   "tests": report["tests"],
-                   "show_comparison_note": show_comparison_note}
+        context = {
+            "uuids": list(uuids),
+            "verifications": report["verifications"],
+            "tests": report["tests"],
+            "show_comparison_note": show_comparison_note,
+        }
 
-        raw_report = template.render(data=json.dumps(context),
-                                     include_libs=self.INCLUDE_LIBS)
+        raw_report = template.render(
+            data=json.dumps(context), include_libs=self.INCLUDE_LIBS
+        )
 
         # in future we will support html_static and will need to save more
         # files
         if self.output_destination:
-            return {"files": {self.output_destination: raw_report},
-                    "open": self.output_destination}
+            return {
+                "files": {self.output_destination: raw_report},
+                "open": self.output_destination,
+            }
         else:
             return {"print": raw_report}
 
@@ -316,6 +331,7 @@ class HTMLReporter(JSONReporter):
 @reporter.configure("html-static")
 class HTMLStaticReporter(HTMLReporter):
     """Generates verification report in HTML format with embedded JS/CSS."""
+
     INCLUDE_LIBS = True
 
 
@@ -413,51 +429,59 @@ class JUnitXMLReporter(reporter.VerificationReporter):
             test_suite = report.add_test_suite(
                 id=v.uuid,
                 time=str(v.tests_duration),
-                timestamp=v.created_at.strftime(TIME_FORMAT)
+                timestamp=v.created_at.strftime(TIME_FORMAT),
             )
             test_suite.setup_final_stats(
                 tests=str(v.tests_count),
                 skipped=str(v.skipped),
-                failures=str(v.failures + v.unexpected_success)
+                failures=str(v.failures + v.unexpected_success),
             )
 
-            tests = sorted(v.tests.values(),
-                           key=lambda t: (t.get("timestamp", ""), t["name"]))
+            tests = sorted(
+                v.tests.values(),
+                key=lambda t: (t.get("timestamp", ""), t["name"]),
+            )
             for result in tests:
                 class_name, name = result["name"].rsplit(".", 1)
 
-                test_id = [tag[3:] for tag in result.get("tags", [])
-                           if tag.startswith("id-")]
+                test_id = [
+                    tag[3:]
+                    for tag in result.get("tags", [])
+                    if tag.startswith("id-")
+                ]
 
                 test_case = test_suite.add_test_case(
                     id=(test_id[0] if test_id else None),
-                    time=result["duration"], name=name, classname=class_name,
-                    timestamp=result.get("timestamp"))
+                    time=result["duration"],
+                    name=name,
+                    classname=class_name,
+                    timestamp=result.get("timestamp"),
+                )
 
                 if result["status"] == "success":
                     # nothing to add
                     pass
                 elif result["status"] == "uxsuccess":
-                    test_case.mark_as_uxsuccess(
-                        result.get("reason"))
+                    test_case.mark_as_uxsuccess(result.get("reason"))
                 elif result["status"] == "fail":
-                    test_case.mark_as_failed(
-                        result.get("traceback", None))
+                    test_case.mark_as_failed(result.get("traceback", None))
                 elif result["status"] == "xfail":
                     trace = result.get("traceback", None)
                     test_case.mark_as_xfail(
                         result.get("reason", None),
-                        f"Traceback:\n{trace}" if trace else None)
+                        f"Traceback:\n{trace}" if trace else None,
+                    )
                 elif result["status"] == "skip":
-                    test_case.mark_as_skipped(
-                        result.get("reason", None))
+                    test_case.mark_as_skipped(result.get("reason", None))
                 else:
                     # wtf is it?! we should add validation of results...
                     pass
 
         raw_report = report.to_string()
         if self.output_destination:
-            return {"files": {self.output_destination: raw_report},
-                    "open": self.output_destination}
+            return {
+                "files": {self.output_destination: raw_report},
+                "open": self.output_destination,
+            }
         else:
             return {"print": raw_report}

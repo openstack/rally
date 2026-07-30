@@ -31,7 +31,7 @@ RUNNERS = "rally.plugins.task.runners."
 class RPSScenarioRunnerTestCase(test.TestCase):
 
     def setUp(self):
-        super(RPSScenarioRunnerTestCase, self).setUp()
+        super().setUp()
         self.task = mock.MagicMock()
 
     @ddt.data(

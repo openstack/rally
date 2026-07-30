@@ -22,7 +22,7 @@ import os
 from rally.common import utils as cutils
 
 
-class StreamingAlgorithm(object, metaclass=abc.ABCMeta):
+class StreamingAlgorithm(metaclass=abc.ABCMeta):
     """Base class for streaming computations that scale."""
 
     @abc.abstractmethod
@@ -100,9 +100,13 @@ class StdDevComputation(StreamingAlgorithm):
         self.mean = self.mean_computation.result()
         self.count += other.count
 
-        self.dev_sum = (dev_sum1 + count1 * mean1 ** 2
-                        + dev_sum2 + count2 * mean2 ** 2
-                        - self.count * self.mean ** 2)
+        self.dev_sum = (
+            dev_sum1
+            + count1 * mean1**2
+            + dev_sum2
+            + count2 * mean2**2
+            - self.count * self.mean**2
+        )
 
     def result(self):
         # NOTE(amaretskiy): Need at least two values to be processed
@@ -152,7 +156,6 @@ class MaxComputation(StreamingAlgorithm):
 
 
 class PointsSaver(StreamingAlgorithm):
-
     def __init__(self, chunk_size=10000, sep=" "):
         self.chunk_size = chunk_size
         self._sep = sep
@@ -165,9 +168,7 @@ class PointsSaver(StreamingAlgorithm):
         with open(self._filename, "a") as f:
             f.write(
                 " ".join(
-                    itertools.chain(
-                        (" ", ),
-                        map(lambda x: str(x), self._chunk))
+                    itertools.chain((" ",), (str(x) for x in self._chunk))
                 )
             )
         self._chunk = []
@@ -175,8 +176,10 @@ class PointsSaver(StreamingAlgorithm):
 
     def add(self, value):
         if self._deleted:
-            raise TypeError("Cannot add more points since %s is in deleted "
-                            "state." % self.__class__.__name__)
+            raise TypeError(
+                "Cannot add more points since %s is in deleted "
+                "state." % self.__class__.__name__
+            )
 
         self._chunk.append(value)
         self._current_chunk_size += 1
@@ -185,15 +188,19 @@ class PointsSaver(StreamingAlgorithm):
 
     def merge(self, other):
         if self._deleted:
-            raise TypeError("Cannot merge points since %s is in deleted "
-                            "state." % self.__class__.__name__)
+            raise TypeError(
+                "Cannot merge points since %s is in deleted "
+                "state." % self.__class__.__name__
+            )
         for point in other.result():
             self.add(point)
 
     def result(self):
         if self._deleted:
-            raise TypeError("Cannot fetch points since %s is in deleted "
-                            "state." % self.__class__.__name__)
+            raise TypeError(
+                "Cannot fetch points since %s is in deleted "
+                "state." % self.__class__.__name__
+            )
 
         if os.path.isfile(self._filename):
             with open(self._filename) as f:

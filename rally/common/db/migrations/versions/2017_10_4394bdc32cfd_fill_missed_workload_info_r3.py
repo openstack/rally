@@ -41,8 +41,12 @@ workload_helper = sa.Table(
     sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
     sa.Column("uuid", sa.String(36), nullable=False),
     sa.Column("start_time", sa_types.TimeStamp),
-    sa.Column("statistics", sa_types.MutableJSONEncodedDict, default={},
-              nullable=False),
+    sa.Column(
+        "statistics",
+        sa_types.MutableJSONEncodedDict,
+        default={},
+        nullable=False,
+    ),
 )
 
 workload_data_helper = sa.Table(
@@ -51,7 +55,7 @@ workload_data_helper = sa.Table(
     sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
     sa.Column("uuid", sa.String(36), nullable=False),
     sa.Column("workload_uuid", sa.String(length=36), nullable=False),
-    sa.Column("chunk_data", sa_types.MutableJSONEncodedDict(), nullable=False)
+    sa.Column("chunk_data", sa_types.MutableJSONEncodedDict(), nullable=False),
 )
 
 
@@ -72,22 +76,29 @@ def upgrade() -> None:
     for workload in connection.execute(workload_helper.select()):
         full_data = []
         for wdata in connection.execute(
-                workload_data_helper.select().where(
-                    workload_data_helper.c.workload_uuid == workload.uuid)):
+            workload_data_helper.select().where(
+                workload_data_helper.c.workload_uuid == workload.uuid
+            )
+        ):
             chunk_data = wdata.chunk_data["raw"]
 
             require_updating = False
             for itr in chunk_data:
                 if "output" not in itr:
                     itr["output"] = {"additive": [], "complete": []}
-                    if ("scenario_output" in itr
-                            and itr["scenario_output"]["data"]):
+                    if (
+                        "scenario_output" in itr
+                        and itr["scenario_output"]["data"]
+                    ):
                         items = list(itr["scenario_output"]["data"].items())
                         itr["output"]["additive"].append(
-                            {"items": items,
-                             "title": "Scenario output",
-                             "description": "",
-                             "chart": "OutputStackedAreaChart"})
+                            {
+                                "items": items,
+                                "title": "Scenario output",
+                                "description": "",
+                                "chart": "OutputStackedAreaChart",
+                            }
+                        )
                         del itr["scenario_output"]
                     require_updating = True
                 if isinstance(itr["atomic_actions"], dict):
@@ -96,10 +107,13 @@ def upgrade() -> None:
                     for name, d in itr["atomic_actions"].items():
                         finished_at = started_at + d
                         new_atomic_actions.append(
-                            {"name": name,
-                             "children": [],
-                             "started_at": started_at,
-                             "finished_at": finished_at})
+                            {
+                                "name": name,
+                                "children": [],
+                                "started_at": started_at,
+                                "finished_at": finished_at,
+                            }
+                        )
                         started_at = finished_at
                     itr["atomic_actions"] = new_atomic_actions
                     require_updating = True
@@ -109,9 +123,11 @@ def upgrade() -> None:
                     require_updating = True
 
             if require_updating:
-                connection.execute(workload_data_helper.update().where(
-                    workload_data_helper.c.uuid == wdata.uuid).values(
-                    chunk_data={"raw": chunk_data}))
+                connection.execute(
+                    workload_data_helper.update()
+                    .where(workload_data_helper.c.uuid == wdata.uuid)
+                    .values(chunk_data={"raw": chunk_data})
+                )
 
             full_data.extend(chunk_data)
 
@@ -121,15 +137,20 @@ def upgrade() -> None:
             start_time = full_data[0]["timestamp"]
 
             durations_stat = charts.MainStatsTable(
-                {"total_iteration_count": len(full_data)})
+                {"total_iteration_count": len(full_data)}
+            )
 
             for itr in full_data:
                 durations_stat.add_iteration(itr)
 
-            connection.execute(workload_helper.update().where(
-                workload_helper.c.uuid == workload.uuid).values(
-                start_time=start_time,
-                statistics={"durations": durations_stat.to_dict()}))
+            connection.execute(
+                workload_helper.update()
+                .where(workload_helper.c.uuid == workload.uuid)
+                .values(
+                    start_time=start_time,
+                    statistics={"durations": durations_stat.to_dict()},
+                )
+            )
 
 
 def downgrade() -> None:

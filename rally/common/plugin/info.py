@@ -25,8 +25,11 @@ if t.TYPE_CHECKING:
 
 PARAM_OR_RETURNS_REGEX = re.compile(":(?:param|returns)")
 RETURNS_REGEX = re.compile(":returns: (?P<doc>.*)", re.S)
-PARAM_REGEX = re.compile(r":param (?P<name>[\*\w]+): (?P<doc>.*?)"
-                         r"(?:(?=:param)|(?=:return)|(?=:raises)|\Z)", re.S)
+PARAM_REGEX = re.compile(
+    r":param (?P<name>[\*\w]+): (?P<doc>.*?)"
+    r"(?:(?=:param)|(?=:return)|(?=:raises)|\Z)",
+    re.S,
+)
 
 # jsonschema primitive type -> short human label, shared by the CLI
 # (`rally plugin show`) and the Sphinx plugin reference.
@@ -36,7 +39,7 @@ JSON_SCHEMA_TYPE_LABELS = {
     "number": "float",
     "integer": "int",
     "array": "list",
-    "object": "dict"
+    "object": "dict",
 }
 
 
@@ -80,12 +83,14 @@ def reindent(string: str) -> str:
 
 class _ParamInfo(t.TypedDict):
     """Type for parameter information in docstring parsing."""
+
     name: str
     doc: str
 
 
 class _DocstringInfo(t.TypedDict):
     """Type for parsed docstring information."""
+
     short_description: str
     long_description: str
     params: list[_ParamInfo]
@@ -129,12 +134,13 @@ def parse_docstring(docstring: str | None) -> _DocstringInfo:
         "short_description": short_description,
         "long_description": long_description,
         "params": params,
-        "returns": returns
+        "returns": returns,
     }
 
 
 class _PluginInfo(t.TypedDict):
     """Type for plugin information returned by get_info method."""
+
     name: str
     platform: str
     module: str
@@ -146,7 +152,6 @@ class _PluginInfo(t.TypedDict):
 
 
 class InfoMixin:
-
     @classmethod
     def _get_doc(cls) -> str | None:
         """Return documentary of class
@@ -158,7 +163,7 @@ class InfoMixin:
 
     @classmethod
     def get_title(  # type: ignore[misc]
-        cls: type[plugin.Plugin]
+        cls: type[plugin.Plugin],
     ) -> str:
         """Return the plugin's short one-line description.
 
@@ -171,7 +176,7 @@ class InfoMixin:
 
     @classmethod
     def get_info(  # type: ignore[misc]
-        cls: type[plugin.Plugin]
+        cls: type[plugin.Plugin],
     ) -> _PluginInfo:
         doc = parse_docstring(cls._get_doc())
 
@@ -182,9 +187,9 @@ class InfoMixin:
                 "type": "object",
                 "additionalProperties": True,
                 "properties": dict(
-                    (p["name"],  {"description": p["doc"]} if p["doc"] else {})
+                    (p["name"], {"description": p["doc"]} if p["doc"] else {})
                     for p in doc["params"]
-                )
+                ),
             }
 
         return {
@@ -195,5 +200,5 @@ class InfoMixin:
             "description": doc["long_description"],
             "parameters": doc["params"],
             "schema": schema,
-            "returns": doc["returns"]
+            "returns": doc["returns"],
         }

@@ -18,7 +18,7 @@ import re
 from tests.unit import test
 
 
-class Variants(object):
+class Variants:
     def __init__(self, variants, print_prefix="mock_"):
         self.variants = variants
         self.print_prefix = print_prefix
@@ -263,9 +263,9 @@ class FuncMockArgsDecoratorsChecker(ast.NodeVisitor):
                     shortest_name = sorted_by_len.pop()
                     if len(shortest_name) <= self.SHORTEST_VARIANT_LEN_LIMIT:
                         error_msgs.append(
-                            (f"Argument 'mock_{arg}' misnamed; should be "
-                             f"either of {dec_vars} that is derived from the "
-                             f"mock decorator args.\n")
+                            f"Argument 'mock_{arg}' misnamed; should be "
+                            f"either of {dec_vars} that is derived from the "
+                            f"mock decorator args.\n"
                         )
                 elif not arg:
                     error_msgs.append(

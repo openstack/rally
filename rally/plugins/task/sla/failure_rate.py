@@ -34,19 +34,20 @@ if t.TYPE_CHECKING:  # pragma: no cover
 @sla.configure(name="failure_rate")
 class FailureRate(sla.SLA):
     """Failure rate minimum and maximum in percents."""
+
     CONFIG_SCHEMA = {
         "type": "object",
         "$schema": consts.JSON_SCHEMA,
         "properties": {
             "min": {"type": "number", "minimum": 0.0, "maximum": 100.0},
-            "max": {"type": "number", "minimum": 0.0, "maximum": 100.0}
+            "max": {"type": "number", "minimum": 0.0, "maximum": 100.0},
         },
         "minProperties": 1,
         "additionalProperties": False,
     }
 
     def __init__(self, criterion_value: dict[str, float]) -> None:
-        super(FailureRate, self).__init__(criterion_value)
+        super().__init__(criterion_value)
         self.min_percent = self.criterion_value.get("min", 0)
         self.max_percent = self.criterion_value.get("max", 100)
         self.errors = 0
@@ -70,6 +71,9 @@ class FailureRate(sla.SLA):
         return self.success
 
     def details(self) -> str:
-        return ("Failure rate criteria %.2f%% <= %.2f%% <= %.2f%% - %s" %
-                (self.min_percent, self.error_rate,
-                 self.max_percent, self.status()))
+        return "Failure rate criteria %.2f%% <= %.2f%% <= %.2f%% - %s" % (
+            self.min_percent,
+            self.error_rate,
+            self.max_percent,
+            self.status(),
+        )

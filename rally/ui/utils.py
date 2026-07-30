@@ -24,7 +24,7 @@ def get_template(template):
             return markupsafe.Markup(loader.get_source(env, file_name)[0])
         except jinja2.TemplateNotFound:
             # NOTE(amaretskiy): re-raise error to make its message clear
-            raise IOError("File not found: %s" % file_name)
+            raise OSError("File not found: %s" % file_name)
 
     loader = jinja2.PackageLoader("rally.ui", "templates")
     env = jinja2.Environment(loader=loader)

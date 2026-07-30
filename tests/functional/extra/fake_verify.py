@@ -25,7 +25,7 @@ class FakeVerifierInstallation(testr.TestrLauncher):
     """FakeVerify verifier."""
 
     def install(self):
-        super(FakeVerifierInstallation, self).install()
+        super().install()
         # use stestr for tests.
         with open(os.path.join(self.repo_dir, ".stestr.conf"), "w") as f:
             f.write("[DEFAULT]\ntest_path=./tests/unit")

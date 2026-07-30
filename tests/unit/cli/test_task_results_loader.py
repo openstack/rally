@@ -57,7 +57,7 @@ class LoaderTestCase(test.TestCase):
 
         # case 3: the file contains valid JSON with a dict that doesn't have
         #   'tasks' key
-        r_file.read.return_value = "{\"tasks\": \"foo\"}"
+        r_file.read.return_value = '{"tasks": "foo"}'
 
         self.assertEqual(mock__update_new_results.return_value,
                          task_results_loader.load("/some/path"))
@@ -67,7 +67,7 @@ class LoaderTestCase(test.TestCase):
         mock__update_old_results.reset_mock()
 
         # case 4: the file contains valid JSON with a list
-        r_file.read.return_value = "[\"foo\"]"
+        r_file.read.return_value = '["foo"]'
 
         self.assertEqual(mock__update_old_results.return_value,
                          task_results_loader.load("/some/path"))

@@ -41,10 +41,12 @@ class PathOrUrl(types.ResourceType):
             if head.status_code == 200:
                 return path
             raise exceptions.InvalidScenarioArgument(
-                f"Url {path} unavailable (code {head.status_code})")
+                f"Url {path} unavailable (code {head.status_code})"
+            )
         except Exception as ex:
             raise exceptions.InvalidScenarioArgument(
-                f"Url error {path} ({ex})")
+                f"Url error {path} ({ex})"
+            )
 
 
 @plugin.configure(name="file")
@@ -58,7 +60,7 @@ class FileType(types.ResourceType):
         config: types.ConvertConfig,
         output_type: t.Any,
     ) -> str:
-        with open(os.path.expanduser(resource_spec), "r") as f:
+        with open(os.path.expanduser(resource_spec)) as f:
             return f.read()
 
 
@@ -90,7 +92,7 @@ class FileTypeDict(types.ResourceType):
         file_type_dict: dict[str, str] = {}
         for file_path in resource_spec:
             file_path = os.path.expanduser(file_path)
-            with open(file_path, "r") as f:
+            with open(file_path) as f:
                 file_type_dict[file_path] = f.read()
 
         return file_type_dict

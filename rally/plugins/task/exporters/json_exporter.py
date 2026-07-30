@@ -42,83 +42,116 @@ class JSONExporter(exporter.TaskExporter):
             for subtask in task["subtasks"]:
                 workloads = []
                 for workload in subtask["workloads"]:
-                    hooks = [{
-                        "config": {"action": dict([h["config"]["action"]]),
-                                   "trigger": dict([h["config"]["trigger"]]),
-                                   "description": h["config"]["description"]},
-                        "results": h["results"],
-                        "summary": h["summary"], } for h in workload["hooks"]]
+                    hooks = [
+                        {
+                            "config": {
+                                "action": dict([h["config"]["action"]]),
+                                "trigger": dict([h["config"]["trigger"]]),
+                                "description": h["config"]["description"],
+                            },
+                            "results": h["results"],
+                            "summary": h["summary"],
+                        }
+                        for h in workload["hooks"]
+                    ]
                     workloads.append(
                         collections.OrderedDict(
-                            [("uuid", workload["uuid"]),
-                             ("description", workload["description"]),
-                             ("runner", {
-                                 workload["runner_type"]: workload["runner"]}),
-                             ("hooks", hooks),
-                             ("scenario", {
-                                 workload["name"]: workload["args"]}),
-                             ("min_duration", workload["min_duration"]),
-                             ("max_duration", workload["max_duration"]),
-                             ("start_time", workload["start_time"]),
-                             ("load_duration", workload["load_duration"]),
-                             ("full_duration", workload["full_duration"]),
-                             ("statistics", workload["statistics"]),
-                             ("data", workload["data"]),
-                             ("failed_iteration_count",
-                              workload["failed_iteration_count"]),
-                             ("total_iteration_count",
-                              workload["total_iteration_count"]),
-                             ("created_at", workload["created_at"]),
-                             ("updated_at", workload["updated_at"]),
-                             ("contexts", workload["contexts"]),
-                             ("contexts_results",
-                              workload["contexts_results"]),
-                             ("position", workload["position"]),
-                             ("pass_sla", workload["pass_sla"]),
-                             ("sla_results", workload["sla_results"]),
-                             ("sla", workload["sla"])]
+                            [
+                                ("uuid", workload["uuid"]),
+                                ("description", workload["description"]),
+                                (
+                                    "runner",
+                                    {
+                                        workload["runner_type"]: workload[
+                                            "runner"
+                                        ]
+                                    },
+                                ),
+                                ("hooks", hooks),
+                                (
+                                    "scenario",
+                                    {workload["name"]: workload["args"]},
+                                ),
+                                ("min_duration", workload["min_duration"]),
+                                ("max_duration", workload["max_duration"]),
+                                ("start_time", workload["start_time"]),
+                                ("load_duration", workload["load_duration"]),
+                                ("full_duration", workload["full_duration"]),
+                                ("statistics", workload["statistics"]),
+                                ("data", workload["data"]),
+                                (
+                                    "failed_iteration_count",
+                                    workload["failed_iteration_count"],
+                                ),
+                                (
+                                    "total_iteration_count",
+                                    workload["total_iteration_count"],
+                                ),
+                                ("created_at", workload["created_at"]),
+                                ("updated_at", workload["updated_at"]),
+                                ("contexts", workload["contexts"]),
+                                (
+                                    "contexts_results",
+                                    workload["contexts_results"],
+                                ),
+                                ("position", workload["position"]),
+                                ("pass_sla", workload["pass_sla"]),
+                                ("sla_results", workload["sla_results"]),
+                                ("sla", workload["sla"]),
+                            ]
                         )
                     )
                 subtasks.append(
                     collections.OrderedDict(
-                        [("uuid", subtask["uuid"]),
-                         ("title", subtask["title"]),
-                         ("description", subtask["description"]),
-                         ("status", subtask["status"]),
-                         ("created_at", subtask["created_at"]),
-                         ("updated_at", subtask["updated_at"]),
-                         ("sla", subtask["sla"]),
-                         ("workloads", workloads)]
+                        [
+                            ("uuid", subtask["uuid"]),
+                            ("title", subtask["title"]),
+                            ("description", subtask["description"]),
+                            ("status", subtask["status"]),
+                            ("created_at", subtask["created_at"]),
+                            ("updated_at", subtask["updated_at"]),
+                            ("sla", subtask["sla"]),
+                            ("workloads", workloads),
+                        ]
                     )
                 )
             tasks.append(
                 collections.OrderedDict(
-                    [("uuid", task["uuid"]),
-                     ("title", task["title"]),
-                     ("description", task["description"]),
-                     ("status", task["status"]),
-                     ("tags", task["tags"]),
-                     ("env_uuid", task.get("env_uuid", "n\a")),
-                     ("env_name", task.get("env_name", "n\a")),
-                     ("created_at", task["created_at"]),
-                     ("updated_at", task["updated_at"]),
-                     ("pass_sla", task["pass_sla"]),
-                     ("subtasks", subtasks)]
+                    [
+                        ("uuid", task["uuid"]),
+                        ("title", task["title"]),
+                        ("description", task["description"]),
+                        ("status", task["status"]),
+                        ("tags", task["tags"]),
+                        ("env_uuid", task.get("env_uuid", "n\a")),
+                        ("env_name", task.get("env_name", "n\a")),
+                        ("created_at", task["created_at"]),
+                        ("updated_at", task["updated_at"]),
+                        ("pass_sla", task["pass_sla"]),
+                        ("subtasks", subtasks),
+                    ]
                 )
             )
         return tasks
 
     def generate(self):
-        results = {"info": {"rally_version": rally_version.version_string(),
-                            "generated_at": dt.datetime.strftime(
-                                dt.datetime.utcnow(), TIMEFORMAT),
-                            "format_version": self.REVISION},
-                   "tasks": self._generate_tasks()}
+        results = {
+            "info": {
+                "rally_version": rally_version.version_string(),
+                "generated_at": dt.datetime.strftime(
+                    dt.datetime.utcnow(), TIMEFORMAT
+                ),
+                "format_version": self.REVISION,
+            },
+            "tasks": self._generate_tasks(),
+        }
 
         results = json.dumps(results, sort_keys=False, indent=4)
 
         if self.output_destination:
-            return {"files": {self.output_destination: results},
-                    "open": "file://" + self.output_destination}
+            return {
+                "files": {self.output_destination: results},
+                "open": "file://" + self.output_destination,
+            }
         else:
             return {"print": results}

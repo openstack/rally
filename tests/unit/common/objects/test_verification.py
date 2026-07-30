@@ -24,7 +24,7 @@ from tests.unit import test
 
 class VerificationTestCase(test.TestCase):
     def setUp(self):
-        super(VerificationTestCase, self).setUp()
+        super().setUp()
 
         self.db_obj = {"uuid": "uuid-1",
                        "env_uuid": "e_uuid"}

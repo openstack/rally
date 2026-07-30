@@ -63,7 +63,7 @@ def get_tasks_results():
 
 class JUnitXMLExporterTestCase(test.TestCase):
     def setUp(self):
-        super(JUnitXMLExporterTestCase, self).setUp()
+        super().setUp()
         self.datetime = dt.datetime
 
         patcher = mock.patch("rally.common.io.junit.dt")

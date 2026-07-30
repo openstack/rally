@@ -27,8 +27,10 @@ from rally.common.plugin import plugin
 
 
 plugin_app = typer.Typer(
-    name="plugin", no_args_is_help=False,
-    help="Discover and inspect installed plugins.")
+    name="plugin",
+    no_args_is_help=False,
+    help="Discover and inspect installed plugins.",
+)
 
 
 def _schema_type_label(prop: dict[str, t.Any]) -> str:
@@ -53,29 +55,25 @@ def _print_plugins_list(plugin_list: list) -> None:
         "Name": lambda p: p.get_name(),
         "Platform": lambda p: p.get_platform(),
         "Title": lambda p: p.get_info()["title"],
-        "Plugin base": lambda p: p._get_base().__name__
+        "Plugin base": lambda p: p._get_base().__name__,
     }
 
-    cliutils.print_list(plugin_list, formatters=formatters,
-                        normalize_field_names=True,
-                        fields=["Plugin base", "Name", "Platform", "Title"])
+    cliutils.print_list(
+        plugin_list,
+        formatters=formatters,
+        normalize_field_names=True,
+        fields=["Plugin base", "Name", "Platform", "Title"],
+    )
 
 
 @plugin_app.command()
 @plugins.ensure_plugins_are_loaded
 def show(
     name: t.Annotated[
-        str,
-        argutils.ArgumentOrKeyword(
-            "--name",
-            help="Plugin name."
-        )
+        str, argutils.ArgumentOrKeyword("--name", help="Plugin name.")
     ],
     platform: t.Annotated[
-        str | None,
-        typer.Option(
-            help="Plugin platform."
-        )
+        str | None, typer.Option(help="Plugin platform.")
     ] = None,
 ) -> None:
     """Show detailed information about a Rally plugin."""
@@ -86,8 +84,10 @@ def show(
 
     if not found:
         if platform:
-            print("Plugin %(name)s@%(platform)s not found"
-                  % {"name": name, "platform": platform})
+            print(
+                "Plugin %(name)s@%(platform)s not found"
+                % {"name": name, "platform": platform}
+            )
         else:
             print("Plugin %s not found at any platform" % name)
         raise typer.Exit(code=exceptions.PluginNotFound.error_code)
@@ -111,21 +111,27 @@ def show(
             rows = []
             for name, prop in props.items():
                 prop = prop if isinstance(prop, dict) else {}
-                rows.append(utils.Struct(
-                    name=name,
-                    type=_schema_type_label(prop) or "Any",
-                    description=prop.get("description", "")))
-            cliutils.print_list(rows,
-                                fields=["name", "type", "description"],
-                                sortby_index=None)
+                rows.append(
+                    utils.Struct(
+                        name=name,
+                        type=_schema_type_label(prop) or "Any",
+                        description=prop.get("description", ""),
+                    )
+                )
+            cliutils.print_list(
+                rows, fields=["name", "type", "description"], sortby_index=None
+            )
         elif plugin_info["parameters"]:
             # no schema (e.g. an un-annotated scenario), so fall back to the
             # docstring parameters.
             print("PARAMETERS")
-            rows = [utils.Struct(name=p["name"], description=p["doc"])
-                    for p in plugin_info["parameters"]]
-            cliutils.print_list(rows, fields=["name", "description"],
-                                sortby_index=None)
+            rows = [
+                utils.Struct(name=p["name"], description=p["doc"])
+                for p in plugin_info["parameters"]
+            ]
+            cliutils.print_list(
+                rows, fields=["name", "description"], sortby_index=None
+            )
     else:
         print("Multiple plugins found:")
         _print_plugins_list(found)
@@ -137,22 +143,16 @@ def show(
 def list_(
     name: t.Annotated[
         str | None,
-        typer.Argument(
-            help="List only plugins that match the given name."
-        )
+        typer.Argument(help="List only plugins that match the given name."),
     ] = None,
     platform: t.Annotated[
         str | None,
         typer.Option(
             help="List only plugins that are in the specified platform."
-        )
+        ),
     ] = None,
     base_cls: t.Annotated[
-        str | None,
-        typer.Option(
-            "--plugin-base",
-            help="Plugin base class."
-        )
+        str | None, typer.Option("--plugin-base", help="Plugin base class.")
     ] = None,
 ) -> None:
     """List all Rally plugins that match name and platform."""

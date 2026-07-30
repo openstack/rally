@@ -27,7 +27,7 @@ RES_PATH = os.path.join(os.path.dirname(rally.__file__), os.pardir, "etc")
 
 class BashCompletionTestCase(test.TestCase):
     def test_bash_completion(self):
-        with open(os.path.join(RES_PATH, "rally.bash_completion"), "r") as f:
+        with open(os.path.join(RES_PATH, "rally.bash_completion")) as f:
             old = f.read().splitlines()
         new = bashcomplete.generate().splitlines()
         if old != new:

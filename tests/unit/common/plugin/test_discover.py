@@ -27,7 +27,7 @@ DISCOVER = "rally.common.plugin.discover"
 class IterSubclassesTestCase(test.TestCase):
 
     def test_itersubclasses(self):
-        class A(object):
+        class A:
             pass
 
         class B(A):
@@ -42,7 +42,7 @@ class IterSubclassesTestCase(test.TestCase):
         self.assertEqual([B, C, D], list(discover.itersubclasses(A)))
 
     def test_itersubclasses_with_multiple_inheritance(self):
-        class A(object):
+        class A:
             pass
 
         class B(A):
@@ -164,7 +164,7 @@ class LoadExtraModulesTestCase(test.TestCase):
             dist: Dist
             load: mock.Mock
 
-        class LoadedPackage(object):
+        class LoadedPackage:
             def __init__(self, name, path=None, file=None):
                 self.__name__ = name
                 if path is not None:

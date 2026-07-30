@@ -24,7 +24,7 @@ from rally.task import utils
 from tests.unit import test
 
 
-class FakeResource(object):
+class FakeResource:
 
     def __init__(self, manager=None, name=None, status="ACTIVE", items=None,
                  deployment_uuid=None, id=None):
@@ -46,10 +46,10 @@ class FakeResource(object):
         return self.items[key]
 
 
-class FakeManager(object):
+class FakeManager:
 
     def __init__(self):
-        super(FakeManager, self).__init__()
+        super().__init__()
         self.cache = {}
         self.resources_order = []
 
@@ -213,7 +213,7 @@ class TaskUtilsTestCase(test.TestCase):
 class WaitForTestCase(test.TestCase):
 
     def setUp(self):
-        super(WaitForTestCase, self).setUp()
+        super().setUp()
 
         self.resource = FakeResource()
         self.load_secs = 0.01
@@ -277,7 +277,7 @@ def action_two(self, *args, **kwargs):
 class ActionBuilderTestCase(test.TestCase):
 
     def setUp(self):
-        super(ActionBuilderTestCase, self).setUp()
+        super().setUp()
         self.mock_one = "%s.action_one" % __name__
         self.mock_two = "%s.action_two" % __name__
 

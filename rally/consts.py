@@ -29,8 +29,8 @@ JSON_SCHEMA7 = "http://json-schema.org/draft-07/schema"
 
 
 class _TaskStatus(utils.ImmutableMixin, utils.EnumMixin):
-
     """Consts that represents task possible states."""
+
     INIT = "init"
     VALIDATING = "validating"
     VALIDATED = "validated"
@@ -46,8 +46,8 @@ class _TaskStatus(utils.ImmutableMixin, utils.EnumMixin):
 
 
 class _SubtaskStatus(utils.ImmutableMixin, utils.EnumMixin):
-
     """Consts that represents task possible states."""
+
     INIT = "init"
     VALIDATING = "validating"
     VALIDATED = "validated"
@@ -183,6 +183,7 @@ class _ServiceType(utils.ImmutableMixin, utils.EnumMixin):
 
 class _HookStatus(utils.ImmutableMixin, utils.EnumMixin):
     """Hook result statuses."""
+
     SUCCESS = "success"
     FAILED = "failed"
     VALIDATION_FAILED = "validation_failed"
@@ -196,6 +197,7 @@ class _TagType(utils.ImmutableMixin, utils.EnumMixin):
 
 class _VerifierStatus(utils.ImmutableMixin, utils.EnumMixin):
     """Verifier statuses."""
+
     INIT = "init"
     INSTALLING = "installing"
     INSTALLED = "installed"
@@ -208,6 +210,7 @@ class _VerifierStatus(utils.ImmutableMixin, utils.EnumMixin):
 #   to update doc reference too
 class _VerificationStatus(utils.ImmutableMixin, utils.EnumMixin):
     """Verification statuses."""
+
     INIT = "init"
     RUNNING = "running"
     FINISHED = "finished"
@@ -217,6 +220,7 @@ class _VerificationStatus(utils.ImmutableMixin, utils.EnumMixin):
 
 class _TimeFormat(utils.ImmutableMixin, utils.EnumMixin):
     """International time formats"""
+
     ISO8601 = "%Y-%m-%dT%H:%M:%S%z"
 
 

@@ -53,10 +53,11 @@ CONF_OPTS = [
     cfg.StrOpt(
         "context_resource_name_format",
         help="A mktemp(1)-like format string that will be used to pattern "
-             "the generated random string. It must contain two separate "
-             "segments of at least three 'X's; the first one will be replaced "
-             "by a portion of the owner ID (i.e task/subtask ID), and the "
-             "second will be replaced with a random string.")
+        "the generated random string. It must contain two separate "
+        "segments of at least three 'X's; the first one will be replaced "
+        "by a portion of the owner ID (i.e task/subtask ID), and the "
+        "second will be replaced with a random string.",
+    )
 ]
 CONF.register_opts(CONF_OPTS)
 
@@ -80,8 +81,9 @@ def configure(
     """
 
     def wrapper(cls: type[C]) -> type[C]:
-        cls = plugin.configure(name=name, platform=platform,
-                               hidden=hidden)(cls)
+        cls = plugin.configure(name=name, platform=platform, hidden=hidden)(
+            cls
+        )
         cls._meta_set("order", order)
         return cls
 
@@ -108,9 +110,13 @@ def add_default_context(
 
 # TODO(andreykurilin): BaseContext is used by Task and Verification and should
 #                      be moved to common place
-class BaseContext(plugin.Plugin, functional.FunctionalMixin,
-                  utils.RandomNameGeneratorMixin, atomic.ActionTimerMixin,
-                  metaclass=abc.ABCMeta):
+class BaseContext(
+    plugin.Plugin,
+    functional.FunctionalMixin,
+    utils.RandomNameGeneratorMixin,
+    atomic.ActionTimerMixin,
+    metaclass=abc.ABCMeta,
+):
     """This class is a factory for context classes.
 
     Every context class should be a subclass of this class and implement
@@ -123,13 +129,14 @@ class BaseContext(plugin.Plugin, functional.FunctionalMixin,
         4) Order of context creation
 
     """
+
     RESOURCE_NAME_FORMAT = "c_rally_XXXXXXXX_XXXXXXXX"
 
     CONFIG_SCHEMA: dict[str, t.Any] = {"type": "null"}
     config: t.Any
 
     def __init__(self, ctx: dict[str, t.Any]) -> None:
-        super(BaseContext, self).__init__()
+        super().__init__()
         config = ctx.get("config", {})
         if self.get_name() in config:
             # TODO(boris-42): Fix tests, code is always using fullnames
@@ -146,7 +153,8 @@ class BaseContext(plugin.Plugin, functional.FunctionalMixin,
                 for key, value in self.DEFAULT_CONFIG.items():
                     config.setdefault(key, value)
             self.config: utils.LockedDict | tuple[t.Any, ...] | t.Any = (
-                utils.LockedDict(config))
+                utils.LockedDict(config)
+            )
         elif isinstance(config, list):
             self.config = tuple(config)
         else:
@@ -219,19 +227,22 @@ class BaseContext(plugin.Plugin, functional.FunctionalMixin,
 @plugin.base()
 class Context(BaseContext, validation.ValidatablePluginMixin):
     """The base class for task contexts."""
+
     def __init__(self, ctx: dict[str, t.Any]) -> None:
-        super(Context, self).__init__(ctx)
+        super().__init__(ctx)
         self.task = self.context.get("task", {})
 
     @classmethod
     def _get_resource_name_format(cls) -> str:
-        return (CONF.context_resource_name_format
-                or super(Context, cls)._get_resource_name_format())
+        return (
+            CONF.context_resource_name_format
+            or super()._get_resource_name_format()
+        )
 
     def get_owner_id(self) -> str | None:
         if "owner_id" in self.context:
             return self.context["owner_id"]
-        return super(Context, self).get_owner_id()
+        return super().get_owner_id()
 
 
 class ContextManager:
@@ -241,15 +252,18 @@ class ContextManager:
         self._visited: list[BaseContext] = []
         self.context_obj = context_obj
         self._data: collections.OrderedDict[str, _ContextExecutionData] = (
-            collections.OrderedDict())
+            collections.OrderedDict()
+        )
 
     def contexts_results(self) -> list[_ContextExecutionData]:
         """Returns a list with contexts execution results."""
         return list(self._data.values())
 
     def _get_sorted_context_lst(self) -> list[BaseContext]:
-        ctx_lst = [Context.get(name, allow_hidden=True)
-                   for name in self.context_obj["config"]]
+        ctx_lst = [
+            Context.get(name, allow_hidden=True)
+            for name in self.context_obj["config"]
+        ]
         ctx_lst.sort(key=lambda x: x.get_order())
         return [c(self.context_obj) for c in ctx_lst]
 
@@ -267,20 +281,21 @@ class ContextManager:
                     "started_at": None,
                     "finished_at": None,
                     "atomic_actions": None,
-                    "error": None
+                    "error": None,
                 },
                 "cleanup": {
                     "started_at": None,
                     "finished_at": None,
                     "atomic_actions": None,
-                    "error": None
-                }
+                    "error": None,
+                },
             }
             self._data[ctx.get_fullname()] = ctx_data
             self._visited.append(ctx)
-            msg = ("%(log_prefix)s Context %(name)s setup() "
-                   % {"log_prefix": self._log_prefix(),
-                      "name": ctx.get_fullname()})
+            msg = "%(log_prefix)s Context %(name)s setup() " % {
+                "log_prefix": self._log_prefix(),
+                "name": ctx.get_fullname(),
+            }
 
             timer = utils.Timer()
             try:
@@ -294,8 +309,10 @@ class ContextManager:
                 ctx_data["setup"]["started_at"] = timer.timestamp()
                 ctx_data["setup"]["finished_at"] = timer.finish_timestamp()
 
-            LOG.info("%(msg)s finished in %(duration)s"
-                     % {"msg": msg, "duration": timer.duration(fmt=True)})
+            LOG.info(
+                "%(msg)s finished in %(duration)s"
+                % {"msg": msg, "duration": timer.duration(fmt=True)}
+            )
 
         return self.context_obj
 
@@ -304,9 +321,10 @@ class ContextManager:
         ctxlst = self._visited or self._get_sorted_context_lst()
         for ctx in ctxlst[::-1]:
             ctx.reset_atomic_actions()
-            msg = ("%(log_prefix)s Context %(name)s cleanup()"
-                   % {"log_prefix": self._log_prefix(),
-                      "name": ctx.get_fullname()})
+            msg = "%(log_prefix)s Context %(name)s cleanup()" % {
+                "log_prefix": self._log_prefix(),
+                "name": ctx.get_fullname(),
+            }
             # NOTE(andreykurilin): As for our code, ctx_data is
             #   always presented. The further checks for `ctx_data is None` are
             #   added just for "disaster cleanup". It is not officially
@@ -322,12 +340,15 @@ class ContextManager:
                 with timer:
                     LOG.info("%s started" % msg)
                     ctx.cleanup()
-                LOG.info("%(msg)s finished in %(duration)s"
-                         % {"msg": msg, "duration": timer.duration(fmt=True)})
+                LOG.info(
+                    "%(msg)s finished in %(duration)s"
+                    % {"msg": msg, "duration": timer.duration(fmt=True)}
+                )
             except Exception as exc:
                 LOG.exception(
                     "%(msg)s failed after %(duration)s"
-                    % {"msg": msg, "duration": timer.duration(fmt=True)})
+                    % {"msg": msg, "duration": timer.duration(fmt=True)}
+                )
                 if ctx_data is not None:
                     ctx_data["cleanup"]["error"] = task_utils.format_exc(exc)
             finally:

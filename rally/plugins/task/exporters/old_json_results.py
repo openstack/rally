@@ -23,7 +23,7 @@ from rally.task import exporter
 
 
 def _to_old_atomic_actions_format(atomic_actions):
-    """Convert atomic actions to old format. """
+    """Convert atomic actions to old format."""
     old_style = collections.OrderedDict()
     for action in atomic_actions:
         duration = action["finished_at"] - action["started_at"]
@@ -41,18 +41,21 @@ def _to_old_atomic_actions_format(atomic_actions):
 @exporter.configure("old-json-results")
 class OldJSONExporter(exporter.TaskExporter):
     """Generates task report in JSON format as old `rally task results`."""
+
     def __init__(self, *args, **kwargs):
-        super(OldJSONExporter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if len(self.tasks_results) != 1:
             raise exceptions.RallyException(
                 f"'{self.get_fullname()}' task exporter can be used only for "
-                f"a one task.")
+                f"a one task."
+            )
         self.task = self.tasks_results[0]
 
     def _get_report(self):
         results = []
-        for w in itertools.chain(*[s["workloads"]
-                                   for s in self.task["subtasks"]]):
+        for w in itertools.chain(
+            *[s["workloads"] for s in self.task["subtasks"]]
+        ):
             for itr in w["data"]:
                 itr["atomic_actions"] = _to_old_atomic_actions_format(
                     itr["atomic_actions"]
@@ -65,36 +68,42 @@ class OldJSONExporter(exporter.TaskExporter):
                     "name": h["config"]["action"][0],
                     "args": h["config"]["action"][1],
                     "description": h["config"].get("description", ""),
-                    "trigger": {"name": h["config"]["trigger"][0],
-                                "args": h["config"]["trigger"][1]}
+                    "trigger": {
+                        "name": h["config"]["trigger"][0],
+                        "args": h["config"]["trigger"][1],
+                    },
                 }
                 return h
 
             hooks = [port_hook_cfg(h) for h in w["hooks"]]
 
-            created_at = dt.datetime.strptime(w["created_at"],
-                                              "%Y-%m-%dT%H:%M:%S")
+            created_at = dt.datetime.strptime(
+                w["created_at"], "%Y-%m-%dT%H:%M:%S"
+            )
             created_at = created_at.strftime("%Y-%d-%mT%H:%M:%S")
 
-            results.append({
-                "key": {
-                    "name": w["name"],
-                    "description": w["description"],
-                    "pos": w["position"],
-                    "kw": {
-                        "args": w["args"],
-                        "runner": w["runner"],
-                        "context": w["contexts"],
-                        "sla": w["sla"],
-                        "hooks": [h["config"] for h in w["hooks"]],
-                    }
-                },
-                "result": w["data"],
-                "sla": w["sla_results"].get("sla", []),
-                "hooks": hooks,
-                "load_duration": w["load_duration"],
-                "full_duration": w["full_duration"],
-                "created_at": created_at})
+            results.append(
+                {
+                    "key": {
+                        "name": w["name"],
+                        "description": w["description"],
+                        "pos": w["position"],
+                        "kw": {
+                            "args": w["args"],
+                            "runner": w["runner"],
+                            "context": w["contexts"],
+                            "sla": w["sla"],
+                            "hooks": [h["config"] for h in w["hooks"]],
+                        },
+                    },
+                    "result": w["data"],
+                    "sla": w["sla_results"].get("sla", []),
+                    "hooks": hooks,
+                    "load_duration": w["load_duration"],
+                    "full_duration": w["full_duration"],
+                    "created_at": created_at,
+                }
+            )
 
         return results
 
@@ -102,10 +111,13 @@ class OldJSONExporter(exporter.TaskExporter):
         if len(self.tasks_results) != 1:
             raise exceptions.RallyException(
                 f"'{self.get_fullname()}' task exporter can be used only for "
-                f"a one task.")
+                f"a one task."
+            )
 
-        finished_statuses = (consts.TaskStatus.FINISHED,
-                             consts.TaskStatus.ABORTED)
+        finished_statuses = (
+            consts.TaskStatus.FINISHED,
+            consts.TaskStatus.ABORTED,
+        )
         if self.task["status"] not in finished_statuses:
             raise exceptions.RallyException(
                 f"Task status is {self.task['status']}. Results available "
@@ -115,7 +127,9 @@ class OldJSONExporter(exporter.TaskExporter):
         results = json.dumps(self._get_report(), sort_keys=False, indent=4)
 
         if self.output_destination:
-            return {"files": {self.output_destination: results},
-                    "open": "file://" + self.output_destination}
+            return {
+                "files": {self.output_destination: results},
+                "open": "file://" + self.output_destination,
+            }
         else:
             return {"print": results}

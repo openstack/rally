@@ -43,7 +43,7 @@ task_helper = sa.Table(
     sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
     sa.Column("uuid", sa.String(36), nullable=False),
     sa.Column("task_duration", sa.Float()),
-    sa.Column("pass_sla", sa.Boolean())
+    sa.Column("pass_sla", sa.Boolean()),
 )
 
 subtask_helper = sa.Table(
@@ -52,7 +52,7 @@ subtask_helper = sa.Table(
     sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
     sa.Column("uuid", sa.String(36), nullable=False),
     sa.Column("duration", sa.Float()),
-    sa.Column("pass_sla", sa.Boolean())
+    sa.Column("pass_sla", sa.Boolean()),
 )
 
 workload_helper = sa.Table(
@@ -89,16 +89,22 @@ def upgrade() -> None:
             subtasks[w.subtask_uuid]["pass_sla"] = False
 
     for subtask in connection.execute(subtask_helper.select()):
-        values = subtasks.get(subtask.uuid, {"duration": 0.0,
-                                             "pass_sla": True})
-        connection.execute(subtask_helper.update().where(
-            subtask_helper.c.id == subtask.id).values(**values))
+        values = subtasks.get(
+            subtask.uuid, {"duration": 0.0, "pass_sla": True}
+        )
+        connection.execute(
+            subtask_helper.update()
+            .where(subtask_helper.c.id == subtask.id)
+            .values(**values)
+        )
 
     for task in connection.execute(task_helper.select()):
-        values = tasks.get(task.uuid, {"task_duration": 0.0,
-                                       "pass_sla": True})
-        connection.execute(task_helper.update().where(
-            task_helper.c.id == task.id).values(**values))
+        values = tasks.get(task.uuid, {"task_duration": 0.0, "pass_sla": True})
+        connection.execute(
+            task_helper.update()
+            .where(task_helper.c.id == task.id)
+            .values(**values)
+        )
 
 
 def downgrade() -> None:

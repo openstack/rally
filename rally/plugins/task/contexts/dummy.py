@@ -23,12 +23,13 @@ from rally.task import context
 @context.configure(name="dummy_context", order=750)
 class DummyContext(context.Context):
     """Dummy context."""
+
     CONFIG_SCHEMA = {
         "type": "object",
         "$schema": consts.JSON_SCHEMA,
         "properties": {
             "fail_setup": {"type": "boolean"},
-            "fail_cleanup": {"type": "boolean"}
+            "fail_cleanup": {"type": "boolean"},
         },
         "additionalProperties": False,
     }

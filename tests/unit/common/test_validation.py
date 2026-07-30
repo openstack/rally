@@ -49,7 +49,7 @@ class DummyValidator(validation.Validator):
         :param foo: additional parameter for Dummy validator
         :param exc: whether to raise expected on unexpected error
         """
-        super(DummyValidator, self).__init__()
+        super().__init__()
         self.foo = foo
         self.exc = exc
 
@@ -90,7 +90,7 @@ class ValidatorTestCase(test.TestCase):
         result = DummyPluginBase.validate(
             name="dummy_plugin", context=ctx, config={}, plugin_cfg={})
         self.assertEqual(1, len(result))
-        self.assertIn("raise Exception(\"foo\")", result[0])
+        self.assertIn('raise Exception("foo")', result[0])
 
         DummyPlugin.unregister()
 

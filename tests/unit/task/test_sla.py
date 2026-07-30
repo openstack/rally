@@ -25,7 +25,7 @@ from tests.unit import test
 class SLABaseForTestCase(test.TestCase):
 
     def setUp(self):
-        super(SLABaseForTestCase, self).setUp()
+        super().setUp()
 
         @plugin.configure(name="test_criterion")
         class FakeCriterion(sla.SLA):

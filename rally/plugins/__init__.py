@@ -61,4 +61,5 @@ def ensure_plugins_are_loaded(func: t.Callable[P, R]) -> t.Callable[P, R]:
     def wrapper(*args: t.Any, **kwargs: t.Any) -> R:
         load()
         return func(*args, **kwargs)
+
     return wrapper

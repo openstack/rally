@@ -22,7 +22,7 @@ from tests.unit import test
 
 class VerifierTestCase(test.TestCase):
     def setUp(self):
-        super(VerifierTestCase, self).setUp()
+        super().setUp()
 
         self.db_obj = {"uuid": "uuid-1"}
 

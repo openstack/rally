@@ -44,8 +44,10 @@ from rally.utils import strutils
 LOG = logging.getLogger(__name__)
 
 task_app = typer.Typer(
-    name="task", no_args_is_help=False,
-    help="Run scenario tests and benchmarks.")
+    name="task",
+    no_args_is_help=False,
+    help="Run scenario tests and benchmarks.",
+)
 
 
 class FailedToLoadTask(exceptions.RallyException):
@@ -54,7 +56,9 @@ class FailedToLoadTask(exceptions.RallyException):
 
 
 def _load_and_validate_task(
-    api: API, task_file: str, args_file: str | None = None,
+    api: API,
+    task_file: str,
+    args_file: str | None = None,
     raw_args: str | None = None,
 ) -> t.Any:
     """Load, render and validate tasks template from file with passed args.
@@ -80,10 +84,11 @@ def _load_and_validate_task(
         try:
             with open(task_file) as f:
                 input_task = f.read()
-        except IOError as err:
+        except OSError as err:
             raise FailedToLoadTask(
                 source="task file",
-                msg="Error reading %s: %s" % (task_file, err))
+                msg="Error reading %s: %s" % (task_file, err),
+            )
         task_dir = os.path.expanduser(os.path.dirname(task_file)) or "./"
 
     task_args = {}
@@ -94,10 +99,11 @@ def _load_and_validate_task(
             try:
                 with open(args_file) as f:
                     args_data = f.read()
-            except IOError as err:
+            except OSError as err:
                 raise FailedToLoadTask(
                     source="--task-args-file",
-                    msg="Error reading %s: %s" % (args_file, err))
+                    msg="Error reading %s: %s" % (args_file, err),
+                )
 
         try:
             task_args.update(yaml.safe_load(args_data))
@@ -105,33 +111,35 @@ def _load_and_validate_task(
             raise FailedToLoadTask(
                 source="--task-args-file",
                 msg="File '%s' has to be YAML or JSON. Details:\n\n%s"
-                % (args_file, e))
+                % (args_file, e),
+            )
 
     if raw_args:
         try:
             data = yaml.safe_load(raw_args)
             if isinstance(data, str):
-                raise yaml.ParserError("String '%s' doesn't look like a "
-                                       "dictionary." % raw_args)
+                raise yaml.ParserError(
+                    "String '%s' doesn't look like a dictionary." % raw_args
+                )
             task_args.update(data)
         except yaml.ParserError as e:
-            args = [keypair.split("=", 1)
-                    for keypair in raw_args.split(",")]
+            args = [keypair.split("=", 1) for keypair in raw_args.split(",")]
             if len([a for a in args if len(a) != 1]) != len(args):
                 raise FailedToLoadTask(
                     source="--task-args",
-                    msg="Value has to be YAML or JSON. Details:\n\n%s" % e)
+                    msg="Value has to be YAML or JSON. Details:\n\n%s" % e,
+                )
             else:
                 task_args.update(dict(args))
 
     try:
-        rendered_task = api.task.render_template(task_template=input_task,
-                                                 template_dir=task_dir,
-                                                 **task_args)
+        rendered_task = api.task.render_template(
+            task_template=input_task, template_dir=task_dir, **task_args
+        )
     except Exception as e:
         raise FailedToLoadTask(
-            source="task file",
-            msg="Failed to render task template.\n\n%s" % e)
+            source="task file", msg="Failed to render task template.\n\n%s" % e
+        )
 
     print("Task is:\n%s\n" % rendered_task.strip())
     try:
@@ -140,15 +148,19 @@ def _load_and_validate_task(
         raise FailedToLoadTask(
             source="task file",
             msg="Wrong format of rendered input task. It should be YAML or"
-                " JSON. Details:\n\n%s" % e)
+            " JSON. Details:\n\n%s" % e,
+        )
 
     print("Task syntax is correct :)")
     return parsed_task
 
 
 def _print_task_errors(task_id: t.Any, task_errors: list) -> None:
-    print(cliutils.make_header("Task %s has %d error(s)" %
-                               (task_id, len(task_errors))))
+    print(
+        cliutils.make_header(
+            "Task %s has %d error(s)" % (task_id, len(task_errors))
+        )
+    )
     for err_data in task_errors:
         print(*err_data, sep="\n")
         print("-" * 80)
@@ -164,9 +176,11 @@ def _format_task_error(data: dict) -> tuple:
         error_traceback = data["error"][2]
     except IndexError:
         pass
-    return ("%(error_type)s: %(error_message)s\n" %
-            {"error_type": error_type, "error_message": error_message},
-            error_traceback)
+    return (
+        "%(error_type)s: %(error_message)s\n"
+        % {"error_type": error_type, "error_message": error_message},
+        error_traceback,
+    )
 
 
 def _use(api: API, task_id: str) -> None:
@@ -175,16 +189,24 @@ def _use(api: API, task_id: str) -> None:
     envutils.update_globals_file("RALLY_TASK", task_id)
 
 
-def _start_task(api: API, deployment: t.Any, task_config: t.Any,
-                tags: list | None = None, do_use: bool = False,
-                abort_on_sla_failure: bool = False) -> int:
+def _start_task(
+    api: API,
+    deployment: t.Any,
+    task_config: t.Any,
+    tags: list | None = None,
+    do_use: bool = False,
+    abort_on_sla_failure: bool = False,
+) -> int:
     try:
         task_instance = api.task.create(deployment=deployment, tags=tags)
         tags = "[tags: '%s']" % "', '".join(tags) if tags else ""
 
-        print(cliutils.make_header(
-            "Task %(tags)s %(uuid)s: started"
-            % {"uuid": task_instance["uuid"], "tags": tags}))
+        print(
+            cliutils.make_header(
+                "Task %(tags)s %(uuid)s: started"
+                % {"uuid": task_instance["uuid"], "tags": tags}
+            )
+        )
         print("Running Task... This can take a while...\n")
         print("To track task status use:\n")
         print("\trally task status\n\tor\n\trally task detailed\n")
@@ -192,9 +214,12 @@ def _start_task(api: API, deployment: t.Any, task_config: t.Any,
         if do_use:
             _use(api, task_instance["uuid"])
 
-        api.task.start(deployment=deployment, config=task_config,
-                       task=task_instance["uuid"],
-                       abort_on_sla_failure=abort_on_sla_failure)
+        api.task.start(
+            deployment=deployment,
+            config=task_config,
+            task=task_instance["uuid"],
+            abort_on_sla_failure=abort_on_sla_failure,
+        )
 
     except exceptions.DeploymentNotFinishedStatus as e:
         print("Cannot start a task on unfinished deployment: %s" % e)
@@ -206,9 +231,14 @@ def _start_task(api: API, deployment: t.Any, task_config: t.Any,
 
 
 @plugins.ensure_plugins_are_loaded
-def _export(api: API, tasks: t.Any = None, output_type: str | None = None,
-            output_dest: str | None = None, open_it: bool = False,
-            deployment: str | None = None) -> None:
+def _export(
+    api: API,
+    tasks: t.Any = None,
+    output_type: str | None = None,
+    output_dest: str | None = None,
+    open_it: bool = False,
+    deployment: str | None = None,
+) -> None:
     if deployment is not None:
         tasks = api.task.list(deployment=deployment, uuids_only=True)
         tasks = [task["uuid"] for task in tasks]
@@ -222,9 +252,9 @@ def _export(api: API, tasks: t.Any = None, output_type: str | None = None,
         else:
             exported_tasks.append(task_file_or_uuid)
 
-    report = api.task.export(tasks=exported_tasks,
-                             output_type=output_type,
-                             output_dest=output_dest)
+    report = api.task.export(
+        tasks=exported_tasks, output_type=output_type, output_dest=output_dest
+    )
     if "files" in report:
         for path in report["files"]:
             output_file = os.path.expanduser(path)
@@ -238,9 +268,12 @@ def _export(api: API, tasks: t.Any = None, output_type: str | None = None,
         print(report["print"])
 
 
-def _detailed(api: API, task_id: str | None = None,
-              iterations_data: bool = False,
-              filters: list | None = None) -> int | None:
+def _detailed(
+    api: API,
+    task_id: str | None = None,
+    iterations_data: bool = False,
+    filters: list | None = None,
+) -> int | None:
     """Print detailed information about given task."""
     scenarios_filter = []
     only_sla_failures = False
@@ -255,11 +288,14 @@ def _detailed(api: API, task_id: str | None = None,
 
     print()
     print("-" * 80)
-    print("Task %(task_id)s: %(status)s"
-          % {"task_id": task_id, "status": task["status"]})
+    print(
+        "Task %(task_id)s: %(status)s"
+        % {"task_id": task_id, "status": task["status"]}
+    )
 
     if task["status"] == consts.TaskStatus.CRASHED or task["status"] == (
-            consts.TaskStatus.VALIDATION_FAILED):
+        consts.TaskStatus.VALIDATION_FAILED
+    ):
         print("-" * 80)
         validation = task["validation_result"]
         if logging.is_debug():
@@ -267,19 +303,26 @@ def _detailed(api: API, task_id: str | None = None,
         else:
             print(validation["etype"])
             print(validation["msg"])
-            print("\nFor more details run:\nrally -d task detailed %s"
-                  % task["uuid"])
+            print(
+                "\nFor more details run:\nrally -d task detailed %s"
+                % task["uuid"]
+            )
         return 0
-    elif task["status"] not in [consts.TaskStatus.FINISHED,
-                                consts.TaskStatus.ABORTED]:
+    elif task["status"] not in [
+        consts.TaskStatus.FINISHED,
+        consts.TaskStatus.ABORTED,
+    ]:
         print("-" * 80)
-        print("\nThe task %s marked as '%s'. Results "
-              "available when it is '%s'."
-              % (task_id, task["status"], consts.TaskStatus.FINISHED))
+        print(
+            "\nThe task %s marked as '%s'. Results "
+            "available when it is '%s'."
+            % (task_id, task["status"], consts.TaskStatus.FINISHED)
+        )
         return 0
 
     for workload in itertools.chain(
-            *[s["workloads"] for s in task["subtasks"]]):
+        *[s["workloads"] for s in task["subtasks"]]
+    ):
         if scenarios_filter and workload["name"] not in scenarios_filter:
             continue
         if only_sla_failures and workload["pass_sla"]:
@@ -290,13 +333,18 @@ def _detailed(api: API, task_id: str | None = None,
         print("test scenario %s" % workload["name"])
         print("args position %s" % workload["position"])
         print("args values:")
-        print(json.dumps(
-            {"args": workload["args"],
-             "runner": workload["runner"],
-             "contexts": workload["contexts"],
-             "sla": workload["sla"],
-             "hooks": [r["config"] for r in workload["hooks"]]},
-            indent=2))
+        print(
+            json.dumps(
+                {
+                    "args": workload["args"],
+                    "runner": workload["runner"],
+                    "contexts": workload["contexts"],
+                    "sla": workload["sla"],
+                    "hooks": [r["config"] for r in workload["hooks"]],
+                },
+                indent=2,
+            )
+        )
         print()
 
         duration_stats = workload["statistics"]["durations"]
@@ -307,20 +355,21 @@ def _detailed(api: API, task_id: str | None = None,
         output: list = []
         task_errors = []
         if iterations_data:
-            atomic_names = [a["display_name"]
-                            for a in duration_stats["atomics"]]
+            atomic_names = [
+                a["display_name"] for a in duration_stats["atomics"]
+            ]
             for i, atomic_name in enumerate(atomic_names, 1):
                 action = "%i. %s" % (i, atomic_name)
                 iterations_headers.append(action)
                 iterations_actions.append((atomic_name, action))
 
         for idx, itr in enumerate(workload["data"], 1):
-
             if iterations_data:
                 row = {"iteration": idx, "duration": itr["duration"]}
                 for name, action in iterations_actions:
                     atomic_actions = atomic.merge_atomic_actions(
-                        itr["atomic_actions"])
+                        itr["atomic_actions"]
+                    )
                     action_info: t.Any = atomic_actions.get(name, {})
                     row[action] = action_info.get("duration", 0)
                 iterations.append(row)
@@ -333,7 +382,8 @@ def _detailed(api: API, task_id: str | None = None,
             for idx, additive in enumerate(iteration_output["additive"]):
                 if len(output) <= idx + 1:
                     output_table = charts.OutputStatsTable(
-                        workload, title=additive["title"])
+                        workload, title=additive["title"]
+                    )
                     output.append(output_table)
                 output[idx].add_iteration(additive["data"])
 
@@ -352,47 +402,66 @@ def _detailed(api: API, task_id: str | None = None,
             "Max (sec)": lambda x: x["data"]["max"],
             "Avg (sec)": lambda x: x["data"]["avg"],
             "Success": lambda x: x["data"]["success"],
-            "Count": lambda x: x["data"]["iteration_count"]
+            "Count": lambda x: x["data"]["iteration_count"],
         }
 
         rows = []
 
         def make_flat(r: dict, depth: int = 0) -> None:
             if depth > 0:
-                r["display_name"] = (" %s> %s" % ("-" * depth,
-                                                  r["display_name"]))
+                r["display_name"] = " %s> %s" % (
+                    "-" * depth,
+                    r["display_name"],
+                )
 
             rows.append(r)
             for children in r["children"]:
                 make_flat(children, depth + 1)
 
-        for row in itertools.chain(duration_stats["atomics"],
-                                   [duration_stats["total"]]):
+        for row in itertools.chain(
+            duration_stats["atomics"], [duration_stats["total"]]
+        ):
             make_flat(row)
-        cliutils.print_list(rows,
-                            fields=cols,
-                            formatters=formatters,
-                            normalize_field_names=True,
-                            table_label="Response Times (sec)",
-                            sortby_index=None)
+        cliutils.print_list(
+            rows,
+            fields=cols,
+            formatters=formatters,
+            normalize_field_names=True,
+            table_label="Response Times (sec)",
+            sortby_index=None,
+        )
         print()
 
         if iterations_data:
-            formatters = dict(zip(iterations_headers[1:],
-                                  [cliutils.pretty_float_formatter(col, 3)
-                                   for col in iterations_headers[1:]]))
-            cliutils.print_list(iterations,
-                                fields=iterations_headers,
-                                table_label="Atomics per iteration",
-                                formatters=formatters)
+            formatters = dict(
+                zip(
+                    iterations_headers[1:],
+                    [
+                        cliutils.pretty_float_formatter(col, 3)
+                        for col in iterations_headers[1:]
+                    ],
+                )
+            )
+            cliutils.print_list(
+                iterations,
+                fields=iterations_headers,
+                table_label="Atomics per iteration",
+                formatters=formatters,
+            )
             print()
 
         if output:
             cols = charts.OutputStatsTable.columns
             float_cols = cols[1:7]
-            formatters = dict(zip(float_cols,
-                              [cliutils.pretty_float_formatter(col, 3)
-                               for col in float_cols]))
+            formatters = dict(
+                zip(
+                    float_cols,
+                    [
+                        cliutils.pretty_float_formatter(col, 3)
+                        for col in float_cols
+                    ],
+                )
+            )
 
             for out in output:
                 data = out.render()
@@ -401,24 +470,30 @@ def _detailed(api: API, task_id: str | None = None,
                     # NOTE(amaretskiy): print title explicitly because
                     #     prettytable fails if title length is too long
                     print(data["title"])
-                    cliutils.print_list(rows, fields=cols,
-                                        formatters=formatters)
+                    cliutils.print_list(
+                        rows, fields=cols, formatters=formatters
+                    )
                     print()
 
-        print("Load duration: %s"
-              % strutils.format_float_to_str(workload["load_duration"]))
-        print("Full duration: %s"
-              % strutils.format_float_to_str(workload["full_duration"]))
+        print(
+            "Load duration: %s"
+            % strutils.format_float_to_str(workload["load_duration"])
+        )
+        print(
+            "Full duration: %s"
+            % strutils.format_float_to_str(workload["full_duration"])
+        )
 
     print("\nHINTS:")
     print("* To plot HTML graphics with this data, run:")
     print("\trally task report %s --out output.html\n" % task["uuid"])
     print("* To generate a JUnit report, run:")
-    print("\trally task export %s --type junit-xml --to output.xml\n" %
-          task["uuid"])
+    print(
+        "\trally task export %s --type junit-xml --to output.xml\n"
+        % task["uuid"]
+    )
     print("* To get raw JSON output of task results, run:")
-    print("\trally task report %s --json --out output.json\n" %
-          task["uuid"])
+    print("\trally task report %s --json --out output.json\n" % task["uuid"])
 
     if not task["pass_sla"]:
         print("At least one workload did not pass SLA criteria.\n")
@@ -431,9 +506,10 @@ def validate(
     task_file: t.Annotated[
         str,
         argutils.ArgumentOrKeyword(
-            "--task", "--filename",
-            help="Path to the input task file (or '-' for stdin)."
-        )
+            "--task",
+            "--filename",
+            help="Path to the input task file (or '-' for stdin).",
+        ),
     ],
     env: t.Annotated[
         str,
@@ -441,23 +517,23 @@ def validate(
             "--env",
             deprecated=["--deployment"],
             envvar=envutils.ENV_ENV,
-            help="UUID or name of the environment."
-        )
+            help="UUID or name of the environment.",
+        ),
     ],
     task_args: t.Annotated[
         str | None,
         typer.Option(
             help="Input task args (JSON dict). These args are used to render "
-                 "the Jinja2 template in the input task."
-        )
+            "the Jinja2 template in the input task."
+        ),
     ] = None,
     task_args_file: t.Annotated[
         str | None,
         typer.Option(
             help="Path to the file with input task args (dict in JSON/YAML). "
-                 "These args are used to render the Jinja2 template in the "
-                 "input task."
-        )
+            "These args are used to render the Jinja2 template in the "
+            "input task."
+        ),
     ] = None,
 ) -> None:
     """Validate a task configuration file.
@@ -470,8 +546,9 @@ def validate(
     values from task_args_file.
     """
     api = cliutils.get_api()
-    task = _load_and_validate_task(api, task_file, raw_args=task_args,
-                                   args_file=task_args_file)
+    task = _load_and_validate_task(
+        api, task_file, raw_args=task_args, args_file=task_args_file
+    )
 
     api.task.validate(deployment=env, config=task)
 
@@ -484,9 +561,10 @@ def start(
     task_file: t.Annotated[
         str,
         argutils.ArgumentOrKeyword(
-            "--task", "--filename",
-            help="Path to the input task file (or '-' for stdin)."
-        )
+            "--task",
+            "--filename",
+            help="Path to the input task file (or '-' for stdin).",
+        ),
     ],
     env: t.Annotated[
         str,
@@ -494,45 +572,42 @@ def start(
             "--env",
             deprecated=["--deployment"],
             envvar=envutils.ENV_ENV,
-            help="UUID or name of the environment."
-        )
+            help="UUID or name of the environment.",
+        ),
     ],
     task_args: t.Annotated[
         str | None,
         typer.Option(
             help="Input task args (JSON dict). These args are used to render "
-                 "the Jinja2 template in the input task."
-        )
+            "the Jinja2 template in the input task."
+        ),
     ] = None,
     task_args_file: t.Annotated[
         str | None,
         typer.Option(
             help="Path to the file with input task args (dict in JSON/YAML). "
-                 "These args are used to render the Jinja2 template in the "
-                 "input task."
-        )
+            "These args are used to render the Jinja2 template in the "
+            "input task."
+        ),
     ] = None,
     tags: t.Annotated[
         list[str] | None,
-        typer.Option(
-            "--tag",
-            help="Mark the task with a tag or a few tags."
-        )
+        typer.Option("--tag", help="Mark the task with a tag or a few tags."),
     ] = None,
     no_use: t.Annotated[
         bool,
         typer.Option(
             "--no-use",
-            help="Don't set new task as default for future operations."
-        )
+            help="Don't set new task as default for future operations.",
+        ),
     ] = False,
     abort_on_sla_failure: t.Annotated[
         bool,
         typer.Option(
             "--abort-on-sla-failure",
             help="Abort the execution of a task when any SLA check for it "
-                 "fails for subtask or workload."
-        )
+            "fails for subtask or workload.",
+        ),
     ] = False,
 ) -> None:
     """Run task.
@@ -544,13 +619,19 @@ def start(
     2: sla check failed.
     """
     api = cliutils.get_api()
-    input_task = _load_and_validate_task(api, task_file, raw_args=task_args,
-                                         args_file=task_args_file)
+    input_task = _load_and_validate_task(
+        api, task_file, raw_args=task_args, args_file=task_args_file
+    )
     print("Running Rally version", version.version_string())
 
-    rc = _start_task(api, env, task_config=input_task, tags=tags,
-                     do_use=not no_use,
-                     abort_on_sla_failure=abort_on_sla_failure)
+    rc = _start_task(
+        api,
+        env,
+        task_config=input_task,
+        tags=tags,
+        do_use=not no_use,
+        abort_on_sla_failure=abort_on_sla_failure,
+    )
     if rc:
         raise typer.Exit(code=rc)
 
@@ -564,52 +645,45 @@ def restart(
             "--env",
             deprecated=["--deployment"],
             envvar=envutils.ENV_ENV,
-            help="UUID or name of the environment."
-        )
+            help="UUID or name of the environment.",
+        ),
     ],
     task_id: t.Annotated[
         str,
         argutils.ArgumentOrKeyword(
-            "--uuid",
-            envvar=envutils.ENV_TASK,
-            help="UUID of task."
-        )
+            "--uuid", envvar=envutils.ENV_TASK, help="UUID of task."
+        ),
     ],
     scenarios: t.Annotated[
         list[str] | None,
-        typer.Option(
-            "--scenario",
-            help="scenario name of workload"
-        )
+        typer.Option("--scenario", help="scenario name of workload"),
     ] = None,
     tags: t.Annotated[
         list[str] | None,
-        typer.Option(
-            "--tag",
-            help="Mark the task with a tag or a few tags."
-        )
+        typer.Option("--tag", help="Mark the task with a tag or a few tags."),
     ] = None,
     no_use: t.Annotated[
         bool,
         typer.Option(
             "--no-use",
-            help="Don't set new task as default for future operations."
-        )
+            help="Don't set new task as default for future operations.",
+        ),
     ] = False,
     abort_on_sla_failure: t.Annotated[
         bool,
         typer.Option(
             "--abort-on-sla-failure",
             help="Abort the execution of a task when any SLA check for it "
-                 "fails for subtask or workload."
-        )
+            "fails for subtask or workload.",
+        ),
     ] = False,
 ) -> None:
     """Restart a task or some scenarios in workloads of task."""
     api = cliutils.get_api()
     task = api.task.get(task_id=task_id, detailed=True)
     if task["status"] == consts.TaskStatus.CRASHED or task["status"] == (
-            consts.TaskStatus.VALIDATION_FAILED):
+        consts.TaskStatus.VALIDATION_FAILED
+    ):
         print("-" * 80)
         print("\nUnable to restart task.")
         validation = task["validation_result"]
@@ -618,33 +692,51 @@ def restart(
         else:
             print(validation["etype"])
             print(validation["msg"])
-            print("\nFor more details run:\nrally -d task detailed %s"
-                  % task["uuid"])
+            print(
+                "\nFor more details run:\nrally -d task detailed %s"
+                % task["uuid"]
+            )
         raise typer.Exit(code=1)
-    retask = {"version": 2, "title": task["title"],
-              "description": task["description"],
-              "tags": task["tags"], "subtasks": []}
+    retask = {
+        "version": 2,
+        "title": task["title"],
+        "description": task["description"],
+        "tags": task["tags"],
+        "subtasks": [],
+    }
     for subtask in task["subtasks"]:
         workloads = []
         for workload in subtask["workloads"]:
             if scenarios is None or workload["name"] in scenarios:
-                workloads.append({
-                    "scenario": {workload["name"]: workload["args"]},
-                    "contexts": workload["contexts"],
-                    "runner": {workload["runner_type"]: workload["runner"]},
-                    "hooks": workload["hooks"],
-                    "sla": workload["sla"]
-                })
+                workloads.append(
+                    {
+                        "scenario": {workload["name"]: workload["args"]},
+                        "contexts": workload["contexts"],
+                        "runner": {
+                            workload["runner_type"]: workload["runner"]
+                        },
+                        "hooks": workload["hooks"],
+                        "sla": workload["sla"],
+                    }
+                )
         if workloads:
-            retask["subtasks"].append({
-                "title": subtask["title"],
-                "description": subtask["description"],
-                "workloads": workloads})
+            retask["subtasks"].append(
+                {
+                    "title": subtask["title"],
+                    "description": subtask["description"],
+                    "workloads": workloads,
+                }
+            )
 
     if retask["subtasks"]:
-        rc = _start_task(api, env, retask, tags=tags,
-                         do_use=not no_use,
-                         abort_on_sla_failure=abort_on_sla_failure)
+        rc = _start_task(
+            api,
+            env,
+            retask,
+            tags=tags,
+            do_use=not no_use,
+            abort_on_sla_failure=abort_on_sla_failure,
+        )
         if rc:
             raise typer.Exit(code=rc)
     else:
@@ -657,25 +749,25 @@ def abort(
     task_id: t.Annotated[
         str,
         argutils.ArgumentOrKeyword(
-            "--uuid",
-            envvar=envutils.ENV_TASK,
-            help="UUID of task."
-        )
+            "--uuid", envvar=envutils.ENV_TASK, help="UUID of task."
+        ),
     ],
     soft: t.Annotated[
         bool,
         typer.Option(
             "--soft",
-            help="Abort task after current scenario finishes execution."
-        )
+            help="Abort task after current scenario finishes execution.",
+        ),
     ] = False,
 ) -> None:
     """Abort a running task."""
     if soft:
-        print("INFO: please be informed that soft abort won't stop "
-              "a running workload, but will prevent new ones from "
-              "starting. If you are running task with only one "
-              "scenario, soft abort will not help at all.")
+        print(
+            "INFO: please be informed that soft abort won't stop "
+            "a running workload, but will prevent new ones from "
+            "starting. If you are running task with only one "
+            "scenario, soft abort will not help at all."
+        )
 
     cliutils.get_api().task.abort(task_uuid=task_id, soft=soft, wait=True)
 
@@ -687,16 +779,16 @@ def status(
     task_id: t.Annotated[
         str,
         argutils.ArgumentOrKeyword(
-            "--uuid",
-            envvar=envutils.ENV_TASK,
-            help="UUID of task"
-        )
+            "--uuid", envvar=envutils.ENV_TASK, help="UUID of task"
+        ),
     ],
 ) -> None:
     """Display the current status of a task."""
     task = cliutils.get_api().task.get(task_id=task_id)
-    print("Task %(task_id)s: %(status)s"
-          % {"task_id": task_id, "status": task["status"]})
+    print(
+        "Task %(task_id)s: %(status)s"
+        % {"task_id": task_id, "status": task["status"]}
+    )
 
 
 @task_app.command()
@@ -706,26 +798,26 @@ def detailed(
         argutils.ArgumentOrKeyword(
             "--uuid",
             envvar=envutils.ENV_TASK,
-            help="UUID of task. If \"last\", the results of the most recently "
-                 "created task will be displayed."
-        )
+            help='UUID of task. If "last", the results of the most recently '
+            "created task will be displayed.",
+        ),
     ],
     iterations_data: t.Annotated[
         bool,
         typer.Option(
             "--iterations-data",
-            help="Print detailed results for each iteration."
-        )
+            help="Print detailed results for each iteration.",
+        ),
     ] = False,
     filters: t.Annotated[
         list[str] | None,
         typer.Option(
             "--filter-by",
             help="Filter the displayed workloads. <sla-failures>: only "
-                 "display the failed workloads. <scenarios>: filter the "
-                 "workloads by scenarios, "
-                 "scenarios=scenario_name1[,scenario_name2]..."
-        )
+            "display the failed workloads. <scenarios>: filter the "
+            "workloads by scenarios, "
+            "scenarios=scenario_name1[,scenario_name2]...",
+        ),
     ] = None,
 ) -> None:
     """Print detailed information about given task."""
@@ -738,19 +830,20 @@ def results(
     task_id: t.Annotated[
         str,
         argutils.ArgumentOrKeyword(
-            "--uuid",
-            envvar=envutils.ENV_TASK,
-            help="UUID of task."
-        )
+            "--uuid", envvar=envutils.ENV_TASK, help="UUID of task."
+        ),
     ],
 ) -> None:
     """DEPRECATED since Rally 3.0.0."""
-    LOG.warning("CLI method `rally task results` is deprecated since "
-                "Rally 3.0.0 and will be removed soon. "
-                "Use `rally task report --json` instead.")
+    LOG.warning(
+        "CLI method `rally task results` is deprecated since "
+        "Rally 3.0.0 and will be removed soon. "
+        "Use `rally task report --json` instead."
+    )
     try:
-        _export(cliutils.get_api(), tasks=[task_id],
-                output_type="old-json-results")
+        _export(
+            cliutils.get_api(), tasks=[task_id], output_type="old-json-results"
+        )
     except exceptions.RallyException as e:
         print(e.format_message())
         raise typer.Exit(code=1)
@@ -764,42 +857,26 @@ def list_(
             "--env",
             deprecated=["--deployment"],
             envvar=envutils.ENV_ENV,
-            help="UUID or name of the environment."
-        )
+            help="UUID or name of the environment.",
+        ),
     ],
     all_envs: t.Annotated[
         bool,
-        typer.Option(
-            "--all-envs",
-            help="List tasks from all environments."
-        )
+        typer.Option("--all-envs", help="List tasks from all environments."),
     ] = False,
     all_deployments: t.Annotated[
-        bool,
-        typer.Option(
-            "--all-deployments",
-            hidden=True
-        )
+        bool, typer.Option("--all-deployments", hidden=True)
     ] = False,
     status: t.Annotated[  # type: ignore[valid-type]
         t.Literal[tuple(consts.TaskStatus)] | None,
-        typer.Option(
-            help="List tasks with the specified status."
-        )
+        typer.Option(help="List tasks with the specified status."),
     ] = None,
     tags: t.Annotated[
         list[str] | None,
-        typer.Option(
-            "--tag",
-            help="Tags to filter tasks by."
-        )
+        typer.Option("--tag", help="Tags to filter tasks by."),
     ] = None,
     uuids_only: t.Annotated[
-        bool,
-        typer.Option(
-            "--uuids-only",
-            help="List task UUIDs only."
-        )
+        bool, typer.Option("--uuids-only", help="List task UUIDs only.")
     ] = False,
 ) -> None:
     """List tasks, started and finished.
@@ -810,15 +887,23 @@ def list_(
     """
     api = cliutils.get_api()
     filters: dict = {}
-    headers = ["UUID", "Environment", "Created at", "Load duration",
-               "Status", "Tag(s)"]
+    headers = [
+        "UUID",
+        "Environment",
+        "Created at",
+        "Load duration",
+        "Status",
+        "Tag(s)",
+    ]
 
     if status:
         filters["status"] = status
 
     if all_deployments:
-        LOG.warning("The `--all-deployments` option is deprecated; use "
-                    "`--all-envs` instead.")
+        LOG.warning(
+            "The `--all-deployments` option is deprecated; use "
+            "`--all-envs` instead."
+        )
         all_envs = True
 
     if not all_envs:
@@ -833,6 +918,7 @@ def list_(
         if task_list:
             print("\n".join([t["uuid"] for t in task_list]))
     elif task_list:
+
         def tags_formatter(task: dict) -> str:
             if not task["tags"]:
                 return ""
@@ -842,21 +928,29 @@ def list_(
             "Tag(s)": tags_formatter,
             "Environment": lambda t: t["deployment_name"],
             "Load duration": cliutils.pretty_float_formatter(
-                "task_duration", 3),
-            "Created at": lambda t: t["created_at"].replace("T", " ")
+                "task_duration", 3
+            ),
+            "Created at": lambda t: t["created_at"].replace("T", " "),
         }
 
         cliutils.print_list(
-            task_list, fields=headers, normalize_field_names=True,
+            task_list,
+            fields=headers,
+            normalize_field_names=True,
             sortby_index=headers.index("Created at"),
-            formatters=formatters)
+            formatters=formatters,
+        )
     else:
         if status:
-            print("There are no tasks in '%s' status. "
-                  "To run a new task, use:\n\trally task start" % status)
+            print(
+                "There are no tasks in '%s' status. "
+                "To run a new task, use:\n\trally task start" % status
+            )
         else:
-            print("There are no tasks. To run a new task, use:\n"
-                  "\trally task start")
+            print(
+                "There are no tasks. To run a new task, use:\n"
+                "\trally task start"
+            )
 
 
 @task_app.command()
@@ -864,29 +958,17 @@ def list_(
 def trends(
     tasks: t.Annotated[
         list[str] | None,
-        typer.Argument(
-            help="UUIDs of tasks, or JSON files with task results"
-        )
+        typer.Argument(help="UUIDs of tasks, or JSON files with task results"),
     ] = None,
     out: t.Annotated[
-        str | None,
-        typer.Option(
-            help="Path to output file."
-        )
+        str | None, typer.Option(help="Path to output file.")
     ] = None,
     open_it: t.Annotated[
-        bool,
-        typer.Option(
-            "--open",
-            help="Open the output in a browser."
-        )
+        bool, typer.Option("--open", help="Open the output in a browser.")
     ] = False,
     html_static: t.Annotated[
         bool,
-        typer.Option(
-            "--html-static",
-            help="Generate static HTML report."
-        )
+        typer.Option("--html-static", help="Generate static HTML report."),
     ] = False,
 ) -> None:
     """Generate workloads trends HTML report."""
@@ -894,10 +976,13 @@ def trends(
         print("ERROR: At least one task must be specified", file=sys.stderr)
         raise typer.Exit(code=1)
 
-    _export(cliutils.get_api(), tasks=tasks,
-            output_type=("trends-html-static" if html_static
-                         else "trends-html"),
-            output_dest=out, open_it=open_it)
+    _export(
+        cliutils.get_api(),
+        tasks=tasks,
+        output_type=("trends-html-static" if html_static else "trends-html"),
+        output_dest=out,
+        open_it=open_it,
+    )
 
 
 @task_app.command()
@@ -908,59 +993,51 @@ def report(
         argutils.ArgumentOrKeyword(
             "--uuid",
             envvar=envutils.ENV_TASK,
-            help="UUIDs of tasks or json reports of tasks"
-        )
+            help="UUIDs of tasks or json reports of tasks",
+        ),
     ],
     out: t.Annotated[
         str | None,
         typer.Option(
             help="Report destination. Can be a path to a file (in case of "
-                 "HTML, HTML-STATIC, etc. types) to save the report to or a "
-                 "connection string."
-        )
+            "HTML, HTML-STATIC, etc. types) to save the report to or a "
+            "connection string."
+        ),
     ] = None,
     open_it: t.Annotated[
-        bool,
-        typer.Option(
-            "--open",
-            help="Open the output in a browser."
-        )
+        bool, typer.Option("--open", help="Open the output in a browser.")
     ] = False,
     html: t.Annotated[
-        bool,
-        typer.Option(
-            "--html",
-            help="Generate HTML report."
-        )
+        bool, typer.Option("--html", help="Generate HTML report.")
     ] = False,
     html_static: t.Annotated[
         bool,
-        typer.Option(
-            "--html-static",
-            help="Generate static HTML report."
-        )
+        typer.Option("--html-static", help="Generate static HTML report."),
     ] = False,
     to_json: t.Annotated[
-        bool,
-        typer.Option(
-            "--json",
-            help="Generate JSON report."
-        )
+        bool, typer.Option("--json", help="Generate JSON report.")
     ] = False,
     env: t.Annotated[
         str | None,
         argutils.DeprecatedAlias(
             "--env",
             deprecated=["--deployment"],
-            help="Report all tasks for the defined environment."
-        )
+            help="Report all tasks for the defined environment.",
+        ),
     ] = None,
 ) -> None:
     """Generate a report for the specified task(s)."""
-    out_format = ("json" if to_json
-                  else "html-static" if html_static else "html")
-    _export(cliutils.get_api(), tasks=tasks, output_type=out_format,
-            output_dest=out, open_it=open_it, deployment=env)
+    out_format = (
+        "json" if to_json else "html-static" if html_static else "html"
+    )
+    _export(
+        cliutils.get_api(),
+        tasks=tasks,
+        output_type=out_format,
+        output_dest=out,
+        open_it=open_it,
+        deployment=env,
+    )
 
 
 @task_app.command()
@@ -970,15 +1047,11 @@ def delete(
         argutils.ArgumentOrKeyword(
             "--uuid",
             envvar=envutils.ENV_TASK,
-            help="UUID of task or a list of task UUIDs."
-        )
+            help="UUID of task or a list of task UUIDs.",
+        ),
     ],
     force: t.Annotated[
-        bool,
-        typer.Option(
-            "--force",
-            help="force delete"
-        )
+        bool, typer.Option("--force", help="force delete")
     ] = False,
 ) -> None:
     """Delete task and its results."""
@@ -1004,17 +1077,11 @@ def sla_check(
     task_id: t.Annotated[
         str,
         argutils.ArgumentOrKeyword(
-            "--uuid",
-            envvar=envutils.ENV_TASK,
-            help="UUID of task."
-        )
+            "--uuid", envvar=envutils.ENV_TASK, help="UUID of task."
+        ),
     ],
     tojson: t.Annotated[
-        bool,
-        typer.Option(
-            "--json",
-            help="Output in JSON format."
-        )
+        bool, typer.Option("--json", help="Output in JSON format.")
     ] = False,
 ) -> None:
     """Display SLA check results table."""
@@ -1024,9 +1091,12 @@ def sla_check(
     STATUS_PASS = "PASS"
     STATUS_FAIL = "FAIL"
     for workload in itertools.chain(
-            *[s["workloads"] for s in task["subtasks"]]):
-        for sla in sorted(workload["sla_results"].get("sla", []),
-                          key=lambda x: x["criterion"]):
+        *[s["workloads"] for s in task["subtasks"]]
+    ):
+        for sla in sorted(
+            workload["sla_results"].get("sla", []),
+            key=lambda x: x["criterion"],
+        ):
             success = sla.pop("success")
             sla["status"] = success and STATUS_PASS or STATUS_FAIL
             sla["benchmark"] = workload["name"]
@@ -1036,8 +1106,9 @@ def sla_check(
     if tojson:
         print(json.dumps(data, sort_keys=False))
     else:
-        cliutils.print_list(data, ("benchmark", "pos", "criterion",
-                                   "status", "detail"))
+        cliutils.print_list(
+            data, ("benchmark", "pos", "criterion", "status", "detail")
+        )
     if not data:
         raise typer.Exit(code=2)
     if failed_criteria:
@@ -1047,11 +1118,7 @@ def sla_check(
 @task_app.command()
 def use(
     task_id: t.Annotated[
-        str,
-        argutils.ArgumentOrKeyword(
-            "--uuid",
-            help="UUID of the task"
-        )
+        str, argutils.ArgumentOrKeyword("--uuid", help="UUID of the task")
     ],
 ) -> None:
     """Set active task."""
@@ -1066,51 +1133,52 @@ def export(
         argutils.ArgumentOrKeyword(
             "--uuid",
             envvar=envutils.ENV_TASK,
-            help="UUIDs of tasks or json reports of tasks"
-        )
+            help="UUIDs of tasks or json reports of tasks",
+        ),
     ],
     output_type: t.Annotated[
         str,
         typer.Option(
             "--type",
             help="Report type. Out-of-the-box types: JSON, HTML, HTML-Static, "
-                 "Elastic, JUnit-XML. HINT: You can list all types, executing "
-                 "`rally plugin list --plugin-base TaskExporter` command."
-        )
+            "Elastic, JUnit-XML. HINT: You can list all types, executing "
+            "`rally plugin list --plugin-base TaskExporter` command.",
+        ),
     ],
     output_dest: t.Annotated[
         str | None,
         typer.Option(
             "--to",
             help="Report destination. Can be a path to a file (in case of "
-                 "JSON, HTML, HTML-Static, JUnit-XML, Elastic etc. types) to "
-                 "save the report to or a connection string. It depends on "
-                 "the report type."
-        )
+            "JSON, HTML, HTML-Static, JUnit-XML, Elastic etc. types) to "
+            "save the report to or a connection string. It depends on "
+            "the report type.",
+        ),
     ] = None,
     env: t.Annotated[
         str | None,
         argutils.DeprecatedAlias(
             "--env",
             deprecated=["--deployment"],
-            help="Report all tasks for the defined environment."
-        )
+            help="Report all tasks for the defined environment.",
+        ),
     ] = None,
 ) -> None:
     """Export task results to the custom task's exporting system."""
-    _export(cliutils.get_api(), tasks=tasks, output_type=output_type,
-            output_dest=output_dest, deployment=env)
+    _export(
+        cliutils.get_api(),
+        tasks=tasks,
+        output_type=output_type,
+        output_dest=output_dest,
+        deployment=env,
+    )
 
 
 @task_app.command(name="import")
 @cliutils.suppress_warnings
 def import_results(
     task_file: t.Annotated[
-        str,
-        typer.Option(
-            "--file",
-            help="JSON file with task results"
-        )
+        str, typer.Option("--file", help="JSON file with task results")
     ],
     env: t.Annotated[
         str,
@@ -1118,15 +1186,12 @@ def import_results(
             "--env",
             deprecated=["--deployment"],
             envvar=envutils.ENV_ENV,
-            help="UUID or name of the environment."
-        )
+            help="UUID or name of the environment.",
+        ),
     ],
     tags: t.Annotated[
         list[str] | None,
-        typer.Option(
-            "--tag",
-            help="Mark the task with a tag or a few tags."
-        )
+        typer.Option("--tag", help="Mark the task with a tag or a few tags."),
     ] = None,
 ) -> None:
     """Import JSON results of a test into the Rally database."""
@@ -1134,11 +1199,12 @@ def import_results(
         api = cliutils.get_api()
         tasks_results = task_results_loader.load(task_file)
         for task_results in tasks_results:
-            task = api.task.import_results(deployment=env,
-                                           task_results=task_results,
-                                           tags=tags)
+            task = api.task.import_results(
+                deployment=env, task_results=task_results, tags=tags
+            )
             print("Task UUID: %s." % task["uuid"])
     else:
-        print("ERROR: Invalid file name passed: %s" % task_file,
-              file=sys.stderr)
+        print(
+            "ERROR: Invalid file name passed: %s" % task_file, file=sys.stderr
+        )
         raise typer.Exit(code=1)

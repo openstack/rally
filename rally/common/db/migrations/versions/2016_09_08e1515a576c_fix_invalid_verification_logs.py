@@ -43,11 +43,12 @@ task_helper = sa.Table(
     sa.MetaData(),
     sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
     sa.Column("uuid", sa.String(36), nullable=False),
-    sa.Column("status", sa.String(36), default=consts.TaskStatus.INIT,
-              nullable=False),
+    sa.Column(
+        "status", sa.String(36), default=consts.TaskStatus.INIT, nullable=False
+    ),
     sa.Column("verification_log", sa.Text, default=""),
     sa.Column("tag", sa.String(64), default=""),
-    sa.Column("deployment_uuid", sa.String(36), nullable=False)
+    sa.Column("deployment_uuid", sa.String(36), nullable=False),
 )
 
 
@@ -74,34 +75,47 @@ def upgrade() -> None:
 
         verification_log = json.loads(verification_log)
         if isinstance(verification_log, list):
-            new_value = {"etype": verification_log[0],
-                         "msg": verification_log[1],
-                         "trace": verification_log[2]}
+            new_value = {
+                "etype": verification_log[0],
+                "msg": verification_log[1],
+                "trace": verification_log[2],
+            }
             if new_value["trace"].startswith("["):
                 # NOTE(andreykurilin): For several cases traceback was
                 #   transmitted as list instead of string.
                 new_value["trace"] = _make_trace(*verification_log)
         else:
             if verification_log.startswith("No such file"):
-                new_value = {"etype": IOError.__name__,
-                             "msg": verification_log}
-                new_value["trace"] = _make_trace(new_value["etype"],
-                                                 new_value["msg"])
+                new_value = {
+                    "etype": IOError.__name__,
+                    "msg": verification_log,
+                }
+                new_value["trace"] = _make_trace(
+                    new_value["etype"], new_value["msg"]
+                )
             elif verification_log.startswith("Task config is invalid"):
-                new_value = {"etype": exceptions.InvalidTaskException.__name__,
-                             "msg": verification_log}
-                new_value["trace"] = _make_trace(new_value["etype"],
-                                                 new_value["msg"])
+                new_value = {
+                    "etype": exceptions.InvalidTaskException.__name__,
+                    "msg": verification_log,
+                }
+                new_value["trace"] = _make_trace(
+                    new_value["etype"], new_value["msg"]
+                )
             elif verification_log.startswith("Failed to load task"):
-                new_value = {"etype": "FailedToLoadTask",
-                             "msg": verification_log}
-                new_value["trace"] = _make_trace(new_value["etype"],
-                                                 new_value["msg"])
+                new_value = {
+                    "etype": "FailedToLoadTask",
+                    "msg": verification_log,
+                }
+                new_value["trace"] = _make_trace(
+                    new_value["etype"], new_value["msg"]
+                )
 
         if new_value:
-            connection.execute(task_helper.update().where(
-                task_helper.c.id == task.id).values(
-                verification_log=json.dumps(new_value)))
+            connection.execute(
+                task_helper.update()
+                .where(task_helper.c.id == task.id)
+                .values(verification_log=json.dumps(new_value))
+            )
 
 
 def downgrade() -> None:

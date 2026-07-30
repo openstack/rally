@@ -42,6 +42,7 @@ class PerformanceDegradation(sla.SLA):
     Assuming that minimum duration is 100%, it calculates
     performance degradation against maximum duration.
     """
+
     CONFIG_SCHEMA = {
         "type": "object",
         "$schema": consts.JSON_SCHEMA7,
@@ -58,7 +59,7 @@ class PerformanceDegradation(sla.SLA):
     }
 
     def __init__(self, criterion_value: dict[str, float]) -> None:
-        super(PerformanceDegradation, self).__init__(criterion_value)
+        super().__init__(criterion_value)
         self.max_degradation = self.criterion_value["max_degradation"]
         self.degradation = streaming_algorithms.DegradationComputation()
 

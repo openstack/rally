@@ -61,7 +61,6 @@ import io
 import os
 import select
 import shlex
-import socket
 import time
 
 import paramiko
@@ -73,11 +72,12 @@ from rally.common import logging
 LOG = logging.getLogger(__name__)
 
 
-class SSH(object):
+class SSH:
     """Represent ssh connection."""
 
-    def __init__(self, user, host, port=22, pkey=None,
-                 key_filename=None, password=None):
+    def __init__(
+        self, user, host, port=22, pkey=None, key_filename=None, password=None
+    ):
         """Initialize SSH client.
 
         :param user: ssh username
@@ -108,8 +108,11 @@ class SSH(object):
             key = io.StringIO(key)
         errors = []
         key_pos = key.seek(0, 1)
-        for key_class in (paramiko.RSAKey, paramiko.ECDSAKey,
-                          paramiko.Ed25519Key):
+        for key_class in (
+            paramiko.RSAKey,
+            paramiko.ECDSAKey,
+            paramiko.Ed25519Key,
+        ):
             try:
                 return key_class.from_private_key(key)
             except paramiko.SSHException as e:
@@ -123,28 +126,47 @@ class SSH(object):
         try:
             self._client = paramiko.SSHClient()
             self._client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            self._client.connect(self.host, username=self.user,
-                                 port=self.port, pkey=self.pkey,
-                                 key_filename=self.key_filename,
-                                 password=self.password, timeout=1)
+            self._client.connect(
+                self.host,
+                username=self.user,
+                port=self.port,
+                pkey=self.pkey,
+                key_filename=self.key_filename,
+                password=self.password,
+                timeout=1,
+            )
             return self._client
         except Exception as e:
-            message = ("Exception %(exception_type)s was raised "
-                       "during connect to %(user)s@%(host)s:%(port)s. "
-                       "Exception value is: %(exception)r")
+            message = (
+                "Exception %(exception_type)s was raised "
+                "during connect to %(user)s@%(host)s:%(port)s. "
+                "Exception value is: %(exception)r"
+            )
             self._client = False
-            raise exceptions.SSHError(message % {"exception": e,
-                                                 "user": self.user,
-                                                 "host": self.host,
-                                                 "port": self.port,
-                                                 "exception_type": type(e)})
+            raise exceptions.SSHError(
+                message
+                % {
+                    "exception": e,
+                    "user": self.user,
+                    "host": self.host,
+                    "port": self.port,
+                    "exception_type": type(e),
+                }
+            )
 
     def close(self):
         self._client.close()
         self._client = False
 
-    def run(self, cmd, stdin=None, stdout=None, stderr=None,
-            raise_on_error=True, timeout=3600):
+    def run(
+        self,
+        cmd,
+        stdin=None,
+        stdout=None,
+        stderr=None,
+        raise_on_error=True,
+        timeout=3600,
+    ):
         """Execute specified command on the server.
 
         :param cmd:             Command to be executed.
@@ -165,15 +187,29 @@ class SSH(object):
             should_close_stdin = True
 
         try:
-            return self._run(client, cmd, stdin=stdin, stdout=stdout,
-                             stderr=stderr, raise_on_error=raise_on_error,
-                             timeout=timeout)
+            return self._run(
+                client,
+                cmd,
+                stdin=stdin,
+                stdout=stdout,
+                stderr=stderr,
+                raise_on_error=raise_on_error,
+                timeout=timeout,
+            )
         finally:
             if should_close_stdin:
                 stdin.close()
 
-    def _run(self, client, cmd, stdin=None, stdout=None, stderr=None,
-             raise_on_error=True, timeout=3600):
+    def _run(
+        self,
+        client,
+        cmd,
+        stdin=None,
+        stdout=None,
+        stderr=None,
+        raise_on_error=True,
+        timeout=3600,
+    ):
 
         if isinstance(cmd, (list, tuple)):
             cmd = " ".join(shlex.quote(str(p)) for p in cmd)
@@ -230,9 +266,10 @@ class SSH(object):
 
             if timeout and (time.time() - timeout) > start_time:
                 args = {"cmd": cmd, "host": self.host}
-                raise exceptions.SSHTimeout("Timeout executing command "
-                                            "'%(cmd)s' on host %(host)s"
-                                            % args)
+                raise exceptions.SSHTimeout(
+                    "Timeout executing command "
+                    "'%(cmd)s' on host %(host)s" % args
+                )
             if e:
                 raise exceptions.SSHError("Socket error.")
 
@@ -256,10 +293,14 @@ class SSH(object):
         """
         with io.StringIO() as stdout:
             with io.StringIO() as stderr:
-
-                exit_status, data = self.run(cmd, stderr=stderr, stdout=stdout,
-                                             stdin=stdin, timeout=timeout,
-                                             raise_on_error=False)
+                exit_status, data = self.run(
+                    cmd,
+                    stderr=stderr,
+                    stdout=stdout,
+                    stdin=stdin,
+                    timeout=timeout,
+                    raise_on_error=False,
+                )
                 stdout.seek(0)
                 stderr.seek(0)
                 return exit_status, stdout.read(), stderr.read()
@@ -270,12 +311,13 @@ class SSH(object):
         while True:
             try:
                 return self.execute("uname")
-            except (socket.error, exceptions.SSHError) as e:
+            except (OSError, exceptions.SSHError) as e:
                 LOG.debug("Ssh is still unavailable: %r" % e)
                 time.sleep(interval)
             if time.time() > (start_time + timeout):
-                raise exceptions.SSHTimeout("Timeout waiting for '%s'" %
-                                            self.host)
+                raise exceptions.SSHTimeout(
+                    "Timeout waiting for '%s'" % self.host
+                )
 
     def _put_file_sftp(self, localpath, remotepath, mode=None):
         client = self._get_client()
@@ -302,8 +344,7 @@ class SSH(object):
         :param remotepath:  Remote filename.
         :param mode:        Permissions to set after upload
         """
-        import socket
         try:
             self._put_file_sftp(localpath, remotepath, mode=mode)
-        except (paramiko.SSHException, socket.error):
+        except (OSError, paramiko.SSHException):
             self._put_file_shell(localpath, remotepath, mode=mode)

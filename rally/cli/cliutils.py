@@ -49,7 +49,8 @@ def get_api() -> "API":
 
 
 _help_requested: "contextvars.ContextVar[bool]" = contextvars.ContextVar(
-    "rally_help_requested", default=False)
+    "rally_help_requested", default=False
+)
 
 
 def set_help_requested(value: bool) -> None:
@@ -66,9 +67,7 @@ def iter_commands(
     command: "typer._click.core.Command",
 ) -> t.Iterator[
     tuple[
-        tuple[str, ...],
-        typer.core.TyperCommand,
-        list[typer.core.TyperOption]
+        tuple[str, ...], typer.core.TyperCommand, list[typer.core.TyperOption]
     ]
 ]:
     """Walk a built typer command tree and yield every leaf command.
@@ -95,12 +94,20 @@ def iter_commands(
         yield (), leaf, params
 
 
-def print_list(objs, fields, formatters=None, sortby_index=0,
-               mixed_case_fields=None, field_labels=None,
-               normalize_field_names=False,
-               table_label=None, print_header=True, print_border=True,
-               print_row_border=False,
-               out=sys.stdout):
+def print_list(
+    objs,
+    fields,
+    formatters=None,
+    sortby_index=0,
+    mixed_case_fields=None,
+    field_labels=None,
+    normalize_field_names=False,
+    table_label=None,
+    print_header=True,
+    print_border=True,
+    print_row_border=False,
+    out=sys.stdout,
+):
     """Print a list or objects as a table, one row per object.
 
     :param objs: iterable of :class:`Resource`
@@ -125,9 +132,11 @@ def print_list(objs, fields, formatters=None, sortby_index=0,
     mixed_case_fields = mixed_case_fields or []
     field_labels = field_labels or fields
     if len(field_labels) != len(fields):
-        raise ValueError("Field labels list %(labels)s has different number of"
-                         " elements than fields list %(fields)s"
-                         % {"labels": field_labels, "fields": fields})
+        raise ValueError(
+            "Field labels list %(labels)s has different number of"
+            " elements than fields list %(fields)s"
+            % {"labels": field_labels, "fields": fields}
+        )
 
     kwargs = {}
     if sortby_index is not None:
@@ -174,9 +183,10 @@ def print_list(objs, fields, formatters=None, sortby_index=0,
         pt.left_padding_width = 0
         pt.right_padding_width = 1
 
-    table_body = pt.get_string(header=print_header,
-                               border=print_border,
-                               **kwargs) + "\n"
+    table_body = (
+        pt.get_string(header=print_header, border=print_border, **kwargs)
+        + "\n"
+    )
     if print_border and print_row_border:
         table_body = table_body.split("\n", 3)
         table_body[2] = table_body[2].replace("-", headers_horizontal_char)
@@ -187,7 +197,8 @@ def print_list(objs, fields, formatters=None, sortby_index=0,
     if table_label:
         table_width = table_body.index("\n")
         table_header = make_table_header(
-            table_label, table_width, horizontal_char=headers_horizontal_char)
+            table_label, table_width, horizontal_char=headers_horizontal_char
+        )
         table_header += "\n"
 
     if table_header:
@@ -232,9 +243,14 @@ def print_dict(
         if isinstance(obj, dict):
             fields = sorted(obj.keys())
         else:
-            fields = [name for name in dir(obj)
-                      if (not name.startswith("_")
-                          and not callable(getattr(obj, name)))]
+            fields = [
+                name
+                for name in dir(obj)
+                if (
+                    not name.startswith("_")
+                    and not callable(getattr(obj, name))
+                )
+            ]
 
     pt = prettytable.PrettyTable([property_label, value_label], caching=False)
     pt.align = "l"
@@ -260,8 +276,7 @@ def print_dict(
             data = textwrap.fill(str(data), wrap)
         # if value has a newline, add in multiple rows
         # e.g. fault with stacktrace
-        if (data and isinstance(data, str)
-                and (r"\n" in data or "\r" in data)):
+        if data and isinstance(data, str) and (r"\n" in data or "\r" in data):
             # "\r" would break the table, so remove it.
             if "\r" in data:
                 data = data.replace("\r", "")
@@ -275,8 +290,7 @@ def print_dict(
                 data = "-"
             pt.add_row([field_name, data])
 
-    table_body = pt.get_string(header=print_header,
-                               border=print_border) + "\n"
+    table_body = pt.get_string(header=print_header, border=print_border) + "\n"
 
     table_header = ""
 
@@ -290,9 +304,13 @@ def print_dict(
     out.write(encodeutils.safe_encode(table_body).decode())
 
 
-def make_table_header(table_label, table_width,
-                      junction_char="+", horizontal_char="-",
-                      vertical_char="|"):
+def make_table_header(
+    table_label,
+    table_width,
+    junction_char="+",
+    horizontal_char="-",
+    vertical_char="|",
+):
     """Generalized way make a table header string.
 
     :param table_label: label to print on header
@@ -307,29 +325,43 @@ def make_table_header(table_label, table_width,
 
     if len(table_label) >= (table_width - 2):
         raise ValueError(
-            "Table header %s is longer than total width of the table.")
+            "Table header %s is longer than total width of the table."
+        )
 
     label_and_space_width = table_width - len(table_label) - 2
     padding = 0 if label_and_space_width % 2 == 0 else 1
 
     half_table_width = label_and_space_width // 2
-    left_spacing = (" " * half_table_width)
-    right_spacing = (" " * (half_table_width + padding))
+    left_spacing = " " * half_table_width
+    right_spacing = " " * (half_table_width + padding)
 
-    border_line = "".join((junction_char,
-                           (horizontal_char * (table_width - 2)),
-                           junction_char,))
+    border_line = "".join(
+        (
+            junction_char,
+            (horizontal_char * (table_width - 2)),
+            junction_char,
+        )
+    )
 
-    label_line = "".join((vertical_char,
-                          left_spacing,
-                          table_label,
-                          right_spacing,
-                          vertical_char,))
+    label_line = "".join(
+        (
+            vertical_char,
+            left_spacing,
+            table_label,
+            right_spacing,
+            vertical_char,
+        )
+    )
 
-    return "\n".join((border_line, label_line,))
+    return "\n".join(
+        (
+            border_line,
+            label_line,
+        )
+    )
 
 
-def make_header(text: str, size: int=80, symbol: str="-") -> str:
+def make_header(text: str, size: int = 80, symbol: str = "-") -> str:
     """Unified way to make header message to CLI.
 
     :param text: what text to write
@@ -341,11 +373,13 @@ def make_header(text: str, size: int=80, symbol: str="-") -> str:
 
 def suppress_warnings(f):
     """Run the wrapped command with Python warnings silenced."""
+
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             return f(*args, **kwargs)
+
     return wrapper
 
 
@@ -357,6 +391,7 @@ def pretty_float_formatter(field, ndigits=None):
                     default is None - this disables rounding
     :returns: field formatter function
     """
+
     def _formatter(obj):
         value = obj[field] if isinstance(obj, dict) else getattr(obj, field)
         if type(value) in (int, float):
@@ -364,4 +399,5 @@ def pretty_float_formatter(field, ndigits=None):
                 return round(value, ndigits)
             return value
         return "n/a"
+
     return _formatter

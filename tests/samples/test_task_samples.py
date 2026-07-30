@@ -36,7 +36,7 @@ class TaskSampleTestCase(test.TestCase):
     samples_path = os.path.join(RALLY_PATH, "samples", "tasks")
 
     def setUp(self):
-        super(TaskSampleTestCase, self).setUp()
+        super().setUp()
         self.rapi = api.API(skip_db_check=True)
 
     def iterate_samples(self, merge_pairs=True):
@@ -104,7 +104,7 @@ class TaskSampleTestCase(test.TestCase):
                     print(traceback.format_exc())
                     self.fail("Invalid task file: %s" % path)
 
-        missing = set(s.get_name() for s in scenario.Scenario.get_all())
+        missing = {s.get_name() for s in scenario.Scenario.get_all()}
         missing -= scenarios
         # check missing scenario is not from plugin
         missing = [s for s in list(missing)
@@ -171,7 +171,7 @@ class TaskSampleTestCase(test.TestCase):
         self.assertEqual([], bad_filenames,
                          "Following sample task filenames contain "
                          "underscores (_) but must use dashes (-) instead: "
-                         "{}".format(bad_filenames))
+                         f"{bad_filenames}")
 
     def test_context_samples_found(self):
         all_plugins = context.Context.get_all()
@@ -184,6 +184,7 @@ class TaskSampleTestCase(test.TestCase):
             file_name = p.get_name().replace("_", "-")
             file_path = os.path.join(context_samples_path, file_name)
             if not os.path.exists("%s.json" % file_path):
-                self.fail(("There is no json sample file of %s,"
-                           "plugin location: %s" %
-                           (p.get_name(), p.__module__)))
+                self.fail(
+                    "There is no json sample file of %s,"
+                    "plugin location: %s" %
+                    (p.get_name(), p.__module__))

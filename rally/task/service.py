@@ -33,6 +33,7 @@ def service(service_name, service_type, version, client_name=None):
         be used instead.
     :type client_name: str
     """
+
     def wrapper(cls):
         cls._meta_init()
         cls._meta_set("name", service_name.lower())
@@ -40,6 +41,7 @@ def service(service_name, service_type, version, client_name=None):
         cls._meta_set("version", str(version))
         cls._meta_set("client_name", client_name or service_name)
         return cls
+
     return wrapper
 
 
@@ -49,10 +51,12 @@ def compat_layer(original_impl):
     :param original_impl: implementation of specific service API
     :type original_impl: cls
     """
+
     def wrapper(cls):
         cls._meta_init()
         cls._meta_set("impl", original_impl)
         return cls
+
     return wrapper
 
 
@@ -105,9 +109,11 @@ def method_wrapper(func):
         args_len = len(args)
 
         if args_len > 1:
-            message = ("%(name)s takes at most 1 positional argument "
-                       "(%(given)d given)" % {"name": func.__name__,
-                                              "given": args_len})
+            message = (
+                "%(name)s takes at most 1 positional argument "
+                "(%(given)d given)"
+                % {"name": func.__name__, "given": args_len}
+            )
 
             raise TypeError(message)
 
@@ -123,14 +129,15 @@ class ServiceMeta(type):
     API. We expect that all public methods of specific common class are
     overridden in all versioned implementation.
     """
+
     def __new__(mcs, name, parents, dct):
         for field in dct:
             if not field.startswith("_") and callable(dct[field]):
                 dct[field] = method_wrapper(dct[field])
-        return super(ServiceMeta, mcs).__new__(mcs, name, parents, dct)
+        return super().__new__(mcs, name, parents, dct)
 
     def __init__(cls, name, bases, namespaces):
-        super(ServiceMeta, cls).__init__(name, bases, namespaces)
+        super().__init__(name, bases, namespaces)
         bases = [c for c in cls.__bases__ if isinstance(c, ServiceMeta)]
         if not bases:
             # nothing to check
@@ -140,9 +147,11 @@ class ServiceMeta(type):
         # properties of parents
         not_implemented_apis = set()
         for name, obj in inspect.getmembers(cls):
-            if (getattr(obj, "require_impl", False)
-                    # name in namespace means that object was introduced in cls
-                    and name not in namespaces):
+            if (
+                getattr(obj, "require_impl", False)
+                # name in namespace means that object was introduced in cls
+                and name not in namespaces
+            ):
                 # it is not overridden...
                 not_implemented_apis.add(name)
 
@@ -150,8 +159,9 @@ class ServiceMeta(type):
             raise exceptions.RallyException(
                 "%s has wrong implementation. Implementation of specific "
                 "version of API should override all required methods of "
-                "base service class. Missed method(s): %s." %
-                (cls.__name__, ", ".join(not_implemented_apis)))
+                "base service class. Missed method(s): %s."
+                % (cls.__name__, ", ".join(not_implemented_apis))
+            )
 
 
 class Service(meta.MetaMixin, metaclass=ServiceMeta):
@@ -205,7 +215,8 @@ class Service(meta.MetaMixin, metaclass=ServiceMeta):
         if not self._name_generator:
             raise exceptions.RallyException(
                 "You cannot use `generate_random_name` method, until you "
-                "initialize class with `name_generator` argument.")
+                "initialize class with `name_generator` argument."
+            )
         return self._name_generator()
 
 
@@ -267,14 +278,14 @@ class UnifiedService(Service):
         :param atomic_inst: an object to store atomic actions. Usually, it is
             `_atomic_actions` property of ActionTimerMixin instance
         """
-        super(UnifiedService, self).__init__(clients, name_generator,
-                                             atomic_inst)
+        super().__init__(clients, name_generator, atomic_inst)
 
         if self._meta_is_inited(raise_exc=False):
             # it is an instance of compatibility layer for specific Service
             impl_cls = self._meta_get("impl")
-            self._impl = impl_cls(self._clients, self._name_generator,
-                                  self._atomic_actions)
+            self._impl = impl_cls(
+                self._clients, self._name_generator, self._atomic_actions
+            )
             self.version = impl_cls._meta_get("version")
         else:
             # it is a base class of service
@@ -282,9 +293,11 @@ class UnifiedService(Service):
             if not impl_cls:
                 raise exceptions.RallyException(
                     "There is no proper implementation for %s."
-                    % self.__class__.__name__)
-            self._impl = impl_cls(self._clients, self._name_generator,
-                                  self._atomic_actions)
+                    % self.__class__.__name__
+                )
+            self._impl = impl_cls(
+                self._clients, self._name_generator, self._atomic_actions
+            )
             self.version = self._impl.version
 
     def discover_impl(self):
@@ -302,10 +315,11 @@ class UnifiedService(Service):
         """
 
         # find all classes with unified implementation
-        impls = {cls: cls._meta_get("impl")
-                 for cls in discover.itersubclasses(self.__class__)
-                 if (cls._meta_is_inited(raise_exc=False)
-                     and cls._meta_get("impl"))}
+        impls = {
+            cls: cls._meta_get("impl")
+            for cls in discover.itersubclasses(self.__class__)
+            if (cls._meta_is_inited(raise_exc=False) and cls._meta_get("impl"))
+        }
 
         service_names = {o._meta_get("name") for o in impls.values()}
 
@@ -316,8 +330,10 @@ class UnifiedService(Service):
             enabled_services = list(self._clients.services().values())
 
         for cls, impl in impls.items():
-            if (enabled_services is not None
-                    and impl._meta_get("name") not in enabled_services):
+            if (
+                enabled_services is not None
+                and impl._meta_get("name") not in enabled_services
+            ):
                 continue
             if cls.is_applicable(self._clients):
                 return cls, impls
@@ -335,8 +351,7 @@ class UnifiedService(Service):
         return False
 
 
-class _Resource(object):
-
+class _Resource:
     __slots__ = []
     _id_property = None
 
@@ -348,13 +363,16 @@ class _Resource(object):
         return getattr(self, item, default)
 
     def __repr__(self):
-        return "<%s id=%s>" % (self.__class__.__name__,
-                               getattr(self, self._id_property, "n/a"))
+        return "<%s id=%s>" % (
+            self.__class__.__name__,
+            getattr(self, self._id_property, "n/a"),
+        )
 
     def __eq__(self, other):
         self_id = getattr(self, self._id_property)
-        return (isinstance(other, self.__class__)
-                and self_id == getattr(other, self._id_property))
+        return isinstance(other, self.__class__) and self_id == getattr(
+            other, self._id_property
+        )
 
     def _as_dict(self):
         return dict((k, self[k]) for k in self.__slots__)
@@ -379,5 +397,8 @@ def make_resource_cls(name, properties, id_property="id"):
     #   class (create Resource class inside the method make_resource_cls and
     #   return it) allows to setup a custom name of a new class, which will be
     #   used in case of errors and etc
-    return type(name.title(), (_Resource,), {"__slots__": properties,
-                                             "_id_property": id_property})
+    return type(
+        name.title(),
+        (_Resource,),
+        {"__slots__": properties, "_id_property": id_property},
+    )

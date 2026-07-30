@@ -27,14 +27,16 @@ from rally.env import env_mgr
 
 
 env_app = typer.Typer(
-    name="env", no_args_is_help=False,
-    help="Environments Rally tests against.")
+    name="env", no_args_is_help=False, help="Environments Rally tests against."
+)
 
-YES = u":-)"
-NO = u":-("
+YES = ":-)"
+NO = ":-("
 
-MSG_NO_ENVS = ("There are no environments. To create a new environment, "
-               "use command bellow to create one:\nrally env create")
+MSG_NO_ENVS = (
+    "There are no environments. To create a new environment, "
+    "use command bellow to create one:\nrally env create"
+)
 
 
 def _print(msg: object, silent: bool = False) -> None:
@@ -50,14 +52,24 @@ def _show(env_data: dict, to_json: bool, only_spec: bool) -> None:
     else:
         table = prettytable.PrettyTable()
         table.header = False
-        for k in ["uuid", "name", "status",
-                  "created_at", "updated_at", "description"]:
+        for k in [
+            "uuid",
+            "name",
+            "status",
+            "created_at",
+            "updated_at",
+            "description",
+        ]:
             table.add_row([k, env_data[k]])
 
         table.add_row(["extras", json.dumps(env_data["extras"], indent=2)])
         for p, data in env_data["platforms"].items():
-            table.add_row(["platform: %s" % p,
-                           json.dumps(data["platform_data"], indent=2)])
+            table.add_row(
+                [
+                    "platform: %s" % p,
+                    json.dumps(data["platform_data"], indent=2),
+                ]
+            )
         table.align = "l"
         print(table.get_string())
 
@@ -70,60 +82,47 @@ def _use(env_uuid: str, to_json: bool) -> None:
 @env_app.command()
 def create(
     name: t.Annotated[
-        str,
-        typer.Option(
-            "--name", "-n",
-            help="Name of the env."
-        )
+        str, typer.Option("--name", "-n", help="Name of the env.")
     ],
     description: t.Annotated[
-        str | None,
-        typer.Option(
-            "--description", "-d",
-            help="Env description"
-        )
+        str | None, typer.Option("--description", "-d", help="Env description")
     ] = None,
     extras: t.Annotated[
         str | None,
         typer.Option(
-            "--extras", "-e",
-            help="JSON or YAML dict with custom non validate info."
-        )
+            "--extras",
+            "-e",
+            help="JSON or YAML dict with custom non validate info.",
+        ),
     ] = None,
     spec: t.Annotated[
-        str | None,
-        typer.Option(
-            "--spec", "-s",
-            help="Path to env spec."
-        )
+        str | None, typer.Option("--spec", "-s", help="Path to env spec.")
     ] = None,
     from_sysenv: t.Annotated[
         bool,
         typer.Option(
             "--from-sysenv",
             help="Iterate over all available platforms and check system "
-                 "environment for credentials."
-        )
+            "environment for credentials.",
+        ),
     ] = False,
     to_json: t.Annotated[
-        bool,
-        typer.Option(
-            "--json",
-            help="Format output as JSON."
-        )
+        bool, typer.Option("--json", help="Format output as JSON.")
     ] = False,
     no_use: t.Annotated[
         bool,
         typer.Option(
             "--no-use",
-            help="Don't set new env as default for future operations."
-        )
+            help="Don't set new env as default for future operations.",
+        ),
     ] = False,
 ) -> None:
     """Create new environment."""
     if spec is not None and from_sysenv:
-        print("Arguments '--spec' and '--from-sysenv' cannot be used "
-              "together, use only one of them.")
+        print(
+            "Arguments '--spec' and '--from-sysenv' cannot be used "
+            "together, use only one of them."
+        )
         raise typer.Exit(code=1)
     spec_obj: t.Any = spec or {}
     if spec:
@@ -134,8 +133,11 @@ def create(
     if from_sysenv:
         result = env_mgr.EnvManager.create_spec_from_sys_environ()
         spec_obj = result["spec"]
-        _print("Your system environment includes specifications of "
-               "%s platform(s)." % len(spec_obj), to_json)
+        _print(
+            "Your system environment includes specifications of "
+            "%s platform(s)." % len(spec_obj),
+            to_json,
+        )
         _print("Discovery information:", to_json)
         for p_name, p_result in result["discovery_details"].items():
             _print("\t - %s : %s." % (p_name, p_result["message"]), to_json)
@@ -144,7 +146,8 @@ def create(
                 _print("".join(p_result["traceback"]), to_json)
     try:
         env = env_mgr.EnvManager.create(
-            name, spec_obj, description=description, extras=extras_obj)
+            name, spec_obj, description=description, extras=extras_obj
+        )
     except exceptions.ManagerInvalidSpec as e:
         _print("Env spec has wrong format:", to_json)
         _print(json.dumps(e.kwargs["spec"], indent=2), to_json)
@@ -166,17 +169,11 @@ def cleanup(
     env: t.Annotated[
         str,
         argutils.ArgumentOrKeyword(
-            "--env",
-            envvar=envutils.ENV_ENV,
-            help="UUID or name of the env."
-        )
+            "--env", envvar=envutils.ENV_ENV, help="UUID or name of the env."
+        ),
     ],
     to_json: t.Annotated[
-        bool,
-        typer.Option(
-            "--json",
-            help="Format output as JSON."
-        )
+        bool, typer.Option("--json", help="Format output as JSON.")
     ] = False,
 ) -> None:
     """Perform disaster cleanup for specified environment.
@@ -210,8 +207,7 @@ def cleanup(
             print("Total %s: %s" % (key, cleanup_info[key]))
         if cleanup_info["errors"]:
             return_code = 1
-            errors = "\t- ".join(e["message"]
-                                 for e in cleanup_info["errors"])
+            errors = "\t- ".join(e["message"] for e in cleanup_info["errors"])
             print("Errors:\n\t- %s" % errors)
 
     if return_code:
@@ -223,31 +219,21 @@ def destroy(
     env: t.Annotated[
         str,
         argutils.ArgumentOrKeyword(
-            "--env",
-            envvar=envutils.ENV_ENV,
-            help="UUID or name of the env."
-        )
+            "--env", envvar=envutils.ENV_ENV, help="UUID or name of the env."
+        ),
     ],
     skip_cleanup: t.Annotated[
         bool,
         typer.Option(
             "--skip-cleanup",
-            help="Do not perform platforms cleanup before destroy."
-        )
+            help="Do not perform platforms cleanup before destroy.",
+        ),
     ] = False,
     to_json: t.Annotated[
-        bool,
-        typer.Option(
-            "--json",
-            help="Format output as JSON."
-        )
+        bool, typer.Option("--json", help="Format output as JSON.")
     ] = False,
     detailed: t.Annotated[
-        bool,
-        typer.Option(
-            "--detailed",
-            help="Show detailed information."
-        )
+        bool, typer.Option("--detailed", help="Show detailed information.")
     ] = False,
 ) -> None:
     """Destroy existing environment."""
@@ -257,8 +243,11 @@ def destroy(
     return_code = int(result["destroy_info"]["skipped"])
 
     if result["destroy_info"]["skipped"]:
-        _print("%s Failed to destroy env %s: %s"
-               % (NO, env_obj, result["destroy_info"]["message"]), to_json)
+        _print(
+            "%s Failed to destroy env %s: %s"
+            % (NO, env_obj, result["destroy_info"]["message"]),
+            to_json,
+        )
     else:
         _print("%s Successfully destroyed env %s" % (YES, env_obj), to_json)
 
@@ -274,17 +263,14 @@ def delete(
     env: t.Annotated[
         str,
         argutils.ArgumentOrKeyword(
-            "--env",
-            envvar=envutils.ENV_ENV,
-            help="UUID or name of the env."
-        )
+            "--env", envvar=envutils.ENV_ENV, help="UUID or name of the env."
+        ),
     ],
     force: t.Annotated[
         bool,
         typer.Option(
-            "--force",
-            help="Delete DB records even if env is not destroyed."
-        )
+            "--force", help="Delete DB records even if env is not destroyed."
+        ),
     ] = False,
 ) -> None:
     """Delete all records related to the environment from db."""
@@ -295,11 +281,7 @@ def delete(
 @cliutils.suppress_warnings
 def list_(
     to_json: t.Annotated[
-        bool,
-        typer.Option(
-            "--json",
-            help="Format output as JSON."
-        )
+        bool, typer.Option("--json", help="Format output as JSON.")
     ] = False,
 ) -> None:
     """List existing environments."""
@@ -329,24 +311,17 @@ def show(
     env: t.Annotated[
         str,
         argutils.ArgumentOrKeyword(
-            "--env",
-            envvar=envutils.ENV_ENV,
-            help="UUID or name of the env."
-        )
+            "--env", envvar=envutils.ENV_ENV, help="UUID or name of the env."
+        ),
     ],
     to_json: t.Annotated[
-        bool,
-        typer.Option(
-            "--json",
-            help="Format output as JSON."
-        )
+        bool, typer.Option("--json", help="Format output as JSON.")
     ] = False,
     only_spec: t.Annotated[
         bool,
         typer.Option(
-            "--only-spec",
-            help="Print only a spec for the environment."
-        )
+            "--only-spec", help="Print only a spec for the environment."
+        ),
     ] = False,
 ) -> None:
     """Show base information about the environment record."""
@@ -359,17 +334,11 @@ def info(
     env: t.Annotated[
         str,
         argutils.ArgumentOrKeyword(
-            "--env",
-            envvar=envutils.ENV_ENV,
-            help="UUID or name of the env."
-        )
+            "--env", envvar=envutils.ENV_ENV, help="UUID or name of the env."
+        ),
     ],
     to_json: t.Annotated[
-        bool,
-        typer.Option(
-            "--json",
-            help="Format output as JSON."
-        )
+        bool, typer.Option("--json", help="Format output as JSON.")
     ] = False,
 ) -> None:
     """Retrieve and show environment information."""
@@ -386,10 +355,13 @@ def info(
     table = prettytable.PrettyTable()
     table.field_names = ["platform", "info", "error"]
     for platform, data in env_info.items():
-        table.add_row([
-            platform, json.dumps(data["info"], indent=2),
-            data.get("error") or ""
-        ])
+        table.add_row(
+            [
+                platform,
+                json.dumps(data["info"], indent=2),
+                data.get("error") or "",
+            ]
+        )
     table.align = "l"
     print(env_obj)
     print(table.get_string())
@@ -402,24 +374,14 @@ def check(
     env: t.Annotated[
         str,
         argutils.ArgumentOrKeyword(
-            "--env",
-            envvar=envutils.ENV_ENV,
-            help="UUID or name of the env."
-        )
+            "--env", envvar=envutils.ENV_ENV, help="UUID or name of the env."
+        ),
     ],
     to_json: t.Annotated[
-        bool,
-        typer.Option(
-            "--json",
-            help="Format output as JSON."
-        )
+        bool, typer.Option("--json", help="Format output as JSON.")
     ] = False,
     detailed: t.Annotated[
-        bool,
-        typer.Option(
-            "--detailed",
-            help="Show detailed information."
-        )
+        bool, typer.Option("--detailed", help="Show detailed information.")
     ] = False,
 ) -> None:
     """Check availability of all platforms in environment."""
@@ -436,7 +398,9 @@ def check(
     def _format_raw(plugin_name: str, el: dict) -> list:
         return [
             el["available"] and YES or NO,
-            plugin_name.split("@")[1], el["message"], plugin_name
+            plugin_name.split("@")[1],
+            el["message"],
+            plugin_name,
         ]
 
     table = prettytable.PrettyTable()
@@ -470,17 +434,10 @@ def check(
 def use(
     env: t.Annotated[
         str,
-        argutils.ArgumentOrKeyword(
-            "--env",
-            help="UUID or name of the env."
-        )
+        argutils.ArgumentOrKeyword("--env", help="UUID or name of the env."),
     ],
     to_json: t.Annotated[
-        bool,
-        typer.Option(
-            "--json",
-            help="Format output as JSON."
-        )
+        bool, typer.Option("--json", help="Format output as JSON.")
     ] = False,
 ) -> None:
     """Set default environment."""

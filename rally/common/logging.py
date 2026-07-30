@@ -28,11 +28,14 @@ from rally.common import cfg
 
 log = __import__("logging")
 
-DEBUG_OPTS = [cfg.BoolOpt(
-    "rally-debug",
-    default=False,
-    help="Print debugging output only for Rally. "
-         "Off-site components stay quiet.")]
+DEBUG_OPTS = [
+    cfg.BoolOpt(
+        "rally-debug",
+        default=False,
+        help="Print debugging output only for Rally. "
+        "Off-site components stay quiet.",
+    )
+]
 
 CONF = cfg.CONF
 CONF.register_cli_opts(DEBUG_OPTS)
@@ -42,14 +45,14 @@ log.RDEBUG = log.DEBUG + 1
 log.addLevelName(log.RDEBUG, "RALLYDEBUG")
 
 CRITICAL = log.CRITICAL  # 50
-FATAL = log.FATAL        # 50
-ERROR = log.ERROR        # 40
-WARN = log.WARN          # 30
-WARNING = log.WARNING    # 30
-INFO = log.INFO          # 20
-RDEBUG = log.RDEBUG      # 11
-DEBUG = log.DEBUG        # 10
-NOTSET = log.NOTSET      # 0
+FATAL = log.FATAL  # 50
+ERROR = log.ERROR  # 40
+WARN = log.WARN  # 30
+WARNING = log.WARNING  # 30
+INFO = log.INFO  # 20
+RDEBUG = log.RDEBUG  # 11
+DEBUG = log.DEBUG  # 10
+NOTSET = log.NOTSET  # 0
 
 
 def setup(product_name, version="unknown"):
@@ -59,16 +62,16 @@ def setup(product_name, version="unknown"):
     oslogging.setup(CONF, product_name, version)
 
     if CONF.rally_debug:
-        oslogging.getLogger(
-            project=product_name).logger.setLevel(log.RDEBUG)
+        oslogging.getLogger(project=product_name).logger.setLevel(log.RDEBUG)
 
 
 class RallyContextAdapter(oslogging.KeywordArgumentAdapter):
-
     _posargs_msg = "Do not use *args for string formatting for log message: %s"
-    _exc_msg = ("Do not transmit an exception objects to logging. It will "
-                "be included automagically. Transmit a user-friendly "
-                "explanation instead.")
+    _exc_msg = (
+        "Do not transmit an exception objects to logging. It will "
+        "be included automagically. Transmit a user-friendly "
+        "explanation instead."
+    )
 
     @staticmethod
     def _find_the_caller(i=0):
@@ -114,23 +117,22 @@ class RallyContextAdapter(oslogging.KeywordArgumentAdapter):
             caller = self._find_the_caller()
             logger = getLogger("%s:%s" % (caller[0], caller[1]))
             logger.warning("[%s] %s" % (caller[2], self._exc_msg))
-        super(RallyContextAdapter, self).exception(msg, exc_info=exc_info,
-                                                   *args, **kwargs)
+        super().exception(msg, exc_info=exc_info, *args, **kwargs)
 
 
 def getLogger(name="unknown", version="unknown"):
 
     if name not in oslogging._loggers:
-        oslogging._loggers[name] = RallyContextAdapter(log.getLogger(name),
-                                                       {"project": "rally",
-                                                        "version": version})
+        oslogging._loggers[name] = RallyContextAdapter(
+            log.getLogger(name), {"project": "rally", "version": version}
+        )
     return oslogging._loggers[name]
 
 
 LOG = getLogger(__name__)
 
 
-class ExceptionLogger(object):
+class ExceptionLogger:
     """Context that intercepts and logs exceptions.
 
     Usage::
@@ -191,6 +193,7 @@ class LogCatcher:
 
             catcher_in_rye.assertInLogs("Running Kids")
     """
+
     def __init__(self, logger):
         self.logger = getattr(logger, "logger", logger)
         self.handler = CatcherHandler()
@@ -209,8 +212,9 @@ class LogCatcher:
         :return: Log messages where the `msg' was found.
             Raises AssertionError if none.
         """
-        in_logs = [record.msg
-                   for record in self.handler.buffer if msg in record.msg]
+        in_logs = [
+            record.msg for record in self.handler.buffer if msg in record.msg
+        ]
         if not in_logs:
             raise AssertionError("Expected `%s' is not in logs" % msg)
         return in_logs
@@ -241,18 +245,22 @@ def _log_wrapper(obj, log_function, msg, **kw):
     :param msg: Text message (possibly parameterized) to be put to the log
     :param **kw: Parameters for msg
     """
+
     def decorator(f):
         @functools.wraps(f)
         def wrapper(self, *args, **kwargs):
-            params = {"msg": msg % kw, "obj_name": obj.title(),
-                      "uuid": getattr(self, obj)["uuid"]}
-            log_function("%(obj_name)s %(uuid)s | Starting:  %(msg)s"
-                         % params)
+            params = {
+                "msg": msg % kw,
+                "obj_name": obj.title(),
+                "uuid": getattr(self, obj)["uuid"],
+            }
+            log_function("%(obj_name)s %(uuid)s | Starting:  %(msg)s" % params)
             result = f(self, *args, **kwargs)
-            log_function("%(obj_name)s %(uuid)s | Completed: %(msg)s"
-                         % params)
+            log_function("%(obj_name)s %(uuid)s | Completed: %(msg)s" % params)
             return result
+
         return wrapper
+
     return decorator
 
 
@@ -277,29 +285,36 @@ def log_deprecated(message, rally_version, log_function=None, once=False):
     :param once: Show only once (default is each)
     """
     log_function = log_function or LOG.warning
-    msg = ("`%(func)s()' is deprecated in v%(version)s: %(msg)s."
-           " Used at %(caller)s")
+    msg = (
+        "`%(func)s()' is deprecated in v%(version)s: %(msg)s."
+        " Used at %(caller)s"
+    )
 
     def decorator(f):
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
             if not (once and getattr(f, "_warned_dep_method", False)):
-                log_function(msg % {
-                    "msg": message,
-                    "version": rally_version,
-                    "func": f.__name__,
-                    "caller": str(traceback.extract_stack()[-2])
-                })
+                log_function(
+                    msg
+                    % {
+                        "msg": message,
+                        "version": rally_version,
+                        "func": f.__name__,
+                        "caller": str(traceback.extract_stack()[-2]),
+                    }
+                )
 
             f._warned_dep_method = True
             return f(*args, **kwargs)
 
         return wrapper
+
     return decorator
 
 
-def log_deprecated_args(message, rally_version, deprecated_args,
-                        log_function=None, once=False):
+def log_deprecated_args(
+    message, rally_version, deprecated_args, log_function=None, once=False
+):
     """A wrapper marking certain arguments as deprecated.
 
     :param message: Message that describes why the arguments were deprecated
@@ -309,29 +324,36 @@ def log_deprecated_args(message, rally_version, deprecated_args,
     :param once: Show only once (default is each)
     """
     log_function = log_function or LOG.warning
-    msg = ("Argument(s): %(args)s of `%(func)s()' are deprecated in "
-           "v%(version)s: %(msg)s. Used at %(caller)s")
+    msg = (
+        "Argument(s): %(args)s of `%(func)s()' are deprecated in "
+        "v%(version)s: %(msg)s. Used at %(caller)s"
+    )
 
     def decorator(f):
 
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
             if not (once and getattr(f, "_warned_dep_args", False)):
-                deprecated = ", ".join([
-                    "`%s'" % x for x in deprecated_args if x in kwargs])
+                deprecated = ", ".join(
+                    ["`%s'" % x for x in deprecated_args if x in kwargs]
+                )
                 if deprecated:
-                    log_function(msg % {
-                        "msg": message,
-                        "version": rally_version,
-                        "args": deprecated,
-                        "func": f.__name__,
-                        "caller": str(traceback.extract_stack()[-2])
-                    })
+                    log_function(
+                        msg
+                        % {
+                            "msg": message,
+                            "version": rally_version,
+                            "args": deprecated,
+                            "func": f.__name__,
+                            "caller": str(traceback.extract_stack()[-2]),
+                        }
+                    )
 
             f._warned_dep_args = True
             return f(*args, **kwargs)
 
         return wrapper
+
     return decorator
 
 
@@ -348,9 +370,9 @@ def is_debug() -> bool:
 
 
 _CLI_OPTS = [
-    *DEBUG_OPTS,                     # --rally-debug
-    *log_options.common_cli_opts,    # --debug/-d
-    *log_options.logging_cli_opts,   # --log-file, --log-dir, ...
+    *DEBUG_OPTS,  # --rally-debug
+    *log_options.common_cli_opts,  # --debug/-d
+    *log_options.logging_cli_opts,  # --log-file, --log-dir, ...
 ]
 
 _CLI_TYPES: dict[type, t.Any] = {
@@ -403,13 +425,14 @@ def build_cli_params() -> list:
                 opt.dest,
                 inspect.Parameter.KEYWORD_ONLY,
                 default=default,
-                annotation=t.Annotated[typ, option]
+                annotation=t.Annotated[typ, option],
             )
         )
         _CLI_FIELDS[opt.dest] = _FieldInfo(
             oslo_name=opt.name,
             is_bool=isinstance(opt, cfg.BoolOpt),
-            is_list=isinstance(opt, (cfg.ListOpt, cfg.MultiStrOpt)))
+            is_list=isinstance(opt, (cfg.ListOpt, cfg.MultiStrOpt)),
+        )
     return params
 
 
@@ -425,6 +448,6 @@ def to_oslo_argv(values: t.Mapping) -> list[str]:
             if value:
                 argv.append("--%s" % info.oslo_name)
         elif value is not None:
-            for item in (value if info.is_list else [value]):
+            for item in value if info.is_list else [value]:
                 argv += ["--%s" % info.oslo_name, str(item)]
     return argv

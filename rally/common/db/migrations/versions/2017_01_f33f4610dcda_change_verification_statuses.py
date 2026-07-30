@@ -39,7 +39,7 @@ verifications_helper = sa.Table(
     sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
     sa.Column("failures", sa.Integer, default=0),
     sa.Column("unexpected_success", sa.Integer, default=0),
-    sa.Column("status", sa.String(36), nullable=False)
+    sa.Column("status", sa.String(36), nullable=False),
 )
 
 
@@ -48,7 +48,8 @@ def upgrade() -> None:
     for v in connection.execute(verifications_helper.select()):
         new_status = v.status
         if v.status == "finished" and (
-                v.failures != 0 or v.unexpected_success != 0):
+            v.failures != 0 or v.unexpected_success != 0
+        ):
             new_status = "failed"
         elif v.status == "failed":
             new_status = "crashed"
@@ -56,9 +57,11 @@ def upgrade() -> None:
             pass
 
         if new_status != v.status:
-            connection.execute(verifications_helper.update().where(
-                verifications_helper.c.id == v.id).values(
-                status=new_status))
+            connection.execute(
+                verifications_helper.update()
+                .where(verifications_helper.c.id == v.id)
+                .values(status=new_status)
+            )
 
 
 def downgrade() -> None:

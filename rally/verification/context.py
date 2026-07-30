@@ -53,7 +53,7 @@ class VerifierContext(context.BaseContext):
     """Verifier context that will be run before starting a verification."""
 
     def __init__(self, ctx):
-        super(VerifierContext, self).__init__(ctx)
+        super().__init__(ctx)
         self.verification = self.context.get("verification", {})
         self.verifier = self.context["verifier"]
 
@@ -84,16 +84,18 @@ class VerifierContext(context.BaseContext):
 
 
 class ContextManager(context.ContextManager):
-
     @staticmethod
     def validate(ctx):
         for name, config in ctx.items():
             VerifierContext.get(name, allow_hidden=True).validate(config)
 
     def _get_sorted_context_lst(self):
-        return sorted([
-            VerifierContext.get(name, allow_hidden=True)(self.context_obj)
-            for name in self.context_obj["config"].keys()])
+        return sorted(
+            [
+                VerifierContext.get(name, allow_hidden=True)(self.context_obj)
+                for name in self.context_obj["config"].keys()
+            ]
+        )
 
     def _log_prefix(self):
         return "Verification %s |" % self.context_obj["verifier"]["uuid"]

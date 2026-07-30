@@ -39,16 +39,13 @@ def upgrade() -> None:
         "envs",
         sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
         sa.Column("uuid", sa.String(36), nullable=False),
-
         sa.Column("name", sa.String(255), nullable=False),
         sa.Column("description", sa.Text, default=""),
         sa.Column("status", sa.String(36), nullable=False),
-
         sa.Column("extras", sa_types.MutableJSONEncodedDict, default={}),
         sa.Column("spec", sa_types.MutableJSONEncodedDict, default={}),
-
         sa.Column("created_at", sa.DateTime),
-        sa.Column("updated_at", sa.DateTime)
+        sa.Column("updated_at", sa.DateTime),
     )
 
     op.create_index("env_uuid", "envs", ["uuid"], unique=True)
@@ -60,22 +57,18 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
         sa.Column("uuid", sa.String(36), nullable=False),
         sa.Column("env_uuid", sa.String(36), nullable=False),
-
         sa.Column("status", sa.String(36), nullable=False),
-
         sa.Column("plugin_name", sa.String(36), nullable=False),
-        sa.Column("plugin_spec", sa_types.MutableJSONEncodedDict,
-                  nullable=False),
-        sa.Column("plugin_data", sa_types.MutableJSONEncodedDict,
-                  default={}),
-
+        sa.Column(
+            "plugin_spec", sa_types.MutableJSONEncodedDict, nullable=False
+        ),
+        sa.Column("plugin_data", sa_types.MutableJSONEncodedDict, default={}),
         sa.Column("platform_name", sa.String(36)),
-        sa.Column("platform_data", sa_types.MutableJSONEncodedDict,
-                  default={}),
-
+        sa.Column(
+            "platform_data", sa_types.MutableJSONEncodedDict, default={}
+        ),
         sa.Column("created_at", sa.DateTime),
         sa.Column("updated_at", sa.DateTime),
-
     )
 
     op.create_index("platform_uuid", "platforms", ["uuid"], unique=True)

@@ -137,7 +137,7 @@ def get_tasks_results():
 @ddt.ddt
 class ElasticSearchExporterTestCase(test.TestCase):
     def setUp(self):
-        super(ElasticSearchExporterTestCase, self).setUp()
+        super().setUp()
         self.patcher = mock.patch.object(elastic.client, "ElasticSearchClient")
         self.es_cls = self.patcher.start()
         self.addCleanup(self.patcher.stop)

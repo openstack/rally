@@ -20,7 +20,7 @@ class YamlTestcase(test.TestCase):
     """Test yaml loading method."""
 
     def setUp(self):
-        super(YamlTestcase, self).setUp()
+        super().setUp()
 
     def test_safe_load(self):
         stream = "{'a': 1, 'b': {'a': 2}}"

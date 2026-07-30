@@ -33,6 +33,7 @@ ParserError = parser.ParserError
 #   the workaround with overridden __repr__ method looks like the best choice.
 class OrderedDict(collections.OrderedDict):
     """collections.OrderedDict with __repr__ like in the regular dict."""
+
     def __repr__(self):
         return json.dumps(self, sort_keys=False)
 
@@ -47,7 +48,8 @@ def _construct_mapping(loader, node, deep=False):
                     "while constructing a mapping",
                     node.start_mark,
                     "the key (%s) is redefined" % key,
-                    key_node.start_mark)
+                    key_node.start_mark,
+                )
             keys.append(key)
     return OrderedDict(loader.construct_pairs(node))
 
@@ -56,8 +58,9 @@ class _SafeLoader(loader.SafeLoader):
     pass
 
 
-_SafeLoader.add_constructor(resolver.BaseResolver.DEFAULT_MAPPING_TAG,
-                            _construct_mapping)
+_SafeLoader.add_constructor(
+    resolver.BaseResolver.DEFAULT_MAPPING_TAG, _construct_mapping
+)
 
 
 def safe_load(stream):

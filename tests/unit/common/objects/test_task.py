@@ -30,7 +30,7 @@ from tests.unit import test
 @ddt.ddt
 class TaskTestCase(test.TestCase):
     def setUp(self):
-        super(TaskTestCase, self).setUp()
+        super().setUp()
         self.task = {
             "uuid": "00ef46a2-c5b8-4aea-a5ca-0f54a10cbca1",
             "status": consts.TaskStatus.INIT,
@@ -392,7 +392,7 @@ class TaskTestCase(test.TestCase):
 class SubtaskTestCase(test.TestCase):
 
     def setUp(self):
-        super(SubtaskTestCase, self).setUp()
+        super().setUp()
         self.subtask = {
             "task_uuid": "00ef46a2-c5b8-4aea-a5ca-0f54a10cbca1",
             "uuid": "00ef46a2-c5b8-4aea-a5ca-0f54a10cbca2",
@@ -449,7 +449,7 @@ class SubtaskTestCase(test.TestCase):
 class WorkloadTestCase(test.TestCase):
 
     def setUp(self):
-        super(WorkloadTestCase, self).setUp()
+        super().setUp()
         self.workload = {
             "task_uuid": "00ef46a2-c5b8-4aea-a5ca-0f54a10cbca1",
             "subtask_uuid": "00ef46a2-c5b8-4aea-a5ca-0f54a10cbca2",

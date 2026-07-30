@@ -85,7 +85,7 @@ class ScenarioConfigureTestCase(test.TestCase):
                 a_enum: Color,
                 a_opt: t.Annotated[int, scenario.Field(ge=1)] | None,
                 a_opt604: int | None,          # PEP 604 nullable
-                a_optU: t.Optional[str],       # typing.Optional
+                a_optU: str | None,       # typing.Optional
                 tags: list[str],
                 counts: dict[str, int],
                 anything: list[t.Any],         # list[Any] stays open

@@ -50,7 +50,7 @@ def _worker_process(
     runs_per_second: t.Callable[[dict[str, float] | float, float, int], float],
     rps_cfg: dict[str, float] | float,
     processes_to_start: int,
-    info: dict[str, t.Any]
+    info: dict[str, t.Any],
 ) -> None:
     """Start scenario within threads.
 
@@ -83,11 +83,18 @@ def _worker_process(
         rps = rps_cfg
     sleep = 1.0 / rps
 
-    runner._log_worker_info(times=times, rps=rps, timeout=timeout,
-                            cls=cls, method_name=method_name, args=args)
+    runner._log_worker_info(
+        times=times,
+        rps=rps,
+        timeout=timeout,
+        cls=cls,
+        method_name=method_name,
+        args=args,
+    )
 
     time.sleep(
-        (sleep * info["processes_counter"]) / info["processes_to_start"])
+        (sleep * info["processes_counter"]) / info["processes_to_start"]
+    )
 
     start = time.time()
     timeout_queue: Queue.Queue[
@@ -96,19 +103,26 @@ def _worker_process(
 
     if timeout:
         collector_thr_by_timeout = threading.Thread(
-            target=utils.timeout_thread,
-            args=(timeout_queue, )
+            target=utils.timeout_thread, args=(timeout_queue,)
         )
         collector_thr_by_timeout.start()
 
     i = 0
     while i < times and not aborted.is_set():
-        scenario_context = runner._get_scenario_context(next(iteration_gen),
-                                                        context)
+        scenario_context = runner._get_scenario_context(
+            next(iteration_gen), context
+        )
         worker_args = (
-            queue, cls, method_name, scenario_context, args, event_queue)
-        thread = threading.Thread(target=runner._worker_thread,
-                                  args=worker_args)
+            queue,
+            cls,
+            method_name,
+            scenario_context,
+            args,
+            event_queue,
+        )
+        thread = threading.Thread(
+            target=runner._worker_thread, args=worker_args
+        )
 
         i += 1
         thread.start()
@@ -120,14 +134,19 @@ def _worker_process(
         real_rps = i / time_gap if time_gap else "Infinity"
 
         LOG.debug(
-            "Worker: %s rps: %s (requested rps: %s)" %
-            (i, real_rps, runs_per_second(rps_cfg, start, processes_to_start)))
+            "Worker: %s rps: %s (requested rps: %s)"
+            % (
+                i,
+                real_rps,
+                runs_per_second(rps_cfg, start, processes_to_start),
+            )
+        )
 
         # try to join latest thread(s) until it finished, or until time to
         # start new thread (if we have concurrent slots available)
         while i / (time.time() - start) > runs_per_second(
-                rps_cfg, start, processes_to_start) or (
-                    len(pool) >= max_concurrent):
+            rps_cfg, start, processes_to_start
+        ) or (len(pool) >= max_concurrent):
             if pool:
                 pool[0].join(0.001)
                 if not pool[0].is_alive():
@@ -139,7 +158,12 @@ def _worker_process(
         pool.popleft().join()
 
     if timeout:
-        timeout_queue.put((None, None,))
+        timeout_queue.put(
+            (
+                None,
+                None,
+            )
+        )
         collector_thr_by_timeout.join()
 
 
@@ -152,7 +176,7 @@ class CheckPRSValidator(validation.Validator):
         context: dict[str, t.Any],
         config: dict[str, t.Any] | None,
         plugin_cls: type[runner.plugin.Plugin],
-        plugin_cfg: dict[str, t.Any] | None
+        plugin_cfg: dict[str, t.Any] | None,
     ) -> None:
         if plugin_cfg and isinstance(plugin_cfg["rps"], dict):
             if plugin_cfg["rps"]["end"] < plugin_cfg["rps"]["start"]:
@@ -163,16 +187,17 @@ class CheckPRSValidator(validation.Validator):
 def _runs_per_second(
     rps_cfg: dict[str, float] | float,
     start_timer: float,
-    number_of_processes: int
+    number_of_processes: int,
 ) -> float:
     """At the given second return desired rps."""
 
     if not isinstance(rps_cfg, dict):
         return float(rps_cfg) / number_of_processes
-    stage_order = (time.time() - start_timer) / rps_cfg.get(
-        "duration", 1) - 1
-    rps = (float(rps_cfg["start"] + rps_cfg["step"] * stage_order)
-           / number_of_processes)
+    stage_order = (time.time() - start_timer) / rps_cfg.get("duration", 1) - 1
+    rps = (
+        float(rps_cfg["start"] + rps_cfg["step"] * stage_order)
+        / number_of_processes
+    )
 
     return min(rps, float(rps_cfg["end"]))
 
@@ -195,61 +220,40 @@ class RPSScenarioRunner(runner.ScenarioRunner):
         "type": "object",
         "$schema": consts.JSON_SCHEMA7,
         "properties": {
-            "times": {
-                "type": "integer",
-                "minimum": 1
-            },
+            "times": {"type": "integer", "minimum": 1},
             "rps": {
                 "anyOf": [
                     {
                         "description": "Generate constant requests per second "
-                                       "during the whole workload.",
+                        "during the whole workload.",
                         "type": "number",
                         "exclusiveMinimum": 0,
-                        "minimum": 0
+                        "minimum": 0,
                     },
                     {
                         "type": "object",
                         "description": "Increase requests per second for "
-                                       "specified value each time after a "
-                                       "certain number of seconds.",
+                        "specified value each time after a "
+                        "certain number of seconds.",
                         "properties": {
-                            "start": {
-                                "type": "number",
-                                "minimum": 1
-                            },
-                            "end": {
-                                "type": "number",
-                                "minimum": 1
-                            },
-                            "step": {
-                                "type": "number",
-                                "minimum": 1
-                            },
-                            "duration": {
-                                "type": "number",
-                                "minimum": 1
-                            }
+                            "start": {"type": "number", "minimum": 1},
+                            "end": {"type": "number", "minimum": 1},
+                            "step": {"type": "number", "minimum": 1},
+                            "duration": {"type": "number", "minimum": 1},
                         },
                         "additionalProperties": False,
-                        "required": ["start", "end", "step"]
-                    }
+                        "required": ["start", "end", "step"],
+                    },
                 ],
             },
             "timeout": {
                 "type": "number",
             },
-            "max_concurrency": {
-                "type": "integer",
-                "minimum": 1
-            },
-            "max_cpu_count": {
-                "type": "integer",
-                "minimum": 1
-            }
+            "max_concurrency": {"type": "integer", "minimum": 1},
+            "max_cpu_count": {"type": "integer", "minimum": 1},
         },
         "required": ["times", "rps"],
-        "additionalProperties": False
+        "additionalProperties": False,
     }
 
     def _run_scenario(
@@ -257,7 +261,7 @@ class RPSScenarioRunner(runner.ScenarioRunner):
         cls: type[scenario.Scenario],
         method_name: t.Literal["run"],
         context: dict[str, t.Any],
-        args: dict[str, t.Any]
+        args: dict[str, t.Any],
     ) -> None:
         """Runs the specified scenario with given arguments.
 
@@ -281,29 +285,37 @@ class RPSScenarioRunner(runner.ScenarioRunner):
         iteration_gen = utils.RAMInt()
 
         cpu_count = multiprocessing.cpu_count()
-        max_cpu_used = min(cpu_count,
-                           self.config.get("max_cpu_count", cpu_count))
+        max_cpu_used = min(
+            cpu_count, self.config.get("max_cpu_count", cpu_count)
+        )
 
-        processes_to_start = min(max_cpu_used, times,
-                                 self.config.get("max_concurrency", times))
+        processes_to_start = min(
+            max_cpu_used, times, self.config.get("max_concurrency", times)
+        )
         times_per_worker, times_overhead = divmod(times, processes_to_start)
 
         # Determine concurrency per worker
         concurrency_per_worker, concurrency_overhead = divmod(
-            self.config.get("max_concurrency", times), processes_to_start)
+            self.config.get("max_concurrency", times), processes_to_start
+        )
 
-        self._log_debug_info(times=times, timeout=timeout,
-                             max_cpu_used=max_cpu_used,
-                             processes_to_start=processes_to_start,
-                             times_per_worker=times_per_worker,
-                             times_overhead=times_overhead,
-                             concurrency_per_worker=concurrency_per_worker,
-                             concurrency_overhead=concurrency_overhead)
+        self._log_debug_info(
+            times=times,
+            timeout=timeout,
+            max_cpu_used=max_cpu_used,
+            processes_to_start=processes_to_start,
+            times_per_worker=times_per_worker,
+            times_overhead=times_overhead,
+            concurrency_per_worker=concurrency_per_worker,
+            concurrency_overhead=concurrency_overhead,
+        )
 
         result_queue: multiprocessing.Queue[runner.ScenarioRunnerResult] = (
-            multiprocessing.Queue())
+            multiprocessing.Queue()
+        )
         event_queue: multiprocessing.Queue[dict[str, t.Any]] = (
-            multiprocessing.Queue())
+            multiprocessing.Queue()
+        )
 
         def worker_args_gen(
             times_overhead: int, concurrency_overhead: int
@@ -322,12 +334,20 @@ class RPSScenarioRunner(runner.ScenarioRunner):
             """
             while True:
                 yield (
-                    result_queue, iteration_gen, timeout,
+                    result_queue,
+                    iteration_gen,
+                    timeout,
                     times_per_worker + (times_overhead and 1),
                     concurrency_per_worker + (concurrency_overhead and 1),
-                    context, cls, method_name, args, event_queue,
-                    self.aborted, _runs_per_second, self.config["rps"],
-                    processes_to_start
+                    context,
+                    cls,
+                    method_name,
+                    args,
+                    event_queue,
+                    self.aborted,
+                    _runs_per_second,
+                    self.config["rps"],
+                    processes_to_start,
                 )
                 if times_overhead:
                     times_overhead -= 1
@@ -335,6 +355,8 @@ class RPSScenarioRunner(runner.ScenarioRunner):
                     concurrency_overhead -= 1
 
         process_pool = self._create_process_pool(
-            processes_to_start, _worker_process,
-            worker_args_gen(times_overhead, concurrency_overhead))
+            processes_to_start,
+            _worker_process,
+            worker_args_gen(times_overhead, concurrency_overhead),
+        )
         self._join_processes(process_pool, result_queue, event_queue)

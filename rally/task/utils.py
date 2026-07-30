@@ -44,15 +44,17 @@ def get_status(resource, status_attr="status"):
             return status.upper()
 
     # Dict case
-    if (isinstance(resource, dict)
-            and status_attr in resource.keys()
-            and isinstance(resource[status_attr], str)):
+    if (
+        isinstance(resource, dict)
+        and status_attr in resource.keys()
+        and isinstance(resource[status_attr], str)
+    ):
         return resource[status_attr].upper()
 
     return "NONE"
 
 
-class resource_is(object):
+class resource_is:
     def __init__(self, desired_status, status_getter=None):
         self.desired_status = desired_status
         self.status_getter = status_getter or get_status
@@ -66,7 +68,7 @@ class resource_is(object):
 
 def get_from_manager(error_statuses=None):
     error_statuses = error_statuses or ["ERROR"]
-    error_statuses = map(lambda str: str.upper(), error_statuses)
+    error_statuses = (status.upper() for status in error_statuses)
 
     def _get_from_manager(resource, id_attr="id"):
         # catch client side errors
@@ -84,8 +86,8 @@ def get_from_manager(error_statuses=None):
             raise exceptions.GetResourceNotFound(resource=res)
         if status in error_statuses:
             raise exceptions.GetResourceErrorStatus(
-                resource=res, status=status,
-                fault=getattr(res, "fault", "n/a"))
+                resource=res, status=status, fault=getattr(res, "fault", "n/a")
+            )
 
         return res
 
@@ -95,13 +97,22 @@ def get_from_manager(error_statuses=None):
 def manager_list_size(sizes):
     def _list(mgr):
         return len(mgr.list()) in sizes
+
     return _list
 
 
 @logging.log_deprecated("Use wait_for_status instead.", "0.1.2", once=True)
-def wait_for(resource, is_ready=None, ready_statuses=None,
-             failure_statuses=None, status_attr="status", update_resource=None,
-             timeout=60, check_interval=1, id_attr="id"):
+def wait_for(
+    resource,
+    is_ready=None,
+    ready_statuses=None,
+    failure_statuses=None,
+    status_attr="status",
+    update_resource=None,
+    timeout=60,
+    check_interval=1,
+    id_attr="id",
+):
     """Waits for the given resource to come into the one of the given statuses.
 
     The method can be used to check resource for status with a `is_ready`
@@ -132,23 +143,30 @@ def wait_for(resource, is_ready=None, ready_statuses=None,
     """
 
     if is_ready is not None:
-        return wait_is_ready(resource=resource, is_ready=is_ready,
-                             update_resource=update_resource, timeout=timeout,
-                             check_interval=check_interval)
+        return wait_is_ready(
+            resource=resource,
+            is_ready=is_ready,
+            update_resource=update_resource,
+            timeout=timeout,
+            check_interval=check_interval,
+        )
     else:
-        return wait_for_status(resource=resource,
-                               ready_statuses=ready_statuses,
-                               failure_statuses=failure_statuses,
-                               status_attr=status_attr,
-                               update_resource=update_resource,
-                               timeout=timeout,
-                               check_interval=check_interval,
-                               id_attr=id_attr)
+        return wait_for_status(
+            resource=resource,
+            ready_statuses=ready_statuses,
+            failure_statuses=failure_statuses,
+            status_attr=status_attr,
+            update_resource=update_resource,
+            timeout=timeout,
+            check_interval=check_interval,
+            id_attr=id_attr,
+        )
 
 
 @logging.log_deprecated("Use wait_for_status instead.", "0.1.2", once=True)
-def wait_is_ready(resource, is_ready, update_resource=None,
-                  timeout=60, check_interval=1):
+def wait_is_ready(
+    resource, is_ready, update_resource=None, timeout=60, check_interval=1
+):
 
     resource_repr = getattr(resource, "name", repr(resource))
     start = time.time()
@@ -168,39 +186,53 @@ def wait_is_ready(resource, is_ready, update_resource=None,
                 resource_type=resource.__class__.__name__,
                 resource_id=getattr(resource, "id", "<no id>"),
                 resource_status=get_status(resource),
-                timeout=timeout)
+                timeout=timeout,
+            )
 
 
-def wait_for_status(resource, ready_statuses, failure_statuses=["error"],
-                    status_attr="status", update_resource=None,
-                    timeout=60, check_interval=1, check_deletion=False,
-                    id_attr="id"):
+def wait_for_status(
+    resource,
+    ready_statuses,
+    failure_statuses=["error"],
+    status_attr="status",
+    update_resource=None,
+    timeout=60,
+    check_interval=1,
+    check_deletion=False,
+    id_attr="id",
+):
 
     resource_repr = getattr(resource, "name", repr(resource))
     if not isinstance(ready_statuses, (set, list, tuple)):
-        raise ValueError("Ready statuses should be supplied as set, list or "
-                         "tuple")
-    if failure_statuses and not isinstance(failure_statuses,
-                                           (set, list, tuple)):
-        raise ValueError("Failure statuses should be supplied as set, list or "
-                         "tuple")
+        raise ValueError(
+            "Ready statuses should be supplied as set, list or tuple"
+        )
+    if failure_statuses and not isinstance(
+        failure_statuses, (set, list, tuple)
+    ):
+        raise ValueError(
+            "Failure statuses should be supplied as set, list or tuple"
+        )
 
     # make all statuses upper case
-    ready_statuses = set(s.upper() for s in ready_statuses or [])
-    failure_statuses = set(s.upper() for s in failure_statuses or [])
+    ready_statuses = {s.upper() for s in ready_statuses or []}
+    failure_statuses = {s.upper() for s in failure_statuses or []}
 
-    if (ready_statuses & failure_statuses):
+    if ready_statuses & failure_statuses:
         raise ValueError(
             "Can't wait for resource's %s status. Ready and Failure "
-            "statuses conflict." % resource_repr)
+            "statuses conflict." % resource_repr
+        )
     if not ready_statuses:
         raise ValueError(
             "Can't wait for resource's %s status. No ready "
-            "statuses provided" % resource_repr)
+            "statuses provided" % resource_repr
+        )
     if not update_resource:
         raise ValueError(
             "Can't wait for resource's %s status. No update method."
-            % resource_repr)
+            % resource_repr
+        )
 
     start = time.time()
 
@@ -226,8 +258,13 @@ def wait_for_status(resource, ready_statuses, failure_statuses=["error"],
             LOG.debug(
                 "Waiting for resource %(resource)s. Status changed: "
                 "%(latest)s => %(current)s in %(delta)s"
-                % {"resource": resource_repr, "latest": latest_status,
-                   "current": status, "delta": delta})
+                % {
+                    "resource": resource_repr,
+                    "latest": latest_status,
+                    "current": status,
+                    "delta": delta,
+                }
+            )
 
             latest_status = status
             latest_status_update = current_time
@@ -238,7 +275,8 @@ def wait_for_status(resource, ready_statuses, failure_statuses=["error"],
             raise exceptions.GetResourceErrorStatus(
                 resource=resource,
                 status=status,
-                fault="Status in failure list %s" % str(failure_statuses))
+                fault="Status in failure list %s" % str(failure_statuses),
+            )
 
         time.sleep(check_interval)
         if time.time() - start > timeout:
@@ -248,12 +286,14 @@ def wait_for_status(resource, ready_statuses, failure_statuses=["error"],
                 resource_type=resource.__class__.__name__,
                 resource_id=getattr(resource, id_attr, "<no id>"),
                 resource_status=get_status(resource, status_attr),
-                timeout=timeout)
+                timeout=timeout,
+            )
 
 
 @logging.log_deprecated("Use wait_for_status instead.", "0.1.2", once=True)
-def wait_for_delete(resource, update_resource=None, timeout=60,
-                    check_interval=1):
+def wait_for_delete(
+    resource, update_resource=None, timeout=60, check_interval=1
+):
     """Wait for the full deletion of resource.
 
     :param update_resource: Function that should take the resource object
@@ -280,7 +320,8 @@ def wait_for_delete(resource, update_resource=None, timeout=60,
                 resource_type=resource.__class__.__name__,
                 resource_id=getattr(resource, "id", "<no id>"),
                 resource_status=get_status(resource),
-                timeout=timeout)
+                timeout=timeout,
+            )
 
 
 def format_exc(exc):
@@ -295,7 +336,7 @@ def infinite_run_args_generator(args_func):
             return
 
 
-class ActionBuilder(object):
+class ActionBuilder:
     """Builder class for mapping and creating action objects.
 
     An action list is an array of single key/value dicts which takes
@@ -318,15 +359,15 @@ class ActionBuilder(object):
             "type": "object",
             "properties": {},
             "additionalProperties": False,
-            "minItems": 0
-        }
+            "minItems": 0,
+        },
     }
 
     ITEM_TEMPLATE = {
         "type": "integer",
         "minimum": 0,
         "exclusiveMinimum": 0.0,
-        "optional": True
+        "optional": True,
     }
 
     def __init__(self, action_keywords):
@@ -339,7 +380,8 @@ class ActionBuilder(object):
         self.schema = dict(ActionBuilder.SCHEMA_TEMPLATE)
         for kw in action_keywords:
             self.schema["items"]["properties"][kw] = (
-                ActionBuilder.ITEM_TEMPLATE)
+                ActionBuilder.ITEM_TEMPLATE
+            )
 
     def bind_action(self, action_key, action, *args, **kwargs):
         """Bind an action to an action key.
@@ -356,7 +398,7 @@ class ActionBuilder(object):
         self._bindings[action_key] = {
             "action": action,
             "args": args or (),
-            "kwargs": kwargs or {}
+            "kwargs": kwargs or {},
         }
 
     def validate(self, actions):
@@ -368,9 +410,11 @@ class ActionBuilder(object):
 
     def _build(self, func, times, *args, **kwargs):
         """Build the wrapper action call."""
+
         def _f():
             for i in range(times):
                 func(*args, **kwargs)
+
         return _f
 
     def build_actions(self, actions, *args, **kwargs):
@@ -397,6 +441,11 @@ class ActionBuilder(object):
             dft_kwargs = dict(binding["kwargs"])
             dft_kwargs.update(kwargs or {})
             bound_actions.append(
-                self._build(binding["action"], times,
-                            *(binding["args"] + args), **dft_kwargs))
+                self._build(
+                    binding["action"],
+                    times,
+                    *(binding["args"] + args),
+                    **dft_kwargs,
+                )
+            )
         return bound_actions

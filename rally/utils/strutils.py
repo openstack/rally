@@ -19,11 +19,13 @@ import uuid
 
 
 def _format_uuid_string(string: str) -> str:
-    return (string.replace("urn:", "")
-                  .replace("uuid:", "")
-                  .strip("{}")
-                  .replace("-", "")
-                  .lower())
+    return (
+        string.replace("urn:", "")
+        .replace("uuid:", "")
+        .strip("{}")
+        .replace("-", "")
+        .lower()
+    )
 
 
 def is_uuid_like(val: t.Any) -> bool:
@@ -79,10 +81,12 @@ def bool_from_string(
         return False
     elif strict:
         acceptable = ", ".join(
-            "'%s'" % s for s in sorted(TRUE_STRINGS + FALSE_STRINGS))
-        msg = ("Unrecognized value '%(val)s', acceptable values are:"
-               " %(acceptable)s") % {"val": subject,
-                                     "acceptable": acceptable}
+            "'%s'" % s for s in sorted(TRUE_STRINGS + FALSE_STRINGS)
+        )
+        msg = (
+            "Unrecognized value '%(val)s', acceptable values are:"
+            " %(acceptable)s"
+        ) % {"val": subject, "acceptable": acceptable}
         raise ValueError(msg)
     else:
         return default

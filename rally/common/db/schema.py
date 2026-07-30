@@ -55,7 +55,8 @@ def schema_cleanup():
                 if not fk["name"]:
                     continue
                 fks.append(
-                    sa.schema.ForeignKeyConstraint((), (), name=fk["name"]))
+                    sa.schema.ForeignKeyConstraint((), (), name=fk["name"])
+                )
             table = sa.schema.Table(table_name, metadata, *fks)
             tbs.append(table)
             all_fks.extend(fks)
@@ -96,8 +97,10 @@ def schema_revision(config=None, engine=None, detailed=False):
     if detailed:
         config = config or _alembic_config()
         sc_dir = alembic.script.ScriptDirectory.from_config(config)
-        return {"revision": revision,
-                "current_head": sc_dir.get_current_head()}
+        return {
+            "revision": revision,
+            "current_head": sc_dir.get_current_head(),
+        }
     return revision
 
 
@@ -132,8 +135,9 @@ def schema_create(config=None, engine=None):
     #                schema, it will only add the new tables, but leave
     #                existing as is. So we should avoid of this situation.
     if schema_revision(engine=engine) is not None:
-        raise exceptions.DBMigrationError("DB schema is already under version"
-                                          " control. Use upgrade() instead")
+        raise exceptions.DBMigrationError(
+            "DB schema is already under version control. Use upgrade() instead"
+        )
 
     models.BASE.metadata.create_all(engine)
     schema_stamp("head", config=config)

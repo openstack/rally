@@ -26,7 +26,7 @@ PATH = "rally.plugins.verification.testr"
 class TestrContextTestCase(test.TestCase):
 
     def setUp(self):
-        super(TestrContextTestCase, self).setUp()
+        super().setUp()
         self.verifier = mock.Mock()
         self.prepare_run_args = self.verifier.manager.prepare_run_args
         self.prepare_run_args.side_effect = lambda x: x

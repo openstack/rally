@@ -46,10 +46,10 @@ class _EnvStatus(utils.ImmutableMixin, utils.EnumMixin):
     TRANSITION_TABLE = {
         INIT: (READY, FAILED_TO_CREATE),
         READY: (DESTROYING, CLEANING),
-        CLEANING: (READY, ),
-        FAILED_TO_CREATE: (DESTROYING, ),
+        CLEANING: (READY,),
+        FAILED_TO_CREATE: (DESTROYING,),
         DESTROYING: (DESTROYED, FAILED_TO_DESTROY),
-        FAILED_TO_DESTROY: (DESTROYING, )
+        FAILED_TO_DESTROY: (DESTROYING,),
     }
 
 
@@ -58,20 +58,18 @@ STATUS = _EnvStatus()
 SPEC_SCHEMA = {
     "type": "object",
     "patternProperties": {
-        "!version": {
-            "enum": [1],
-            "description": "Env format version"
-        },
+        "!version": {"enum": [1], "description": "Env format version"},
         "!description": {
             "type": "string",
-            "description": "User specific description of deployment"
+            "description": "User specific description of deployment",
         },
         "!extras": {
             "type": "object",
             "description": (
                 "External information provided by users, can be used for "
                 "integration of other tooling outside of rally or just "
-                "providing some specific meta information")
+                "providing some specific meta information"
+            ),
         },
         "!config": {
             "type": "object",
@@ -79,25 +77,25 @@ SPEC_SCHEMA = {
                 "*": {
                     "type": "object",
                     "description": (
-                        "Keys are option's name, values are option's values"),
-                    "properties": {
-                        "*": {"type": "object"}
-                    }
+                        "Keys are option's name, values are option's values"
+                    ),
+                    "properties": {"*": {"type": "object"}},
                 },
             },
-            "description": "Keys are groups, values are options names"
+            "description": "Keys are groups, values are options names",
         },
         "^[^!@]+(@[^!@]+)?$": {
             "type": "object",
             "description": (
-                "Key is platform plugin name, values are plugin specs")
-        }
+                "Key is platform plugin name, values are plugin specs"
+            ),
+        },
     },
-    "additionalProperties": False
+    "additionalProperties": False,
 }
 
 
-class EnvManager(object):
+class EnvManager:
     """Implements life cycle management of Rally Envs.
 
     EnvManager is one of key Rally components, It manages and stores
@@ -169,7 +167,7 @@ class EnvManager(object):
             "status": self._env["status"],
             "spec": copy.deepcopy(self._env["spec"]),
             "extras": copy.deepcopy(self._env["extras"]),
-            "platforms": platforms
+            "platforms": platforms,
         }
 
     @property
@@ -196,7 +194,7 @@ class EnvManager(object):
                     uuid=p["uuid"],
                     plugin_data=p["plugin_data"],
                     platform_data=p["platform_data"],
-                    status=p["status"]
+                    status=p["status"],
                 )
             )
 
@@ -234,7 +232,8 @@ class EnvManager(object):
             jsonschema.validate(spec, SPEC_SCHEMA)
         except jsonschema.ValidationError as err:
             raise exceptions.ManagerInvalidSpec(
-                mgr="Env", spec=spec, errors=[str(err)])
+                mgr="Env", spec=spec, errors=[str(err)]
+            )
 
         spec.pop("!version", None)
         config = spec.pop("!config", {})
@@ -250,10 +249,13 @@ class EnvManager(object):
             platform_name = p_name.split("@")[1] if "@" in p_name else p_name
             if platform_name in existing_platforms:
                 raise exceptions.ManagerInvalidSpec(
-                    mgr="Env", spec=spec,
-                    errors=["Using multiple plugins [%s, %s] with the same "
-                            "platform in single Env is not supported: "
-                            % (p_name, existing_platforms[platform_name])]
+                    mgr="Env",
+                    spec=spec,
+                    errors=[
+                        "Using multiple plugins [%s, %s] with the same "
+                        "platform in single Env is not supported: "
+                        % (p_name, existing_platforms[platform_name])
+                    ],
                 )
             existing_platforms[platform_name] = p_name
 
@@ -262,19 +264,31 @@ class EnvManager(object):
             errors.extend(platform.Platform.validate(p_name, {}, spec, p_spec))
         if errors:
             raise exceptions.ManagerInvalidSpec(
-                mgr="Env", spec=spec, errors=errors)
+                mgr="Env", spec=spec, errors=errors
+            )
 
         _platforms = []
         for p_name, p_spec in spec.items():
-            _platforms.append({
-                "status": platform.STATUS.INIT,
-                "plugin_name": p_name,
-                "plugin_spec": p_spec,
-                "platform_name": p_name.split("@")[1]
-            })
+            _platforms.append(
+                {
+                    "status": platform.STATUS.INIT,
+                    "plugin_name": p_name,
+                    "plugin_spec": p_spec,
+                    "platform_name": p_name.split("@")[1],
+                }
+            )
 
-        return cls(db.env_create(name, STATUS.INIT, description, extras,
-                                 config, spec, _platforms))
+        return cls(
+            db.env_create(
+                name,
+                STATUS.INIT,
+                description,
+                extras,
+                config,
+                spec,
+                _platforms,
+            )
+        )
 
     def _create_platforms(self):
         """Iterates over platform and creates them, storing results in DB.
@@ -296,7 +310,8 @@ class EnvManager(object):
         for p in self._get_platforms():
             if new_env_status != STATUS.READY:
                 db.platform_set_status(
-                    p.uuid, platform.STATUS.INIT, platform.STATUS.SKIPPED)
+                    p.uuid, platform.STATUS.INIT, platform.STATUS.SKIPPED
+                )
                 continue
 
             try:
@@ -305,16 +320,27 @@ class EnvManager(object):
                 new_env_status = STATUS.FAILED_TO_CREATE
                 LOG.exception(
                     "Failed to create platform (%(uuid)s): "
-                    "%(name)s with spec: %(spec)s" %
-                    {"uuid": p.uuid, "name": p.get_fullname(), "spec": p.spec})
+                    "%(name)s with spec: %(spec)s"
+                    % {
+                        "uuid": p.uuid,
+                        "name": p.get_fullname(),
+                        "spec": p.spec,
+                    }
+                )
                 try:
-                    db.platform_set_status(p.uuid, platform.STATUS.INIT,
-                                           platform.STATUS.FAILED_TO_CREATE)
+                    db.platform_set_status(
+                        p.uuid,
+                        platform.STATUS.INIT,
+                        platform.STATUS.FAILED_TO_CREATE,
+                    )
                 except Exception:
                     LOG.exception(
                         "Failed to set platform %(uuid)s status %(status)s"
-                        % {"uuid": p.uuid,
-                           "status": platform.STATUS.FAILED_TO_CREATE})
+                        % {
+                            "uuid": p.uuid,
+                            "status": platform.STATUS.FAILED_TO_CREATE,
+                        }
+                    )
 
             if new_env_status == STATUS.FAILED_TO_CREATE:
                 continue
@@ -322,9 +348,12 @@ class EnvManager(object):
             try:
                 db.platform_set_data(
                     p.uuid,
-                    platform_data=platform_data, plugin_data=plugin_data)
+                    platform_data=platform_data,
+                    plugin_data=plugin_data,
+                )
                 db.platform_set_status(
-                    p.uuid, platform.STATUS.INIT, platform.STATUS.READY)
+                    p.uuid, platform.STATUS.INIT, platform.STATUS.READY
+                )
             except Exception:
                 new_env_status = STATUS.FAILED_TO_CREATE
 
@@ -335,16 +364,21 @@ class EnvManager(object):
                 p.platform_data, p.plugin_data = platform_data, plugin_data
                 try:
                     p.destroy()
-                    LOG.warning("Couldn't store platform %s data to DB."
-                                "Attempt to destroy it succeeded." % p.uuid)
+                    LOG.warning(
+                        "Couldn't store platform %s data to DB."
+                        "Attempt to destroy it succeeded." % p.uuid
+                    )
                 except Exception:
                     LOG.exception(
                         "Couldn't store data of platform(%(uuid)s): %(name)s  "
                         "with spec: %(spec)s. Attempt to destroy it failed. "
                         "Sorry, but we can't do anything else for you. :("
-                        % {"uuid": p.uuid,
-                           "name": p.get_fullname(),
-                           "spec": p.spec})
+                        % {
+                            "uuid": p.uuid,
+                            "name": p.get_fullname(),
+                            "spec": p.spec,
+                        }
+                    )
 
         db.env_set_status(self.uuid, STATUS.INIT, new_env_status)
 
@@ -381,17 +415,17 @@ class EnvManager(object):
             "available": {"type": "boolean"},
             "message": {"type": "string"},
             "traceback": {"type": "string"},
-            "spec": {"type": "object",
-                     "additionalProperties": True}
+            "spec": {"type": "object", "additionalProperties": True},
         },
         "required": ["available"],
-        "additionalProperties": False
+        "additionalProperties": False,
     }
 
     @classmethod
     @plugins.ensure_plugins_are_loaded
-    def create_spec_from_sys_environ(cls, description=None, extras=None,
-                                     config=None):
+    def create_spec_from_sys_environ(
+        cls, description=None, extras=None, config=None
+    ):
         """Compose an environment spec based on system environment.
 
         Iterates over all available platform-representation plugins which
@@ -412,15 +446,20 @@ class EnvManager(object):
                 jsonschema.validate(res, cls._FROM_SYS_ENV_FORMAT)
                 res.setdefault("message", "Available")
             except Exception as e:
-                msg = ("Plugin %s.create_from_sys_environ() method is broken"
-                       % p.get_fullname())
+                msg = (
+                    "Plugin %s.create_from_sys_environ() method is broken"
+                    % p.get_fullname()
+                )
                 LOG.exception(msg)
                 res = {"message": msg, "available": False}
                 if not isinstance(e, jsonschema.ValidationError):
                     res["traceback"] = traceback.format_exc()
             details[p.get_fullname()] = res
-        spec = dict((k, v.get("spec", {}))
-                    for k, v in details.items() if v["available"])
+        spec = dict(
+            (k, v.get("spec", {}))
+            for k, v in details.items()
+            if v["available"]
+        )
         if description is not None:
             spec["!description"] = description
         if extras is not None:
@@ -445,7 +484,8 @@ class EnvManager(object):
         :param extras: New extras for env
         """
         return db.env_update(
-            self.uuid, description=description, config=config, extras=extras)
+            self.uuid, description=description, config=config, extras=extras
+        )
 
     def update_spec(self, new_spec):
         """Update env spec. [not implemented]"""
@@ -459,10 +499,10 @@ class EnvManager(object):
         "properties": {
             "available": {"type": "boolean"},
             "message": {"type": "string"},
-            "traceback": {"type": "string"}
+            "traceback": {"type": "string"},
         },
         "required": ["available"],
-        "additionalProperties": False
+        "additionalProperties": False,
     }
 
     @plugins.ensure_plugins_are_loaded
@@ -487,8 +527,10 @@ class EnvManager(object):
                 jsonschema.validate(check_result, self._HEALTH_FORMAT)
                 check_result.setdefault("message", "OK!")
             except Exception as e:
-                msg = ("Plugin %s.check_health() method is broken"
-                       % p.get_fullname())
+                msg = (
+                    "Plugin %s.check_health() method is broken"
+                    % p.get_fullname()
+                )
                 LOG.exception(msg)
                 check_result = {"message": msg, "available": False}
                 if not isinstance(e, jsonschema.ValidationError):
@@ -506,7 +548,7 @@ class EnvManager(object):
             "traceback": {"type": "string"},
         },
         "required": ["info"],
-        "additionalProperties": False
+        "additionalProperties": False,
     }
 
     @plugins.ensure_plugins_are_loaded
@@ -546,10 +588,10 @@ class EnvManager(object):
                     "properties": {
                         "discovered": {"type": "integer"},
                         "deleted": {"type": "integer"},
-                        "failed": {"type": "integer"}
+                        "failed": {"type": "integer"},
                     },
                     "required": ["discovered", "deleted", "failed"],
-                    "additionalProperties": False
+                    "additionalProperties": False,
                 }
             },
             "errors": {
@@ -560,15 +602,15 @@ class EnvManager(object):
                         "resource_id": {"type": "string"},
                         "resource_type": {"type": "string"},
                         "message": {"type": "string"},
-                        "traceback": {"type": "string"}
+                        "traceback": {"type": "string"},
                     },
                     "required": ["message"],
-                    "additionalProperties": False
-                }
-            }
+                    "additionalProperties": False,
+                },
+            },
         },
         "required": ["discovered", "deleted", "failed", "resources", "errors"],
-        "additionalProperties": False
+        "additionalProperties": False,
     }
 
     @plugins.ensure_plugins_are_loaded
@@ -591,15 +633,19 @@ class EnvManager(object):
                 LOG.exception(msg)
                 cleanup_info = {
                     "message": "Failed",
-                    "discovered": 0, "deleted": 0, "failed": 0,
-                    "resources": {}, "errors": [{"message": msg}]
+                    "discovered": 0,
+                    "deleted": 0,
+                    "failed": 0,
+                    "resources": {},
+                    "errors": [{"message": msg}],
                 }
                 if isinstance(e, NotImplementedError):
                     cleanup_info["message"] = "Not implemented"
                     cleanup_info["errors"] = []
                 elif not isinstance(e, jsonschema.ValidationError):
                     cleanup_info["errors"][0]["traceback"] = (
-                        traceback.format_exc())
+                        traceback.format_exc()
+                    )
 
             result[p.get_fullname()] = cleanup_info
 
@@ -616,24 +662,22 @@ class EnvManager(object):
         if not skip_cleanup:
             cleanup_info["info"] = self.cleanup()
             cleanup_info["skipped"] = False
-            cleanup_info["failed"] = bool(any(
-                v["errors"] for v in cleanup_info["info"].values()))
+            cleanup_info["failed"] = bool(
+                any(v["errors"] for v in cleanup_info["info"].values())
+            )
             if cleanup_info["failed"]:
                 return {
                     "cleanup_info": cleanup_info,
                     "destroy_info": {
                         "skipped": True,
                         "platforms": {},
-                        "message": "Skipped because cleanup has errors"
-                    }
+                        "message": "Skipped because cleanup has errors",
+                    },
                 }
 
         result = {
             "cleanup_info": cleanup_info,
-            "destroy_info": {
-                "skipped": False,
-                "platforms": {}
-            }
+            "destroy_info": {"skipped": False, "platforms": {}},
         }
 
         db.env_set_status(self.uuid, STATUS.READY, STATUS.DESTROYING)
@@ -647,26 +691,33 @@ class EnvManager(object):
             if p.status == platform.STATUS.DESTROYED:
                 platforms[name]["status"]["new"] = p.status
                 platforms[name]["message"] = (
-                    "Platform is already destroyed. Do nothing")
+                    "Platform is already destroyed. Do nothing"
+                )
                 continue
 
             db.platform_set_status(
-                p.uuid, p.status, platform.STATUS.DESTROYING)
+                p.uuid, p.status, platform.STATUS.DESTROYING
+            )
             try:
                 p.destroy()
             except Exception:
-                db.platform_set_status(p.uuid,
-                                       platform.STATUS.DESTROYING,
-                                       platform.STATUS.FAILED_TO_DESTROY)
+                db.platform_set_status(
+                    p.uuid,
+                    platform.STATUS.DESTROYING,
+                    platform.STATUS.FAILED_TO_DESTROY,
+                )
                 platforms[name]["message"] = "Failed to destroy"
                 platforms[name]["status"]["new"] = (
-                    platform.STATUS.FAILED_TO_DESTROY)
+                    platform.STATUS.FAILED_TO_DESTROY
+                )
                 platforms[name]["traceback"] = traceback.format_exc()
                 new_env_status = STATUS.FAILED_TO_DESTROY
             else:
-                db.platform_set_status(p.uuid,
-                                       platform.STATUS.DESTROYING,
-                                       platform.STATUS.DESTROYED)
+                db.platform_set_status(
+                    p.uuid,
+                    platform.STATUS.DESTROYING,
+                    platform.STATUS.DESTROYED,
+                )
                 platforms[name]["message"] = "Successfully destroyed"
                 platforms[name]["status"]["new"] = platform.STATUS.DESTROYED
 
@@ -693,7 +744,8 @@ class EnvManager(object):
         _status = self.status
         if not force and _status != STATUS.DESTROYED:
             raise exceptions.ManagerInvalidState(
-                mgr="Env", expected=STATUS.DESTROYED, actual=_status)
+                mgr="Env", expected=STATUS.DESTROYED, actual=_status
+            )
         db.env_delete_cascade(self.uuid)
 
     def get_validation_context(self):
