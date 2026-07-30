@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import copy
+import inspect
 import random
 import typing as t
 
@@ -286,6 +287,12 @@ class Scenario(
         preprocessors = types.collect_scenario_args_preprocessors(cls, hints)
         types_map: dict[str, t.Any] = {}
         for arg, type_cfg in preprocessors.items():
+            # a converter declared for something run() does not accept (a stale
+            # ``@types.convert`` entry, e.g. for a removed ``**kwargs``) must
+            # not fabricate a phantom property
+            if arg not in schema["properties"] \
+                    and not schema["additionalProperties"]:
+                continue
             type_name = type_cfg.get("type")
             if not type_name:
                 continue
@@ -337,7 +344,17 @@ class Scenario(
             }
         properties = schema["properties"]
         additional = schema.get("additionalProperties", False)
+        # the ``**kwargs`` parameter is the catch-all for extra arguments,
+        # not a named one: its docstring describes ``additionalProperties``
+        # rather than becoming a fake property named after it.
+        kwargs_name = next(
+            (n for n, p in inspect.signature(cls.run).parameters.items()
+             if p.kind is inspect.Parameter.VAR_KEYWORD), None)
         for name, doc in docs.items():
+            if name == kwargs_name:
+                if doc:
+                    schema["additionalProperties"] = {"description": doc}
+                continue
             prop = properties.get(name)
             if prop is None:
                 # documented but not a real argument

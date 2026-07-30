@@ -62,6 +62,11 @@ Changed
 * ``rally plugin show`` now lists the ``CONFIG_SCHEMA`` parameters of any plugin
   (contexts, runners, SLAs), not only scenarios.
 
+* The generated plugin reference now surfaces more of a scenario's derived
+  argument schema: default values (rendered as ``Defaults to ...``), which
+  arguments are required, and a note describing the extra ``**kwargs`` a
+  scenario accepts.
+
 * New ``[DEFAULT]strict_type_annotations`` option to fail, rather than warn, on a
   scenario argument type Rally cannot map to a JSON Schema.
 

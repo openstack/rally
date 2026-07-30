@@ -25,6 +25,11 @@ from rally.common import logging
 
 LOG = logging.getLogger(__name__)
 
+# default values simple enough to embed verbatim as a JSON Schema ``default``.
+# ``None`` is intentionally excluded: a ``None`` default just means the
+# argument is optional, which the ``required`` list already conveys.
+_JSON_DEFAULT_TYPES = (bool, int, float, str, list, dict)
+
 
 class UnsupportedType(Exception):
     """Base error for deriving a JSON Schema from annotations/signatures."""
@@ -150,7 +155,7 @@ def _object_schema(
     additional: bool,
     strict: bool = True,
 ) -> dict[str, t.Any]:
-    """Build an object schema from ``(name, type_hint, required)`` triples.
+    """Build an object schema from ``(name, hint, required)`` triples.
 
     Each hint becomes a property via :func:`hint_to_schema` (an unconstrained
     ``Any`` -> ``{}``); a ``Never`` hint maps to ``{"<name>": false}``,
@@ -338,6 +343,7 @@ def arguments_schema(
         )
 
     fields: list[tuple[str, t.Any, bool]] = []
+    defaults: dict[str, t.Any] = {}
     additional = False
     for name, param in signature.parameters.items():
         if name in ("self", "cls") or name in ignore:
@@ -348,7 +354,19 @@ def arguments_schema(
         if param.kind == inspect.Parameter.VAR_POSITIONAL:
             continue
         required = param.default is inspect.Parameter.empty
+        if not required:
+            default = param.default
+            if isinstance(default, enum.Enum):
+                default = default.value  # an enum default -> its raw value
+            if isinstance(default, _JSON_DEFAULT_TYPES):
+                defaults[name] = default
         fields.append((name, hints.get(name, t.Any), required))
 
     schema = _object_schema(fields, additional=additional, strict=strict)
+    # overlay defaults onto the derived properties (a signature-only concern,
+    # so it lives here rather than in _object_schema)
+    for name, default in defaults.items():
+        prop = schema["properties"].get(name)
+        if isinstance(prop, dict):  # not a forbidden (False) property
+            prop["default"] = default
     return schema, signature, hints

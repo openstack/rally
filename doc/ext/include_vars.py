@@ -13,15 +13,25 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import annotations
+
 import json
+import typing as t
 
 from docutils import nodes
 
 from oslo_utils import importutils
 
 
-def include_var(name, rawtext, text, lineno, inliner, options=None,
-                content=None):
+def include_var(
+    name: str,
+    rawtext: str,
+    text: str,
+    lineno: int,
+    inliner: t.Any,
+    options: dict | None = None,
+    content: list | None = None,
+) -> tuple[list, list]:
     """include variable
 
     :param name: The local name of the interpreted role, the role name
@@ -54,5 +64,5 @@ def include_var(name, rawtext, text, lineno, inliner, options=None,
     return [nodes.inline("", obj)], []
 
 
-def setup(app):
+def setup(app: t.Any) -> None:
     app.add_role("include-var", include_var)

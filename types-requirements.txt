@@ -1,5 +1,6 @@
 mypy
 # Type stubs for external packages
+types-docutils
 types-Jinja2
 types-jsonschema
 types-paramiko

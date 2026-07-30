@@ -310,6 +310,30 @@ class ScenarioConfigureTestCase(test.TestCase):
             props["path"]
         )
 
+    def test_converter_for_non_argument_is_ignored(self):
+        # a stale @types.convert entry for something run() does not accept
+        # (e.g. a removed **kwargs) must not fabricate a phantom property
+        @plugin.configure(name="test_ghost_conv")
+        class GhostConv(types.ResourceType):
+            def pre_process(self, *, resource_spec, config, output_type):
+                return resource_spec
+
+        @types.convert(real={"type": "test_ghost_conv"},
+                       kwargs={"type": "test_ghost_conv"})
+        @scenario.configure(name="fooscenario.ghostconv")
+        class GhostConvScenario(scenario.Scenario):
+            def run(self, real):
+                """Do it.
+
+                :param real: a real argument
+                """
+        self.addCleanup(GhostConvScenario.unregister)
+        self.addCleanup(GhostConv.unregister)
+
+        props = GhostConvScenario.get_info()["schema"]["properties"]
+        self.assertIn("real", props)       # a real converted arg stays
+        self.assertNotIn("kwargs", props)  # the stale converter is dropped
+
 
 class ScenarioTestCase(test.TestCase):
 
