@@ -100,6 +100,8 @@ Removed
 Fixed
 ~~~~~
 
+* Publishing to ReadTheDocs
+
 * Compatibility with paramiko 4+, which dropped the removed DSA key support.
 
 * The failure during Scenario plugin initialization will no longer be silently
