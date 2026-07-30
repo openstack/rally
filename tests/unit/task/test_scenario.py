@@ -20,6 +20,7 @@ from unittest import mock
 import typing_extensions as te
 
 from rally import exceptions
+from rally.common import logging
 from rally.common.plugin import plugin
 from rally.task import context
 from rally.task import scenario
@@ -93,8 +94,8 @@ class ScenarioConfigureTestCase(test.TestCase):
                 a_open: OpenSpec,
                 a_closed: ClosedSpec,
                 a_guarded: GuardedSpec,
-                a_plain,                       # unannotated -> skipped
-                a_any: t.Any,                  # typing.Any -> skipped
+                a_plain,                       # unannotated -> {}
+                a_any: t.Any,                  # typing.Any -> {}
                 **kwargs                       # -> extra args ok
             ):
                 """Boot it.
@@ -147,11 +148,14 @@ class ScenarioConfigureTestCase(test.TestCase):
              "a_guarded": {"type": "object", "required": ["name"],
                            "additionalProperties": True,
                            "properties": {"name": {"type": "string"},
-                                          "admin_pass": False}}},
+                                          "admin_pass": False}},
+             # unannotated and typing.Any args become unconstrained {}
+             "a_plain": {},
+             "a_any": {}},
             constraints)
-        # unannotated and typing.Any args are simply skipped
-        self.assertNotIn("a_plain", constraints)
-        self.assertNotIn("a_any", constraints)
+        # every parameter without a default is required (jsonschema-complete)
+        self.assertIn("a_int", schema["required"])
+        self.assertIn("a_plain", schema["required"])
 
         # Without **kwargs the object is closed, and info["parameters"] stays
         # plain (no derived "type") for backward compatibility.
@@ -203,10 +207,9 @@ class ScenarioConfigureTestCase(test.TestCase):
                 """
 
         self.addCleanup(Ghost.unregister)
-        with mock.patch.object(scenario.LOG, "warning") as m_warn:
+        with logging.LogCatcher(scenario.LOG) as catcher:
             self.assertIn("ghost", Ghost.get_info()["schema"]["properties"])
-        m_warn.assert_called_once()
-        self.assertIn("ghost", m_warn.call_args[0][0])
+        catcher.assertInLogs("ghost")
 
         # An unmappable annotation (here bytes) is treated as Any and warns.
         @scenario.configure(name="fooscenario.badtype")
@@ -219,12 +222,12 @@ class ScenarioConfigureTestCase(test.TestCase):
                 """
 
         self.addCleanup(BadType.unregister)
-        with mock.patch.object(scenario.LOG, "warning") as m_warn:
+        # the unmappable-type warning comes from the general annotation layer
+        with logging.LogCatcher(scenario.typeutils.LOG) as catcher:
             props = BadType.get_info()["schema"]["properties"]
         self.assertEqual("integer", props["ok"]["type"])
         self.assertNotIn("type", props["weird"])  # Any
-        m_warn.assert_called_once()
-        self.assertIn("weird", m_warn.call_args[0][0])
+        catcher.assertInLogs("weird")
 
         # Strict mode turns the warn-cases above into hard errors.
         opt = "strict_type_annotations"
@@ -246,7 +249,7 @@ class ScenarioConfigureTestCase(test.TestCase):
         self.addCleanup(TitledScenario.unregister)
         # get_title must not trigger the (potentially costly) schema build
         with mock.patch.object(
-                TitledScenario, "_arg_property_schemas") as m_build:
+                TitledScenario, "_args_schema") as m_build:
             self.assertEqual("My title.", TitledScenario.get_title())
             m_build.assert_not_called()
 

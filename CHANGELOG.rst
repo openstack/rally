@@ -54,6 +54,11 @@ Changed
 * Scenario ``run()`` arguments can be validated and documented from their Python
   type annotations. See the scenario plugin docs for the supported annotations.
 
+* A ``dict`` scenario argument that is forwarded to another callable can derive
+  its schema from that callable's signature with
+  ``scenario.ArgsOf(func, ignore=(...))``, instead of restating it as a
+  ``TypedDict``.
+
 * ``rally plugin show`` now lists the ``CONFIG_SCHEMA`` parameters of any plugin
   (contexts, runners, SLAs), not only scenarios.
 

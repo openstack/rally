@@ -14,10 +14,27 @@ from __future__ import annotations
 
 import dataclasses
 import enum
+import inspect
 import types
 import typing as t
 
 import typing_extensions as te
+
+from rally.common import logging
+
+
+LOG = logging.getLogger(__name__)
+
+
+class UnsupportedType(Exception):
+    """Base error for deriving a JSON Schema from annotations/signatures."""
+
+    def __init__(self, detail: str, *, location: t.Sequence[str] = ()) -> None:
+        self.detail = detail
+        self.location = tuple(location)
+        if location:
+            detail = f"{detail} (at {' -> '.join(location)})"
+        super().__init__(detail)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -58,12 +75,32 @@ class Field:
                 if getattr(self, attr) is not None}
 
 
-class UnsupportedType(Exception):
-    """A type hint :func:`hint_to_schema` cannot map to a JSON Schema."""
+@dataclasses.dataclass(frozen=True)
+class ArgsOf:
+    """Build an object schema from another callable's signature.
 
-    def __init__(self, hint: t.Any) -> None:
-        self.hint = hint
-        super().__init__(repr(hint))
+    Used as ``typing.Annotated`` metadata on a ``dict`` argument, so the keys
+    a scenario forwards to another callable need not be duplicated::
+
+        args: typing.Annotated[
+            dict[str, typing.Any],
+            ArgsOf(create_something, ignore=("c",)),
+        ]
+
+    Each parameter becomes a property; one without a default is required;
+    ``ignore`` drops names; extra keys are allowed only if the callable takes
+    ``**kwargs``.
+    """
+    target: t.Callable[..., t.Any]
+    ignore: t.Sequence[str] = ()
+
+    def __post_init__(self) -> None:
+        # accept a single name as a bare string for convenience
+        if isinstance(self.ignore, str):
+            ignore = (self.ignore,)
+        else:
+            ignore = tuple(self.ignore)
+        object.__setattr__(self, "ignore", ignore)
 
 
 def _make_nullable(schema: dict[str, t.Any]) -> dict[str, t.Any]:
@@ -100,17 +137,83 @@ def _sequence_item(container: t.Any, args: tuple[t.Any, ...]) -> t.Any:
     return args[0]
 
 
-def hint_to_schema(hint: t.Any) -> dict[str, t.Any] | None:
+def _object_schema(
+    fields: t.Iterable[tuple[str, t.Any, bool]],
+    *,
+    additional: bool,
+    strict: bool = True,
+) -> dict[str, t.Any]:
+    """Build an object schema from ``(name, type_hint, required)`` triples.
+
+    Each hint becomes a property via :func:`hint_to_schema` (an unconstrained
+    ``Any`` -> ``{}``); a ``Never`` hint maps to ``{"<name>": false}``,
+    forbidding that key outright (and never required). When a field cannot be
+    mapped: the error is located under the field name; if ``strict`` it is
+    re-raised, otherwise it is logged and the field is left unconstrained
+    (``{}``).
+    """
+    properties: dict[str, t.Any] = {}
+    required: list[str] = []
+    for name, hint, is_required in fields:
+        if hint is te.Never:
+            properties[name] = False  # forbidden: no value is valid
+            continue
+        try:
+            schema = hint_to_schema(hint)
+        except UnsupportedType as e:
+            located = UnsupportedType(e.detail, location=(name, *e.location))
+            if strict:
+                raise located
+            LOG.warning(str(located))
+            schema = None
+        properties[name] = schema if schema is not None else {}
+        if is_required:
+            required.append(name)
+    result: dict[str, t.Any] = {
+        "type": "object",
+        "properties": properties,
+        "additionalProperties": additional,
+    }
+    if required:
+        result["required"] = required
+    return result
+
+
+def _typeddict_object_schema(td: type) -> dict[str, t.Any]:
+    """Map a ``TypedDict`` to an object jsonschema.
+
+    Every field becomes a property. A field is required unless it is
+    ``NotRequired`` or the whole dict is ``total=False``; we read that from the
+    resolved hints rather than ``__required_keys__``, which is unreliable under
+    ``from __future__ import annotations``. Whether extra keys are allowed is a
+    separate question, answered by PEP 728 ``closed=`` (they are, unless
+    ``closed=True``).
+    """
+    fields: list[tuple[str, t.Any, bool]] = []
+    total = bool(getattr(td, "__total__", True))
+    for field, ftype in t.get_type_hints(td, include_extras=True).items():
+        is_required = total
+        if t.get_origin(ftype) is te.Required:
+            is_required = True
+            ftype = t.get_args(ftype)[0]
+        elif t.get_origin(ftype) is te.NotRequired:
+            is_required = False
+            ftype = t.get_args(ftype)[0]
+        fields.append((field, ftype, is_required))
+    return _object_schema(fields,
+                          additional=not getattr(td, "__closed__", False))
+
+
+def hint_to_schema(hint: t.Any) -> dict[str, t.Any]:
     """Convert a Python type hint into a jsonschema property.
 
-    Returns None when the value is intentionally unconstrained (``typing.Any``
-    or a multi-type union), and raises :class:`UnsupportedType` for a type
-    that cannot be mapped at all. Supports plain scalars/containers,
-    ``Optional``/``| None``, ``enum.Enum``/``typing.Literal`` and
-    ``typing.Annotated[T, Field(...)]``.
+    Supports plain scalars/containers, ``Optional``/``| None``,
+    ``enum.Enum``/``typing.Literal`` and ``typing.Annotated[T, Field(...)]``.
+
+    :raises UnsupportedType: for a type that cannot be mapped at all
     """
     if hint is t.Any:
-        return None
+        return {}
 
     origin = t.get_origin(hint)
 
@@ -121,10 +224,9 @@ def hint_to_schema(hint: t.Any) -> dict[str, t.Any] | None:
     # Accepts both ``typing.Union``/``Optional`` and PEP 604 ``X | Y``.
     if origin is t.Union or origin is types.UnionType:
         args = t.get_args(hint)
-        raw = [hint_to_schema(a) for a in args if a is not type(None)]
-        parts = [m for m in raw if m is not None]
-        if len(parts) != len(raw):
-            return None  # an ``Any`` member -> whole union unconstrained
+        parts = [hint_to_schema(a) for a in args if a is not type(None)]
+        if any(not part for part in parts):
+            return {}  # an unconstrained (``Any``) member -> whole union open
         if len(parts) == 1:
             schema = parts[0]
         elif all(set(m) == {"type"} and isinstance(m["type"], str)
@@ -134,11 +236,17 @@ def hint_to_schema(hint: t.Any) -> dict[str, t.Any] | None:
             schema = {"anyOf": parts}
         return _make_nullable(schema) if type(None) in args else schema
 
-    # ``Annotated[T, Field(...)]``
+    # ``Annotated[T, Field(...)]`` / ``Annotated[dict, ArgsOf(...)]``. An
+    # ``ArgsOf`` replaces the base type's schema (the ``dict`` is only there
+    # for linters); a ``Field`` then merges its constraints on top.
     if hasattr(hint, "__metadata__"):
-        schema = hint_to_schema(t.get_args(hint)[0])
-        if schema is None:
-            return None
+        args_of = next((m for m in hint.__metadata__
+                        if isinstance(m, ArgsOf)), None)
+        if args_of is not None:
+            schema, _signature, _hints = arguments_schema(
+                args_of.target, ignore=args_of.ignore)
+        else:
+            schema = hint_to_schema(t.get_args(hint)[0])
         for meta in hint.__metadata__:
             if isinstance(meta, Field):
                 schema = {**schema, **meta.as_schema()}
@@ -166,7 +274,7 @@ def hint_to_schema(hint: t.Any) -> dict[str, t.Any] | None:
         item = _sequence_item(container, t.get_args(hint))
         if item is not None:
             item_schema = hint_to_schema(item)
-            if item_schema is not None:  # ``Any`` element -> stay open
+            if item_schema:  # ``Any`` element ({}) -> stay open
                 array_schema["items"] = item_schema
         return array_schema
     if container is dict:
@@ -174,45 +282,58 @@ def hint_to_schema(hint: t.Any) -> dict[str, t.Any] | None:
         dargs = t.get_args(hint)
         if len(dargs) == 2:
             value_schema = hint_to_schema(dargs[1])
-            if value_schema is not None:  # ``dict[str, Any]`` stays open
+            if value_schema:  # ``dict[str, Any]`` ({}) stays open
                 object_schema["additionalProperties"] = value_schema
         return object_schema
-    raise UnsupportedType(hint)
+    raise UnsupportedType(
+        f"Cannot map type annotation `{hint!r}` to a JSON Schema"
+    )
 
 
-def _typeddict_object_schema(td: type) -> dict[str, t.Any]:
-    """Map a ``TypedDict`` to an object jsonschema.
+def arguments_schema(
+    target: t.Callable[..., t.Any],
+    *,
+    target_name: str | None = None,
+    ignore: t.Collection[str] = (),
+    strict: bool = True,
+) -> tuple[dict[str, t.Any], inspect.Signature, dict[str, t.Any]]:
+    """Build a complete object schema from a callable's arguments.
 
-    Every field becomes a property, typed via :func:`hint_to_schema`. A field
-    is required unless it is ``NotRequired`` or the whole dict is
-    ``total=False``; we read that from the resolved hints rather than
-    ``__required_keys__``, which is unreliable under
-    ``from __future__ import annotations``. Whether extra keys are allowed is a
-    separate question, answered by PEP 728 ``closed=`` (they are, unless
-    ``closed=True``). Finally, a ``NotRequired[Never]`` (or plain ``Never``)
-    field maps to ``{"<key>": false}``, forbidding that key outright.
+    Resolves the callable's ``signature`` and type ``hints`` and returns them
+    alongside the schema so a caller can reuse them without resolving twice.
+    ``self``/``cls``, ``*args`` are skipped. ``**kwargs`` is treated as
+    ``additionalProperties: True``.
+
+    :param target: callable to proceed
+    :param target_name: labels the callable in error messages
+        (defaults to ``target.__name__``)
+    :param ignore: extra parameters to ignore (defaults to ``()``)
+    :param strict: raise errors for unresolvable hints instead of warnings
     """
-    properties: dict[str, t.Any] = {}
-    required: list[str] = []
-    total = bool(getattr(td, "__total__", True))
-    for field, ftype in t.get_type_hints(td, include_extras=True).items():
-        is_required = total
-        if t.get_origin(ftype) is te.Required:
-            is_required, ftype = True, t.get_args(ftype)[0]
-        elif t.get_origin(ftype) is te.NotRequired:
-            is_required, ftype = False, t.get_args(ftype)[0]
-        if ftype is te.Never:
-            properties[field] = False  # forbidden: no value is valid
+    try:
+        signature = inspect.signature(target)
+        hints = t.get_type_hints(target, include_extras=True)
+    except Exception:
+        label = target_name or getattr(target, "__name__", repr(target))
+        raise UnsupportedType(f"Failed to resolve type hints for `{label}`.")
+    unknown = [n for n in ignore if n not in signature.parameters]
+    if unknown and strict:
+        raise TypeError(
+            f"Ignore list includes unknown parameter(s): {unknown}"
+        )
+
+    fields: list[tuple[str, t.Any, bool]] = []
+    additional = False
+    for name, param in signature.parameters.items():
+        if name in ("self", "cls") or name in ignore:
             continue
-        schema = hint_to_schema(ftype)
-        properties[field] = schema if schema is not None else {}
-        if is_required:
-            required.append(field)
-    result: dict[str, t.Any] = {
-        "type": "object",
-        "properties": properties,
-        "additionalProperties": not getattr(td, "__closed__", False),
-    }
-    if required:
-        result["required"] = required
-    return result
+        if param.kind == inspect.Parameter.VAR_KEYWORD:
+            additional = True  # ``**kwargs`` -> extra keys allowed
+            continue
+        if param.kind == inspect.Parameter.VAR_POSITIONAL:
+            continue
+        required = param.default is inspect.Parameter.empty
+        fields.append((name, hints.get(name, t.Any), required))
+
+    schema = _object_schema(fields, additional=additional, strict=strict)
+    return schema, signature, hints

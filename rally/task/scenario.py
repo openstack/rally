@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 import copy
-import inspect
 import random
 import typing as t
 
@@ -60,9 +59,9 @@ CONF_OPTS = [
 ]
 CONF.register_opts(CONF_OPTS)
 
-# re-exported so scenario plugins can write ``scenario.Field(...)`` next to
-# ``scenario.configure`` in run() annotations
+# aliases to reduce imports
 Field = typeutils.Field
+ArgsOf = typeutils.ArgsOf
 
 
 def configure(
@@ -247,69 +246,44 @@ class Scenario(plugin.Plugin,
         return cls.run.__doc__ or ""
 
     @classmethod
-    def _arg_property_schemas(cls) -> tuple[dict[str, t.Any], bool]:
-        """Return the per-argument schemas and whether extra args are allowed.
+    def _args_schema(cls) -> dict[str, t.Any] | None:
+        """Build the object schema for the scenario's ``run()`` arguments.
 
-        The schemas come from the ``run()`` type annotations, plus the input
-        schema of any converted argument. A converter describes the value the
-        user writes before conversion, which overrides the post-conversion type
-        from the annotation. The flag is True when ``run()`` accepts
-        ``**kwargs``.
+        A complete jsonschema object: every parameter is a property (``{}``
+        when untyped), ``required`` lists the parameters without a default and
+        ``additionalProperties`` reflects ``**kwargs``. A converted argument's
+        property is overlaid with the resource type's input schema (which
+        describes the value written *before* conversion). Returns None when the
+        type hints cannot be resolved and strict mode is off.
         """
-        properties: dict[str, t.Any] = {}
-        additional = False
-
         try:
-            hints = t.get_type_hints(cls.run, include_extras=True)
-        except Exception as e:
-            msg = f"Cannot resolve type hints for {cls.__name__}.run(): {e}"
-            if CONF.strict_type_annotations:
-                raise exceptions.InvalidScenarioArgument(msg)
-            LOG.warning(msg)
-            return properties, additional
-
-        for name, param in inspect.signature(cls.run).parameters.items():
-            if name in ("self", "cls"):
-                continue
-            if param.kind == inspect.Parameter.VAR_KEYWORD:
-                additional = True  # **kwargs -> extra args allowed
-                continue
-            if param.kind == inspect.Parameter.VAR_POSITIONAL:
-                continue
-            if name in hints:
-                try:
-                    schema = typeutils.hint_to_schema(hints[name])
-                except typeutils.UnsupportedType:
-                    if CONF.strict_type_annotations:
-                        raise exceptions.InvalidScenarioArgument(
-                            f"'{name}' has an unsupported type annotation: "
-                            f"{hints[name]!r}"
-                        )
-                    LOG.warning(
-                        f"Scenario argument '{name}' has an unsupported "
-                        f"type annotation {hints[name]!r}; "
-                        f"it is not validated (treated as 'Any'). "
-                        f"Set [DEFAULT]strict_type_annotations=True "
-                        f"to fail instead."
-                    )
-                    schema = None
-
-                if schema is not None:
-                    properties[name] = schema
+            schema, _signature, hints = typeutils.arguments_schema(
+                cls.run, target_name=cls.get_name(),
+                strict=CONF.strict_type_annotations)
+        except typeutils.UnsupportedType as e:
+            # broken annotations: fall back to description-only docs
+            if not CONF.strict_type_annotations:
+                LOG.warning(str(e))
+                return None
+            raise exceptions.InvalidScenarioArgument(str(e))
 
         preprocessors = types.collect_scenario_args_preprocessors(cls, hints)
+        types_map: dict[str, t.Any] = {}
         for arg, type_cfg in preprocessors.items():
             type_name = type_cfg.get("type")
             if not type_name:
                 continue
-            try:
-                resource_cls = types.ResourceType.get(type_name)
-            except exceptions.PluginNotFound:
-                continue
+            if type_name not in types_map:
+                try:
+                    resource_cls = types.ResourceType.get(type_name)
+                except exceptions.PluginNotFound:
+                    continue
 
-            properties[arg] = types._compose_jsonschema(resource_cls)
+                types_map[type_name] = types._compose_jsonschema(resource_cls)
 
-        return properties, additional
+            schema["properties"][arg] = types_map[type_name]
+
+        return schema
 
     @classmethod
     def get_title(cls) -> str:
@@ -334,37 +308,34 @@ class Scenario(plugin.Plugin,
         logged (or an error, under strict-type-annotations mode).
         """
         plugin_info = super(Scenario, cls).get_info()
-        arg_props, additional = cls._arg_property_schemas()
+        schema: dict[str, t.Any] | None = cls._args_schema()
         docs = {p["name"]: p["doc"] for p in plugin_info["parameters"]}
-        if arg_props or docs:
-            if not additional:
-                # no **kwargs -> every documented name must be a real argument
-                real = {n for n in inspect.signature(cls.run).parameters
-                        if n not in ("self", "cls")}
-                for name in docs:
-                    if name not in real and name not in arg_props:
-                        msg = (
-                            f"Scenario '{cls.get_name()}': ':param {name}:' "
-                            f"documents an argument that run() does not accept"
-                        )
-                        if CONF.strict_type_annotations:
-                            raise exceptions.InvalidScenarioArgument(msg)
-                        LOG.warning(
-                            f"{msg}; it is shown in the docs but not "
-                            f"validated. "
-                            f"Set [DEFAULT]strict_type_annotations=True "
-                            f"to fail instead."
-                        )
-            # documented params first (in order), then any typed args that are
-            # not documented, so an annotated arg never escapes the schema.
-            names = list(docs) + [n for n in arg_props if n not in docs]
-            properties: dict[str, t.Any] = {}
-            for name in names:
-                prop = dict(arg_props.get(name, {}))
-                if docs.get(name):
-                    prop["description"] = docs[name]
-                properties[name] = prop
-            plugin_info["schema"] = {"type": "object",
-                                     "additionalProperties": additional,
-                                     "properties": properties}
+        if schema is None and not docs:
+            return plugin_info
+        if schema is None:
+            # hints could not be resolved: describe the documented params only
+            schema = {"type": "object", "additionalProperties": True,
+                      "properties": {}}
+        properties = schema["properties"]
+        additional = schema.get("additionalProperties", False)
+        for name, doc in docs.items():
+            prop = properties.get(name)
+            if prop is None:
+                # documented but not a real argument
+                if not additional:
+                    msg = (
+                        f"Scenario '{cls.get_name()}': ':param {name}:' "
+                        f"documents an argument that run() does not accept"
+                    )
+                    if CONF.strict_type_annotations:
+                        raise exceptions.InvalidScenarioArgument(msg)
+                    LOG.warning(
+                        f"{msg}; it is shown in the docs but not validated. "
+                        f"Set [DEFAULT]strict_type_annotations=True to fail "
+                        f"instead."
+                    )
+                properties[name] = {"description": doc} if doc else {}
+            elif doc and isinstance(prop, dict):
+                prop["description"] = doc
+        plugin_info["schema"] = schema
         return plugin_info

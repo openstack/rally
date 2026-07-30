@@ -144,6 +144,35 @@ Two independent axes control the object schema:
    and is honored by Rally. Add ``# type: ignore[call-arg]`` if that check is
    enforced in your project.
 
+When a scenario simply forwards a dict of keyword arguments to another
+callable, there is no need to restate that callable's signature as a
+``TypedDict``.
+Annotate the argument with ``scenario.ArgsOf`` and Rally copies the schema from
+the callable's parameters (each becomes a property, one without a default is
+required, extra keys are allowed only if the callable accepts ``**kwargs``):
+
+.. code-block:: python
+
+    import typing as t
+
+
+    # the plain helper this scenario forwards its keyword arguments to
+    def create_widget(name: str, size: int = 1, color: str = "red") -> None:
+        ...
+
+
+    def run(
+        self,
+        widget_args: t.Annotated[
+            dict[str, t.Any],
+            scenario.ArgsOf(create_widget, ignore=("name",)),
+        ],
+    ) -> None:
+        create_widget(name="widget-1", **widget_args)
+
+The plain ``dict[str, t.Any]`` base keeps linters and mypy happy; ``ignore``
+drops parameters the scenario fills in itself (here ``name``).
+
 Some inputs cannot be used as raw values; they must first be transformed or
 discovered (a file path read into its contents, an image name resolved to an
 id). Rally does this through a pluggable pre-processing step called a *resource

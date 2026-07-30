@@ -15,6 +15,7 @@ import typing as t
 
 import typing_extensions as te
 
+from rally.common import logging
 from rally.utils import typeutils
 from tests.unit import test
 
@@ -22,6 +23,10 @@ from tests.unit import test
 class Color(enum.Enum):
     RED = "red"
     BLUE = "blue"
+
+
+def _make_widget(name: str, size: int = 1, tag: t.Any = None) -> None:
+    pass
 
 
 class HintToSchemaTestCase(test.TestCase):
@@ -34,7 +39,7 @@ class HintToSchemaTestCase(test.TestCase):
                          typeutils.hint_to_schema(list[str]))
 
     def test_any_is_unconstrained(self):
-        self.assertIsNone(typeutils.hint_to_schema(t.Any))
+        self.assertEqual({}, typeutils.hint_to_schema(t.Any))
 
     def test_unsupported_raises(self):
         self.assertRaises(typeutils.UnsupportedType,
@@ -51,9 +56,10 @@ class HintToSchemaTestCase(test.TestCase):
             {"type": "integer"},
             typeutils.hint_to_schema(t.Annotated[int, "just a note"]))
 
-    def test_annotated_any_inner_is_unconstrained(self):
+    def test_annotated_any_inner_keeps_field(self):
+        # an ``Any`` base is unconstrained ({}); a Field still merges on top
         hint = t.Annotated[t.Any, typeutils.Field(ge=1)]
-        self.assertIsNone(typeutils.hint_to_schema(hint))
+        self.assertEqual({"minimum": 1}, typeutils.hint_to_schema(hint))
 
     def test_literal_and_enum(self):
         self.assertEqual({"enum": ["a", "b"]},
@@ -84,7 +90,7 @@ class HintToSchemaTestCase(test.TestCase):
             typeutils.hint_to_schema(int | dict[str, int] | None))
 
     def test_union_with_any_member_is_unconstrained(self):
-        self.assertIsNone(typeutils.hint_to_schema(t.Union[int, t.Any]))
+        self.assertEqual({}, typeutils.hint_to_schema(t.Union[int, t.Any]))
 
     def test_make_nullable_is_idempotent(self):
         # a schema that already admits null, or has no type/anyOf, is unchanged
@@ -128,6 +134,135 @@ class HintToSchemaTestCase(test.TestCase):
              "properties": {"a": {"type": "integer"},
                             "b": {"type": "string"}}},
             typeutils.hint_to_schema(Spec))
+
+
+class ArgsOfTestCase(test.TestCase):
+
+    def test_signature_becomes_object_schema(self):
+        hint = t.Annotated[dict[str, t.Any], typeutils.ArgsOf(_make_widget)]
+        self.assertEqual(
+            {"type": "object", "additionalProperties": False,
+             "required": ["name"],
+             "properties": {"name": {"type": "string"},
+                            "size": {"type": "integer"},
+                            "tag": {}}},
+            typeutils.hint_to_schema(hint))
+
+    def test_ignore_drops_parameters(self):
+        hint = t.Annotated[dict[str, t.Any],
+                           typeutils.ArgsOf(_make_widget, ignore=("size",
+                                                                  "tag"))]
+        self.assertEqual(
+            {"type": "object", "additionalProperties": False,
+             "required": ["name"],
+             "properties": {"name": {"type": "string"}}},
+            typeutils.hint_to_schema(hint))
+
+    def test_ignore_accepts_a_bare_string(self):
+        marker = typeutils.ArgsOf(_make_widget, ignore="tag")
+        self.assertEqual(("tag",), marker.ignore)
+        hint = t.Annotated[dict[str, t.Any], marker]
+        self.assertNotIn("tag", typeutils.hint_to_schema(hint)["properties"])
+
+    def test_var_keyword_allows_extra_keys(self):
+        def target(name: str, **extra: t.Any) -> None:
+            pass
+
+        hint = t.Annotated[dict[str, t.Any],
+                           typeutils.ArgsOf(target)]
+        self.assertEqual(
+            {"type": "object", "additionalProperties": True,
+             "required": ["name"],
+             "properties": {"name": {"type": "string"}}},
+            typeutils.hint_to_schema(hint))
+
+    def test_field_description_merges_on_top(self):
+        hint = t.Annotated[dict[str, t.Any],
+                           typeutils.ArgsOf(_make_widget, ignore=("size",
+                                                                  "tag")),
+                           typeutils.Field(description="the widget")]
+        self.assertEqual(
+            {"type": "object", "additionalProperties": False,
+             "required": ["name"],
+             "properties": {"name": {"type": "string"}},
+             "description": "the widget"},
+            typeutils.hint_to_schema(hint))
+
+    def test_unknown_ignore_name_raises(self):
+        hint = t.Annotated[dict[str, t.Any],
+                           typeutils.ArgsOf(_make_widget, ignore=("nope",))]
+        e = self.assertRaises(TypeError, typeutils.hint_to_schema, hint)
+        self.assertIn("nope", str(e))
+
+
+class ArgumentsSchemaTestCase(test.TestCase):
+
+    def test_skips_self_varargs_and_flags_kwargs(self):
+        def target(self, a: str, b=2, *args, **kw) -> None:
+            pass
+
+        schema, _sig, _hints = typeutils.arguments_schema(target)
+        # self/*args dropped; **kw -> additional; b untyped -> {}; a required
+        self.assertTrue(schema["additionalProperties"])
+        self.assertEqual({"a": {"type": "string"}, "b": {}},
+                         schema["properties"])
+        self.assertEqual(["a"], schema["required"])
+
+    def test_returns_schema_signature_and_hints(self):
+        schema, signature, hints = typeutils.arguments_schema(_make_widget)
+        self.assertEqual(
+            {"type": "object", "additionalProperties": False,
+             "required": ["name"],
+             "properties": {"name": {"type": "string"},
+                            "size": {"type": "integer"},
+                            "tag": {}}},
+            schema)
+        self.assertEqual(["name", "size", "tag"],
+                         list(signature.parameters))
+        self.assertEqual(str, hints["name"])
+
+    def test_bad_ignore_raises(self):
+        e = self.assertRaises(TypeError,
+                              typeutils.arguments_schema, _make_widget,
+                              ignore=("nope",))
+        self.assertIn("nope", str(e))
+
+    def test_strict_raises_with_located_hint(self):
+        def target(a: int, b: bytes) -> None:  # bytes is unmappable
+            pass
+
+        e = self.assertRaises(typeutils.UnsupportedType,
+                              typeutils.arguments_schema, target)
+        self.assertEqual(("b",), e.location)
+        self.assertIn("bytes", str(e))
+
+    def test_nested_error_builds_a_location_path(self):
+        # an unmappable param of a forwarded ArgsOf callable is located through
+        # the nesting: the dict argument, then the offending key (which is the
+        # forwarded callable's parameter).
+        def make_thing(good: int, bad: bytes) -> None:
+            pass
+
+        def outer(
+            create_args: t.Annotated[dict[str, t.Any],
+                                     typeutils.ArgsOf(make_thing)],
+        ) -> None:
+            pass
+
+        e = self.assertRaises(typeutils.UnsupportedType,
+                              typeutils.arguments_schema, outer)
+        self.assertEqual(("create_args", "bad"), e.location)
+
+    def test_non_strict_degrades_to_empty(self):
+        def target(a: int, b: bytes) -> None:
+            pass
+
+        with logging.LogCatcher(typeutils.LOG) as catcher:
+            schema, _sig, _hints = typeutils.arguments_schema(
+                target, strict=False)
+        self.assertEqual({"type": "integer"}, schema["properties"]["a"])
+        self.assertEqual({}, schema["properties"]["b"])  # unmappable -> {}
+        catcher.assertInLogs("at b")
 
 
 class FieldTestCase(test.TestCase):
