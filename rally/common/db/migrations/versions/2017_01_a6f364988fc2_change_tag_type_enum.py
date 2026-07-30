@@ -19,6 +19,7 @@ Revises: 37fdbb373e8d
 Create Date: 2017-01-17 18:47:10.700459
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 
@@ -38,16 +39,16 @@ tag_helper = sa.Table(
     "tags",
     sa.MetaData(),
     sa.Column("id", sa.Integer(), nullable=False),
-    sa.Column("type", sa.Enum(*TAG_TYPES, name="enum_tag_types"),
-              nullable=False),
-    sa.Column("new_type", sa.String(36), nullable=False)
+    sa.Column(
+        "type", sa.Enum(*TAG_TYPES, name="enum_tag_types"), nullable=False
+    ),
+    sa.Column("new_type", sa.String(36), nullable=False),
 )
 
 
 def upgrade() -> None:
     with op.batch_alter_table("tags") as batch_op:
-        batch_op.add_column(
-            sa.Column("new_type", sa.String(36)))
+        batch_op.add_column(sa.Column("new_type", sa.String(36)))
 
     op.execute(tag_helper.update().values(new_type=tag_helper.c.type))
 
@@ -55,8 +56,12 @@ def upgrade() -> None:
 
     with op.batch_alter_table("tags") as batch_op:
         batch_op.drop_column("type")
-        batch_op.alter_column("new_type", new_column_name="type",
-                              existing_type=sa.String(36), nullable=False)
+        batch_op.alter_column(
+            "new_type",
+            new_column_name="type",
+            existing_type=sa.String(36),
+            nullable=False,
+        )
 
     op.create_index("d_type_tag", "tags", ["uuid", "type", "tag"], unique=True)
 

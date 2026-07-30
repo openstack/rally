@@ -58,14 +58,17 @@ class Chart(plugin.Plugin, metaclass=abc.ABCMeta):
         """
         for name, value in self._map_iteration_values(iteration):
             if name not in self._data:
-                self._data[name] = utils.GraphZipper(self.base_size,
-                                                     self.zipped_size)
+                self._data[name] = utils.GraphZipper(
+                    self.base_size, self.zipped_size
+                )
             self._data[name].add_point(value)
 
     def render(self):
         """Generate chart data ready for drawing."""
-        return [(name, points.get_zipped_graph())
-                for name, points in self._data.items()]
+        return [
+            (name, points.get_zipped_graph())
+            for name, points in self._data.items()
+        ]
 
     @classmethod
     def render_complete_data(cls, data):
@@ -79,10 +82,10 @@ class Chart(plugin.Plugin, metaclass=abc.ABCMeta):
         due to failures, this method must be used in all cases
         related to atomic actions processing.
         """
-        return list(
+        return [
             (name, atomic_actions.get(name, {}).get("duration", 0))
             for name in self._get_atomic_names()
-        )
+        ]
 
     def _get_atomic_names(self):
         duration_stats = self._workload["statistics"]["durations"]
@@ -94,7 +97,6 @@ class Chart(plugin.Plugin, metaclass=abc.ABCMeta):
 
 
 class MainStackedAreaChart(Chart):
-
     widget = "StackedArea"
 
     def _map_iteration_values(self, iteration):
@@ -102,29 +104,36 @@ class MainStackedAreaChart(Chart):
             result = [("duration", 0), ("idle_duration", 0)]
             if self._workload["failed_iteration_count"]:
                 result.append(
-                    ("failed_duration",
-                     iteration["duration"] + iteration["idle_duration"]))
+                    (
+                        "failed_duration",
+                        iteration["duration"] + iteration["idle_duration"],
+                    )
+                )
         else:
-            result = [("duration", iteration["duration"]),
-                      ("idle_duration", iteration["idle_duration"])]
+            result = [
+                ("duration", iteration["duration"]),
+                ("idle_duration", iteration["idle_duration"]),
+            ]
             if self._workload["failed_iteration_count"]:
                 result.append(("failed_duration", 0))
         return result
 
 
 class AtomicStackedAreaChart(Chart):
-
     widget = "StackedArea"
 
     def _map_iteration_values(self, iteration):
         atomic_actions = atomic.merge_atomic_actions(
-            iteration["atomic_actions"])
+            iteration["atomic_actions"]
+        )
         atomics = self._fix_atomic_actions(atomic_actions)
         if self._workload["failed_iteration_count"]:
             if iteration["error"]:
                 failed_duration = (
-                    iteration["duration"] + iteration["idle_duration"]
-                    - sum([(a[1] or 0) for a in atomics]))
+                    iteration["duration"]
+                    + iteration["idle_duration"]
+                    - sum([(a[1] or 0) for a in atomics])
+                )
             else:
                 failed_duration = 0
             atomics.append(("failed_duration", failed_duration))
@@ -147,10 +156,10 @@ class AvgChart(Chart):
 
 
 class AtomicAvgChart(AvgChart):
-
     def _map_iteration_values(self, iteration):
         atomic_actions = atomic.merge_atomic_actions(
-            iteration["atomic_actions"])
+            iteration["atomic_actions"]
+        )
         return self._fix_atomic_actions(atomic_actions)
 
 
@@ -159,24 +168,25 @@ class LoadProfileChart(Chart):
 
     widget = "StackedArea"
 
-    def __init__(self, workload, name="parallel iterations",
-                 scale=100):
+    def __init__(self, workload, name="parallel iterations", scale=100):
         """Setup chart with graph name and scale.
 
         :param workload:  dict, detailed information about Workload
         :param name: str name for X axis
         :param scale: int number of X points
         """
-        super(LoadProfileChart, self).__init__(workload)
+        super().__init__(workload)
         self._name = name
         # NOTE(boris-42): Add 2 points at the end of graph so at the end of
         #                 graph there will be point with 0 running iterations.
         self._duration = self._workload["load_duration"] * (1 + 2.0 / scale)
 
         self.step = self._duration / float(scale)
-        self._time_axis = [self.step * x
-                           for x in range(int(scale))
-                           if (self.step * x) < self._duration]
+        self._time_axis = [
+            self.step * x
+            for x in range(int(scale))
+            if (self.step * x) < self._duration
+        ]
         self._time_axis.append(self._duration)
         self._running = [0] * len(self._time_axis)
         # NOTE(andreykurilin): There is a "start_time" field in workload
@@ -203,10 +213,11 @@ class LoadProfileChart(Chart):
             self._running[ended_idx] += duration / self.step
         else:
             self._running[started_idx] += (
-                self._time_axis[started_idx] - ts_start) / self.step
+                self._time_axis[started_idx] - ts_start
+            ) / self.step
             self._running[ended_idx] += (
-                ts_start + duration
-                - self._time_axis[ended_idx - 1]) / self.step
+                ts_start + duration - self._time_axis[ended_idx - 1]
+            ) / self.step
 
     def render(self):
         return [(self._name, list(zip(self._time_axis, self._running)))]
@@ -229,16 +240,23 @@ class HistogramChart(Chart):
         min_value, max_value = min_value or 0, max_value or 0
         views = []
         for view, bins in [
-                ("Square Root Choice",
-                 int(math.ceil(math.sqrt(self.base_size)))),
-                ("Sturges Formula",
-                 int(math.ceil(math.log(self.base_size, 2) + 1))),
-                ("Rice Rule",
-                 int(math.ceil(2 * self.base_size ** (1.0 / 3))))]:
+            ("Square Root Choice", int(math.ceil(math.sqrt(self.base_size)))),
+            (
+                "Sturges Formula",
+                int(math.ceil(math.log(self.base_size, 2) + 1)),
+            ),
+            ("Rice Rule", int(math.ceil(2 * self.base_size ** (1.0 / 3)))),
+        ]:
             bin_width = float(max_value - min_value) / bins
             x_axis = [min_value + (bin_width * x) for x in range(1, bins + 1)]
-            views.append({"view": view, "bins": bins,
-                          "x": x_axis, "y": [0] * len(x_axis)})
+            views.append(
+                {
+                    "view": view,
+                    "bins": bins,
+                    "x": x_axis,
+                    "y": [0] * len(x_axis),
+                }
+            )
         return views
 
     def add_iteration(self, iteration):
@@ -255,25 +273,32 @@ class HistogramChart(Chart):
         data = []
         for name, hist in self._data.items():
             for idx, v in enumerate(hist["views"]):
-                graph = {"key": name,
-                         "view": v["view"],
-                         "disabled": hist["disabled"],
-                         "values": [{"x": x, "y": y}
-                                    for x, y in zip(v["x"], v["y"])]}
+                graph = {
+                    "key": name,
+                    "view": v["view"],
+                    "disabled": hist["disabled"],
+                    "values": [
+                        {"x": x, "y": y} for x, y in zip(v["x"], v["y"])
+                    ],
+                }
                 try:
                     data[idx].append(graph)
                 except IndexError:
                     data.append([graph])
-        return {"data": data, "views": [{"id": i, "name": d[0]["view"]}
-                                        for i, d in enumerate(data)]}
+        return {
+            "data": data,
+            "views": [
+                {"id": i, "name": d[0]["view"]} for i, d in enumerate(data)
+            ],
+        }
 
 
 class MainHistogramChart(HistogramChart):
-
     def __init__(self, workload_info):
-        super(MainHistogramChart, self).__init__(workload_info)
-        views = self._init_views(self._workload["min_duration"],
-                                 self._workload["max_duration"])
+        super().__init__(workload_info)
+        views = self._init_views(
+            self._workload["min_duration"], self._workload["max_duration"]
+        )
         self._data["task"] = {"views": views, "disabled": None}
 
     def _map_iteration_values(self, iteration):
@@ -281,19 +306,22 @@ class MainHistogramChart(HistogramChart):
 
 
 class AtomicHistogramChart(HistogramChart):
-
     def __init__(self, workload_info):
-        super(AtomicHistogramChart, self).__init__(workload_info)
+        super().__init__(workload_info)
         for i, aa in enumerate(
-                self._workload["statistics"]["durations"]["atomics"]):
+            self._workload["statistics"]["durations"]["atomics"]
+        ):
             self._data[aa["display_name"]] = {
-                "views": self._init_views(aa["data"]["min"],
-                                          aa["data"]["max"]),
-                "disabled": i}
+                "views": self._init_views(
+                    aa["data"]["min"], aa["data"]["max"]
+                ),
+                "disabled": i,
+            }
 
     def _map_iteration_values(self, iteration):
         atomic_actions = atomic.merge_atomic_actions(
-            iteration["atomic_actions"])
+            iteration["atomic_actions"]
+        )
         return self._fix_atomic_actions(atomic_actions)
 
 
@@ -345,9 +373,14 @@ class Table(Chart, metaclass=abc.ABCMeta):
         :returns: bool
         """
         for ins, fn in values:
-            if isinstance(ins, (streaming.MinComputation,
-                                streaming.MaxComputation,
-                                streaming.MeanComputation)):
+            if isinstance(
+                ins,
+                (
+                    streaming.MinComputation,
+                    streaming.MaxComputation,
+                    streaming.MeanComputation,
+                ),
+            ):
                 # NOTE(amaretskiy): None means this computation
                 #                   has never been called
                 return ins.result() is not None
@@ -381,20 +414,26 @@ class Table(Chart, metaclass=abc.ABCMeta):
             styles = {len(rows) - 1: "rich"}
         else:
             styles = self._styles
-        return {"cols": self.columns,
-                "rows": rows,
-                "styles": styles}
+        return {"cols": self.columns, "rows": rows, "styles": styles}
 
 
 class MainStatsTable(Table):
-
-    columns = ["Action", "Min (sec)", "Median (sec)", "90%ile (sec)",
-               "95%ile (sec)", "Max (sec)", "Avg (sec)", "Success", "Count"]
+    columns = [
+        "Action",
+        "Min (sec)",
+        "Median (sec)",
+        "90%ile (sec)",
+        "95%ile (sec)",
+        "Max (sec)",
+        "Avg (sec)",
+        "Success",
+        "Count",
+    ]
 
     _DEPTH_OF_PROCESSING = 2
 
     def __init__(self, *args, **kwargs):
-        super(MainStatsTable, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.iters_num = self._workload["total_iteration_count"]
 
     def _initialize_atomic(self, name, root, real_name=None, count=1):
@@ -407,11 +446,11 @@ class MainStatsTable(Table):
                 streaming.MaxComputation(),
                 streaming.MeanComputation(),
                 streaming.MeanComputation(),
-                streaming.IncrementComputation()
+                streaming.IncrementComputation(),
             ],
             "children": collections.OrderedDict(),
             "real_name": real_name,
-            "count_per_iteration": count
+            "count_per_iteration": count,
         }
 
     def _add_data(self, raw_data, root=None):
@@ -420,12 +459,14 @@ class MainStatsTable(Table):
         for name, data in raw_data.items():
             original_name = name
             if data["count"] > 1:
-                name += (" (x%s)" % data["count"])
+                name += " (x%s)" % data["count"]
             if name not in p_data:
-                self._initialize_atomic(name,
-                                        root=p_data,
-                                        real_name=original_name,
-                                        count=data["count"])
+                self._initialize_atomic(
+                    name,
+                    root=p_data,
+                    real_name=original_name,
+                    count=data["count"],
+                )
 
             points, min_v, max_v, mean, success, count = p_data[name]["sa"]
             count.add()
@@ -449,8 +490,12 @@ class MainStatsTable(Table):
             the_last = data[next(reversed(data))]
             if iteration["error"] and not the_last.get("failed", False):
                 # un-wrapped action failed
-                data["<no-name-action>"] = {"duration": 0, "count": 1,
-                                            "failed": True, "children": {}}
+                data["<no-name-action>"] = {
+                    "duration": 0,
+                    "count": 1,
+                    "failed": True,
+                    "children": {},
+                }
         total_duration = iteration["duration"] + iteration["idle_duration"]
         data["total"] = {
             "duration": total_duration,
@@ -461,15 +506,15 @@ class MainStatsTable(Table):
                     "duration": iteration["duration"],
                     "count": 1,
                     "failed": bool(iteration["error"]),
-                    "children": {}
+                    "children": {},
                 },
                 idle_duration={
                     "duration": iteration["idle_duration"],
                     "count": 1,
                     "failed": bool(iteration["error"]),
-                    "children": {}
-                }
-            )
+                    "children": {},
+                },
+            ),
         }
 
         self._add_data(data)
@@ -507,18 +552,22 @@ class MainStatsTable(Table):
 
         for c_name, c_values in values["children"].items():
             children.append(self._process_result(c_name, c_values))
-        return {"data": {"iteration_count": count,
-                         "min": min_v,
-                         "median": p50ile,
-                         "90%ile": p90ile,
-                         "95%ile": p95ile,
-                         "max": max_v,
-                         "avg": avg,
-                         "success": success},
-                "count_per_iteration": values["count_per_iteration"],
-                "name": values["real_name"],
-                "display_name": name,
-                "children": children}
+        return {
+            "data": {
+                "iteration_count": count,
+                "min": min_v,
+                "median": p50ile,
+                "90%ile": p90ile,
+                "95%ile": p95ile,
+                "max": max_v,
+                "avg": avg,
+                "success": success,
+            },
+            "count_per_iteration": values["count_per_iteration"],
+            "name": values["real_name"],
+            "display_name": name,
+            "children": children,
+        }
 
     def _get_results(self):
         if self._data:
@@ -545,16 +594,20 @@ class MainStatsTable(Table):
         def _process_elem(elem, depth=0):
             name = elem["display_name"]
             if depth > 0:
-                name = (" %s> %s" % ("-" * depth, name))
-            rows.append([name,
-                         elem["data"]["min"],
-                         elem["data"]["median"],
-                         elem["data"]["90%ile"],
-                         elem["data"]["95%ile"],
-                         elem["data"]["max"],
-                         elem["data"]["avg"],
-                         elem["data"]["success"],
-                         elem["data"]["iteration_count"]])
+                name = " %s> %s" % ("-" * depth, name)
+            rows.append(
+                [
+                    name,
+                    elem["data"]["min"],
+                    elem["data"]["median"],
+                    elem["data"]["90%ile"],
+                    elem["data"]["95%ile"],
+                    elem["data"]["max"],
+                    elem["data"]["avg"],
+                    elem["data"]["success"],
+                    elem["data"]["iteration_count"],
+                ]
+            )
             for child in elem["children"]:
                 _process_elem(child, depth=(depth + 1))
 
@@ -568,12 +621,14 @@ class MainStatsTable(Table):
         return {"total": res[-1], "atomics": res[:-1]}
 
     def render(self):
-        rendered_data = super(MainStatsTable, self).render()
+        rendered_data = super().render()
         rows_len = len(rendered_data["rows"])
         if rows_len > 1:
-            styles = {rows_len - 3: "rich",
-                      rows_len - 2: "oblique",
-                      rows_len - 1: "oblique"}
+            styles = {
+                rows_len - 3: "rich",
+                rows_len - 2: "oblique",
+                rows_len - 1: "oblique",
+            }
             for i, row in enumerate(rendered_data["rows"]):
                 if i == rows_len - 3:
                     break
@@ -586,21 +641,30 @@ class MainStatsTable(Table):
 class OutputChart(Chart):
     """Base class for charts related to scenario output."""
 
-    def __init__(self, workload_info, zipped_size=1000,
-                 title="", description="", label="", axis_label=""):
-        super(OutputChart, self).__init__(workload_info, zipped_size)
+    def __init__(
+        self,
+        workload_info,
+        zipped_size=1000,
+        title="",
+        description="",
+        label="",
+        axis_label="",
+    ):
+        super().__init__(workload_info, zipped_size)
         self.title = title
         self.description = description
         self.label = label
         self.axis_label = axis_label
 
     def render(self):
-        return {"title": self.title,
-                "description": self.description,
-                "widget": self.widget,
-                "data": super(OutputChart, self).render(),
-                "label": self.label,
-                "axis_label": self.axis_label}
+        return {
+            "title": self.title,
+            "description": self.description,
+            "widget": self.widget,
+            "data": super().render(),
+            "label": self.label,
+            "axis_label": self.axis_label,
+        }
 
 
 @plugin.configure(name="StackedArea")
@@ -635,14 +699,20 @@ class OutputStackedAreaChart(OutputChart):
     widget = "StackedArea"
 
     def render(self):
-        result = super(OutputStackedAreaChart, self).render()
+        result = super().render()
 
         # NOTE(amaretskiy): transform to Table if there is a single iteration
         if result["data"] and len(result["data"][0][1]) == 1:
             rows = [[v[0], v[1][0][1]] for v in result["data"]]
-            result.update({"widget": "Table",
-                           "data": {"cols": ["Name", self.label or "Value"],
-                                    "rows": rows}})
+            result.update(
+                {
+                    "widget": "Table",
+                    "data": {
+                        "cols": ["Name", self.label or "Value"],
+                        "rows": rows,
+                    },
+                }
+            )
         return result
 
 
@@ -745,8 +815,16 @@ class OutputStatsTable(OutputTable):
                       "data": [["foo stat", 12], ["bar", 34], ["spam", 56]]})
     """
 
-    columns = ["Action", "Min (sec)", "Median (sec)", "90%ile (sec)",
-               "95%ile (sec)", "Max (sec)", "Avg (sec)", "Count"]
+    columns = [
+        "Action",
+        "Min (sec)",
+        "Median (sec)",
+        "90%ile (sec)",
+        "95%ile (sec)",
+        "Max (sec)",
+        "Avg (sec)",
+        "Count",
+    ]
 
     def add_iteration(self, iteration):
         for name, value in self._map_iteration_values(iteration):
@@ -756,7 +834,7 @@ class OutputStatsTable(OutputTable):
                     streaming.IncrementComputation(),
                     streaming.MinComputation(),
                     streaming.MaxComputation(),
-                    streaming.MeanComputation()
+                    streaming.MeanComputation(),
                 ]
             points, count, min_v, max_v, avg = self._data[name]
 
@@ -852,7 +930,7 @@ class OutputEmbeddedChart(OutputChart):
                 # NOTE(chenxu): ensure that '</script>' of embedded_data will
                 #   not be handled incorrectly by JavaScript.
                 "embedded": pdata["data"].replace("/script>", "\\/script>"),
-            }
+            },
         }
 
 
@@ -880,7 +958,7 @@ class OutputEmbeddedExternalChart(OutputChart):
         return {
             "title": pdata["title"],
             "widget": cls.widget,
-            "data": {"embedded": None, "source": pdata["data"]}
+            "data": {"embedded": None, "source": pdata["data"]},
         }
 
 
@@ -891,8 +969,10 @@ _OUTPUT_SCHEMA = {
         "chart_plugin": str,
         "data": (list, dict),
         "label": str,
-        "axis_label": str},
-    "required": ["title", "chart_plugin", "data"]}
+        "axis_label": str,
+    },
+    "required": ["title", "chart_plugin", "data"],
+}
 
 
 def validate_output(output_type, output):
@@ -900,37 +980,52 @@ def validate_output(output_type, output):
     #   Maybe it is worth to add classmethod OutputChart.validate(), so
     #   we could have flexible validation for custom chart plugins
     if output_type not in ("additive", "complete"):
-        return ("unexpected output type: '%s', "
-                "should be in ('additive', 'complete')" % output_type)
+        return (
+            "unexpected output type: '%s', "
+            "should be in ('additive', 'complete')" % output_type
+        )
 
     if not isinstance(output, dict):
-        return ("%(name)s output item has wrong type '%(type)s', "
-                "must be 'dict'" % {"name": output_type,
-                                    "type": type(output).__name__})
+        return (
+            "%(name)s output item has wrong type '%(type)s', "
+            "must be 'dict'"
+            % {"name": output_type, "type": type(output).__name__}
+        )
 
     for key in _OUTPUT_SCHEMA["required"]:
         if key not in output:
-            return ("%(name)s output missing key '%(key)s'"
-                    % {"name": output_type, "key": key})
+            return "%(name)s output missing key '%(key)s'" % {
+                "name": output_type,
+                "key": key,
+            }
 
     for key in output:
         if key not in _OUTPUT_SCHEMA["key_types"]:
-            return ("%(name)s output has unexpected key '%(key)s'"
-                    % {"name": output_type, "key": key})
+            return "%(name)s output has unexpected key '%(key)s'" % {
+                "name": output_type,
+                "key": key,
+            }
 
         proper_type = _OUTPUT_SCHEMA["key_types"][key]
         if not isinstance(output[key], proper_type):
             if isinstance(proper_type, tuple):
-                return ("Value of %(name)s output %(key)s has wrong type "
-                        "'%(actual_type)s', should be in %(types)r"
-                        % {"name": output_type,
-                           "key": key,
-                           "actual_type": type(output[key]).__name__,
-                           "types": tuple(t.__name__
-                                          for t in proper_type)})
-            return ("Value of %(name)s output %(key)s has wrong type "
-                    "'%(actual_type)s', should be %(proper_type)s"
-                    % {"name": output_type,
-                       "key": key,
-                       "actual_type": type(output[key]).__name__,
-                       "proper_type": proper_type.__name__})
+                return (
+                    "Value of %(name)s output %(key)s has wrong type "
+                    "'%(actual_type)s', should be in %(types)r"
+                    % {
+                        "name": output_type,
+                        "key": key,
+                        "actual_type": type(output[key]).__name__,
+                        "types": tuple(t.__name__ for t in proper_type),
+                    }
+                )
+            return (
+                "Value of %(name)s output %(key)s has wrong type "
+                "'%(actual_type)s', should be %(proper_type)s"
+                % {
+                    "name": output_type,
+                    "key": key,
+                    "actual_type": type(output[key]).__name__,
+                    "proper_type": proper_type.__name__,
+                }
+            )

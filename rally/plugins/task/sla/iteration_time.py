@@ -34,14 +34,16 @@ if t.TYPE_CHECKING:  # pragma: no cover
 @sla.configure(name="max_seconds_per_iteration")
 class IterationTime(sla.SLA):
     """Maximum time for one iteration in seconds."""
+
     CONFIG_SCHEMA = {
         "type": "number",
         "$schema": consts.JSON_SCHEMA7,
         "minimum": 0.0,
-        "exclusiveMinimum": 0.0}
+        "exclusiveMinimum": 0.0,
+    }
 
     def __init__(self, criterion_value: float) -> None:
-        super(IterationTime, self).__init__(criterion_value)
+        super().__init__(criterion_value)
         self.max_iteration_time = 0.0
 
     def add_iteration(self, iteration: runner.ScenarioRunnerResult) -> bool:
@@ -57,5 +59,8 @@ class IterationTime(sla.SLA):
         return self.success
 
     def details(self) -> str:
-        return ("Maximum seconds per iteration %.2fs <= %.2fs - %s" %
-                (self.max_iteration_time, self.criterion_value, self.status()))
+        return "Maximum seconds per iteration %.2fs <= %.2fs - %s" % (
+            self.max_iteration_time,
+            self.criterion_value,
+            self.status(),
+        )

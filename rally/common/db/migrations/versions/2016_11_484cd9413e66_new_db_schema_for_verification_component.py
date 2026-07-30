@@ -38,14 +38,24 @@ branch_labels = None
 depends_on = None
 
 
-TASK_STATUSES = ["aborted", "aborting", "cleaning up", "failed", "finished",
-                 "init", "paused", "running", "setting up", "soft_aborting",
-                 "verifying"]
+TASK_STATUSES = [
+    "aborted",
+    "aborting",
+    "cleaning up",
+    "failed",
+    "finished",
+    "init",
+    "paused",
+    "running",
+    "setting up",
+    "soft_aborting",
+    "verifying",
+]
 
 _MAP_OLD_TO_NEW_TEST_STATUSES = {
     "OK": "success",
     "FAIL": "fail",
-    "SKIP": "skip"
+    "SKIP": "skip",
 }
 
 
@@ -55,15 +65,19 @@ verification_helper = sa.Table(
     sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
     sa.Column("uuid", sa.String(36), nullable=False),
     sa.Column("deployment_uuid", sa.String(36), nullable=False),
-    sa.Column("status", sa.Enum(*TASK_STATUSES, name="enum_tasks_status"),
-              default="init", nullable=False),
+    sa.Column(
+        "status",
+        sa.Enum(*TASK_STATUSES, name="enum_tasks_status"),
+        default="init",
+        nullable=False,
+    ),
     sa.Column("set_name", sa.String(20)),
     sa.Column("tests", sa.Integer),
     sa.Column("errors", sa.Integer),
     sa.Column("failures", sa.Integer),
     sa.Column("time", sa.Float),
     sa.Column("created_at", sa.DateTime),
-    sa.Column("updated_at", sa.DateTime)
+    sa.Column("updated_at", sa.DateTime),
 )
 
 
@@ -72,10 +86,11 @@ results_helper = sa.Table(
     sa.MetaData(),
     sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
     sa.Column("verification_uuid", sa.String(36), nullable=False),
-    sa.Column("data", sa_types.MutableJSONEncodedDict, nullable=False,
-              default={}),
+    sa.Column(
+        "data", sa_types.MutableJSONEncodedDict, nullable=False, default={}
+    ),
     sa.Column("created_at", sa.DateTime),
-    sa.Column("updated_at", sa.DateTime)
+    sa.Column("updated_at", sa.DateTime),
 )
 
 
@@ -87,24 +102,19 @@ def upgrade() -> None:
         "verifiers",
         sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
         sa.Column("uuid", sa.String(36), nullable=False),
-
         sa.Column("name", sa.String(255), unique=True),
         sa.Column("description", sa.Text),
-
         sa.Column("type", sa.String(255), nullable=False),
         sa.Column("namespace", sa.String(255)),
-
         sa.Column("source", sa.String(255)),
         sa.Column("version", sa.String(255)),
         sa.Column("system_wide", sa.Boolean),
-
         sa.Column("status", sa.String(36), default="init", nullable=False),
-
-        sa.Column("extra_settings", sa_types.MutableJSONEncodedDict,
-                  nullable=True),
-
+        sa.Column(
+            "extra_settings", sa_types.MutableJSONEncodedDict, nullable=True
+        ),
         sa.Column("created_at", sa.DateTime),
-        sa.Column("updated_at", sa.DateTime)
+        sa.Column("updated_at", sa.DateTime),
     )
 
     op.create_index("verifier_uuid", "verifiers", ["uuid"], unique=True)
@@ -113,14 +123,10 @@ def upgrade() -> None:
         "verifications_new",
         sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
         sa.Column("uuid", sa.String(36), nullable=False),
-
         sa.Column("verifier_uuid", sa.String(36), nullable=False),
         sa.Column("deployment_uuid", sa.String(36), nullable=False),
-
         sa.Column("run_args", sa_types.MutableJSONEncodedDict),
-
         sa.Column("status", sa.String(36), default="init", nullable=False),
-
         sa.Column("tests_count", sa.Integer, default=0),
         sa.Column("failures", sa.Integer, default=0),
         sa.Column("skipped", sa.Integer, default=0),
@@ -128,14 +134,11 @@ def upgrade() -> None:
         sa.Column("unexpected_success", sa.Integer, default=0),
         sa.Column("expected_failures", sa.Integer, default=0),
         sa.Column("tests_duration", sa.Float, default=0.0),
-
         sa.Column("tests", sa_types.MutableJSONEncodedDict, default={}),
-
         sa.Column("created_at", sa.DateTime),
         sa.Column("updated_at", sa.DateTime),
-
         sa.ForeignKeyConstraint(["verifier_uuid"], ["verifiers.uuid"]),
-        sa.ForeignKeyConstraint(["deployment_uuid"], ["deployments.uuid"])
+        sa.ForeignKeyConstraint(["deployment_uuid"], ["deployments.uuid"]),
     )
 
     default_verifier = None
@@ -144,26 +147,32 @@ def upgrade() -> None:
             vuuid = models.UUID()
             connection.execute(
                 verifiers_table.insert(),
-                [{
-                    "uuid": vuuid,
-                    "name": "DefaultTempestVerifier",
-                    "description": "It is the default verifier to assign all "
-                                   "migrated verification results for",
-                    "type": "tempest",
-                    "namespace": "openstack",
-                    "source": "n/a",
-                    "version": "n/a",
-                    "system_wide": False,
-                    "status": "init",
-                    "created_at": dt.datetime.utcnow(),
-                    "updated_at": dt.datetime.utcnow()
-                }]
+                [
+                    {
+                        "uuid": vuuid,
+                        "name": "DefaultTempestVerifier",
+                        "description": (
+                            "It is the default verifier to assign all "
+                            "migrated verification results for"
+                        ),
+                        "type": "tempest",
+                        "namespace": "openstack",
+                        "source": "n/a",
+                        "version": "n/a",
+                        "system_wide": False,
+                        "status": "init",
+                        "created_at": dt.datetime.utcnow(),
+                        "updated_at": dt.datetime.utcnow(),
+                    }
+                ],
             )
             default_verifier = t.cast(
                 sa.Row,
                 connection.execute(
                     verifiers_table.select().where(
-                        verifiers_table.c.uuid == vuuid)).first()
+                        verifiers_table.c.uuid == vuuid
+                    )
+                ).first(),
             )
 
         data = vresult.data
@@ -172,17 +181,21 @@ def upgrade() -> None:
             for test in data["test_cases"].keys():
                 old_status = data["test_cases"][test]["status"]
                 new_status = _MAP_OLD_TO_NEW_TEST_STATUSES.get(
-                    old_status, old_status.lower())
+                    old_status, old_status.lower()
+                )
                 data["test_cases"][test]["status"] = new_status
 
                 if "failure" in data["test_cases"][test]:
-                    data["test_cases"][test]["traceback"] = data[
-                        "test_cases"][test]["failure"]["log"]
+                    data["test_cases"][test]["traceback"] = data["test_cases"][
+                        test
+                    ]["failure"]["log"]
                     data["test_cases"][test].pop("failure")
 
         verifications = connection.execute(
             verification_helper.select().where(
-                verification_helper.c.uuid == vresult.verification_uuid))
+                verification_helper.c.uuid == vresult.verification_uuid
+            )
+        )
         # for each verification result we have single verification object
         verification = verifications.first()
         # this check is needed only for mypy
@@ -191,29 +204,34 @@ def upgrade() -> None:
 
         connection.execute(
             verifications_table.insert(),
-            [{"uuid": verification.uuid,
-              "verifier_uuid": default_verifier.uuid,
-              "deployment_uuid": verification.deployment_uuid,
-              "run_args": {"pattern": "set=%s" % verification.set_name},
-              "status": verification.status,
-              "tests": data["test_cases"],
-              "tests_count": data["tests"],
-              "failures": data["failures"],
-              "skipped": data["skipped"],
-              "success": data["success"],
-              "unexpected_success": data.get("unexpected_success", 0),
-              "expected_failures": data.get("expected_failures", 0),
-              "tests_duration": data["time"],
-              "created_at": vresult.created_at,
-              "updated_at": vresult.updated_at
-              }])
+            [
+                {
+                    "uuid": verification.uuid,
+                    "verifier_uuid": default_verifier.uuid,
+                    "deployment_uuid": verification.deployment_uuid,
+                    "run_args": {"pattern": "set=%s" % verification.set_name},
+                    "status": verification.status,
+                    "tests": data["test_cases"],
+                    "tests_count": data["tests"],
+                    "failures": data["failures"],
+                    "skipped": data["skipped"],
+                    "success": data["success"],
+                    "unexpected_success": data.get("unexpected_success", 0),
+                    "expected_failures": data.get("expected_failures", 0),
+                    "tests_duration": data["time"],
+                    "created_at": vresult.created_at,
+                    "updated_at": vresult.updated_at,
+                }
+            ],
+        )
 
     op.drop_table("verification_results")
     op.drop_table("verifications")
     op.rename_table("verifications_new", "verifications")
 
     op.create_index(
-        "verification_uuid", "verifications", ["uuid"], unique=True)
+        "verification_uuid", "verifications", ["uuid"], unique=True
+    )
 
 
 def downgrade() -> None:

@@ -38,7 +38,7 @@ verifications_helper = sa.Table(
     "verifications",
     sa.MetaData(),
     sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
-    sa.Column("tests", sa_types.MutableJSONEncodedDict, default={})
+    sa.Column("tests", sa_types.MutableJSONEncodedDict, default={}),
 )
 
 
@@ -51,8 +51,10 @@ def upgrade() -> None:
             test["duration"] = duration
 
         connection.execute(
-            verifications_helper.update().where(
-                verifications_helper.c.id == v.id).values(tests=tests))
+            verifications_helper.update()
+            .where(verifications_helper.c.id == v.id)
+            .values(tests=tests)
+        )
 
 
 def downgrade() -> None:

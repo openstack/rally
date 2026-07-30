@@ -37,8 +37,7 @@ def list_opts():
 
 def update_opt_defaults():
     logging.oslogging.cfg.set_defaults(
-        logging.oslogging._options.generic_log_opts,
-        use_stderr=True
+        logging.oslogging._options.generic_log_opts, use_stderr=True
     )
 
 

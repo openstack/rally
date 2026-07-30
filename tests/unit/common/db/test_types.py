@@ -31,7 +31,7 @@ class JsonEncodedTest(test.TestCase):
 
     def test_process_bind_param(self):
         t = sa_types.JSONEncodedDict()
-        self.assertEqual("{\"a\": 1}", t.process_bind_param({"a": 1}, None))
+        self.assertEqual('{"a": 1}', t.process_bind_param({"a": 1}, None))
 
     def test_process_bind_param_none(self):
         t = sa_types.JSONEncodedDict()
@@ -39,7 +39,7 @@ class JsonEncodedTest(test.TestCase):
 
     def test_process_result_value(self):
         t = sa_types.JSONEncodedDict()
-        self.assertEqual({"a": 1}, t.process_result_value("{\"a\": 1}", None))
+        self.assertEqual({"a": 1}, t.process_result_value('{"a": 1}', None))
         t = sa_types.JSONEncodedList()
         self.assertEqual([[2, 1], [1, 2]], t.process_result_value(
             "[[2, 1], [1, 2]]", None))

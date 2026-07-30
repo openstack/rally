@@ -82,7 +82,7 @@ class CliUtilsTestCase(test.TestCase):
                          out.getvalue())
 
     def test_print_dict_objects(self):
-        class SomeStruct(object):
+        class SomeStruct:
             def __init__(self, a, b):
                 self.a = a
                 self.b = b
@@ -180,7 +180,7 @@ class CliUtilsTestCase(test.TestCase):
         else:
             self.assertEqual(expected, formatter(obj))
 
-    class TestObj(object):
+    class TestObj:
         x = 1
         y = 2
         z = 3.142857142857143

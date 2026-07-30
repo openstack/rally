@@ -52,10 +52,10 @@ class TimeStamp(sa_types.TypeDecorator):
 class LongText(sa_types.TypeDecorator):
     """Represents an immutable structure as a json-encoded string.
 
-       MySql can store only 64kb in Text type, and for example in psql or
-       sqlite we are able to store more than 1GB. In some cases, like storing
-       results of task 64kb is not enough. So this type uses for MySql
-       LONGTEXT that allows us to store 4GiB.
+    MySql can store only 64kb in Text type, and for example in psql or
+    sqlite we are able to store more than 1GB. In some cases, like storing
+    results of task 64kb is not enough. So this type uses for MySql
+    LONGTEXT that allows us to store 4GiB.
     """
 
     cache_ok = True
@@ -81,7 +81,8 @@ class JSONEncodedDict(LongText):
     def process_result_value(self, value, dialect):
         if value:
             value = json.loads(
-                value, object_pairs_hook=collections.OrderedDict)
+                value, object_pairs_hook=collections.OrderedDict
+            )
         return value
 
 
@@ -159,11 +160,13 @@ class MutableList(mutable.Mutable, list):
 
 class MutableJSONEncodedList(JSONEncodedList):
     """Represent a mutable structure as a json-encoded string."""
+
     cache_ok = True
 
 
 class MutableJSONEncodedDict(JSONEncodedDict):
     """Represent a mutable structure as a json-encoded string."""
+
     cache_ok = True
 
 

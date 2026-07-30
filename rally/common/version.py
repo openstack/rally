@@ -61,7 +61,6 @@ def plugins_versions() -> dict[str, str]:
 
 # backward compatibility
 class version_info:
-
     @classmethod
     def semantic_version(cls) -> type[version_info]:
         return cls

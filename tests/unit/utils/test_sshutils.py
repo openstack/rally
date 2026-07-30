@@ -34,7 +34,7 @@ class SSHTestCase(test.TestCase):
     """Test all small SSH methods."""
 
     def setUp(self):
-        super(SSHTestCase, self).setUp()
+        super().setUp()
         self.ssh = sshutils.SSH("root", "example.net")
 
     @mock.patch("rally.utils.sshutils.SSH._get_pkey")
@@ -178,7 +178,7 @@ class SSHRunTestCase(test.TestCase):
     """
 
     def setUp(self):
-        super(SSHRunTestCase, self).setUp()
+        super().setUp()
 
         self.fake_client = mock.Mock()
         self.fake_session = mock.Mock()

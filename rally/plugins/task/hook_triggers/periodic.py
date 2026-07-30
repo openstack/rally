@@ -35,7 +35,7 @@ class PeriodicTrigger(hook.HookTrigger):
         "oneOf": [
             {
                 "description": "Periodically triage hook based on elapsed time"
-                               " after start of workload.",
+                " after start of workload.",
                 "properties": {
                     "unit": {"enum": ["time"]},
                     "start": {"type": "integer", "minimum": 0},
@@ -56,27 +56,30 @@ class PeriodicTrigger(hook.HookTrigger):
                 "required": ["unit", "step"],
                 "additionalProperties": False,
             },
-        ]
+        ],
     }
 
     def __init__(
         self,
         hook_cfg: dict[str, t.Any],
         task: objects.Task,
-        hook_cls: type[hook.HookAction]
+        hook_cls: type[hook.HookAction],
     ) -> None:
-        super(PeriodicTrigger, self).__init__(hook_cfg, task, hook_cls)
+        super().__init__(hook_cfg, task, hook_cls)
         self.config.setdefault(
-            "start", 0 if self.config["unit"] == "time" else 1)
+            "start", 0 if self.config["unit"] == "time" else 1
+        )
         self.config.setdefault("end", float("Inf"))
 
     def get_listening_event(self) -> str:
         return self.config["unit"]
 
     def on_event(self, event_type: str, value: t.Any = None) -> bool:
-        if not (event_type == self.get_listening_event()
-                and self.config["start"] <= value <= self.config["end"]
-                and (value - self.config["start"]) % self.config["step"] == 0):
+        if not (
+            event_type == self.get_listening_event()
+            and self.config["start"] <= value <= self.config["end"]
+            and (value - self.config["start"]) % self.config["step"] == 0
+        ):
             # do nothing
             return False
-        return super(PeriodicTrigger, self).on_event(event_type, value)
+        return super().on_event(event_type, value)

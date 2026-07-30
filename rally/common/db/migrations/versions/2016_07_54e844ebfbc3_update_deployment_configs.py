@@ -47,7 +47,7 @@ deployments_helper = sa.Table(
         sa_types.MutableJSONEncodedDict,
         default={},
         nullable=False,
-    )
+    ),
 )
 
 
@@ -55,10 +55,17 @@ def _check_user_entry(user: dict[str, str]) -> bool | None:
     """Fixes wrong format of users."""
     if "tenant_name" in user:
         keys = set(user.keys())
-        if keys == {"username", "password", "tenant_name",
-                    "project_domain_name", "user_domain_name"}:
-            if (user["user_domain_name"] == ""
-                    and user["project_domain_name"] == ""):
+        if keys == {
+            "username",
+            "password",
+            "tenant_name",
+            "project_domain_name",
+            "user_domain_name",
+        }:
+            if (
+                user["user_domain_name"] == ""
+                and user["project_domain_name"] == ""
+            ):
                 # it is credentials of keystone v2 and they were created
                 # --fromenv
                 del user["user_domain_name"]
@@ -92,9 +99,10 @@ def upgrade() -> None:
 
         if should_update:
             connection.execute(
-                deployments_helper.update().where(
-                    deployments_helper.c.id == deployment.id).values(
-                    config=conf))
+                deployments_helper.update()
+                .where(deployments_helper.c.id == deployment.id)
+                .values(config=conf)
+            )
 
 
 def downgrade() -> None:

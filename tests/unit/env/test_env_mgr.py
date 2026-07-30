@@ -136,7 +136,7 @@ class EnvManagerTestCase(test.TestCase):
         for r in result:
             self.assertIsInstance(r, env_mgr.EnvManager)
 
-        self.assertEqual(set(r.uuid for r in result), set(["1", "2"]))
+        self.assertEqual({r.uuid for r in result}, {"1", "2"})
         self.assertEqual(2, len(result))
         mock_env_list.assert_called_once_with(status=None)
 

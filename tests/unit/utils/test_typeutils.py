@@ -68,13 +68,15 @@ class HintToSchemaTestCase(test.TestCase):
                          typeutils.hint_to_schema(Color))
 
     def test_optional_scalar(self):
-        self.assertEqual({"type": ["string", "null"]},
-                         typeutils.hint_to_schema(t.Optional[str]))
+        self.assertEqual(
+            {"type": ["string", "null"]},
+            typeutils.hint_to_schema(t.Optional[str]))  # noqa: UP045
 
     def test_optional_enum_appends_none(self):
         self.assertEqual(
             {"enum": ["a", "b", None]},
-            typeutils.hint_to_schema(t.Optional[t.Literal["a", "b"]]))
+            typeutils.hint_to_schema(
+                t.Optional[t.Literal["a", "b"]]))  # noqa: UP045
 
     def test_union_of_scalars_is_a_type_list(self):
         self.assertEqual(
@@ -90,7 +92,8 @@ class HintToSchemaTestCase(test.TestCase):
             typeutils.hint_to_schema(int | dict[str, int] | None))
 
     def test_union_with_any_member_is_unconstrained(self):
-        self.assertEqual({}, typeutils.hint_to_schema(t.Union[int, t.Any]))
+        self.assertEqual(
+            {}, typeutils.hint_to_schema(t.Union[int, t.Any]))  # noqa: UP007
 
     def test_make_nullable_is_idempotent(self):
         # a schema that already admits null, or has no type/anyOf, is unchanged

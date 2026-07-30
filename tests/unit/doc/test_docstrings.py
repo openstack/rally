@@ -26,7 +26,7 @@ from tests.unit.doc import utils
 class DocstringsTestCase(test.TestCase):
 
     def setUp(self):
-        super(DocstringsTestCase, self).setUp()
+        super().setUp()
         plugins.load()
         # validate every plugin's argument schema strictly
         scenario.CONF.set_override("strict_type_annotations", True)

@@ -36,18 +36,14 @@ REPORT_RESPONSE_SCHEMA = {
     "properties": {
         "files": {
             "type": "object",
-            "patternProperties": {
-                ".{1,}": {"type": "string"}
-            }
+            "patternProperties": {".{1,}": {"type": "string"}},
         },
         "open": {
             "type": "string",
         },
-        "print": {
-            "type": "string"
-        }
+        "print": {"type": "string"},
     },
-    "additionalProperties": False
+    "additionalProperties": False,
 }
 
 
@@ -61,7 +57,7 @@ class VerificationReporter(plugin.Plugin, metaclass=abc.ABCMeta):
         :param verifications: list of results to generate report for
         :param output_destination: destination of report
         """
-        super(VerificationReporter, self).__init__()
+        super().__init__()
         self.verifications = verifications
         self.output_destination = output_destination
 

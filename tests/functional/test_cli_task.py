@@ -281,12 +281,12 @@ class TaskTestCase(unittest.TestCase):
         embedded_signatures = ["Copyright (c) 2011-2014 Novus Partners, Inc.",
                                "AngularJS v1.3.3",
                                "Copyright (c) 2010-2015, Michael Bostock"]
-        external_signatures = ["<script type=\"text/javascript\" src=",
-                               "<link rel=\"stylesheet\" href="]
+        external_signatures = ['<script type="text/javascript" src=',
+                               '<link rel="stylesheet" href=']
         with open(file_path) as f:
             html = f.read()
-        result_embedded = all([sig in html for sig in embedded_signatures])
-        result_external = all([sig in html for sig in external_signatures])
+        result_embedded = all(sig in html for sig in embedded_signatures)
+        result_external = all(sig in html for sig in external_signatures)
         self.assertEqual(expected, result_embedded)
         self.assertEqual(not expected, result_external)
 
@@ -522,8 +522,8 @@ class TaskTestCase(unittest.TestCase):
         # and error message become useless
         if expected != actual:
             self.fail("AssertionError: Expected output is not equal to actual."
-                      "\nExpected:\"\"\"\n%s\n\"\"\""
-                      "\nActual:\"\"\"\n%s\n\"\"\"" % (expected, actual))
+                      '\nExpected:"""\n%s\n"""'
+                      '\nActual:"""\n%s\n"""' % (expected, actual))
 
         self.assertIn("There are no tasks",
                       rally("task list --status crashed"))
@@ -1264,7 +1264,7 @@ class SLAPerfDegrTestCase(unittest.TestCase):
 class HookTestCase(unittest.TestCase):
 
     def setUp(self):
-        super(HookTestCase, self).setUp()
+        super().setUp()
         self.started = time.time()
 
     def _assert_results_time(self, results):

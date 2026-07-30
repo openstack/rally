@@ -37,20 +37,32 @@ LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
 
 TASK_ENGINE_OPTS = [
-    cfg.IntOpt("raw_result_chunk_size", default=1000, min=1,
-               help="Size of raw result chunk in iterations"),
+    cfg.IntOpt(
+        "raw_result_chunk_size",
+        default=1000,
+        min=1,
+        help="Size of raw result chunk in iterations",
+    ),
 ]
 
 
-class ResultConsumer(object):
+class ResultConsumer:
     """ResultConsumer class stores results from ScenarioRunner, checks SLA.
 
     Also ResultConsumer listens for runner events and notifies HookExecutor
     about started iterations.
     """
 
-    def __init__(self, workload_cfg, task, subtask, workload, runner,
-                 abort_on_sla_failure, ctx_manager):
+    def __init__(
+        self,
+        workload_cfg,
+        task,
+        subtask,
+        workload,
+        runner,
+        abort_on_sla_failure,
+        ctx_manager,
+    ):
         """ResultConsumer constructor.
 
         :param workload_cfg: A configuration of the Workload
@@ -100,18 +112,23 @@ class ResultConsumer(object):
                 results = self.runner.result_queue.popleft()
                 self.results.extend(results)
                 for r in results:
-                    self.load_started_at = min(r["timestamp"],
-                                               self.load_started_at)
-                    self.load_finished_at = max(r["duration"] + r["timestamp"],
-                                                self.load_finished_at)
+                    self.load_started_at = min(
+                        r["timestamp"], self.load_started_at
+                    )
+                    self.load_finished_at = max(
+                        r["duration"] + r["timestamp"], self.load_finished_at
+                    )
                     success = self.sla_checker.add_iteration(r)
-                    if (self.abort_on_sla_failure
-                            and not success
-                            and not task_aborted):
+                    if (
+                        self.abort_on_sla_failure
+                        and not success
+                        and not task_aborted
+                    ):
                         self.sla_checker.set_aborted_on_sla()
                         self.runner.abort()
                         self.task.update_status(
-                            consts.TaskStatus.SOFT_ABORTING)
+                            consts.TaskStatus.SOFT_ABORTING
+                        )
                         task_aborted = True
 
                 # save results chunks
@@ -120,8 +137,9 @@ class ResultConsumer(object):
                     results_chunk = self.results[:chunk_size]
                     self.results = self.results[chunk_size:]
                     results_chunk.sort(key=lambda x: x["timestamp"])
-                    self.workload.add_workload_data(self.workload_data_count,
-                                                    {"raw": results_chunk})
+                    self.workload.add_workload_data(
+                        self.workload_data_count, {"raw": results_chunk}
+                    )
                     self.workload_data_count += 1
 
             elif self.is_done.is_set():
@@ -134,7 +152,8 @@ class ResultConsumer(object):
             if self.runner.event_queue:
                 event = self.runner.event_queue.popleft()
                 self.hook_executor.on_event(
-                    event_type=event["type"], value=event["value"])
+                    event_type=event["type"], value=event["value"]
+                )
             else:
                 time.sleep(0.01)
 
@@ -147,18 +166,26 @@ class ResultConsumer(object):
         if exc_type:
             self.sla_checker.set_unexpected_failure(exc_value)
 
-        if objects.Task.get_status(
-                self.task["uuid"]) == consts.TaskStatus.ABORTED:
+        if (
+            objects.Task.get_status(self.task["uuid"])
+            == consts.TaskStatus.ABORTED
+        ):
             self.sla_checker.set_aborted_manually()
 
         load_duration = max(self.load_finished_at - self.load_started_at, 0)
 
-        LOG.info("Load duration is: %s" % strutils.format_float_to_str(
-            load_duration))
-        LOG.info("Full runner duration is: %s" %
-                 strutils.format_float_to_str(self.runner.run_duration))
-        LOG.info("Full duration is: %s" % strutils.format_float_to_str(
-            self.finish - self.start))
+        LOG.info(
+            "Load duration is: %s"
+            % strutils.format_float_to_str(load_duration)
+        )
+        LOG.info(
+            "Full runner duration is: %s"
+            % strutils.format_float_to_str(self.runner.run_duration)
+        )
+        LOG.info(
+            "Full duration is: %s"
+            % strutils.format_float_to_str(self.finish - self.start)
+        )
 
         results = {}
         if self.workload_cfg["hooks"]:
@@ -169,16 +196,22 @@ class ResultConsumer(object):
             # NOTE(boris-42): Sort in order of starting
             #                 instead of order of ending
             self.results.sort(key=lambda x: x["timestamp"])
-            self.workload.add_workload_data(self.workload_data_count,
-                                            {"raw": self.results})
-        start_time = (self.load_started_at
-                      if self.load_started_at != float("inf") else None)
-        self.workload.set_results(load_duration=load_duration,
-                                  full_duration=(self.finish - self.start),
-                                  sla_results=self.sla_checker.results(),
-                                  start_time=start_time,
-                                  contexts_results=self._cm.contexts_results(),
-                                  **results)
+            self.workload.add_workload_data(
+                self.workload_data_count, {"raw": self.results}
+            )
+        start_time = (
+            self.load_started_at
+            if self.load_started_at != float("inf")
+            else None
+        )
+        self.workload.set_results(
+            load_duration=load_duration,
+            full_duration=(self.finish - self.start),
+            sla_results=self.sla_checker.results(),
+            start_time=start_time,
+            contexts_results=self._cm.contexts_results(),
+            **results,
+        )
 
     @staticmethod
     def is_task_in_aborting_status(task_uuid, check_soft=True):
@@ -202,8 +235,9 @@ class ResultConsumer(object):
         """
 
         while not self.is_done.is_set():
-            if self.is_task_in_aborting_status(self.task["uuid"],
-                                               check_soft=False):
+            if self.is_task_in_aborting_status(
+                self.task["uuid"], check_soft=False
+            ):
                 self.runner.abort()
                 self.task.update_status(consts.TaskStatus.ABORTED)
                 break
@@ -217,7 +251,7 @@ class TaskAborted(Exception):
     """
 
 
-class TaskEngine(object):
+class TaskEngine:
     """The Task engine class is used to execute benchmark scenarios.
 
     An instance of this class is initialized by the API with the task
@@ -263,74 +297,97 @@ class TaskEngine(object):
                 name=workload["name"],
                 pos=workload["position"],
                 config=json.dumps(objects.Workload.to_task(workload)),
-                reason=e.format_message()) from None
+                reason=e.format_message(),
+            ) from None
 
         scenario_context = copy.deepcopy(scenario_cls.get_default_context())
         results = []
 
-        results.extend(scenario.Scenario.validate(
-            name=workload["name"],
-            context=vcontext,
-            config=workload,
-            plugin_cfg=None,
-            vtype=vtype))
+        results.extend(
+            scenario.Scenario.validate(
+                name=workload["name"],
+                context=vcontext,
+                config=workload,
+                plugin_cfg=None,
+                vtype=vtype,
+            )
+        )
 
         if workload["runner_type"]:
-            results.extend(runner.ScenarioRunner.validate(
-                name=workload["runner_type"],
-                context=vcontext,
-                config=None,
-                plugin_cfg=workload["runner"],
-                vtype=vtype))
+            results.extend(
+                runner.ScenarioRunner.validate(
+                    name=workload["runner_type"],
+                    context=vcontext,
+                    config=None,
+                    plugin_cfg=workload["runner"],
+                    vtype=vtype,
+                )
+            )
 
         for context_name, context_conf in workload["contexts"].items():
-            results.extend(context.Context.validate(
-                name=context_name,
-                context=vcontext,
-                config=None,
-                plugin_cfg=context_conf,
-                vtype=vtype))
+            results.extend(
+                context.Context.validate(
+                    name=context_name,
+                    context=vcontext,
+                    config=None,
+                    plugin_cfg=context_conf,
+                    vtype=vtype,
+                )
+            )
 
         for context_name, context_conf in scenario_context.items():
-            results.extend(context.Context.validate(
-                name=context_name,
-                context=vcontext,
-                config=None,
-                plugin_cfg=context_conf,
-                allow_hidden=True,
-                vtype=vtype))
+            results.extend(
+                context.Context.validate(
+                    name=context_name,
+                    context=vcontext,
+                    config=None,
+                    plugin_cfg=context_conf,
+                    allow_hidden=True,
+                    vtype=vtype,
+                )
+            )
 
         for sla_name, sla_conf in workload["sla"].items():
-            results.extend(sla.SLA.validate(
-                name=sla_name,
-                context=vcontext,
-                config=None,
-                plugin_cfg=sla_conf,
-                vtype=vtype))
+            results.extend(
+                sla.SLA.validate(
+                    name=sla_name,
+                    context=vcontext,
+                    config=None,
+                    plugin_cfg=sla_conf,
+                    vtype=vtype,
+                )
+            )
 
         for hook_conf in workload["hooks"]:
             action_name, action_cfg = hook_conf["action"]
-            results.extend(hook.HookAction.validate(
-                name=action_name,
-                context=vcontext,
-                config=None,
-                plugin_cfg=action_cfg,
-                vtype=vtype))
+            results.extend(
+                hook.HookAction.validate(
+                    name=action_name,
+                    context=vcontext,
+                    config=None,
+                    plugin_cfg=action_cfg,
+                    vtype=vtype,
+                )
+            )
 
             trigger_name, trigger_cfg = hook_conf["trigger"]
-            results.extend(hook.HookTrigger.validate(
-                name=trigger_name,
-                context=vcontext,
-                config=None,
-                plugin_cfg=trigger_cfg,
-                vtype=vtype))
+            results.extend(
+                hook.HookTrigger.validate(
+                    name=trigger_name,
+                    context=vcontext,
+                    config=None,
+                    plugin_cfg=trigger_cfg,
+                    vtype=vtype,
+                )
+            )
 
         if results:
             raise exceptions.InvalidTaskConfig(
                 name=workload["name"],
                 pos=workload["position"],
                 config=json.dumps(objects.Workload.to_task(workload)),
-                reason="\n ".join(results))
+                reason="\n ".join(results),
+            )
 
     @logging.log_task_wrapper(LOG.info, "Task validation of syntax.")
     def _validate_config_syntax(self, config):
@@ -338,27 +395,31 @@ class TaskEngine(object):
             for workload in subtask["workloads"]:
                 self._validate_workload(workload, vtype="syntax")
 
-    @logging.log_task_wrapper(LOG.info,
-                              "Task validation of required platforms.")
+    @logging.log_task_wrapper(
+        LOG.info, "Task validation of required platforms."
+    )
     def _validate_config_platforms(self, config):
         # FIXME(andreykurilin): prepare the similar context object to others
         platforms = dict(
             (p["platform_name"], p["platform_data"])
-            for p in self.env.data["platforms"].values())
-        ctx = {"task": self.task,
-               "platforms": platforms}
+            for p in self.env.data["platforms"].values()
+        )
+        ctx = {"task": self.task, "platforms": platforms}
         for subtask in config.subtasks:
             for workload in subtask["workloads"]:
                 self._validate_workload(
-                    workload, vcontext=ctx, vtype="platform")
+                    workload, vcontext=ctx, vtype="platform"
+                )
 
     @logging.log_task_wrapper(LOG.info, "Task validation of semantic.")
     def _validate_config_semantic(self, config):
         LOG.info("Check health of the environment '%s'." % self.env.uuid)
         failed = []
         for p, res in self.env.check_health().items():
-            LOG.info("Platform %s (available: %s): %s" %
-                     (p, res["available"], res["message"]))
+            LOG.info(
+                "Platform %s (available: %s): %s"
+                % (p, res["available"], res["message"])
+            )
             if not res["available"]:
                 failed.append(p)
                 if logging.is_debug():
@@ -366,23 +427,28 @@ class TaskEngine(object):
         if failed:
             raise exceptions.ValidationError(
                 "One or several platforms are not available: %s. Check logs "
-                "for more details." % ", ".join(failed))
+                "for more details." % ", ".join(failed)
+            )
         validation_ctx = self.env.get_validation_context()
 
         env_data = self.env.data
         env_data["platforms"] = dict(
             (p["platform_name"], p["platform_data"])
-            for p in env_data["platforms"].values())
+            for p in env_data["platforms"].values()
+        )
 
-        ctx_obj = {"task": self.task,
-                   "config": validation_ctx,
-                   "env": env_data}
+        ctx_obj = {
+            "task": self.task,
+            "config": validation_ctx,
+            "env": env_data,
+        }
 
         with context.ContextManager(ctx_obj):
             for subtask in config.subtasks:
                 for workload in subtask["workloads"]:
                     self._validate_workload(
-                        workload, vcontext=ctx_obj, vtype="semantic")
+                        workload, vcontext=ctx_obj, vtype="semantic"
+                    )
 
     @logging.log_task_wrapper(LOG.info, "Task validation.")
     def validate(self, only_syntax=False):
@@ -398,8 +464,9 @@ class TaskEngine(object):
             self._validate_config_platforms(self.config)
             self._validate_config_semantic(self.config)
         except Exception as e:
-            exception_info = json.dumps(traceback.format_exc(), indent=2,
-                                        separators=(",", ": "))
+            exception_info = json.dumps(
+                traceback.format_exc(), indent=2, separators=(",", ": ")
+            )
             self.task.set_failed(type(e).__name__, str(e), exception_info)
             expected_errors = (
                 # this error is a wrapper for all error messages from
@@ -408,10 +475,12 @@ class TaskEngine(object):
                 # rally.task.task_cfg raises it
                 # _validate_config_semantic raises this error in case of
                 # failed platform check{s}
-                exceptions.ValidationError)
+                exceptions.ValidationError,
+            )
             if logging.is_debug() and not isinstance(e, expected_errors):
-                LOG.exception("Unexpected error had happened while validating "
-                              "task.")
+                LOG.exception(
+                    "Unexpected error had happened while validating task."
+                )
             raise
 
     def _prepare_context(self, ctx, scenario_name, owner_id):
@@ -427,14 +496,15 @@ class TaskEngine(object):
         env_data = self.env.data
         env_data["platforms"] = dict(
             (p["platform_name"], p["platform_data"])
-            for p in env_data["platforms"].values())
+            for p in env_data["platforms"].values()
+        )
 
         context_obj = {
             "task": self.task,
             "owner_id": owner_id,
             "scenario_name": scenario_name,
             "config": context_config,
-            "env": env_data
+            "env": env_data,
         }
         return context_obj
 
@@ -459,14 +529,18 @@ class TaskEngine(object):
             LOG.info("Received aborting signal.")
             self.task.update_status(consts.TaskStatus.ABORTED)
         else:
-            if objects.Task.get_status(
-                    self.task["uuid"]) != consts.TaskStatus.ABORTED:
+            if (
+                objects.Task.get_status(self.task["uuid"])
+                != consts.TaskStatus.ABORTED
+            ):
                 self.task.update_status(consts.TaskStatus.FINISHED)
 
     def _run_subtask(self, subtask, subtask_position):
-        subtask_obj = self.task.add_subtask(title=subtask["title"],
-                                            description=subtask["description"],
-                                            contexts=subtask["contexts"])
+        subtask_obj = self.task.add_subtask(
+            title=subtask["title"],
+            description=subtask["description"],
+            contexts=subtask["contexts"],
+        )
 
         try:
             # TODO(astudenov): add subtask context here
@@ -474,15 +548,19 @@ class TaskEngine(object):
             for index, workload in enumerate(subtask["workloads"], 1):
                 self._run_workload(subtask_obj, workload)
                 self.task_workload_index += 1
-                LOG.info("Finished workload %(index)d/%(count)d"
-                         " of subtask %(subtask)d "
-                         " (completed %(t_index)d of %(t_count)d "
-                         "in general)." % {
-                             "index": index,
-                             "count": workloads_count,
-                             "subtask": subtask_position,
-                             "t_index": self.task_workload_index,
-                             "t_count": self.task_workloads_count})
+                LOG.info(
+                    "Finished workload %(index)d/%(count)d"
+                    " of subtask %(subtask)d "
+                    " (completed %(t_index)d of %(t_count)d "
+                    "in general)."
+                    % {
+                        "index": index,
+                        "count": workloads_count,
+                        "subtask": subtask_position,
+                        "t_index": self.task_workload_index,
+                        "t_count": self.task_workloads_count,
+                    }
+                )
         except TaskAborted:
             subtask_obj.update_status(consts.SubtaskStatus.ABORTED)
             raise
@@ -509,29 +587,41 @@ class TaskEngine(object):
             hooks=workload["hooks"],
             contexts=workload["contexts"],
             sla=workload["sla"],
-            args=workload["args"])
+            args=workload["args"],
+        )
         workload["uuid"] = workload_obj["uuid"]
 
         workload_cfg = objects.Workload.to_task(workload)
-        LOG.info("Running workload: \n"
-                 "  position = %(position)s\n"
-                 "  config = %(cfg)s"
-                 % {"position": workload["position"],
-                    "cfg": json.dumps(workload_cfg, indent=3)})
+        LOG.info(
+            "Running workload: \n"
+            "  position = %(position)s\n"
+            "  config = %(cfg)s"
+            % {
+                "position": workload["position"],
+                "cfg": json.dumps(workload_cfg, indent=3),
+            }
+        )
 
         runner_cls = runner.ScenarioRunner.get(workload["runner_type"])
         runner_obj = runner_cls(self.task, workload["runner"])
         context_obj = self._prepare_context(
-            workload["contexts"], workload["name"], workload_obj["uuid"])
+            workload["contexts"], workload["name"], workload_obj["uuid"]
+        )
         try:
             ctx_manager = context.ContextManager(context_obj)
-            with ResultConsumer(workload, task=self.task, subtask=subtask_obj,
-                                workload=workload_obj, runner=runner_obj,
-                                abort_on_sla_failure=self.abort_on_sla_failure,
-                                ctx_manager=ctx_manager):
+            with ResultConsumer(
+                workload,
+                task=self.task,
+                subtask=subtask_obj,
+                workload=workload_obj,
+                runner=runner_obj,
+                abort_on_sla_failure=self.abort_on_sla_failure,
+                ctx_manager=ctx_manager,
+            ):
                 with ctx_manager:
-                    runner_obj.run(workload["name"], context_obj,
-                                   workload["args"])
+                    runner_obj.run(
+                        workload["name"], context_obj, workload["args"]
+                    )
         except Exception:
             LOG.exception("Unexpected exception during the workload execution")
             # TODO(astudenov): save error to DB

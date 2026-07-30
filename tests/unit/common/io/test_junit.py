@@ -21,7 +21,7 @@ from tests.unit import test
 
 class JUnitTestCase(test.TestCase):
     def setUp(self):
-        super(JUnitTestCase, self).setUp()
+        super().setUp()
         p_mock_datetime = mock.patch("rally.common.io.junit.dt.datetime")
         self.mock_datetime = p_mock_datetime.start()
         isoformat = self.mock_datetime.utcnow.return_value.isoformat

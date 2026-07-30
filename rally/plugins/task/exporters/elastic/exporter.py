@@ -37,10 +37,13 @@ class Validator(validation.Validator):
     In case when the destination is ElasticSearch cluster, the version of it
     should be 2.* or 5.*
     """
+
     def validate(self, context, config, plugin_cls, plugin_cfg):
         destination = plugin_cfg["destination"]
-        if destination and (not destination.startswith("http://")
-                            and not destination.startswith("https://")):
+        if destination and (
+            not destination.startswith("http://")
+            and not destination.startswith("https://")
+        ):
             # it is a path to a local file
             return
         es = client.ElasticSearchClient(destination)
@@ -49,9 +52,11 @@ class Validator(validation.Validator):
         except exceptions.RallyException as e:
             # re-raise a proper exception to hide redundant traceback
             self.fail(e.format_message())
-        if not (version.startswith("2.")
-                or version.startswith("5.")
-                or version.startswith("6.")):
+        if not (
+            version.startswith("2.")
+            or version.startswith("5.")
+            or version.startswith("6.")
+        ):
             self.fail("The unsupported version detected %s." % version)
 
 
@@ -98,7 +103,7 @@ class ElasticSearchExporter(exporter.TaskExporter):
             "description": {"type": "text"},
             "status": {"type": "keyword"},
             "pass_sla": {"type": "boolean"},
-            "tags": {"type": "keyword"}
+            "tags": {"type": "keyword"},
         },
         WORKLOAD_INDEX: {
             "deployment_uuid": {"type": "keyword"},
@@ -116,7 +121,7 @@ class ElasticSearchExporter(exporter.TaskExporter):
             "full_duration": {"type": "long"},
             "pass_sla": {"type": "boolean"},
             "success_rate": {"type": "float"},
-            "sla_details": {"type": "text"}
+            "sla_details": {"type": "text"},
         },
         AA_INDEX: {
             "deployment_uuid": {"type": "keyword"},
@@ -132,19 +137,17 @@ class ElasticSearchExporter(exporter.TaskExporter):
             "started_at": {"type": "date"},
             "finished_at": {"type": "date"},
             "parent": {"type": "keyword"},
-            "error": {"type": "keyword"}
-        }
+            "error": {"type": "keyword"},
+        },
     }
 
     def __init__(self, tasks_results, output_destination, api=None):
-        super(ElasticSearchExporter, self).__init__(tasks_results,
-                                                    output_destination,
-                                                    api=api)
+        super().__init__(tasks_results, output_destination, api=api)
         self._report = []
-        self._remote = (
-            output_destination is None or (
-                output_destination.startswith("http://")
-                or self.output_destination.startswith("https://")))
+        self._remote = output_destination is None or (
+            output_destination.startswith("http://")
+            or self.output_destination.startswith("https://")
+        )
         if self._remote:
             self._client = client.ElasticSearchClient(self.output_destination)
 
@@ -161,26 +164,45 @@ class ElasticSearchExporter(exporter.TaskExporter):
         self._report.append(
             json.dumps(
                 # use OrderedDict to make the report more unified
-                {"index": collections.OrderedDict([
-                    ("_index", index),
-                    ("_type", doc_type),
-                    ("_id", doc_id)])},
-                sort_keys=False))
+                {
+                    "index": collections.OrderedDict(
+                        [
+                            ("_index", index),
+                            ("_type", doc_type),
+                            ("_id", doc_id),
+                        ]
+                    )
+                },
+                sort_keys=False,
+            )
+        )
         self._report.append(json.dumps(body))
 
     def _ensure_indices(self):
         """Check available indices and create require ones if they missed."""
         available_index = set(self._client.list_indices())
-        missed_index = {self.TASK_INDEX, self.WORKLOAD_INDEX,
-                        self.AA_INDEX} - available_index
+        missed_index = {
+            self.TASK_INDEX,
+            self.WORKLOAD_INDEX,
+            self.AA_INDEX,
+        } - available_index
         for index in missed_index:
             LOG.debug("Creating '%s' index." % index)
-            self._client.create_index(index, doc_type="data",
-                                      properties=self.INDEX_SCHEMAS[index])
+            self._client.create_index(
+                index, doc_type="data", properties=self.INDEX_SCHEMAS[index]
+            )
 
     @staticmethod
-    def _make_action_report(name, workload_id, workload, duration,
-                            started_at, finished_at, parent, error):
+    def _make_action_report(
+        name,
+        workload_id,
+        workload,
+        duration,
+        started_at,
+        finished_at,
+        parent,
+        error,
+    ):
         # NOTE(andreykurilin): actually, this method just creates a dict object
         #   but we need to have the same format at two places, so the template
         #   transformed into a method.
@@ -199,12 +221,19 @@ class ElasticSearchExporter(exporter.TaskExporter):
             "started_at": started_at,
             "finished_at": finished_at,
             "parent": parent,
-            "error": error
+            "error": error,
         }
 
-    def _process_atomic_actions(self, itr, workload, workload_id,
-                                atomic_actions=None, _parent=None, _depth=0,
-                                _cache=None):
+    def _process_atomic_actions(
+        self,
+        itr,
+        workload,
+        workload_id,
+        atomic_actions=None,
+        _parent=None,
+        _depth=0,
+        _cache=None,
+    ):
         """Process atomic actions of an iteration
 
         :param atomic_actions: A list with an atomic actions
@@ -232,7 +261,8 @@ class ElasticSearchExporter(exporter.TaskExporter):
             act_id = act_id_tmpl % {
                 "itr_id": itr["id"],
                 "action_name": action["name"],
-                "num": cache[action["name"]]}
+                "num": cache[action["name"]],
+            }
             cache[action["name"]] += 1
 
             started_at = dt.datetime.utcfromtimestamp(action["started_at"])
@@ -248,11 +278,10 @@ class ElasticSearchExporter(exporter.TaskExporter):
                 started_at=started_at,
                 finished_at=finished_at,
                 parent=_parent,
-                error=(itr["error"] if action.get("failed", False) else None)
+                error=(itr["error"] if action.get("failed", False) else None),
             )
 
-            self._add_index(self.AA_INDEX, action_report,
-                            doc_id=act_id)
+            self._add_index(self.AA_INDEX, action_report, doc_id=act_id)
 
             self._process_atomic_actions(
                 atomic_actions=action["children"],
@@ -261,26 +290,33 @@ class ElasticSearchExporter(exporter.TaskExporter):
                 workload_id=workload_id,
                 _parent=(act_id, action_report),
                 _depth=(_depth + 1),
-                _cache=cache)
+                _cache=cache,
+            )
 
         if itr["error"] and (
-                # the case when it is a top level of the scenario and the
-                #   first fails the item which is not wrapped by AtomicTimer
-                (not _parent and not atomic_actions)
-                # the case when it is a top level of the scenario and and
-                # the item fails after some atomic actions completed
-                or (not _parent and atomic_actions
-                    and not atomic_actions[-1].get("failed", False))):
+            # the case when it is a top level of the scenario and the
+            #   first fails the item which is not wrapped by AtomicTimer
+            (not _parent and not atomic_actions)
+            # the case when it is a top level of the scenario and and
+            # the item fails after some atomic actions completed
+            or (
+                not _parent
+                and atomic_actions
+                and not atomic_actions[-1].get("failed", False)
+            )
+        ):
             act_id = act_id_tmpl % {
                 "itr_id": itr["id"],
                 "action_name": "no-name-action",
-                "num": 0}
+                "num": 0,
+            }
 
             # Since the action had not be wrapped by AtomicTimer, we cannot
             # make any assumption about it's duration (start_time) so let's use
             # finished_at timestamp of iteration with 0 duration
-            timestamp = (itr["timestamp"] + itr["duration"]
-                         + itr["idle_duration"])
+            timestamp = (
+                itr["timestamp"] + itr["duration"] + itr["idle_duration"]
+            )
             timestamp = dt.datetime.utcfromtimestamp(timestamp)
             timestamp = timestamp.strftime(consts.TimeFormat.ISO8601)
             action_report = self._make_action_report(
@@ -291,7 +327,7 @@ class ElasticSearchExporter(exporter.TaskExporter):
                 started_at=timestamp,
                 finished_at=timestamp,
                 parent=_parent,
-                error=itr["error"]
+                error=itr["error"],
             )
             self._add_index(self.AA_INDEX, action_report, doc_id=act_id)
 
@@ -304,8 +340,9 @@ class ElasticSearchExporter(exporter.TaskExporter):
                 if self._client.check_document(self.TASK_INDEX, task["uuid"]):
                     raise exceptions.RallyException(
                         "Failed to push the task %s to the ElasticSearch "
-                        "cluster. The document with such UUID already exists" %
-                        task["uuid"])
+                        "cluster. The document with such UUID already exists"
+                        % task["uuid"]
+                    )
 
             task_report = {
                 "task_uuid": task["uuid"],
@@ -315,16 +352,15 @@ class ElasticSearchExporter(exporter.TaskExporter):
                 "description": task["description"],
                 "status": task["status"],
                 "pass_sla": task["pass_sla"],
-                "tags": task["tags"]
+                "tags": task["tags"],
             }
-            self._add_index(self.TASK_INDEX, task_report,
-                            doc_id=task["uuid"])
+            self._add_index(self.TASK_INDEX, task_report, doc_id=task["uuid"])
 
             # NOTE(andreykurilin): The subtasks do not have much logic now, so
             #   there is no reason to save the info about them.
             for workload in itertools.chain(
-                    *[s["workloads"] for s in task["subtasks"]]):
-
+                *[s["workloads"] for s in task["subtasks"]]
+            ):
                 durations = workload["statistics"]["durations"]
                 success_rate = durations["total"]["data"]["success"]
                 if success_rate == "n/a":
@@ -353,35 +389,48 @@ class ElasticSearchExporter(exporter.TaskExporter):
                     "full_duration": workload["full_duration"],
                     "pass_sla": workload["pass_sla"],
                     "success_rate": success_rate,
-                    "sla_details": [s["detail"]
-                                    for s in workload["sla_results"]["sla"]
-                                    if not s["success"]]}
+                    "sla_details": [
+                        s["detail"]
+                        for s in workload["sla_results"]["sla"]
+                        if not s["success"]
+                    ],
+                }
 
                 # do we need to store hooks ?!
-                self._add_index(self.WORKLOAD_INDEX, workload_report,
-                                doc_id=workload["uuid"])
+                self._add_index(
+                    self.WORKLOAD_INDEX,
+                    workload_report,
+                    doc_id=workload["uuid"],
+                )
 
                 # Iterations
                 for idx, itr in enumerate(workload.get("data", []), 1):
                     itr["id"] = "%(uuid)s_iter_%(num)s" % {
                         "uuid": workload["uuid"],
-                        "num": str(idx)}
+                        "num": str(idx),
+                    }
 
                     self._process_atomic_actions(
                         itr=itr,
                         workload=workload_report,
-                        workload_id=workload["uuid"])
+                        workload_id=workload["uuid"],
+                    )
         if self._remote:
-            LOG.debug("The info of ElasticSearch cluster to which the results "
-                      "will be exported: %s" % self._client.info())
+            LOG.debug(
+                "The info of ElasticSearch cluster to which the results "
+                "will be exported: %s" % self._client.info()
+            )
             self._client.push_documents(self._report)
 
-            msg = ("Successfully exported results to ElasticSearch at url "
-                   "'%s'" % self.output_destination)
+            msg = (
+                "Successfully exported results to ElasticSearch at url "
+                "'%s'" % self.output_destination
+            )
             return {"print": msg}
         else:
             # a new line is required in the end of the file.
             report = "\n".join(self._report) + "\n"
-            return {"files": {self.output_destination: report},
-                    "open": "file://" + os.path.abspath(
-                        self.output_destination)}
+            return {
+                "files": {self.output_destination: report},
+                "open": "file://" + os.path.abspath(self.output_destination),
+            }

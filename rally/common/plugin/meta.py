@@ -74,7 +74,7 @@ class MetaMixin:
 
     @classmethod
     def _meta_clear(cls) -> None:
-        cls._meta.clear()    # NOTE(boris-42): make sure that meta is deleted
+        cls._meta.clear()  # NOTE(boris-42): make sure that meta is deleted
         delattr(cls, "_meta")
 
     @classmethod
@@ -88,7 +88,8 @@ class MetaMixin:
             if raise_exc:
                 raise ReferenceError(
                     "Trying to use MetaMixin before initialization %s. "
-                    "Call _meta_init() before using it" % cls)
+                    "Call _meta_init() before using it" % cls
+                )
             return False
         return True
 
@@ -128,7 +129,8 @@ class MetaMixin:
     def _default_meta_set(cls, key: str, value: t.Any) -> None:
         if cls is not cls._default_meta[0]:
             raise ReferenceError(
-                "Trying to update default meta from children class.")
+                "Trying to update default meta from children class."
+            )
 
         cls._default_meta[1][key] = value
 
@@ -140,6 +142,7 @@ class MetaMixin:
     def _default_meta_setdefault(cls, key: str, value: t.Any) -> None:
         if cls is not cls._default_meta[0]:
             raise ReferenceError(
-                "Trying to update default meta from children class.")
+                "Trying to update default meta from children class."
+            )
 
         cls._default_meta[1].setdefault(key, value)

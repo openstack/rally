@@ -59,38 +59,44 @@ class JUnitXMLExporter(exporter.TaskExporter):
         root = junit.JUnitXML()
 
         for t in self.tasks_results:
-            created_at = dt.datetime.strptime(t["created_at"],
-                                              "%Y-%m-%dT%H:%M:%S")
-            updated_at = dt.datetime.strptime(t["updated_at"],
-                                              "%Y-%m-%dT%H:%M:%S")
+            created_at = dt.datetime.strptime(
+                t["created_at"], "%Y-%m-%dT%H:%M:%S"
+            )
+            updated_at = dt.datetime.strptime(
+                t["updated_at"], "%Y-%m-%dT%H:%M:%S"
+            )
             test_suite = root.add_test_suite(
                 id=t["uuid"],
                 time="%.2f" % (updated_at - created_at).total_seconds(),
-                timestamp=t["created_at"]
+                timestamp=t["created_at"],
             )
             for workload in itertools.chain(
-                    *[s["workloads"] for s in t["subtasks"]]):
+                *[s["workloads"] for s in t["subtasks"]]
+            ):
                 class_name, name = workload["name"].split(".", 1)
                 test_case = test_suite.add_test_case(
                     id=workload["uuid"],
                     time="%.2f" % workload["full_duration"],
                     classname=class_name,
                     name=name,
-                    timestamp=workload["created_at"]
+                    timestamp=workload["created_at"],
                 )
                 if not workload["pass_sla"]:
                     details = "\n".join(
-                        [s["detail"]
-                         for s in workload["sla_results"]["sla"]
-                         if not s["success"]]
+                        [
+                            s["detail"]
+                            for s in workload["sla_results"]["sla"]
+                            if not s["success"]
+                        ]
                     )
                     test_case.mark_as_failed(details)
 
         raw_report = root.to_string()
 
         if self.output_destination:
-            return {"files": {self.output_destination: raw_report},
-                    "open": "file://" + os.path.abspath(
-                        self.output_destination)}
+            return {
+                "files": {self.output_destination: raw_report},
+                "open": "file://" + os.path.abspath(self.output_destination),
+            }
         else:
             return {"print": raw_report}

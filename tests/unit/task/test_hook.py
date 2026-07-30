@@ -53,7 +53,7 @@ class DummyHookAction(hook.HookAction):
 class HookExecutorTestCase(test.TestCase):
 
     def setUp(self):
-        super(HookExecutorTestCase, self).setUp()
+        super().setUp()
         self.conf = {
             "hooks": [
                 {
@@ -275,7 +275,7 @@ class HookTestCase(test.TestCase):
 class TriggerTestCase(test.TestCase):
 
     def setUp(self):
-        super(TriggerTestCase, self).setUp()
+        super().setUp()
 
         @hook.configure(name="dummy_trigger")
         class DummyTrigger(hook.HookTrigger):

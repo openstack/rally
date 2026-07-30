@@ -30,16 +30,13 @@ CREDENTIALS_SCHEMA = {
                 "type": "object",
                 "properties": {
                     "admin": {"type": ["object", "null"]},
-                    "users": {
-                        "type": "array",
-                        "items": {"type": "object"}
-                    }
+                    "users": {"type": "array", "items": {"type": "object"}},
                 },
                 "required": ["admin", "users"],
                 "additionalProperties": False,
             },
         }
-    }
+    },
 }
 
 
@@ -52,7 +49,7 @@ _STATUS_OLD_TO_NEW = {
     consts.DeployStatus.DEPLOY_SUBDEPLOY: env_mgr.STATUS.INIT,
     consts.DeployStatus.CLEANUP_STARTED: env_mgr.STATUS.CLEANING,
     consts.DeployStatus.CLEANUP_FAILED: env_mgr.STATUS.READY,
-    consts.DeployStatus.CLEANUP_FINISHED: env_mgr.STATUS.READY
+    consts.DeployStatus.CLEANUP_FINISHED: env_mgr.STATUS.READY,
 }
 _STATUS_NEW_TO_OLD = {
     env_mgr.STATUS.INIT: consts.DeployStatus.DEPLOY_INIT,
@@ -61,12 +58,13 @@ _STATUS_NEW_TO_OLD = {
     env_mgr.STATUS.CLEANING: consts.DeployStatus.CLEANUP_STARTED,
     env_mgr.STATUS.DESTROYING: consts.DeployStatus.DEPLOY_INIT,
     env_mgr.STATUS.FAILED_TO_DESTROY: consts.DeployStatus.DEPLOY_INCONSISTENT,
-    env_mgr.STATUS.DESTROYED: consts.DeployStatus.DEPLOY_INIT
+    env_mgr.STATUS.DESTROYED: consts.DeployStatus.DEPLOY_INIT,
 }
 
 
-class Deployment(object):
+class Deployment:
     """Represents a deployment object."""
+
     TIME_FORMAT = consts.TimeFormat.ISO8601
 
     def __init__(self, deployment=None, name=None, config=None, extras=None):
@@ -77,7 +75,8 @@ class Deployment(object):
                 name=name,
                 spec=config or {},
                 description="",
-                extras=extras or {})
+                extras=extras or {},
+            )
         self._env_data = self._env.data
         self._all_credentials = {}
         for p in self._env_data["platforms"].values():
@@ -116,7 +115,7 @@ class Deployment(object):
             "updated_at": self._env_data["updated_at"],
             "config": self.config,
             "credentials": self._all_credentials,
-            "status": self["status"]
+            "status": self["status"],
         }
 
     @staticmethod
@@ -144,8 +143,9 @@ class Deployment(object):
         for platform_name, result in self._env.check_health().items():
             if not result["available"]:
                 raise exceptions.RallyException(
-                    "Platform %s is not available: %s." % (platform_name,
-                                                           result["message"]))
+                    "Platform %s is not available: %s."
+                    % (platform_name, result["message"])
+                )
 
     def get_platforms(self):
         return self._all_credentials.keys()
@@ -162,12 +162,17 @@ class Deployment(object):
                     admin = credentials[0]["admin"]
                     if admin:
                         admin = credential.OpenStackCredential(
-                            permission=consts.EndpointPermission.ADMIN,
-                            **admin)
-                    all_credentials[platform] = [{
-                        "admin": admin,
-                        "users": [credential.OpenStackCredential(**user)
-                                  for user in credentials[0]["users"]]}]
+                            permission=consts.EndpointPermission.ADMIN, **admin
+                        )
+                    all_credentials[platform] = [
+                        {
+                            "admin": admin,
+                            "users": [
+                                credential.OpenStackCredential(**user)
+                                for user in credentials[0]["users"]
+                            ],
+                        }
+                    ]
             else:
                 all_credentials[platform] = credentials
         return all_credentials
@@ -181,4 +186,5 @@ class Deployment(object):
             return creds[platform][0]
         except (KeyError, IndexError):
             raise exceptions.RallyException(
-                "No credentials found for %s" % platform)
+                "No credentials found for %s" % platform
+            )

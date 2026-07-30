@@ -11,7 +11,6 @@
 # under the License.
 
 import fnmatch
-import io
 import os
 import re
 import unittest
@@ -76,7 +75,7 @@ class TestFormat(unittest.TestCase):
                 files.append(os.path.join(root, filename))
 
         for filename in files:
-            with io.open(filename, encoding="utf-8") as f:
+            with open(filename, encoding="utf-8") as f:
                 data = f.read()
 
             self._check_lines_wrapping(filename, data)

@@ -26,7 +26,7 @@ from tests.unit import test
 class EventTriggerTestCase(test.TestCase):
 
     def setUp(self):
-        super(EventTriggerTestCase, self).setUp()
+        super().setUp()
         self.hook_cls = mock.MagicMock(__name__="name")
         self.trigger = event.EventTrigger(
             {"trigger": ("event", {"unit": "iteration", "at": [1, 4, 5]}),

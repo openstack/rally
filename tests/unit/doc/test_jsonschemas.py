@@ -34,7 +34,7 @@ class ConfigSchemasTestCase(test.TestCase):
     STRING_TYPE_KEYS = {"$schema", "type", "description", "pattern"}
 
     def fail(self, p, schema, msg):
-        super(ConfigSchemasTestCase, self).fail(
+        super().fail(
             "Config schema of plugin '%s' (%s) is invalid. %s "
             "Schema: \n%s" % (p.get_name(),
                               "%s.%s" % (p.__module__, p.__name__),

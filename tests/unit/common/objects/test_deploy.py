@@ -29,7 +29,7 @@ class DeploymentTestCase(test.TestCase):
     TIME_FORMAT = consts.TimeFormat.ISO8601
 
     def setUp(self):
-        super(DeploymentTestCase, self).setUp()
+        super().setUp()
         self.env = mock.MagicMock()
         self.env.data = {
             "id": 1,
@@ -141,7 +141,7 @@ class DeploymentTestCase(test.TestCase):
 
     def test_getitem(self):
 
-        class FakeEnvManager(object):
+        class FakeEnvManager:
             @property
             def status(self):
                 return env_mgr.STATUS.READY

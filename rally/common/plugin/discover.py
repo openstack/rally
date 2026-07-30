@@ -47,7 +47,7 @@ def itersubclasses(
     seen = seen or set()
     try:
         subs = cls.__subclasses__()
-    except TypeError:   # fails only when cls is type
+    except TypeError:  # fails only when cls is type
         subs = cls.__subclasses__(cls)  # type: ignore[call-arg]
     for sub in subs:
         if sub not in seen:
@@ -76,9 +76,7 @@ def import_modules_from_package(package: str) -> None:
 def iter_entry_points() -> t.Any:  # pragma: no cover
     try:
         # Python 3.10+
-        return importlib.metadata.entry_points(
-            group="rally_plugins"
-        )  # type: ignore[call-arg]
+        return importlib.metadata.entry_points(group="rally_plugins")  # type: ignore[call-arg]
     except TypeError:
         # Python 3.8-3.9
         return importlib.metadata.entry_points().get("rally_plugins", [])
@@ -94,7 +92,7 @@ def find_packages_by_entry_point() -> list[dict[str, t.Any]]:
         if ep.dist.name not in packages:
             packages[ep.dist.name] = {
                 "name": ep.dist.name,
-                "version": ep.dist.version
+                "version": ep.dist.version,
             }
 
         if ep.name == "path":
@@ -109,7 +107,7 @@ def find_packages_by_entry_point() -> list[dict[str, t.Any]]:
 
 
 def import_modules_by_entry_point(
-    _packages: list[dict[str, t.Any]] | None = None
+    _packages: list[dict[str, t.Any]] | None = None,
 ) -> list[dict[str, t.Any]]:
     """Import plugins by entry-point 'rally_plugins'."""
     if _packages is not None:
@@ -119,7 +117,6 @@ def import_modules_by_entry_point(
 
     for package in loaded_packages:
         if "plugins_path" in package:
-
             ep = package["plugins_path_ep"]
             try:
                 m = ep.load()
@@ -129,15 +126,20 @@ def import_modules_by_entry_point(
                     path = [m.__file__]
                 prefix = m.__name__ + "."
                 for loader, name, _is_pkg in pkgutil.walk_packages(
-                        path, prefix=prefix):
+                    path, prefix=prefix
+                ):
                     if name not in sys.modules:
                         sys.modules[name] = importlib.import_module(name)
             except Exception as e:
-                msg = ("\t Failed to load plugins from module '%(module)s' "
-                       "(package: '%(package)s')" %
-                       {"module": ep.name,
-                        "package": "%s %s" % (package["name"],
-                                              package["version"])})
+                msg = (
+                    "\t Failed to load plugins from module '%(module)s' "
+                    "(package: '%(package)s')"
+                    % {
+                        "module": ep.name,
+                        "package": "%s %s"
+                        % (package["name"], package["version"]),
+                    }
+                )
                 if logging.is_debug():
                     LOG.exception(msg)
                 else:
@@ -151,8 +153,9 @@ _loaded_modules: list[types.ModuleType] = []
 def load_plugins(dir_or_file: str, depth: int = 0) -> None:
     if os.path.isdir(dir_or_file):
         directory = dir_or_file
-        LOG.info("Loading plugins from directories %s/*" %
-                 directory.rstrip("/"))
+        LOG.info(
+            "Loading plugins from directories %s/*" % directory.rstrip("/")
+        )
         for root, _dirs, files in os.walk(directory, followlinks=True):
             if root not in sys.path:
                 # this hack is required to support relative imports
@@ -170,7 +173,8 @@ def load_plugins(dir_or_file: str, depth: int = 0) -> None:
         module_name = os.path.splitext(os.path.basename(plugin_file))[0]
         try:
             spec = importlib.util.spec_from_file_location(
-                module_name, plugin_file)
+                module_name, plugin_file
+            )
             if spec is None or spec.loader is None:
                 raise ImportError(f"Could not load spec for {plugin_file}")
             module = importlib.util.module_from_spec(spec)

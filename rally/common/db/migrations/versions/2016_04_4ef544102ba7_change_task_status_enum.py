@@ -36,19 +36,39 @@ depends_on = None
 
 
 OLD_STATUS = [
-    "aborted", "aborting", "cleaning up", "failed", "finished",
-    "init", "paused", "running", "setting up", "soft_aborting", "verifying"
+    "aborted",
+    "aborting",
+    "cleaning up",
+    "failed",
+    "finished",
+    "init",
+    "paused",
+    "running",
+    "setting up",
+    "soft_aborting",
+    "verifying",
 ]
 OLD_ENUM = sa.Enum(*OLD_STATUS, name="enum_tasks_status")
 
 WITHOUT_CHANGES = (
-    "init", "running", "aborted", "aborting", "soft_aborting", "paused",
-    "finished"
+    "init",
+    "running",
+    "aborted",
+    "aborting",
+    "soft_aborting",
+    "paused",
+    "finished",
 )
 
 OLD_TO_NEW = [
-    ("verifying", "validating",),
-    ("failed", "crashed",)
+    (
+        "verifying",
+        "validating",
+    ),
+    (
+        "failed",
+        "crashed",
+    ),
 ]
 
 
@@ -67,14 +87,13 @@ task = sa.Table(
     sa.Column("task_duration", sa.Float()),
     sa.Column("pass_sla", sa.Boolean()),
     sa.Column("status", OLD_ENUM, nullable=False),
-    sa.Column("new_status", sa.String(36),
-              default=consts.TaskStatus.INIT),
+    sa.Column("new_status", sa.String(36), default=consts.TaskStatus.INIT),
     sa.Column(
         "validation_result",
         sa_types.MutableJSONEncodedDict(),
         default={},
-        nullable=False
-    )
+        nullable=False,
+    ),
 )
 
 subtask = sa.Table(
@@ -91,24 +110,23 @@ subtask = sa.Table(
         "context",
         sa_types.MutableJSONEncodedDict(),
         default={},
-        nullable=False),
+        nullable=False,
+    ),
     sa.Column(
-        "sla",
-        sa_types.MutableJSONEncodedDict(),
-        default={},
-        nullable=False),
+        "sla", sa_types.MutableJSONEncodedDict(), default={}, nullable=False
+    ),
     sa.Column("duration", sa.Float()),
-    sa.Column(
-        "run_in_parallel",
-        sa.Boolean(),
-        default=False,
-        nullable=False),
+    sa.Column("run_in_parallel", sa.Boolean(), default=False, nullable=False),
     sa.Column("pass_sla", sa.Boolean()),
     sa.Column("status", OLD_ENUM, nullable=False),
-    sa.Column("new_status", sa.String(36),
-              default=consts.SubtaskStatus.RUNNING),
-    sa.ForeignKeyConstraint(["task_uuid"], ["tasks.uuid"], ),
-    sa.PrimaryKeyConstraint("id")
+    sa.Column(
+        "new_status", sa.String(36), default=consts.SubtaskStatus.RUNNING
+    ),
+    sa.ForeignKeyConstraint(
+        ["task_uuid"],
+        ["tasks.uuid"],
+    ),
+    sa.PrimaryKeyConstraint("id"),
 )
 
 
@@ -117,36 +135,56 @@ def upgrade() -> None:
     # https://bitbucket.org/zzzeek/alembic/issue/89
 
     with op.batch_alter_table("tasks") as batch_op:
-        batch_op.add_column(sa.Column("new_status", sa.String(36),
-                                      default=consts.TaskStatus.INIT))
+        batch_op.add_column(
+            sa.Column(
+                "new_status", sa.String(36), default=consts.TaskStatus.INIT
+            )
+        )
     with op.batch_alter_table("subtasks") as batch_op:
-        batch_op.add_column(sa.Column("new_status", sa.String(36),
-                                      default=consts.SubtaskStatus.RUNNING))
+        batch_op.add_column(
+            sa.Column(
+                "new_status",
+                sa.String(36),
+                default=consts.SubtaskStatus.RUNNING,
+            )
+        )
 
     op.execute(
         task.update()
-            .where(task.c.status.in_(WITHOUT_CHANGES))
-            .values({"new_status": task.c.status}))
+        .where(task.c.status.in_(WITHOUT_CHANGES))
+        .values({"new_status": task.c.status})
+    )
 
     for old, new in OLD_TO_NEW:
         op.execute(
             task.update()
-                .where(task.c.status == op.inline_literal(old))
-                .values({"new_status": new}))
+            .where(task.c.status == op.inline_literal(old))
+            .values({"new_status": new})
+        )
 
     # NOTE(rvasilets): Assume that set_failed was used only in causes of
     # validation failed
     op.execute(
-        task.update().where(
+        task.update()
+        .where(
             (task.c.status == op.inline_literal("failed"))
-            & (task.c.validation_result == {})).values(
-            {"new_status": "crashed", "validation_result": {}}))
+            & (task.c.validation_result == {})
+        )
+        .values({"new_status": "crashed", "validation_result": {}})
+    )
     op.execute(
-        task.update().where(
+        task.update()
+        .where(
             (task.c.status == op.inline_literal("failed"))
-            & (task.c.validation_result != {})).values(
-            {"new_status": "validation_failed",
-             "validation_result": task.c.validation_result}))
+            & (task.c.validation_result != {})
+        )
+        .values(
+            {
+                "new_status": "validation_failed",
+                "validation_result": task.c.validation_result,
+            }
+        )
+    )
 
     op.drop_index("task_status", "tasks")
     op.drop_index("subtask_status", "subtasks")
@@ -154,12 +192,14 @@ def upgrade() -> None:
     # NOTE(boris-42): Statuses "setting up", "cleaning up" were not used
     with op.batch_alter_table("tasks") as batch_op:
         batch_op.drop_column("status")
-        batch_op.alter_column("new_status", new_column_name="status",
-                              existing_type=sa.String(36))
+        batch_op.alter_column(
+            "new_status", new_column_name="status", existing_type=sa.String(36)
+        )
     with op.batch_alter_table("subtasks") as batch_op:
         batch_op.drop_column("status")
-        batch_op.alter_column("new_status", new_column_name="status",
-                              existing_type=sa.String(36))
+        batch_op.alter_column(
+            "new_status", new_column_name="status", existing_type=sa.String(36)
+        )
 
     op.create_index("task_status", "tasks", ["status"])
     op.create_index("subtask_status", "subtasks", ["status"])

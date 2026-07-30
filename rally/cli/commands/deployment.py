@@ -38,8 +38,10 @@ from rally.env import env_mgr
 LOG = logging.getLogger(__name__)
 
 deployment_app = typer.Typer(
-    name="deployment", no_args_is_help=False,
-    help="Legacy environments (superseded by env).")
+    name="deployment",
+    no_args_is_help=False,
+    help="Legacy environments (superseded by env).",
+)
 
 
 @deployment_app.callback()
@@ -47,12 +49,13 @@ def _deprecation_warning(ctx: typer.Context) -> None:
     # warn once per invocation, but not when only rendering help or when no
     # subcommand is actually run
     if ctx.invoked_subcommand and not cliutils.is_help_requested():
-        LOG.warning("The `deployment` commands are deprecated; use the `env` "
-                    "commands instead.")
+        LOG.warning(
+            "The `deployment` commands are deprecated; use the `env` "
+            "commands instead."
+        )
 
 
-def _list_deployments(api: API,
-                      deployment_list: list | None = None) -> None:
+def _list_deployments(api: API, deployment_list: list | None = None) -> None:
     headers = ["uuid", "created_at", "name", "status", "active"]
     current_deployment = envutils.get_global("RALLY_DEPLOYMENT")
     deployment_list = deployment_list or api.deployment.list()
@@ -63,42 +66,56 @@ def _list_deployments(api: API,
             r = [str(dep[column]) for column in headers[:-1]]
             r.append("" if dep["uuid"] != current_deployment else "*")
             table_rows.append(utils.Struct(**dict(zip(headers, r))))
-        cliutils.print_list(table_rows, headers,
-                            sortby_index=headers.index("created_at"))
+        cliutils.print_list(
+            table_rows, headers, sortby_index=headers.index("created_at")
+        )
     else:
-        print("There are no deployments. To create a new deployment, use:"
-              "\nrally deployment create")
+        print(
+            "There are no deployments. To create a new deployment, use:"
+            "\nrally deployment create"
+        )
 
 
 def _update_openrc_deployment_file(deployment: str, credential: dict) -> None:
     openrc_path = os.path.expanduser("~/.rally/openrc-%s" % deployment)
     with open(openrc_path, "w+") as env_file:
-        env_file.write("export OS_AUTH_URL='%(auth_url)s'\n"
-                       "export OS_USERNAME='%(username)s'\n"
-                       "export OS_PASSWORD='%(password)s'\n"
-                       "export OS_TENANT_NAME='%(tenant_name)s'\n"
-                       "export OS_PROJECT_NAME='%(tenant_name)s'\n"
-                       % credential)
+        env_file.write(
+            "export OS_AUTH_URL='%(auth_url)s'\n"
+            "export OS_USERNAME='%(username)s'\n"
+            "export OS_PASSWORD='%(password)s'\n"
+            "export OS_TENANT_NAME='%(tenant_name)s'\n"
+            "export OS_PROJECT_NAME='%(tenant_name)s'\n" % credential
+        )
         if credential.get("region_name"):
-            env_file.write("export OS_REGION_NAME='%s'\n" %
-                           credential["region_name"])
+            env_file.write(
+                "export OS_REGION_NAME='%s'\n" % credential["region_name"]
+            )
         if credential.get("endpoint_type"):
-            env_file.write("export OS_ENDPOINT_TYPE='%sURL'\n" %
-                           credential["endpoint_type"])
-            env_file.write("export OS_INTERFACE='%s'\n" %
-                           credential["endpoint_type"])
+            env_file.write(
+                "export OS_ENDPOINT_TYPE='%sURL'\n"
+                % credential["endpoint_type"]
+            )
+            env_file.write(
+                "export OS_INTERFACE='%s'\n" % credential["endpoint_type"]
+            )
         if credential.get("endpoint"):
-            env_file.write("export OS_ENDPOINT='%s'\n" %
-                           credential["endpoint"])
+            env_file.write(
+                "export OS_ENDPOINT='%s'\n" % credential["endpoint"]
+            )
         if credential.get("https_cacert"):
-            env_file.write("export OS_CACERT='%s'\n" %
-                           credential["https_cacert"])
+            env_file.write(
+                "export OS_CACERT='%s'\n" % credential["https_cacert"]
+            )
         if credential.get("project_domain_name"):
-            env_file.write("export OS_IDENTITY_API_VERSION=3\n"
-                           "export OS_USER_DOMAIN_NAME='%s'\n"
-                           "export OS_PROJECT_DOMAIN_NAME='%s'\n" %
-                           (credential["user_domain_name"],
-                            credential["project_domain_name"]))
+            env_file.write(
+                "export OS_IDENTITY_API_VERSION=3\n"
+                "export OS_USER_DOMAIN_NAME='%s'\n"
+                "export OS_PROJECT_DOMAIN_NAME='%s'\n"
+                % (
+                    credential["user_domain_name"],
+                    credential["project_domain_name"],
+                )
+            )
     expanded_path = os.path.expanduser("~/.rally/openrc")
     if os.path.exists(expanded_path):
         os.remove(expanded_path)
@@ -121,43 +138,39 @@ def _use(api: API, deployment: t.Any) -> int | None:
     if "openstack" in deployment["credentials"]:
         creds = deployment["credentials"]["openstack"][0]
         _update_openrc_deployment_file(
-            deployment["uuid"], creds["admin"] or creds["users"][0])
-        print("~/.rally/openrc was updated\n\nHINTS:\n"
-              "\n* To use standard OpenStack clients, set up your env by "
-              "running:\n\tsource ~/.rally/openrc\n"
-              "  OpenStack clients are now configured, e.g run:\n\t"
-              "openstack image list")
+            deployment["uuid"], creds["admin"] or creds["users"][0]
+        )
+        print(
+            "~/.rally/openrc was updated\n\nHINTS:\n"
+            "\n* To use standard OpenStack clients, set up your env by "
+            "running:\n\tsource ~/.rally/openrc\n"
+            "  OpenStack clients are now configured, e.g run:\n\t"
+            "openstack image list"
+        )
     return None
 
 
 @deployment_app.command()
 @plugins.ensure_plugins_are_loaded
 def create(
-    name: t.Annotated[
-        str,
-        typer.Option(
-            help="Name of the deployment."
-        )
-    ],
+    name: t.Annotated[str, typer.Option(help="Name of the deployment.")],
     fromenv: t.Annotated[
         bool,
         typer.Option(
             "--fromenv",
-            help="Read environment variables instead of config file."
-        )
+            help="Read environment variables instead of config file.",
+        ),
     ] = False,
     filename: t.Annotated[
         str | None,
-        typer.Option(
-            help="Path to the configuration file of the deployment."
-        )
+        typer.Option(help="Path to the configuration file of the deployment."),
     ] = None,
     no_use: t.Annotated[
         bool,
         typer.Option(
             "--no-use",
-            help="Don't set new deployment as default for future operations."
-        )
+            help="Don't set new deployment as default for future operations.",
+        ),
     ] = False,
 ) -> None:
     """Create new deployment.
@@ -226,14 +239,12 @@ def recreate(
         argutils.ArgumentOrKeyword(
             "--deployment",
             help="UUID or name of the deployment.",
-            envvar=envutils.ENV_ENV
-        )
+            envvar=envutils.ENV_ENV,
+        ),
     ],
     filename: t.Annotated[
         str | None,
-        typer.Option(
-            help="Path to the configuration file of the deployment."
-        )
+        typer.Option(help="Path to the configuration file of the deployment."),
     ] = None,
 ) -> None:
     """Destroy and create an existing deployment.
@@ -258,8 +269,8 @@ def destroy(
         argutils.ArgumentOrKeyword(
             "--deployment",
             help="UUID or name of the deployment.",
-            envvar=envutils.ENV_ENV
-        )
+            envvar=envutils.ENV_ENV,
+        ),
     ],
 ) -> None:
     """Destroy existing deployment.
@@ -288,8 +299,8 @@ def config(
         argutils.ArgumentOrKeyword(
             "--deployment",
             help="UUID or name of the deployment.",
-            envvar=envutils.ENV_ENV
-        )
+            envvar=envutils.ENV_ENV,
+        ),
     ],
 ) -> None:
     """Display configuration of the deployment.
@@ -310,14 +321,20 @@ def show(
         argutils.ArgumentOrKeyword(
             "--deployment",
             help="UUID or name of the deployment.",
-            envvar=envutils.ENV_ENV
-        )
+            envvar=envutils.ENV_ENV,
+        ),
     ],
 ) -> None:
     """Show the credentials of the deployment."""
     # TODO(astudenov): make this method platform independent
-    headers = ["auth_url", "username", "password", "tenant_name",
-               "region_name", "endpoint_type"]
+    headers = [
+        "auth_url",
+        "username",
+        "password",
+        "tenant_name",
+        "region_name",
+        "endpoint_type",
+    ]
     table_rows = []
 
     deployment = cliutils.get_api().deployment.get(deployment=deployment)
@@ -327,8 +344,7 @@ def show(
     admin = creds["admin"]
     credentials = users + [admin] if admin else users
     for ep in credentials:
-        data = ["***" if m == "password" else ep.get(m, "")
-                for m in headers]
+        data = ["***" if m == "password" else ep.get(m, "") for m in headers]
         table_rows.append(utils.Struct(**dict(zip(headers, data))))
     cliutils.print_list(table_rows, headers)
 
@@ -341,8 +357,8 @@ def check(
         argutils.ArgumentOrKeyword(
             "--deployment",
             help="UUID or name of the deployment.",
-            envvar=envutils.ENV_ENV
-        )
+            envvar=envutils.ENV_ENV,
+        ),
     ],
 ) -> None:
     """Check all credentials and list all available services."""
@@ -379,9 +395,11 @@ def check(
                 formatters = {
                     "Service": lambda x: x.get("name"),
                     "Service Type": lambda x: x.get("type"),
-                    "Status": lambda x: x.get("status", "Available")}
-                if (is_field_there(creds["services"], "type")
-                        and is_field_there(creds["services"], "name")):
+                    "Status": lambda x: x.get("status", "Available"),
+                }
+                if is_field_there(
+                    creds["services"], "type"
+                ) and is_field_there(creds["services"], "name"):
                     headers = ["Service", "Service Type", "Status"]
                 else:
                     headers = ["Service", "Status"]
@@ -392,9 +410,12 @@ def check(
                 if is_field_there(creds["services"], "description"):
                     headers.append("Description")
 
-                cliutils.print_list(creds["services"], headers,
-                                    normalize_field_names=True,
-                                    formatters=formatters)
+                cliutils.print_list(
+                    creds["services"],
+                    headers,
+                    normalize_field_names=True,
+                    formatters=formatters,
+                )
             else:
                 exit_code = 1
             print("\n")
@@ -409,9 +430,8 @@ def use(
     deployment: t.Annotated[
         str,
         argutils.ArgumentOrKeyword(
-            "--deployment",
-            help="UUID or name of a deployment."
-        )
+            "--deployment", help="UUID or name of a deployment."
+        ),
     ],
 ) -> None:
     """Set active deployment."""

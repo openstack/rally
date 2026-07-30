@@ -30,7 +30,6 @@ from rally.common.plugin import plugin
 
 
 if t.TYPE_CHECKING:  # pragma: no cover
-
     from rally.task import runner
 
     S = t.TypeVar("S", bound="SLA")
@@ -41,6 +40,7 @@ configure = plugin.configure
 
 class SLAResult(t.TypedDict):
     """Structure for SLA result data."""
+
     criterion: str
     success: bool
     detail: str
@@ -50,9 +50,7 @@ def _format_result(
     criterion_name: str, success: bool, detail: str
 ) -> SLAResult:
     """Returns the SLA result dict corresponding to the current state."""
-    return {"criterion": criterion_name,
-            "success": success,
-            "detail": detail}
+    return {"criterion": criterion_name, "success": success, "detail": detail}
 
 
 class SLAChecker:
@@ -65,8 +63,7 @@ class SLAChecker:
         self.aborted_manually = False
         self.sla_criteria: list[SLA] = [
             SLA.get(name)(criterion_value)
-            for name, criterion_value
-            in config.get("sla", {}).items()
+            for name, criterion_value in config.get("sla", {}).items()
         ]
 
     def add_iteration(self, iteration: runner.ScenarioRunnerResult) -> bool:
@@ -77,19 +74,26 @@ class SLAChecker:
 
         :param iteration: iteration result object
         """
-        return all([sla.add_iteration(iteration) for sla in self.sla_criteria])
+        return all([  # noqa: C419
+            sla.add_iteration(iteration)
+            for sla in self.sla_criteria
+        ])
 
     def merge(self, other: SLAChecker) -> bool:
         self._validate_config(other)
         self._validate_sla_types(other)
 
-        return all([self_sla.merge(other_sla)
-                    for self_sla, other_sla
-                    in zip(self.sla_criteria, other.sla_criteria)])
+        return all([  # noqa: C419
+            self_sla.merge(other_sla)
+            for self_sla, other_sla in zip(
+                self.sla_criteria, other.sla_criteria
+            )
+        ])
 
     def _validate_sla_types(self, other: SLAChecker) -> None:
         for self_sla, other_sla in itertools.zip_longest(
-                self.sla_criteria, other.sla_criteria):
+            self.sla_criteria, other.sla_criteria
+        ):
             self_sla.validate_type(other_sla)
 
     def _validate_config(self, other: SLAChecker) -> None:
@@ -99,24 +103,37 @@ class SLAChecker:
             raise TypeError(
                 "Error merging SLACheckers with configs %s, %s. "
                 "Only SLACheckers with the same config could be merged."
-                % (self_config, other_config))
+                % (self_config, other_config)
+            )
 
     def results(self) -> list[SLAResult]:
         results = [sla.result() for sla in self.sla_criteria]
         if self.aborted_on_sla:
-            results.append(_format_result(
-                "aborted_on_sla", False,
-                "Task was aborted due to SLA failure(s)."))
+            results.append(
+                _format_result(
+                    "aborted_on_sla",
+                    False,
+                    "Task was aborted due to SLA failure(s).",
+                )
+            )
 
         if self.aborted_manually:
-            results.append(_format_result(
-                "aborted_manually", False,
-                "Task was aborted due to abort signal."))
+            results.append(
+                _format_result(
+                    "aborted_manually",
+                    False,
+                    "Task was aborted due to abort signal.",
+                )
+            )
 
         if self.unexpected_failure:
-            results.append(_format_result(
-                "something_went_wrong", False,
-                "Unexpected error: %s" % self.unexpected_failure))
+            results.append(
+                _format_result(
+                    "something_went_wrong",
+                    False,
+                    "Unexpected error: %s" % self.unexpected_failure,
+                )
+            )
 
         return results
 
@@ -132,8 +149,9 @@ class SLAChecker:
 
 @validation.add_default("jsonschema")
 @plugin.base()
-class SLA(plugin.Plugin, validation.ValidatablePluginMixin,
-          metaclass=abc.ABCMeta):
+class SLA(
+    plugin.Plugin, validation.ValidatablePluginMixin, metaclass=abc.ABCMeta
+):
     """Factory for criteria classes."""
 
     CONFIG_SCHEMA: dict = {"type": "null"}
@@ -202,4 +220,5 @@ class SLA(plugin.Plugin, validation.ValidatablePluginMixin,
         if type(self) is not type(other):
             raise TypeError(
                 "Error merging SLAs of types %s, %s. Only SLAs of the same "
-                "type could be merged." % (type(self), type(other)))
+                "type could be merged." % (type(self), type(other))
+            )

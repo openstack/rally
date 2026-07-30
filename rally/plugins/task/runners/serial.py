@@ -42,13 +42,8 @@ class SerialScenarioRunner(runner.ScenarioRunner):
     CONFIG_SCHEMA = {
         "type": "object",
         "$schema": consts.JSON_SCHEMA,
-        "properties": {
-            "times": {
-                "type": "integer",
-                "minimum": 1
-            }
-        },
-        "additionalProperties": True
+        "properties": {"times": {"type": "integer", "minimum": 1}},
+        "additionalProperties": True,
     }
 
     def _run_scenario(
@@ -56,7 +51,7 @@ class SerialScenarioRunner(runner.ScenarioRunner):
         cls: type[scenario.Scenario],
         method_name: t.Literal["run"],
         context: dict[str, t.Any],
-        args: dict[str, t.Any]
+        args: dict[str, t.Any],
     ) -> None:
         """Runs the specified scenario with given arguments.
 
@@ -84,8 +79,12 @@ class SerialScenarioRunner(runner.ScenarioRunner):
             if self.aborted.is_set():
                 break
             result = runner._run_scenario_once(
-                cls, method_name, runner._get_scenario_context(i, context),
-                args, event_queue)
+                cls,
+                method_name,
+                runner._get_scenario_context(i, context),
+                args,
+                event_queue,
+            )
             self._send_result(result)
 
         self._flush_results()

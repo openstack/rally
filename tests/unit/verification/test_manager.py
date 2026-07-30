@@ -41,7 +41,7 @@ class FakeVerifier(manager.VerifierManager):
 
 class VerifierManagerTestCase(test.TestCase):
     def setUp(self):
-        super(VerifierManagerTestCase, self).setUp()
+        super().setUp()
         check_output_p = mock.patch("rally.verification.manager.utils."
                                     "check_output")
         self.check_output = check_output_p.start()

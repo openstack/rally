@@ -131,7 +131,7 @@ class ArgsValidatorTestCase(test.TestCase):
             def run(self, image,  # converter-typed, not annotated
                     count: t.Annotated[int, scenario.Field(ge=1)] = 1,
                     mode: t.Literal["l2", "l3"] = "l3",
-                    note: t.Optional[str] = None,
+                    note: str | None = None,
                     tags: list[str] = None,
                     spec: Spec = None,  # structured (TypedDict) arg
                     **kwargs):
@@ -274,7 +274,7 @@ class EnumValidatorTestCase(test.TestCase):
 class RestrictedParametersValidatorTestCase(test.TestCase):
 
     def setUp(self):
-        super(RestrictedParametersValidatorTestCase, self).setUp()
+        super().setUp()
         self.credentials = dict(openstack={"admin": mock.MagicMock(),
                                            "users": [mock.MagicMock()]})
 
@@ -313,7 +313,7 @@ class RestrictedParametersValidatorTestCase(test.TestCase):
 class RequiredContextsValidatorTestCase(test.TestCase):
 
     def setUp(self):
-        super(RequiredContextsValidatorTestCase, self).setUp()
+        super().setUp()
         self.credentials = dict(openstack={"admin": mock.MagicMock(),
                                            "users": [mock.MagicMock()], })
 
@@ -394,7 +394,7 @@ class RequiredContextsValidatorTestCase(test.TestCase):
 class RequiredParamOrContextValidatorTestCase(test.TestCase):
 
     def setUp(self):
-        super(RequiredParamOrContextValidatorTestCase, self).setUp()
+        super().setUp()
         self.validator = validators.RequiredParamOrContextValidator(
             "image", "custom_image")
         self.credentials = dict(openstack={"admin": mock.MagicMock(),

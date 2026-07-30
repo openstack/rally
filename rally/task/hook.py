@@ -48,6 +48,7 @@ configure = plugin.configure
 
 class HookResult(t.TypedDict):
     """Structure for hook execution result."""
+
     status: str
     started_at: float
     finished_at: float
@@ -58,6 +59,7 @@ class HookResult(t.TypedDict):
 
 class TriggerResults(t.TypedDict):
     """Structure for trigger results collection."""
+
     config: dict[str, t.Any]
     results: list[HookResult]
     summary: dict[str, int]
@@ -71,13 +73,15 @@ class HookExecutor:
         self.task = task
 
         self.triggers: collections.defaultdict[str, list[HookTrigger]] = (
-            collections.defaultdict(list))
+            collections.defaultdict(list)
+        )
         for hook_cfg in config.get("hooks", []):
             action_name = hook_cfg["action"][0]
             trigger_name = hook_cfg["trigger"][0]
             action_cls = HookAction.get(action_name)
-            trigger_obj = HookTrigger.get(
-                trigger_name)(hook_cfg, self.task, action_cls)
+            trigger_obj = HookTrigger.get(trigger_name)(
+                hook_cfg, self.task, action_cls
+            )
             event_type = trigger_obj.get_listening_event()
             self.triggers[event_type].append(trigger_obj)
 
@@ -122,9 +126,15 @@ class HookExecutor:
         for trigger_obj in self.triggers[event_type]:
             started = trigger_obj.on_event(event_type, value)
             if started:
-                LOG.info("Hook %s is trigged for Task %s by %s=%s"
-                         % (trigger_obj.hook_cls.__name__, self.task["uuid"],
-                            event_type, value))
+                LOG.info(
+                    "Hook %s is trigged for Task %s by %s=%s"
+                    % (
+                        trigger_obj.hook_cls.__name__,
+                        self.task["uuid"],
+                        event_type,
+                        value,
+                    )
+                )
 
     def results(self) -> list[TriggerResults]:
         """Returns list of dicts with hook results."""
@@ -139,17 +149,15 @@ class HookExecutor:
 
 @validation.add_default("jsonschema")
 @plugin.base()
-class HookAction(plugin.Plugin, validation.ValidatablePluginMixin,
-                 metaclass=abc.ABCMeta):
+class HookAction(
+    plugin.Plugin, validation.ValidatablePluginMixin, metaclass=abc.ABCMeta
+):
     """Factory for hook classes."""
 
     CONFIG_SCHEMA: dict = {"type": "null"}
 
     def __init__(
-        self,
-        task: objects.Task,
-        config: t.Any,
-        triggered_by: dict[str, t.Any]
+        self, task: objects.Task, config: t.Any, triggered_by: dict[str, t.Any]
     ) -> None:
         self.task = task
         self.config = config
@@ -178,8 +186,11 @@ class HookAction(plugin.Plugin, validation.ValidatablePluginMixin,
         :param details: any details as string
         """
         self.set_status(consts.HookStatus.FAILED)
-        self._result["error"] = {"etype": exception_name,
-                                 "msg": description, "details": details}
+        self._result["error"] = {
+            "etype": exception_name,
+            "msg": description,
+            "details": details,
+        }
 
     def set_status(self, status: str) -> None:
         """Set status to result."""
@@ -188,7 +199,7 @@ class HookAction(plugin.Plugin, validation.ValidatablePluginMixin,
     def add_output(
         self,
         additive: dict[str, t.Any] | None = None,
-        complete: dict[str, t.Any] | None = None
+        complete: dict[str, t.Any] | None = None,
     ) -> None:
         """Save custom output.
 
@@ -249,8 +260,9 @@ class HookAction(plugin.Plugin, validation.ValidatablePluginMixin,
 
 @validation.add_default("jsonschema")
 @plugin.base()
-class HookTrigger(plugin.Plugin, validation.ValidatablePluginMixin,
-                  metaclass=abc.ABCMeta):
+class HookTrigger(
+    plugin.Plugin, validation.ValidatablePluginMixin, metaclass=abc.ABCMeta
+):
     """Factory for hook trigger classes."""
 
     CONFIG_SCHEMA: dict = {"type": "null"}
@@ -259,7 +271,7 @@ class HookTrigger(plugin.Plugin, validation.ValidatablePluginMixin,
         self,
         hook_cfg: dict[str, t.Any],
         task: objects.Task,
-        hook_cls: type[HookAction]
+        hook_cls: type[HookAction],
     ) -> None:
         self.hook_cfg = hook_cfg
         self.config = self.hook_cfg["trigger"][1]
@@ -273,12 +285,14 @@ class HookTrigger(plugin.Plugin, validation.ValidatablePluginMixin,
 
     def on_event(self, event_type: str, value: t.Any = None) -> bool:
         """Launch hook on specified event."""
-        LOG.info("Hook action %s is triggered for Task %s by %s=%s"
-                 % (self.hook_cls.get_name(), self.task["uuid"],
-                    event_type, value))
+        LOG.info(
+            "Hook action %s is triggered for Task %s by %s=%s"
+            % (self.hook_cls.get_name(), self.task["uuid"], event_type, value)
+        )
         action_cfg = self.hook_cfg["action"][1]
-        action = self.hook_cls(self.task, action_cfg,
-                               {"event_type": event_type, "value": value})
+        action = self.hook_cls(
+            self.task, action_cfg, {"event_type": event_type, "value": value}
+        )
         action.run_async()
         self._runs.append(action)
         return True
@@ -287,7 +301,7 @@ class HookTrigger(plugin.Plugin, validation.ValidatablePluginMixin,
         results: TriggerResults = {
             "config": self.hook_cfg,
             "results": [],
-            "summary": {}
+            "summary": {},
         }
         for action in self._runs:
             action_result = action.result()

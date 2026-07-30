@@ -45,7 +45,7 @@ subtask_helper = sa.Table(
     sa.Column("uuid", sa.String(36), nullable=False),
     sa.Column("context", sa_types.MutableJSONEncodedDict()),
     sa.Column("contexts", sa_types.MutableJSONEncodedDict()),
-    sa.Column("contexts_results", sa_types.MutableJSONEncodedList())
+    sa.Column("contexts_results", sa_types.MutableJSONEncodedList()),
 )
 
 workload_helper = sa.Table(
@@ -74,8 +74,9 @@ def _process_contexts(w_context: dict) -> list[str] | None:
             ctxs.append((ctx_cls.get_order(), ctx_cls.get_fullname()))
         ctxs.sort()
         result = ["%s.setup" % ctx_name for _i, ctx_name in ctxs]
-        result.extend([ctx.replace(".setup", ".cleanup")
-                       for ctx in reversed(result)])
+        result.extend(
+            [ctx.replace(".setup", ".cleanup") for ctx in reversed(result)]
+        )
         return result
     except Exception:
         # the proper of context can be missed while applying the migration, it
@@ -85,21 +86,41 @@ def _process_contexts(w_context: dict) -> list[str] | None:
 
 def upgrade() -> None:
     with op.batch_alter_table("subtasks") as batch_op:
-        batch_op.add_column(sa.Column("contexts",
-                                      sa_types.MutableJSONEncodedDict(),
-                                      default={}, nullable=False))
-        batch_op.add_column(sa.Column("contexts_results",
-                                      sa_types.MutableJSONEncodedList(),
-                                      default=[], nullable=False))
+        batch_op.add_column(
+            sa.Column(
+                "contexts",
+                sa_types.MutableJSONEncodedDict(),
+                default={},
+                nullable=False,
+            )
+        )
+        batch_op.add_column(
+            sa.Column(
+                "contexts_results",
+                sa_types.MutableJSONEncodedList(),
+                default=[],
+                nullable=False,
+            )
+        )
         # it was not used, so we do not need to migrate the data
         batch_op.drop_column("context")
     with op.batch_alter_table("workloads") as batch_op:
-        batch_op.add_column(sa.Column("contexts",
-                                      sa_types.MutableJSONEncodedDict(),
-                                      default={}, nullable=False))
-        batch_op.add_column(sa.Column("contexts_results",
-                                      sa_types.MutableJSONEncodedList(),
-                                      default=[], nullable=False))
+        batch_op.add_column(
+            sa.Column(
+                "contexts",
+                sa_types.MutableJSONEncodedDict(),
+                default={},
+                nullable=False,
+            )
+        )
+        batch_op.add_column(
+            sa.Column(
+                "contexts_results",
+                sa_types.MutableJSONEncodedList(),
+                default=[],
+                nullable=False,
+            )
+        )
         # it was not used, so we do not need to migrate the data
         batch_op.drop_column("context_execution")
 
@@ -134,7 +155,8 @@ def upgrade() -> None:
             # finished. Again, there can be possible delay, let it be 0.01
             # seconds
             ctx_cleanup_started_at = (
-                workload.start_time + workload.load_duration + 0.01)
+                workload.start_time + workload.load_duration + 0.01
+            )
             # We cannot rely on updated_at field since it can be affected by
             # another migration. The full_duration is a timestamp of the moment
             # when the load is finished, all results are saved in the database
@@ -142,53 +164,63 @@ def upgrade() -> None:
             # right timestamp of finishing cleanup, but it should be almost
             # there. Let's deduct 0.1 seconds.
             ctx_cleanup_finished_at = (
-                ctx_setup_started_at + workload.full_duration - 0.1)
+                ctx_setup_started_at + workload.full_duration - 0.1
+            )
 
             # plugin_name and arguments should be used only for analyzing, not
             # for restoring original task itself, so we can use custom thing
             # here
-            contexts_results = [{
-                "plugin_name": "AllExecutedContexts",
-                "plugin_cfg": {
-                    "description":
-                        "It is impossible to restore stats of executed "
-                        "contexts while performing database migration. "
-                        "The current info displays the approximate timestamps "
-                        "which should say when the first setup method was "
-                        "executed, when the last setup method finished, when "
-                        "the first cleanup was started and when the last "
-                        "cleanup finished. Also, please not that it is "
-                        "impossible to guess information about possible "
-                        "errors, so the current stats are marked as "
-                        "successful."},
-                "setup": {
-                    "started_at": ctx_setup_started_at,
-                    "finished_at": ctx_setup_finished_at,
-                    "atomic_actions": [],
-                    "error": None
-                },
-                "cleanup": {
-                    "started_at": ctx_cleanup_started_at,
-                    "finished_at": ctx_cleanup_finished_at,
-                    "atomic_actions": [],
-                    "error": None
+            contexts_results = [
+                {
+                    "plugin_name": "AllExecutedContexts",
+                    "plugin_cfg": {
+                        "description": (
+                            "It is impossible to restore stats of executed "
+                            "contexts while performing database migration. "
+                            "The current info displays the approximate "
+                            "timestamps which should say when the first "
+                            "setup method was executed, when the last setup "
+                            "method finished, when the first cleanup was "
+                            "started and when the last cleanup finished. "
+                            "Also, please not that it is impossible to "
+                            "guess information about possible errors, "
+                            "so the current stats are marked as successful."
+                        )
+                    },
+                    "setup": {
+                        "started_at": ctx_setup_started_at,
+                        "finished_at": ctx_setup_finished_at,
+                        "atomic_actions": [],
+                        "error": None,
+                    },
+                    "cleanup": {
+                        "started_at": ctx_cleanup_started_at,
+                        "finished_at": ctx_cleanup_finished_at,
+                        "atomic_actions": [],
+                        "error": None,
+                    },
                 }
-            }]
+            ]
 
             possible_order = _process_contexts(workload.context)
             if possible_order:
                 contexts_results[0]["plugin_cfg"]["order_of_execution"] = {
                     "note": "We do not know if all setup methods were "
-                            "executed, but if they were, the following order "
-                            "is right.",
-                    "order": possible_order
+                    "executed, but if they were, the following order "
+                    "is right.",
+                    "order": possible_order,
                 }
 
         connection.execute(
-            workload_helper.update().where(
-                workload_helper.c.uuid == workload.uuid).values(
-                {"contexts": workload_helper.c.context,
-                 "contexts_results": contexts_results}))
+            workload_helper.update()
+            .where(workload_helper.c.uuid == workload.uuid)
+            .values(
+                {
+                    "contexts": workload_helper.c.context,
+                    "contexts_results": contexts_results,
+                }
+            )
+        )
 
     with op.batch_alter_table("workloads") as batch_op:
         batch_op.drop_column("context")

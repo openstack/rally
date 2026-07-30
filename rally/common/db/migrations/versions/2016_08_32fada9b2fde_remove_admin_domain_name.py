@@ -43,7 +43,7 @@ deployments_helper = sa.Table(
         sa_types.MutableJSONEncodedDict,
         default={},
         nullable=False,
-    )
+    ),
 )
 
 
@@ -67,9 +67,10 @@ def upgrade() -> None:
 
         if should_update:
             connection.execute(
-                deployments_helper.update().where(
-                    deployments_helper.c.id == deployment.id).values(
-                    config=conf))
+                deployments_helper.update()
+                .where(deployments_helper.c.id == deployment.id)
+                .values(config=conf)
+            )
 
 
 def downgrade() -> None:

@@ -44,7 +44,7 @@ class JsonSchemaValidator(validation.Validator):
         context: dict[str, t.Any],
         config: dict[str, t.Any] | None,
         plugin_cls: type[plugin.Plugin],
-        plugin_cfg: dict[str, t.Any] | None
+        plugin_cfg: dict[str, t.Any] | None,
     ) -> None:
         schema = getattr(plugin_cls, "CONFIG_SCHEMA", {"type": "null"})
 
@@ -52,13 +52,14 @@ class JsonSchemaValidator(validation.Validator):
             schema,
             default=t.cast(
                 type[jsonschema.protocols.Validator],
-                jsonschema.Draft7Validator
-            )
+                jsonschema.Draft7Validator,
+            ),
         )
         try:
             jsonschema.validate(
-                plugin_cfg, schema,
-                cls=validator  # type: ignore[arg-type]
+                plugin_cfg,
+                schema,
+                cls=validator,  # type: ignore[arg-type]
             )
         except jsonschema.ValidationError as err:
             self.fail(str(err))
@@ -73,7 +74,7 @@ class ArgsValidator(validation.Validator):
         context: dict[str, t.Any],
         config: dict[str, t.Any] | None,
         plugin_cls: type[scenario.Scenario],  # type: ignore[override]
-        plugin_cfg: dict[str, t.Any] | None
+        plugin_cfg: dict[str, t.Any] | None,
     ) -> None:
         scenario_cls = plugin_cls
         name = scenario_cls.get_name()
@@ -83,35 +84,43 @@ class ArgsValidator(validation.Validator):
         missed_args = [
             p.name
             for i, p in enumerate(args_spec.values())
-            if (i != 0  # first argument is self-argument, i.e instance of cls
+            if (
+                i != 0  # first argument is self-argument, i.e instance of cls
                 and p.default == inspect.Parameter.empty
-                and p.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD)
+                and p.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
+            )
         ]
 
-        hint_msg = (f" Use `rally plugin show --name {name} --platform "
-                    f"{platform}` to display scenario description.")
+        hint_msg = (
+            f" Use `rally plugin show --name {name} --platform "
+            f"{platform}` to display scenario description."
+        )
 
         args = config.get("args", {}) if config is not None else {}
 
         # keep run()-signature order (the comprehension above is ordered)
         missed_args = [a for a in missed_args if a not in args]
         if missed_args:
-            msg = ("Argument(s) '%(args)s' should be specified in task config."
-                   "%(hint)s" % {"args": "', '".join(missed_args),
-                                 "hint": hint_msg})
+            msg = (
+                "Argument(s) '%(args)s' should be specified in task config."
+                "%(hint)s"
+                % {"args": "', '".join(missed_args), "hint": hint_msg}
+            )
             self.fail(msg)
 
         support_kwargs = any(
-            p for p in args_spec.values()
+            p
+            for p in args_spec.values()
             if p.kind == inspect.Parameter.VAR_KEYWORD
         )
 
         if not support_kwargs:
             redundant_args = [p for p in args if p not in args_spec]
             if redundant_args:
-                msg = ("Unexpected argument(s) found ['%(args)s'].%(hint)s" %
-                       {"args": "', '".join(redundant_args),
-                        "hint": hint_msg})
+                msg = "Unexpected argument(s) found ['%(args)s'].%(hint)s" % {
+                    "args": "', '".join(redundant_args),
+                    "hint": hint_msg,
+                }
                 self.fail(msg)
 
         # Validate each provided arg against its schema separately (so the
@@ -146,9 +155,9 @@ class RequiredParameterValidator(validation.Validator):
     def __init__(
         self,
         params: list[str | tuple[str, ...] | list[str]] | None = None,
-        subdict: str | None = None
+        subdict: str | None = None,
     ) -> None:
-        super(RequiredParameterValidator, self).__init__()
+        super().__init__()
         self.subdict = subdict
         self.params = params or []
 
@@ -157,7 +166,7 @@ class RequiredParameterValidator(validation.Validator):
         context: dict[str, t.Any],
         config: dict[str, t.Any] | None,
         plugin_cls: type[plugin.Plugin],
-        plugin_cfg: dict[str, t.Any] | None
+        plugin_cfg: dict[str, t.Any] | None,
     ) -> None:
         missing: list[str] = []
         args: dict[str, t.Any] = config.get("args", {}) if config else {}
@@ -171,15 +180,18 @@ class RequiredParameterValidator(validation.Validator):
                         break
                 else:
                     arg_str = "'/'".join(arg)
-                    missing.append("'%s' (at least one parameter should be "
-                                   "specified)" % arg_str)
+                    missing.append(
+                        "'%s' (at least one parameter should be "
+                        "specified)" % arg_str
+                    )
             else:
                 if arg not in args:
                     missing.append("'%s'" % arg)
 
         if missing:
-            msg = ("%s parameter(s) are not defined in "
-                   "the input task file") % ", ".join(missing)
+            msg = (
+                "%s parameter(s) are not defined in the input task file"
+            ) % ", ".join(missing)
             self.fail(msg)
 
 
@@ -203,7 +215,7 @@ class NumberValidator(validation.Validator):
         minval: int | float | None = None,
         maxval: int | float | None = None,
         nullable: bool = False,
-        integer_only: bool = False
+        integer_only: bool = False,
     ) -> None:
         self.param_name = param_name
         self.minval = minval
@@ -216,7 +228,7 @@ class NumberValidator(validation.Validator):
         context: dict[str, t.Any],
         config: dict[str, t.Any] | None,
         plugin_cls: type[plugin.Plugin],
-        plugin_cfg: dict[str, t.Any] | None
+        plugin_cfg: dict[str, t.Any] | None,
     ) -> None:
         value: t.Any = None
         if config is not None:
@@ -227,8 +239,10 @@ class NumberValidator(validation.Validator):
             # NOTE(boris-42): Force check that passed value is not float, this
             #   is important cause int(float_numb) won't raise exception
             if isinstance(value, float):
-                self.fail("%(name)s is %(val)s which hasn't int type"
-                          % {"name": self.param_name, "val": value})
+                self.fail(
+                    "%(name)s is %(val)s which hasn't int type"
+                    % {"name": self.param_name, "val": value}
+                )
             num_func = int
 
         # None may be valid if the scenario sets a sensible default.
@@ -238,19 +252,34 @@ class NumberValidator(validation.Validator):
         try:
             number = num_func(value)
             if self.minval is not None and number < self.minval:
-                self.fail("%(name)s is %(val)s which is less than the minimum "
-                          "(%(min)s)" % {"name": self.param_name,
-                                         "val": number,
-                                         "min": self.minval})
+                self.fail(
+                    "%(name)s is %(val)s which is less than the minimum "
+                    "(%(min)s)"
+                    % {
+                        "name": self.param_name,
+                        "val": number,
+                        "min": self.minval,
+                    }
+                )
             if self.maxval is not None and number > self.maxval:
-                self.fail("%(name)s is %(val)s which is greater than the "
-                          "maximum (%(max)s)" % {"name": self.param_name,
-                                                 "val": number,
-                                                 "max": self.maxval})
+                self.fail(
+                    "%(name)s is %(val)s which is greater than the "
+                    "maximum (%(max)s)"
+                    % {
+                        "name": self.param_name,
+                        "val": number,
+                        "max": self.maxval,
+                    }
+                )
         except (ValueError, TypeError):
-            self.fail("%(name)s is %(val)s which is not a valid %(type)s" %
-                      {"name": self.param_name, "val": value,
-                       "type": num_func.__name__})
+            self.fail(
+                "%(name)s is %(val)s which is not a valid %(type)s"
+                % {
+                    "name": self.param_name,
+                    "val": value,
+                    "type": num_func.__name__,
+                }
+            )
 
 
 @validation.configure(name="enum")
@@ -271,7 +300,7 @@ class EnumValidator(validation.Validator):
         param_name: str,
         values: list[t.Any],
         missed: bool = False,
-        case_insensitive: bool = False
+        case_insensitive: bool = False,
     ) -> None:
         self.param_name = param_name
         self.missed = missed
@@ -290,7 +319,7 @@ class EnumValidator(validation.Validator):
         context: dict[str, t.Any],
         config: dict[str, t.Any] | None,
         plugin_cls: type[plugin.Plugin],
-        plugin_cfg: dict[str, t.Any] | None
+        plugin_cfg: dict[str, t.Any] | None,
     ) -> None:
         value = None
         if config is not None:
@@ -301,14 +330,21 @@ class EnumValidator(validation.Validator):
                     value = value.lower()
 
             if value not in self.values:
-                self.fail("%(name)s is %(val)s which is not a valid value "
-                          "from %(list)s" % {"name": self.param_name,
-                                             "val": value,
-                                             "list": self.values})
+                self.fail(
+                    "%(name)s is %(val)s which is not a valid value "
+                    "from %(list)s"
+                    % {
+                        "name": self.param_name,
+                        "val": value,
+                        "list": self.values,
+                    }
+                )
         else:
             if not self.missed:
-                self.fail("%s parameter is not defined in the task config file"
-                          % self.param_name)
+                self.fail(
+                    "%s parameter is not defined in the task config file"
+                    % self.param_name
+                )
 
 
 @validation.configure(name="map_keys")
@@ -329,9 +365,9 @@ class MapKeysParameterValidator(validation.Validator):
         required: list[str] | None = None,
         allowed: list[str] | None = None,
         additional: bool = True,
-        missed: bool = False
+        missed: bool = False,
     ) -> None:
-        super(MapKeysParameterValidator, self).__init__()
+        super().__init__()
         self.param_name = param_name
         self.required = required or []
         self.allowed = allowed or []
@@ -343,7 +379,7 @@ class MapKeysParameterValidator(validation.Validator):
         context: dict[str, t.Any],
         config: dict[str, t.Any] | None,
         plugin_cls: type[plugin.Plugin],
-        plugin_cfg: dict[str, t.Any] | None
+        plugin_cfg: dict[str, t.Any] | None,
     ) -> None:
         parameter = None
         if config is not None:
@@ -354,8 +390,11 @@ class MapKeysParameterValidator(validation.Validator):
             if required_diff:
                 self.fail(
                     "Required keys is missing in '%(name)s' parameter: "
-                    "%(key)s" % {"name": self.param_name,
-                                 "key": ", ".join(sorted(list(required_diff)))}
+                    "%(key)s"
+                    % {
+                        "name": self.param_name,
+                        "key": ", ".join(sorted(required_diff)),
+                    }
                 )
 
             if self.allowed:
@@ -363,30 +402,36 @@ class MapKeysParameterValidator(validation.Validator):
                 if allowed_diff:
                     self.fail(
                         "Parameter '%(name)s' contains unallowed keys: "
-                        "%(key)s" % {
+                        "%(key)s"
+                        % {
                             "name": self.param_name,
-                            "key": ", ".join(sorted(list(allowed_diff)))}
+                            "key": ", ".join(sorted(allowed_diff)),
+                        }
                     )
             elif not self.additional:
                 diff = set(parameter.keys()) - set(self.required)
                 if diff:
                     self.fail(
                         "Parameter '%(name)s' contains unallowed keys: "
-                        "%(key)s" % {
+                        "%(key)s"
+                        % {
                             "name": self.param_name,
-                            "key": ", ".join(sorted(list(diff)))}
+                            "key": ", ".join(sorted(diff)),
+                        }
                     )
         elif not self.missed:
-            self.fail("'%s' parameter is not defined in the task config file"
-                      % self.param_name)
+            self.fail(
+                "'%s' parameter is not defined in the task config file"
+                % self.param_name
+            )
 
 
 @validation.configure(name="restricted_parameters")
 class RestrictedParametersValidator(validation.Validator):
-
     def __init__(
-        self, param_names: str | list[str] | tuple[str, ...],
-        subdict: str | None = None
+        self,
+        param_names: str | list[str] | tuple[str, ...],
+        subdict: str | None = None,
     ) -> None:
         """Validates that parameters is not set.
 
@@ -394,7 +439,7 @@ class RestrictedParametersValidator(validation.Validator):
         :param subdict: sub-dict of "config" to search for param_names. if
                         not defined - will search in "config"
         """
-        super(RestrictedParametersValidator, self).__init__()
+        super().__init__()
         if isinstance(param_names, (list, tuple)):
             self.params = param_names
         else:
@@ -406,7 +451,7 @@ class RestrictedParametersValidator(validation.Validator):
         context: dict[str, t.Any],
         config: dict[str, t.Any] | None,
         plugin_cls: type[plugin.Plugin],
-        plugin_cfg: dict[str, t.Any] | None
+        plugin_cfg: dict[str, t.Any] | None,
     ) -> None:
         restricted_params: list[str] = []
         args: dict[str, t.Any] = config.get("args", {}) if config else {}
@@ -415,17 +460,21 @@ class RestrictedParametersValidator(validation.Validator):
             if param_name in source:
                 restricted_params.append(param_name)
         if restricted_params:
-            self.fail("You can't specify parameters '%s' in '%s'" % (
-                ", ".join(restricted_params),
-                self.subdict if self.subdict else "args"))
+            self.fail(
+                "You can't specify parameters '%s' in '%s'"
+                % (
+                    ", ".join(restricted_params),
+                    self.subdict if self.subdict else "args",
+                )
+            )
 
 
 @validation.configure(name="required_contexts")
 class RequiredContextsValidator(validation.Validator):
-
     def __init__(
-        self, *args: str,
-        contexts: t.Iterable[str | tuple[str, ...]] | None = None
+        self,
+        *args: str,
+        contexts: t.Iterable[str | tuple[str, ...]] | None = None,
     ) -> None:
         """Validator checks if required contexts are specified.
 
@@ -433,15 +482,17 @@ class RequiredContextsValidator(validation.Validator):
                          should be specified. Tuple represent 'at least one
                          of the'.
         """
-        super(RequiredContextsValidator, self).__init__()
+        super().__init__()
         if isinstance(contexts, (list, tuple)):
             # services argument is a list, so it is a new way of validators
             #  usage, args in this case should not be provided
             self.contexts: list[str | tuple[str, ...]] = list(contexts)
             if args:
-                LOG.warning("Positional argument is not what "
-                            "'required_context' decorator expects. "
-                            "Use only `contexts` argument instead")
+                LOG.warning(
+                    "Positional argument is not what "
+                    "'required_context' decorator expects. "
+                    "Use only `contexts` argument instead"
+                )
         else:
             # it is an old way validator
             self.contexts = []
@@ -455,8 +506,10 @@ class RequiredContextsValidator(validation.Validator):
     ) -> bool:
         requested_ctx_name_extended = f"{requested_ctx_name}@"
         for input_ctx_name in input_contexts:
-            if (requested_ctx_name == input_ctx_name
-                    or input_ctx_name.startswith(requested_ctx_name_extended)):
+            if (
+                requested_ctx_name == input_ctx_name
+                or input_ctx_name.startswith(requested_ctx_name_extended)
+            ):
                 return True
 
         if "@" in requested_ctx_name:
@@ -464,8 +517,10 @@ class RequiredContextsValidator(validation.Validator):
             if platform_aware_name in input_contexts:
                 try:
                     ctx_cls = context_lib.Context.get(requested_ctx_name)
-                except (exceptions.PluginNotFound,
-                        exceptions.MultiplePluginsFound):
+                except (
+                    exceptions.PluginNotFound,
+                    exceptions.MultiplePluginsFound,
+                ):
                     return False
                 return ctx_cls.get_platform() == platform
 
@@ -476,7 +531,7 @@ class RequiredContextsValidator(validation.Validator):
         context: dict[str, t.Any],
         config: dict[str, t.Any] | None,
         plugin_cls: type[plugin.Plugin],
-        plugin_cfg: dict[str, t.Any] | None
+        plugin_cfg: dict[str, t.Any] | None,
     ) -> None:
         missing_contexts: list[str] = []
         input_contexts: dict[str, t.Any] = {}
@@ -485,8 +540,10 @@ class RequiredContextsValidator(validation.Validator):
 
         for required_ctx in self.contexts:
             if isinstance(required_ctx, tuple):
-                if not any(self._match(r_ctx, input_contexts)
-                           for r_ctx in required_ctx):
+                if not any(
+                    self._match(r_ctx, input_contexts)
+                    for r_ctx in required_ctx
+                ):
                     # formatted string like: 'foo or bar or baz'
                     formatted_names = "'%s'" % " or ".join(required_ctx)
                     missing_contexts.append(formatted_names)
@@ -495,20 +552,21 @@ class RequiredContextsValidator(validation.Validator):
                     missing_contexts.append(required_ctx)
 
         if missing_contexts:
-            self.fail("The following context(s) are required but missing from "
-                      "the input task file: %s" % ", ".join(missing_contexts))
+            self.fail(
+                "The following context(s) are required but missing from "
+                "the input task file: %s" % ", ".join(missing_contexts)
+            )
 
 
 @validation.configure(name="required_param_or_context")
 class RequiredParamOrContextValidator(validation.Validator):
-
     def __init__(self, param_name: str, ctx_name: str) -> None:
         """Validator checks if required image is specified.
 
         :param param_name: name of parameter
         :param ctx_name: name of context
         """
-        super(RequiredParamOrContextValidator, self).__init__()
+        super().__init__()
         self.param_name = param_name
         self.ctx_name = ctx_name
 
@@ -517,10 +575,12 @@ class RequiredParamOrContextValidator(validation.Validator):
         context: dict[str, t.Any],
         config: dict[str, t.Any] | None,
         plugin_cls: type[plugin.Plugin],
-        plugin_cfg: dict[str, t.Any] | None
+        plugin_cfg: dict[str, t.Any] | None,
     ) -> None:
-        msg = ("You should specify either scenario argument %s or"
-               " use context %s." % (self.param_name, self.ctx_name))
+        msg = (
+            "You should specify either scenario argument %s or"
+            " use context %s." % (self.param_name, self.ctx_name)
+        )
 
         if config is not None:
             if self.ctx_name in config.get("contexts", {}):
@@ -532,7 +592,6 @@ class RequiredParamOrContextValidator(validation.Validator):
 
 @validation.configure(name="file_exists")
 class FileExistsValidator(validation.Validator):
-
     def __init__(
         self, param_name: str, mode: int = os.R_OK, required: bool = True
     ) -> None:
@@ -552,36 +611,45 @@ class FileExistsValidator(validation.Validator):
                 mode=os.R_OK+os.W_OK
         :param required: Boolean indicating whether this argument is required.
         """
-        super(FileExistsValidator, self).__init__()
+        super().__init__()
 
         self.param_name = param_name
         self.mode = mode
         self.required = required
 
     def _file_access_ok(
-        self, filename: str | None, mode: int, param_name: str,
-        required: bool = True
+        self,
+        filename: str | None,
+        mode: int,
+        param_name: str,
+        required: bool = True,
     ) -> None:
         if not filename:
             if not required:
                 return
             self.fail("Parameter %s required" % param_name)
         if not os.access(os.path.expanduser(filename), mode):
-            self.fail("Could not open %(filename)s with mode %(mode)s for "
-                      "parameter %(param_name)s" % {"filename": filename,
-                                                    "mode": mode,
-                                                    "param_name": param_name})
+            self.fail(
+                "Could not open %(filename)s with mode %(mode)s for "
+                "parameter %(param_name)s"
+                % {
+                    "filename": filename,
+                    "mode": mode,
+                    "param_name": param_name,
+                }
+            )
 
     def validate(
         self,
         context: dict[str, t.Any],
         config: dict[str, t.Any] | None,
         plugin_cls: type[plugin.Plugin],
-        plugin_cfg: dict[str, t.Any] | None
+        plugin_cfg: dict[str, t.Any] | None,
     ) -> None:
         filename = None
         if config is not None:
             filename = config.get("args", {}).get(self.param_name)
 
-        self._file_access_ok(filename, self.mode, self.param_name,
-                             self.required)
+        self._file_access_ok(
+            filename, self.mode, self.param_name, self.required
+        )

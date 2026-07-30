@@ -19,6 +19,7 @@ Revises: 7948b83229f6
 Create Date: 2017-09-05 16:34:47.434748
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 
@@ -35,11 +36,13 @@ depends_on = None
 def upgrade() -> None:
     with op.batch_alter_table("tasks") as batch_op:
         batch_op.alter_column(
-            "title", type_=sa.String(128), existing_type=sa.String(64))
+            "title", type_=sa.String(128), existing_type=sa.String(64)
+        )
 
     with op.batch_alter_table("subtasks") as batch_op:
         batch_op.alter_column(
-            "title", type_=sa.String(128), existing_type=sa.String(64))
+            "title", type_=sa.String(128), existing_type=sa.String(64)
+        )
 
 
 def downgrade() -> None:

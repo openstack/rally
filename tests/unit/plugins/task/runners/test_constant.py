@@ -31,7 +31,7 @@ RUNNERS = "rally.plugins.task.runners."
 class ConstantScenarioRunnerTestCase(test.TestCase):
 
     def setUp(self):
-        super(ConstantScenarioRunnerTestCase, self).setUp()
+        super().setUp()
         self.config = {"times": 4, "concurrency": 2,
                        "timeout": 2, "type": "constant",
                        "max_cpu_count": 2}
@@ -257,7 +257,7 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
 class ConstantForDurationScenarioRunnerTestCase(test.TestCase):
 
     def setUp(self):
-        super(ConstantForDurationScenarioRunnerTestCase, self).setUp()
+        super().setUp()
         self.config = {"duration": 0, "concurrency": 2,
                        "timeout": 2, "type": "constant_for_duration"}
         self.context = fakes.FakeContext({"task": {"uuid": "uuid"}}).context

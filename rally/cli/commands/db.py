@@ -21,8 +21,10 @@ from rally.common import db
 
 
 db_app = typer.Typer(
-    name="db", no_args_is_help=False,
-    help="Create, upgrade and inspect the database.")
+    name="db",
+    no_args_is_help=False,
+    help="Create, upgrade and inspect the database.",
+)
 
 
 def _print_connection(show_creds: bool) -> None:
@@ -79,9 +81,10 @@ def upgrade() -> None:
     db.schema.schema_upgrade()
     current_revision = db.schema.schema_revision()
     if start_revision != current_revision:
-        print("Database schema upgraded successfully "
-              "from {start} to {end} revision."
-              .format(start=start_revision, end=current_revision))
+        print(
+            f"Database schema upgraded successfully "
+            f"from {start_revision} to {current_revision} revision."
+        )
     else:
         print("Database is already up to date")
 
@@ -97,9 +100,8 @@ def show(
     creds: t.Annotated[
         bool,
         typer.Option(
-            "--creds",
-            help="Do not hide credentials from connection string"
-        )
+            "--creds", help="Do not hide credentials from connection string"
+        ),
     ] = False,
 ) -> None:
     """Show the connection string."""

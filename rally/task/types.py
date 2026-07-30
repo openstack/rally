@@ -52,9 +52,7 @@ class ConvertConfig(t.TypedDict):
     type: str
 
 
-def convert(
-    **kwargs: dict[str, t.Any]
-) -> t.Callable[[type[S]], type[S]]:
+def convert(**kwargs: dict[str, t.Any]) -> t.Callable[[type[S]], type[S]]:
     """Decorator to define resource transformation(s) on scenario parameters.
 
     The ``kwargs`` passed as arguments are used to map a key in the
@@ -75,11 +73,13 @@ def convert(
                 LOG.warning(
                     "The configuration for preprocessing '%s' argument of"
                     " %s Scenario plugin is wrong. Check documentation "
-                    "for more details." % (k, cls.get_name()))
+                    "for more details." % (k, cls.get_name())
+                )
 
         cls._meta_setdefault("preprocessors", {})
         cls._meta_get("preprocessors").update(kwargs)
         return cls
+
     return wrapper
 
 
@@ -108,7 +108,7 @@ class Convert:
         """The ``{"type": ..., **extra}`` config consumed by preprocessing."""
         return {
             "type": self.type,
-            **self.config  # type: ignore[typeddict-item]
+            **self.config,  # type: ignore[typeddict-item]
         }
 
 
@@ -149,15 +149,15 @@ def _find_convert_marker(hint: t.Any) -> tuple[Convert, t.Any] | None:
 
 
 def collect_scenario_args_preprocessors(
-    scenario_cls: type[scenario.Scenario],
-    hints: dict[str, t.Any]
+    scenario_cls: type[scenario.Scenario], hints: dict[str, t.Any]
 ) -> dict[str, ConvertConfig]:
     """Merge the ``@types.convert`` decorator and inline ``Convert`` markers.
 
     An annotation marker wins over the decorator on conflict.
     """
     converters: dict[str, ConvertConfig] = dict(
-        scenario_cls._meta_get("preprocessors", default={}))
+        scenario_cls._meta_get("preprocessors", default={})
+    )
 
     for name, hint in hints.items():
         res = _find_convert_marker(hint)
@@ -168,9 +168,7 @@ def collect_scenario_args_preprocessors(
 
 
 def preprocess(
-    name: str,
-    context: dict[str, t.Any],
-    args: dict[str, t.Any]
+    name: str, context: dict[str, t.Any], args: dict[str, t.Any]
 ) -> dict[str, t.Any]:
     """Run preprocessor on scenario arguments.
 
@@ -186,15 +184,17 @@ def preprocess(
 
     scenario_cls = scenario.Scenario.get(name)
     try:
-        hints: dict[str, t.Any] = t.get_type_hints(scenario_cls.run,
-                                                   include_extras=True)
+        hints: dict[str, t.Any] = t.get_type_hints(
+            scenario_cls.run, include_extras=True
+        )
     except Exception as e:
         LOG.debug(
             f"Cannot resolve type hints for {scenario_cls.__name__}.run(): {e}"
         )
         hints = {}
-    preprocessors = collect_scenario_args_preprocessors(scenario_cls,
-                                                        hints=hints)
+    preprocessors = collect_scenario_args_preprocessors(
+        scenario_cls, hints=hints
+    )
 
     processed_args = copy.deepcopy(args)
 
@@ -209,8 +209,12 @@ def preprocess(
         if rtype not in resource_types:
             resource_cls = ResourceType.get(rtype)
             try:
-                if "output_type" not in inspect.signature(
-                        resource_cls.pre_process).parameters:
+                if (
+                    "output_type"
+                    not in inspect.signature(
+                        resource_cls.pre_process
+                    ).parameters
+                ):
                     legacy_types.add(rtype)
                     LOG.warning(
                         f"Resource type '{rtype}' uses the deprecated legacy "
@@ -220,15 +224,15 @@ def preprocess(
 
                 # Legacy resource type plugin may or may not override parent
                 #   `__init__`, so we need to be careful here and recheck
-                if "scenario_cls" in inspect.signature(
-                        resource_cls.__init__).parameters:
+                if (
+                    "scenario_cls"
+                    in inspect.signature(resource_cls.__init__).parameters
+                ):
                     resource_types[rtype] = resource_cls(
                         context=context, cache=cache, scenario_cls=scenario_cls
                     )
                 else:
-                    resource_types[rtype] = (
-                        resource_cls(context, cache)  # type: ignore[call-arg]
-                    )
+                    resource_types[rtype] = resource_cls(context, cache)  # type: ignore[call-arg]
             except Exception:
                 raise exceptions.RallyException(
                     f"Failed to initialize '{rtype}' resource type."
@@ -261,8 +265,10 @@ def _compose_jsonschema(resource_cls: type[ResourceType]) -> dict[str, t.Any]:
     try:
         hints = t.get_type_hints(resource_cls.pre_process, include_extras=True)
     except Exception as e:
-        msg = (f"Resource type '{resource_cls.get_name()}' has an "
-               f"unresolvable pre_process() type annotation: {e}")
+        msg = (
+            f"Resource type '{resource_cls.get_name()}' has an "
+            f"unresolvable pre_process() type annotation: {e}"
+        )
         if CONF.strict_type_annotations:
             raise exceptions.InvalidScenarioArgument(msg)
         LOG.warning(msg)
@@ -344,7 +350,7 @@ class ResourceType(plugin.Plugin, metaclass=abc.ABCMeta):
 def obj_from_name(
     resource_config: dict[str, t.Any],
     resources: t.Iterable[t.Any],
-    typename: str
+    typename: str,
 ) -> t.Any:
     """Return the resource whose name matches the pattern.
 
@@ -362,50 +368,61 @@ def obj_from_name(
     """
     if "name" in resource_config:
         # In a case of pattern string exactly matches resource name
-        matching_exact = [resource for resource in resources
-                          if resource.name == resource_config["name"]]
+        matching_exact = [
+            resource
+            for resource in resources
+            if resource.name == resource_config["name"]
+        ]
         if len(matching_exact) == 1:
             return matching_exact[0]
         elif len(matching_exact) > 1:
             raise exceptions.InvalidScenarioArgument(
                 "{typename} with name '{pattern}' "
                 "is ambiguous, possible matches "
-                "by id: {ids}".format(typename=typename.title(),
-                                      pattern=resource_config["name"],
-                                      ids=", ".join(map(
-                                                    operator.attrgetter("id"),
-                                                    matching_exact))))
+                "by id: {ids}".format(
+                    typename=typename.title(),
+                    pattern=resource_config["name"],
+                    ids=", ".join(
+                        map(operator.attrgetter("id"), matching_exact)
+                    ),
+                )
+            )
         # Else look up as regex
         patternstr = resource_config["name"]
     elif "regex" in resource_config:
         patternstr = resource_config["regex"]
     else:
         raise exceptions.InvalidScenarioArgument(
-            "{typename} 'id', 'name', or 'regex' not found "
-            "in '{resource_config}' ".format(typename=typename.title(),
-                                             resource_config=resource_config))
+            f"{typename.title()} 'id', 'name', or 'regex' not found "
+            f"in '{resource_config}' "
+        )
 
     pattern = re.compile(patternstr)
-    matching = [resource for resource in resources
-                if re.search(pattern, resource.name or "")]
+    matching = [
+        resource
+        for resource in resources
+        if re.search(pattern, resource.name or "")
+    ]
     if not matching:
         raise exceptions.InvalidScenarioArgument(
-            "{typename} with pattern '{pattern}' not found".format(
-                typename=typename.title(), pattern=pattern.pattern))
+            f"{typename.title()} with pattern '{pattern.pattern}' not found"
+        )
     elif len(matching) > 1:
         raise exceptions.InvalidScenarioArgument(
             "{typename} with name '{pattern}' is ambiguous, possible matches "
-            "by id: {ids}".format(typename=typename.title(),
-                                  pattern=pattern.pattern,
-                                  ids=", ".join(map(operator.attrgetter("id"),
-                                                    matching))))
+            "by id: {ids}".format(
+                typename=typename.title(),
+                pattern=pattern.pattern,
+                ids=", ".join(map(operator.attrgetter("id"), matching)),
+            )
+        )
     return matching[0]
 
 
 def obj_from_id(
     resource_config: dict[str, t.Any],
     resources: t.Iterable[t.Any],
-    typename: str
+    typename: str,
 ) -> t.Any:
     """Return the resource whose name matches the id.
 
@@ -418,25 +435,30 @@ def obj_from_id(
     :returns: resource object mapped to `id`
     """
     if "id" in resource_config:
-        matching = [resource for resource in resources
-                    if resource.id == resource_config["id"]]
+        matching = [
+            resource
+            for resource in resources
+            if resource.id == resource_config["id"]
+        ]
         if len(matching) == 1:
             return matching[0]
         else:
             raise exceptions.InvalidScenarioArgument(
                 "{typename} with id '{id}' not found".format(
-                    typename=typename.title(), id=resource_config["id"]))
+                    typename=typename.title(), id=resource_config["id"]
+                )
+            )
     else:
         raise exceptions.InvalidScenarioArgument(
-            "{typename} 'id' not found in '{resource_config}'".format(
-                typename=typename.title(), resource_config=resource_config))
+            f"{typename.title()} 'id' not found in '{resource_config}'"
+        )
 
 
 def _id_from_name(
     resource_config: dict[str, t.Any],
     resources: t.Iterable[t.Any],
     typename: str,
-    id_attr: str = "id"
+    id_attr: str = "id",
 ) -> t.Any:
     """Return the id of the resource whose name matches the pattern.
 
@@ -454,18 +476,19 @@ def _id_from_name(
     :returns: resource id uniquely mapped to `name` or `regex`
     """
     try:
-        return getattr(obj_from_name(resource_config, resources, typename),
-                       id_attr)
+        return getattr(
+            obj_from_name(resource_config, resources, typename), id_attr
+        )
     except AttributeError:
         raise exceptions.RallyException(
-            "There is no attribute {attr} in the object {type}".format(
-                attr=id_attr, type=typename))
+            f"There is no attribute {id_attr} in the object {typename}"
+        )
 
 
 def _name_from_id(
     resource_config: dict[str, t.Any],
     resources: t.Iterable[t.Any],
-    typename: str
+    typename: str,
 ) -> str:
     """Return the name of the resource which has the id.
 

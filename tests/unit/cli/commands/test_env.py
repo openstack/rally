@@ -75,11 +75,11 @@ class EnvCommandsTestCase(test.CLITestCase):
         # env creation provisions platforms -- stub that one external step
         mock_env_manager_create.return_value.data = {"test": "test"}
         with tempfile.NamedTemporaryFile("w", suffix=".yml") as tf:
-            tf.write("{\"a\": 1}")
+            tf.write('{"a": 1}')
             tf.flush()
             result = self.invoke([
                 "env", "create", "--name", "n", "--description", "d",
-                "--extras", "{\"extra\": 123}", "--spec", tf.name,
+                "--extras", '{"extra": 123}', "--spec", tf.name,
                 "--json", "--no-use"])
 
         self.assertEqual(0, result.exit_code, result.output)
@@ -261,12 +261,12 @@ class EnvCommandsTestCase(test.CLITestCase):
     @mock.patch("rally.cli.commands.env.print")
     def test__show_to_json(self, mock_print):
         env._show("data", to_json=True, only_spec=False)
-        mock_print.assert_called_once_with("\"data\"")
+        mock_print.assert_called_once_with('"data"')
 
     @mock.patch("rally.cli.commands.env.print")
     def test__show_only_spec(self, mock_print):
         env._show({"spec": "data"}, to_json=False, only_spec=True)
-        mock_print.assert_called_once_with("\"data\"")
+        mock_print.assert_called_once_with('"data"')
 
     def test_show(self):
         env_ = self._create_env()
@@ -313,7 +313,7 @@ class EnvCommandsTestCase(test.CLITestCase):
             "| platform | info         | error      |\n"
             "+----------+--------------+------------+\n"
             "| p1       | {            |            |\n"
-            "|          |   \"a\": false |            |\n"
+            '|          |   "a": false |            |\n'
             "|          | }            |            |\n"
             "| p2       | {}           | some error |\n"
             "+----------+--------------+------------+", result.output)

@@ -29,7 +29,7 @@ LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
 
 
-class TaskConfig(object):
+class TaskConfig:
     """Version-aware wrapper around task config."""
 
     def __init__(self, config):
@@ -59,9 +59,11 @@ class TaskConfig(object):
                 processors[version] = method
 
         if self.version not in processors:
-            msg = ("Task configuration version %s is not supported. "
-                   "Supported versions: %s" %
-                   (self.version, ", ".join(processors)))
+            msg = (
+                "Task configuration version %s is not supported. "
+                "Supported versions: %s"
+                % (self.version, ", ".join(processors))
+            )
             raise exceptions.InvalidTaskException(msg)
 
         config = processors[self.version](config)
@@ -86,8 +88,9 @@ class TaskConfig(object):
             for position, wconf in enumerate(sconf["workloads"]):
                 # fill all missed properties of a Workload
 
-                wconf["name"], wconf["args"] = list(
-                    wconf["scenario"].items())[0]
+                wconf["name"], wconf["args"] = list(wconf["scenario"].items())[
+                    0
+                ]
                 del wconf["scenario"]
 
                 wconf["position"] = position
@@ -95,9 +98,12 @@ class TaskConfig(object):
                 if not wconf.get("description", ""):
                     try:
                         wconf["description"] = scenario.Scenario.get(
-                            wconf["name"]).get_info()["title"]
-                    except (exceptions.PluginNotFound,
-                            exceptions.MultiplePluginsFound):
+                            wconf["name"]
+                        ).get_info()["title"]
+                    except (
+                        exceptions.PluginNotFound,
+                        exceptions.MultiplePluginsFound,
+                    ):
                         # let's fail an issue with loading plugin at a
                         # validation step
                         pass
@@ -141,10 +147,14 @@ class TaskConfig(object):
 
                 w["scenario"] = {w.pop("name"): w.pop("args")}
                 w["runner"] = {w.pop("runner_type"): w["runner"]}
-                w["hooks"] = [{"description": h.get("description", ""),
-                               "action": dict([h["action"]]),
-                               "trigger": dict([h["trigger"]])}
-                              for h in w["hooks"]]
+                w["hooks"] = [
+                    {
+                        "description": h.get("description", ""),
+                        "action": dict([h["action"]]),
+                        "trigger": dict([h["trigger"]]),
+                    }
+                    for h in w["hooks"]
+                ]
             task["subtasks"].append(subtask)
         return task
 
@@ -158,23 +168,21 @@ class TaskConfig(object):
                     "type": "object",
                     "properties": {
                         "args": {"type": "object"},
-                        "description": {
-                            "type": "string"
-                        },
+                        "description": {"type": "string"},
                         "runner": {
                             "type": "object",
                             "properties": {"type": {"type": "string"}},
-                            "required": ["type"]
+                            "required": ["type"],
                         },
                         "context": {"type": "object"},
                         "sla": {"type": "object"},
                         "hooks": {
                             "type": "array",
                             "items": {"$ref": "#/definitions/hook"},
-                        }
+                        },
                     },
-                    "additionalProperties": False
-                }
+                    "additionalProperties": False,
+                },
             }
         },
         "definitions": {
@@ -192,12 +200,12 @@ class TaskConfig(object):
                         },
                         "required": ["name", "args"],
                         "additionalProperties": False,
-                    }
+                    },
                 },
                 "required": ["name", "args", "trigger"],
                 "additionalProperties": False,
             }
-        }
+        },
     }
 
     def _process_1(self, config):
@@ -216,36 +224,41 @@ class TaskConfig(object):
                 if "runner" in v2_workload:
                     runner_type = v2_workload["runner"].pop("type")
                     v2_workload["runner"] = {
-                        runner_type: v2_workload["runner"]}
+                        runner_type: v2_workload["runner"]
+                    }
                 if "hooks" in v2_workload:
                     hooks = v2_workload["hooks"]
                     v2_workload["hooks"] = []
                     for hook_cfg in hooks:
                         trigger_cfg = hook_cfg["trigger"]
                         v2_workload["hooks"].append(
-                            {"description": hook_cfg.get("description"),
-                             "action": {
-                                 hook_cfg["name"]: hook_cfg["args"]},
-                             "trigger": {
-                                 trigger_cfg["name"]: trigger_cfg["args"]}}
+                            {
+                                "description": hook_cfg.get("description"),
+                                "action": {hook_cfg["name"]: hook_cfg["args"]},
+                                "trigger": {
+                                    trigger_cfg["name"]: trigger_cfg["args"]
+                                },
+                            }
                         )
                 workloads.append(v2_workload)
-            subtasks.append({
-                "title": name,
-                "workloads": workloads,
-            })
+            subtasks.append(
+                {
+                    "title": name,
+                    "workloads": workloads,
+                }
+            )
 
-        return {"title": "Task (adopted from task format v1)",
-                "subtasks": subtasks}
+        return {
+            "title": "Task (adopted from task format v1)",
+            "subtasks": subtasks,
+        }
 
     CONFIG_SCHEMA_V2_SINGLE_ENTITY = {
         "type": "object",
         "description": "An object with a single property.",
         "minProperties": 1,
         "maxProperties": 1,
-        "patternProperties": {
-            ".*": {"type": "object"}
-        }
+        "patternProperties": {".*": {"type": "object"}},
     }
 
     CONFIG_SCHEMA_V2_HOOK = {
@@ -255,13 +268,13 @@ class TaskConfig(object):
                 "type": "object",
                 "minProperties": 1,
                 "maxProperties": 1,
-                "patternProperties": {".*": {}}
+                "patternProperties": {".*": {}},
             },
             "trigger": CONFIG_SCHEMA_V2_SINGLE_ENTITY,
             "description": {"type": "string"},
         },
         "required": ["action", "trigger"],
-        "additionalProperties": False
+        "additionalProperties": False,
     }
 
     CONFIG_SCHEMA_V2_SUBTASK_SIMPLE = {
@@ -273,7 +286,7 @@ class TaskConfig(object):
             "description": {"type": "string"},
             "tags": {
                 "type": "array",
-                "items": {"type": "string", "maxLength": 255}
+                "items": {"type": "string", "maxLength": 255},
             },
             "scenario": CONFIG_SCHEMA_V2_SINGLE_ENTITY,
             "runner": CONFIG_SCHEMA_V2_SINGLE_ENTITY,
@@ -282,7 +295,7 @@ class TaskConfig(object):
                 "type": "array",
                 "items": CONFIG_SCHEMA_V2_HOOK,
             },
-            "contexts": {"type": "object"}
+            "contexts": {"type": "object"},
         },
         "additionalProperties": False,
         "required": ["title", "scenario"],
@@ -296,7 +309,7 @@ class TaskConfig(object):
             "description": {"type": "string"},
             "tags": {
                 "type": "array",
-                "items": {"type": "string", "maxLength": 255}
+                "items": {"type": "string", "maxLength": 255},
             },
             "run_in_parallel": {"type": "boolean"},
             "workloads": {
@@ -313,19 +326,24 @@ class TaskConfig(object):
                             "type": "array",
                             "items": CONFIG_SCHEMA_V2_HOOK,
                         },
-                        "contexts": {"type": "object"}
+                        "contexts": {"type": "object"},
                     },
                     "additionalProperties": False,
-                    "required": ["scenario"]
-                }
-            }
+                    "required": ["scenario"],
+                },
+            },
         },
         "additionalProperties": False,
-        "required": ["title", "workloads"]
+        "required": ["title", "workloads"],
     }
 
     V2_TOP_ALLOWED_KEYS = [
-        "title", "version", "description", "tags", "subtasks"]
+        "title",
+        "version",
+        "description",
+        "tags",
+        "subtasks",
+    ]
     V2_TOP_REQUIRED_KEYS = ["title", "version", "subtasks"]
 
     @staticmethod
@@ -333,14 +351,15 @@ class TaskConfig(object):
         identifier = " of %s" % identifier if identifier else ""
         if not isinstance(title, str):
             raise exceptions.InvalidTaskException(
-                "Title%s should be a string, but '%s' is found." %
-                (identifier, type(title).__name__))
+                "Title%s should be a string, but '%s' is found."
+                % (identifier, type(title).__name__)
+            )
 
         if len(title) > 255:
             raise exceptions.InvalidTaskException(
                 "Title%s should not be longer then 254 char. Use 'description'"
-                " field for longer text."
-                % identifier)
+                " field for longer text." % identifier
+            )
 
     @staticmethod
     def _check_tags(tags, identifier=None):
@@ -348,19 +367,21 @@ class TaskConfig(object):
         if not isinstance(tags, list):
             raise exceptions.InvalidTaskException(
                 "Tags%s should be an array(list) of strings, but '%s' is "
-                "found."
-                % (identifier, type(tags).__name__))
+                "found." % (identifier, type(tags).__name__)
+            )
 
         for tag in tags:
             if not isinstance(tag, str):
                 raise exceptions.InvalidTaskException(
-                    "Tag '%s'%s should be a string, but '%s' is found." %
-                    (tag, identifier, type(tag).__name__))
+                    "Tag '%s'%s should be a string, but '%s' is found."
+                    % (tag, identifier, type(tag).__name__)
+                )
 
             if len(tag) > 255:
                 raise exceptions.InvalidTaskException(
                     "Tag '%s'%s should not be longer then 254 char."
-                    % (tag, identifier))
+                    % (tag, identifier)
+                )
 
     def _process_2(self, config):
         # task format v2 is quite complex. To increase UX we need to
@@ -371,8 +392,9 @@ class TaskConfig(object):
         if missed:
             if len(missed) > 1:
                 raise exceptions.InvalidTaskException(
-                    "'%s' are required properties, but they are missed." %
-                    "', '".join(sorted(missed)))
+                    "'%s' are required properties, but they are missed."
+                    % "', '".join(sorted(missed))
+                )
 
             raise exceptions.InvalidTaskException(
                 "'%s' is a required property, but it is missed." % missed.pop()
@@ -381,9 +403,12 @@ class TaskConfig(object):
         redundant = top_keys - set(self.V2_TOP_ALLOWED_KEYS)
         if redundant:
             raise exceptions.InvalidTaskException(
-                "Additional properties are not allowed ('%s' %s unexpected)." %
-                ("', '".join(sorted(redundant)),
-                 "were" if len(redundant) > 1 else "was"))
+                "Additional properties are not allowed ('%s' %s unexpected)."
+                % (
+                    "', '".join(sorted(redundant)),
+                    "were" if len(redundant) > 1 else "was",
+                )
+            )
 
         self._check_title(config["title"])
         self._check_tags(config.get("tags", []))
@@ -391,25 +416,31 @@ class TaskConfig(object):
         if not isinstance(config["subtasks"], list):
             raise exceptions.InvalidTaskException(
                 "Property 'subtasks' should be an array(list), but '%s' is "
-                "found." % type(config["subtasks"]).__name__)
+                "found." % type(config["subtasks"]).__name__
+            )
 
         for i, subtask in enumerate(config["subtasks"]):
             try:
                 if "workloads" not in subtask:
                     jsonschema.validate(
-                        subtask, self.CONFIG_SCHEMA_V2_SUBTASK_SIMPLE)
+                        subtask, self.CONFIG_SCHEMA_V2_SUBTASK_SIMPLE
+                    )
                 else:
                     jsonschema.validate(
-                        subtask, self.CONFIG_SCHEMA_V2_SUBTASK_COMPLEX)
+                        subtask, self.CONFIG_SCHEMA_V2_SUBTASK_COMPLEX
+                    )
             except jsonschema.ValidationError as e:
                 raise exceptions.InvalidTaskException(
-                    "Subtask #%s. %s" % (i + 1, e))
+                    "Subtask #%s. %s" % (i + 1, e)
+                )
 
             if "workloads" not in subtask:
                 workload = copy.deepcopy(subtask)
-                subtask = {"title": workload.pop("title"),
-                           "description": workload.pop("description", ""),
-                           "tags": workload.pop("tags", []),
-                           "workloads": [workload]}
+                subtask = {
+                    "title": workload.pop("title"),
+                    "description": workload.pop("description", ""),
+                    "tags": workload.pop("tags", []),
+                    "workloads": [workload],
+                }
                 config["subtasks"][i] = subtask
         return config

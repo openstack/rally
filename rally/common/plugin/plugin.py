@@ -30,6 +30,7 @@ if t.TYPE_CHECKING:  # pragma: no cover
 
 class DeprecationInfo(t.TypedDict):
     """Structure for plugin deprecation information."""
+
     reason: str
     rally_version: str
 
@@ -47,21 +48,25 @@ def base() -> t.Callable[[type[P]], type[P]]:
 
     Plugin bases by default initialize _default_meta
     """
+
     def wrapper(cls: type[P]) -> type[P]:
         if not issubclass(cls, Plugin):
             raise exceptions.RallyException(
-                "Plugin's Base can be only a subclass of Plugin class.")
+                "Plugin's Base can be only a subclass of Plugin class."
+            )
 
         parent = cls._get_base()
         if parent != Plugin:
             raise exceptions.RallyException(
                 "'%(plugin_cls)s' can not be marked as plugin base, since it "
                 "inherits from '%(parent)s' which is also plugin base."
-                % {"plugin_cls": cls.__name__, "parent": parent.__name__})
+                % {"plugin_cls": cls.__name__, "parent": parent.__name__}
+            )
 
         cls.base_ref = cls
         cls._default_meta_init(True)
         return cls
+
     return wrapper
 
 
@@ -82,25 +87,30 @@ def configure(
         plugin_id = "%s.%s" % (plugin.__module__, plugin.__name__)
         if not name:
             raise ValueError(
-                f"The name of the plugin {plugin_id} cannot be empty.")
+                f"The name of the plugin {plugin_id} cannot be empty."
+            )
         if "@" in name:
             raise ValueError(
-                f"The name of the plugin {plugin_id} cannot contain @ symbol")
+                f"The name of the plugin {plugin_id} cannot contain @ symbol"
+            )
 
         plugin._meta_init()
         try:
             existing_plugin = plugin._get_base().get(
-                name=name, platform=platform, allow_hidden=True)
+                name=name, platform=platform, allow_hidden=True
+            )
         except exceptions.PluginNotFound:
             plugin._meta_set("name", name)
             plugin._meta_set("platform", platform)
         else:
             plugin.unregister()
             raise exceptions.PluginWithSuchNameExists(
-                name=name, platform=existing_plugin.get_platform(),
+                name=name,
+                platform=existing_plugin.get_platform(),
                 existing_path=(
-                    sys.modules[existing_plugin.__module__].__file__),
-                new_path=sys.modules[plugin.__module__].__file__
+                    sys.modules[existing_plugin.__module__].__file__
+                ),
+                new_path=sys.modules[plugin.__module__].__file__,
             )
         plugin._meta_set("hidden", hidden)
         return plugin
@@ -132,11 +142,11 @@ def deprecated(
     :param reason: Message that describes reason of plugin deprecation
     :param rally_version: Deprecated since this version of Rally
     """
+
     def decorator(plugin: type[P]) -> type[P]:
-        plugin._meta_set("deprecated", dict(
-            reason=reason,
-            rally_version=rally_version
-        ))
+        plugin._meta_set(
+            "deprecated", dict(reason=reason, rally_version=rally_version)
+        )
         return plugin
 
     return decorator
@@ -161,7 +171,7 @@ class Plugin(meta.MetaMixin, info.InfoMixin):
         cls: type[P],
         name: str,
         platform: str | None = None,
-        allow_hidden: bool = False
+        allow_hidden: bool = False,
     ) -> type[P]:
         """Return plugin by its name for specified platform.
 
@@ -173,14 +183,16 @@ class Plugin(meta.MetaMixin, info.InfoMixin):
         if "@" in name:
             name, platform = name.split("@", 1)
 
-        results = cls.get_all(name=name, platform=platform,
-                              allow_hidden=allow_hidden)
+        results = cls.get_all(
+            name=name, platform=platform, allow_hidden=allow_hidden
+        )
 
         if not results:
             base = cls._get_base()
             base = "" if base == Plugin else " %s" % base.__name__
             raise exceptions.PluginNotFound(
-                name=name, platform=platform or "any", base=base)
+                name=name, platform=platform or "any", base=base
+            )
 
         if len(results) == 1:
             return results[0]
@@ -192,8 +204,8 @@ class Plugin(meta.MetaMixin, info.InfoMixin):
                 return default[0]
 
         raise exceptions.MultiplePluginsFound(
-            name=name,
-            plugins=", ".join(p.get_fullname() for p in results))
+            name=name, plugins=", ".join(p.get_fullname() for p in results)
+        )
 
     @classmethod
     def get_all(
@@ -233,7 +245,7 @@ class Plugin(meta.MetaMixin, info.InfoMixin):
 
     @classmethod
     def get_platform(cls) -> str:
-        """"Return plugin's platform name."""
+        """Return plugin's platform name."""
         return cls._meta_get("platform")
 
     @classmethod

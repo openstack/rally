@@ -46,15 +46,16 @@ class Field:
 
         size: typing.Annotated[int, Field(ge=1, le=10)] = 1
     """
+
     _: dataclasses.KW_ONLY
-    ge: float | None = None          # >=  -> minimum
-    gt: float | None = None          # >   -> exclusiveMinimum
-    le: float | None = None          # <=  -> maximum
-    lt: float | None = None          # <   -> exclusiveMaximum
-    min_length: int | None = None    # -> minLength
-    max_length: int | None = None    # -> maxLength
-    pattern: str | None = None       # -> pattern
-    description: str | None = None    # -> description
+    ge: float | None = None  # >=  -> minimum
+    gt: float | None = None  # >   -> exclusiveMinimum
+    le: float | None = None  # <=  -> maximum
+    lt: float | None = None  # <   -> exclusiveMaximum
+    min_length: int | None = None  # -> minLength
+    max_length: int | None = None  # -> maxLength
+    pattern: str | None = None  # -> pattern
+    description: str | None = None  # -> description
 
     # field attribute -> jsonschema keyword
     _SCHEMA_KEYS: t.ClassVar[dict[str, str]] = {
@@ -65,14 +66,16 @@ class Field:
         "min_length": "minLength",
         "max_length": "maxLength",
         "pattern": "pattern",
-        "description": "description"
+        "description": "description",
     }
 
     def as_schema(self) -> dict[str, t.Any]:
         """The jsonschema keywords for the constraints that are set."""
-        return {key: getattr(self, attr)
-                for attr, key in self._SCHEMA_KEYS.items()
-                if getattr(self, attr) is not None}
+        return {
+            key: getattr(self, attr)
+            for attr, key in self._SCHEMA_KEYS.items()
+            if getattr(self, attr) is not None
+        }
 
 
 @dataclasses.dataclass(frozen=True)
@@ -91,6 +94,7 @@ class ArgsOf:
     ``ignore`` drops names; extra keys are allowed only if the callable takes
     ``**kwargs``.
     """
+
     target: t.Callable[..., t.Any]
     ignore: t.Sequence[str] = ()
 
@@ -106,8 +110,11 @@ class ArgsOf:
 def _make_nullable(schema: dict[str, t.Any]) -> dict[str, t.Any]:
     """Allow ``None`` in a property schema (for ``Optional`` / ``| None``)."""
     if "enum" in schema:
-        return (schema if None in schema["enum"]
-                else {**schema, "enum": [*schema["enum"], None]})
+        return (
+            schema
+            if None in schema["enum"]
+            else {**schema, "enum": [*schema["enum"], None]}
+        )
     if "type" in schema:
         types_ = schema["type"]
         if isinstance(types_, list):
@@ -200,8 +207,9 @@ def _typeddict_object_schema(td: type) -> dict[str, t.Any]:
             is_required = False
             ftype = t.get_args(ftype)[0]
         fields.append((field, ftype, is_required))
-    return _object_schema(fields,
-                          additional=not getattr(td, "__closed__", False))
+    return _object_schema(
+        fields, additional=not getattr(td, "__closed__", False)
+    )
 
 
 def hint_to_schema(hint: t.Any) -> dict[str, t.Any]:
@@ -229,8 +237,9 @@ def hint_to_schema(hint: t.Any) -> dict[str, t.Any]:
             return {}  # an unconstrained (``Any``) member -> whole union open
         if len(parts) == 1:
             schema = parts[0]
-        elif all(set(m) == {"type"} and isinstance(m["type"], str)
-                 for m in parts):
+        elif all(
+            set(m) == {"type"} and isinstance(m["type"], str) for m in parts
+        ):
             schema = {"type": [m["type"] for m in parts]}
         else:
             schema = {"anyOf": parts}
@@ -240,11 +249,13 @@ def hint_to_schema(hint: t.Any) -> dict[str, t.Any]:
     # ``ArgsOf`` replaces the base type's schema (the ``dict`` is only there
     # for linters); a ``Field`` then merges its constraints on top.
     if hasattr(hint, "__metadata__"):
-        args_of = next((m for m in hint.__metadata__
-                        if isinstance(m, ArgsOf)), None)
+        args_of = next(
+            (m for m in hint.__metadata__ if isinstance(m, ArgsOf)), None
+        )
         if args_of is not None:
             schema, _signature, _hints = arguments_schema(
-                args_of.target, ignore=args_of.ignore)
+                args_of.target, ignore=args_of.ignore
+            )
         else:
             schema = hint_to_schema(t.get_args(hint)[0])
         for meta in hint.__metadata__:
@@ -264,8 +275,12 @@ def hint_to_schema(hint: t.Any) -> dict[str, t.Any]:
         return _typeddict_object_schema(hint)
 
     # plain scalars (bool before int: bool is a subclass of int) / containers
-    for tp, json_type in ((bool, "boolean"), (int, "integer"),
-                          (float, "number"), (str, "string")):
+    for tp, json_type in (
+        (bool, "boolean"),
+        (int, "integer"),
+        (float, "number"),
+        (str, "string"),
+    ):
         if hint is tp:
             return {"type": json_type}
     container = origin or hint

@@ -82,4 +82,4 @@ class BrokerTestCase(test.TestCase):
 
         consumer_count = 2
         broker.run(publish, consume, consumer_count)
-        self.assertEqual(set([1, 2, 3]), consumed)
+        self.assertEqual({1, 2, 3}, consumed)

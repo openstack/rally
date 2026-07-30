@@ -134,7 +134,7 @@ class RallyContaxtAdapterTestCase(test.TestCase):
         self.assertEqual(1, logger.warning.call_count)
         args = logger.warning.call_args_list[0]
         self.assertTrue(args[0][0].startswith("[radapter.exception(Exception("
-                                              "\"!2!\"))] Do not transmit"))
+                                              '"!2!"))] Do not transmit'))
 
     @mock.patch("rally.common.logging.getLogger")
     def test_error(self, mock_get_logger):
@@ -150,8 +150,8 @@ class RallyContaxtAdapterTestCase(test.TestCase):
         logger = mock_get_logger.return_value
         self.assertEqual(1, logger.warning.call_count)
         args = logger.warning.call_args_list[0]
-        self.assertTrue(args[0][0].startswith("[radapter.error(\"foo\", "
-                                              "\"bar\")] Do not use *args "))
+        self.assertTrue(args[0][0].startswith('[radapter.error("foo", '
+                                              '"bar")] Do not use *args '))
 
 
 class ExceptionLoggerTestCase(test.TestCase):
@@ -219,7 +219,7 @@ class CatcherHandlerTestCase(test.TestCase):
 
 class LogCatcherUnitTestCase(test.TestCase):
     def setUp(self):
-        super(LogCatcherUnitTestCase, self).setUp()
+        super().setUp()
         patcher = mock.patch("rally.common.logging.CatcherHandler")
         self.catcher_handler = patcher.start()
         self.catcher_handler.return_value.buffer = [
@@ -286,7 +286,7 @@ class LogTestCase(test.TestCase):
         mock_log = mock.MagicMock()
         msg = "test %(a)s %(b)s"
 
-        class TaskLog(object):
+        class TaskLog:
 
             def __init__(self):
                 self.task = {"uuid": "some_uuid"}
@@ -320,8 +320,8 @@ class LogTestCase(test.TestCase):
     def test_log_deprecated_args(self):
         mock_log = mock.MagicMock()
 
-        @logging.log_deprecated_args("ABC42", "0.0.1", ("z",),
-                                           mock_log, once=True)
+        @logging.log_deprecated_args(
+            "ABC42", "0.0.1", ("z",), mock_log, once=True)
         def some_method(x, y, z):
             return x + y + z
 
@@ -334,8 +334,8 @@ class LogTestCase(test.TestCase):
         self.assertEqual(7, some_method(2, 2, z=3))
         self.assertFalse(mock_log.called)
 
-        @logging.log_deprecated_args("CBA42", "0.0.1", ("z",),
-                                           mock_log, once=False)
+        @logging.log_deprecated_args(
+            "CBA42", "0.0.1", ("z",), mock_log, once=False)
         def some_method(x, y, z):
             return x + y + z
 

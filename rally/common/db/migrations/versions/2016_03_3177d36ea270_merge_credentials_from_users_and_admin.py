@@ -47,27 +47,30 @@ deployments_helper = sa.Table(
 def upgrade() -> None:
     with op.batch_alter_table("deployments", schema=None) as batch_op:
         batch_op.add_column(
-            sa.Column("credentials", sa.PickleType(), nullable=True))
+            sa.Column("credentials", sa.PickleType(), nullable=True)
+        )
 
     connection = op.get_bind()
     for deployment in connection.execute(deployments_helper.select()):
         creds = [
-            ["openstack",
-             {
-                 "admin": deployment.admin,
-                 "users": deployment.users
-             }]
+            [
+                "openstack",
+                {"admin": deployment.admin, "users": deployment.users},
+            ]
         ]
         connection.execute(
-            deployments_helper.update().where(
-                deployments_helper.c.id == deployment.id).values(
-                credentials=creds))
+            deployments_helper.update()
+            .where(deployments_helper.c.id == deployment.id)
+            .values(credentials=creds)
+        )
 
     with op.batch_alter_table("deployments", schema=None) as batch_op:
-        batch_op.alter_column("credentials",
-                              existing_type=sa.PickleType,
-                              existing_nullable=True,
-                              nullable=False)
+        batch_op.alter_column(
+            "credentials",
+            existing_type=sa.PickleType,
+            existing_nullable=True,
+            nullable=False,
+        )
         batch_op.drop_column("admin")
         batch_op.drop_column("users")
 

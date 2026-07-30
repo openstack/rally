@@ -37,11 +37,11 @@ class TestrContext(context.VerifierContext):
     """Context to transform 'run_args' into CLI arguments for testr."""
 
     def __init__(self, ctx):
-        super(TestrContext, self).__init__(ctx)
+        super().__init__(ctx)
         self._tmp_files = []
 
     def setup(self):
-        super(TestrContext, self).setup()
+        super().setup()
         use_testr = getattr(self.verifier.manager, "_use_testr", True)
 
         if use_testr:
@@ -50,7 +50,8 @@ class TestrContext(context.VerifierContext):
             base_cmd = "stestr"
         self.context["testr_cmd"] = [base_cmd, "run", "--subunit"]
         run_args = self.verifier.manager.prepare_run_args(
-            self.context.get("run_args", {}))
+            self.context.get("run_args", {})
+        )
 
         concurrency = run_args.get("concurrency", 0)
         if concurrency == 0 or concurrency > 1:
@@ -61,7 +62,8 @@ class TestrContext(context.VerifierContext):
                 self.context["testr_cmd"].append("--serial")
             else:
                 self.context["testr_cmd"].extend(
-                    ["--concurrency", str(concurrency)])
+                    ["--concurrency", str(concurrency)]
+                )
 
         load_list = self.context.get("load_list")
         skip_list = self.context.get("skip_list")
@@ -91,9 +93,10 @@ class TestrLauncher(manager.VerifierManager):
     """Testr/sTestr wrapper."""
 
     def __init__(self, *args, **kwargs):
-        super(TestrLauncher, self).__init__(*args, **kwargs)
-        self._use_testr = os.path.exists(os.path.join(
-            self.repo_dir, ".testr.conf"))
+        super().__init__(*args, **kwargs)
+        self._use_testr = os.path.exists(
+            os.path.join(self.repo_dir, ".testr.conf")
+        )
 
     @property
     def run_environ(self):
@@ -111,15 +114,16 @@ class TestrLauncher(manager.VerifierManager):
             else:
                 base_cmd = "stestr"
             try:
-                utils.check_output([base_cmd, "init"], cwd=self.repo_dir,
-                                   env=self.environ)
+                utils.check_output(
+                    [base_cmd, "init"], cwd=self.repo_dir, env=self.environ
+                )
             except (subprocess.CalledProcessError, OSError):
                 if os.path.exists(test_repository_dir):
                     shutil.rmtree(test_repository_dir)
                 raise exceptions.RallyException("Failed to initialize testr.")
 
     def install(self):
-        super(TestrLauncher, self).install()
+        super().install()
         self._init_testr()
 
     def list_tests(self, pattern=""):
@@ -128,20 +132,24 @@ class TestrLauncher(manager.VerifierManager):
             cmd = ["testr", "list-tests", pattern]
         else:
             cmd = ["stestr", "list", pattern]
-        output = utils.check_output(cmd,
-                                    cwd=self.repo_dir, env=self.environ,
-                                    debug_output=False)
+        output = utils.check_output(
+            cmd, cwd=self.repo_dir, env=self.environ, debug_output=False
+        )
         return [t for t in output.split("\n") if TEST_NAME_RE.match(t)]
 
     def run(self, context):
         """Run tests."""
         testr_cmd = context["testr_cmd"]
-        LOG.debug("Test(s) started by the command: '%s'."
-                  % " ".join(testr_cmd))
-        stream = subprocess.Popen(testr_cmd, env=self.run_environ,
-                                  cwd=self.repo_dir,
-                                  stdout=subprocess.PIPE,
-                                  stderr=subprocess.STDOUT)
+        LOG.debug(
+            "Test(s) started by the command: '%s'." % " ".join(testr_cmd)
+        )
+        stream = subprocess.Popen(
+            testr_cmd,
+            env=self.run_environ,
+            cwd=self.repo_dir,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
         xfail_list = context.get("xfail_list")
         skip_list = context.get("skip_list")
         results = subunit_v2.parse(
@@ -149,7 +157,7 @@ class TestrLauncher(manager.VerifierManager):
             live=True,
             expected_failures=xfail_list,
             skipped_tests=skip_list,
-            logger_name=self.verifier.name
+            logger_name=self.verifier.name,
         )
         stream.wait()
 

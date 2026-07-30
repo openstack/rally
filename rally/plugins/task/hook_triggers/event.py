@@ -31,17 +31,14 @@ class EventTrigger(hook.HookTrigger):
         "oneOf": [
             {
                 "description": "Triage hook based on specified seconds after "
-                               "start of workload.",
+                "start of workload.",
                 "properties": {
                     "unit": {"enum": ["time"]},
                     "at": {
                         "type": "array",
                         "minItems": 1,
                         "uniqueItems": True,
-                        "items": {
-                            "type": "integer",
-                            "minimum": 0
-                        }
+                        "items": {"type": "integer", "minimum": 0},
                     },
                 },
                 "required": ["unit", "at"],
@@ -58,21 +55,23 @@ class EventTrigger(hook.HookTrigger):
                         "items": {
                             "type": "integer",
                             "minimum": 1,
-                        }
+                        },
                     },
                 },
                 "required": ["unit", "at"],
                 "additionalProperties": False,
             },
-        ]
+        ],
     }
 
     def get_listening_event(self) -> str:
         return self.config["unit"]
 
     def on_event(self, event_type: str, value: t.Any = None) -> bool:
-        if not (event_type == self.get_listening_event()
-                and value in self.config["at"]):
+        if not (
+            event_type == self.get_listening_event()
+            and value in self.config["at"]
+        ):
             # do nothing
             return False
-        return super(EventTrigger, self).on_event(event_type, value)
+        return super().on_event(event_type, value)

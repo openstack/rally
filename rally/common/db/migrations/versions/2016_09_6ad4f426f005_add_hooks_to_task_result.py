@@ -21,6 +21,7 @@ Revises: 08e1515a576c
 Create Date: 2016-09-13 18:11:47.703023
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 
@@ -49,9 +50,10 @@ def upgrade() -> None:
         data: dict = task_result.data
         data["hooks"] = []
         connection.execute(
-            task_results_helper.update().where(
-                task_results_helper.c.id == task_result.id).values(
-                    data=data))
+            task_results_helper.update()
+            .where(task_results_helper.c.id == task_result.id)
+            .values(data=data)
+        )
 
 
 def downgrade() -> None:

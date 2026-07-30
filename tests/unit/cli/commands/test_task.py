@@ -203,7 +203,7 @@ class TaskCommandsTestCase(test.CLITestCase):
         other = os.path.join(os.path.dirname(rally.__file__), os.pardir,
                              "samples/tasks/scenarios/dummy/dummy.json")
         including = self._write(
-            "{%% include \"%s\" %%}" % os.path.basename(other))
+            '{%% include "%s" %%}' % os.path.basename(other))
         # move the including file next to the referenced one
         target = os.path.join(os.path.dirname(other), os.path.basename(
             including))

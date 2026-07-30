@@ -37,7 +37,7 @@ class ConnectionTestCase(test.DBTestCase):
 
 class TasksTestCase(test.DBTestCase):
     def setUp(self):
-        super(TasksTestCase, self).setUp()
+        super().setUp()
         self.env = db.env_create(self.id(), "INIT", "", {}, {}, {}, [])
 
     def _get_task(self, uuid):
@@ -381,7 +381,7 @@ class TasksTestCase(test.DBTestCase):
 
 class SubtaskTestCase(test.DBTestCase):
     def setUp(self):
-        super(SubtaskTestCase, self).setUp()
+        super().setUp()
         self.env = db.env_create(self.id(), "INIT", "", {}, {}, {}, [])
         self.task = db.task_create({"env_uuid": self.env["uuid"]})
 
@@ -401,7 +401,7 @@ class SubtaskTestCase(test.DBTestCase):
 
 class WorkloadTestCase(test.DBTestCase):
     def setUp(self):
-        super(WorkloadTestCase, self).setUp()
+        super().setUp()
         self.env = db.env_create(self.id(), "INIT", "", {}, {}, {}, [])
         self.task = db.task_create({"env_uuid": self.env["uuid"]})
         self.task_uuid = self.task["uuid"]
@@ -556,7 +556,7 @@ class WorkloadTestCase(test.DBTestCase):
 
 class WorkloadDataTestCase(test.DBTestCase):
     def setUp(self):
-        super(WorkloadDataTestCase, self).setUp()
+        super().setUp()
         self.env = db.env_create(self.id(), "INIT", "", {}, {}, {}, [])
         self.task = db.task_create({"env_uuid": self.env["uuid"]})
         self.task_uuid = self.task["uuid"]
@@ -638,8 +638,8 @@ class EnvTestCase(test.DBTestCase):
         for env in all_:
             self.assertIsInstance(env, dict)
 
-        self.assertEqual(set("name %s" % i for i in range(3)),
-                         set(e["name"] for e in db.env_list()))
+        self.assertEqual({"name %s" % i for i in range(3)},
+                         {e["name"] for e in db.env_list()})
 
     def test_env_list_filter_by_status(self):
         db.env_create("name 1", "STATUS42", "descr", {}, {}, {}, [])
@@ -648,8 +648,8 @@ class EnvTestCase(test.DBTestCase):
 
         result = db.env_list("STATUS42")
         self.assertEqual(2, len(result))
-        self.assertEqual(set(["name 1", "name 2"]),
-                         set(r["name"] for r in result))
+        self.assertEqual({"name 1", "name 2"},
+                         {r["name"] for r in result})
         result = db.env_list("STATUS43")
         self.assertEqual(1, len(result))
         self.assertEqual("name 3", result[0]["name"])
@@ -749,7 +749,7 @@ class EnvTestCase(test.DBTestCase):
 class PlatformTestCase(test.DBTestCase):
 
     def setUp(self):
-        super(PlatformTestCase, self).setUp()
+        super().setUp()
         platforms = [
             {
                 "status": "ANY",
@@ -864,7 +864,7 @@ class VerifierTestCase(test.DBTestCase):
 
 class VerificationTestCase(test.DBTestCase):
     def setUp(self):
-        super(VerificationTestCase, self).setUp()
+        super().setUp()
 
         self.verifier = db.verifier_create("a", "b", "c", "d", "e", False)
         self.env = db.env_create(self.id(), "INIT", "", {}, {}, {}, [])

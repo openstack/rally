@@ -356,7 +356,7 @@ def check_dict_formatting_in_string(logical_line, tokens, noqa=False):
             if not in_string:
                 current_string = ""
                 in_string = True
-            current_string += text.strip("\"")
+            current_string += text.strip('"')
         elif token_type == tokenize.OP:
             if not current_string:
                 continue

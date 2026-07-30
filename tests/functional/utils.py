@@ -40,7 +40,7 @@ class RallyCliError(Exception):
         return self.msg
 
 
-class JsonTempFile(object):
+class JsonTempFile:
 
     def __init__(self, config):
         config_file = tempfile.NamedTemporaryFile(delete=False)
@@ -56,7 +56,7 @@ class TaskConfig(JsonTempFile):
     pass
 
 
-class Rally(object):
+class Rally:
     """Create and represent separate rally installation.
 
     Usage:

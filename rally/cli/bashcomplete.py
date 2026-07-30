@@ -65,6 +65,7 @@ _FOOTER = r"""    for OPT in ${!OPTS[*]} ; do
 complete -o filenames -F _rally rally
 """
 
+
 def generate() -> str:
     """Return the bash completion script for the current CLI."""
     import typer
@@ -89,13 +90,17 @@ def generate() -> str:
                 (
                     # only long ``--flags``; short aliases (``-n``) are valid
                     # but kept out of completion
-                    name for name in p.opts
-                    if (name.startswith("--")
-                        and name not in ("--help", "--version"))
+                    name
+                    for name in p.opts
+                    if (
+                        name.startswith("--")
+                        and name not in ("--help", "--version")
+                    )
                 )
                 for p in params
                 if not getattr(p, "hidden", False)
-            ))
+            )
+        )
 
         lines.append(f'    OPTS["{category}_{name}"]="{opts}"\n')
     return _HEADER + "".join(sorted(lines)) + _FOOTER

@@ -38,7 +38,7 @@ def _read_env_file(path, except_env=None):
     """
     output = []
     if os.path.exists(path):
-        with open(path, "r") as env_file:
+        with open(path) as env_file:
             content = env_file.readlines()
             for line in content:
                 if except_env is None or not line.startswith(f"{except_env}="):

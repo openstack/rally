@@ -39,20 +39,24 @@ class Outliers(sla.SLA):
     The outliers are detected automatically using the computation of the mean
     and standard deviation (std) of the data.
     """
+
     CONFIG_SCHEMA = {
         "type": "object",
         "$schema": consts.JSON_SCHEMA7,
         "properties": {
             "max": {"type": "integer", "minimum": 0},
             "min_iterations": {"type": "integer", "minimum": 3},
-            "sigmas": {"type": "number", "minimum": 0.0,
-                       "exclusiveMinimum": 0.0}
+            "sigmas": {
+                "type": "number",
+                "minimum": 0.0,
+                "exclusiveMinimum": 0.0,
+            },
         },
         "additionalProperties": False,
     }
 
     def __init__(self, criterion_value: dict[str, t.Any]) -> None:
-        super(Outliers, self).__init__(criterion_value)
+        super().__init__(criterion_value)
         self.max_outliers = self.criterion_value.get("max", 0)
         # NOTE(msdubov): Having 3 as default is reasonable (need enough data).
         self.min_iterations = self.criterion_value.get("min_iterations", 3)
@@ -77,8 +81,11 @@ class Outliers(sla.SLA):
             self.iterations += 1
 
             # NOTE(msdubov): First check if the current iteration is an outlier
-            if (self.iterations >= self.min_iterations
-                    and self.threshold and duration > self.threshold):
+            if (
+                self.iterations >= self.min_iterations
+                and self.threshold
+                and duration > self.threshold
+            ):
                 self.outliers += 1
 
             # NOTE(msdubov): Then update the threshold value
@@ -115,5 +122,8 @@ class Outliers(sla.SLA):
         return self.success
 
     def details(self) -> str:
-        return ("Maximum number of outliers %i <= %i - %s" %
-                (self.outliers, self.max_outliers, self.status()))
+        return "Maximum number of outliers %i <= %i - %s" % (
+            self.outliers,
+            self.max_outliers,
+            self.status(),
+        )

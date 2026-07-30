@@ -86,7 +86,7 @@ class CLITestCase(test.TestCase):
     APPLY_DB_SCHEMA = True
 
     def setUp(self) -> None:
-        super(CLITestCase, self).setUp()
+        super().setUp()
         # CONF is a process-wide singleton shared across the whole test run;
         # isolate our changes with the oslo fixture (auto-reverted on cleanup)
         # and pin the DB at in-memory SQLite so nothing hits a real database.

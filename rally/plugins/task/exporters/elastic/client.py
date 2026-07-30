@@ -23,7 +23,7 @@ from rally.common import logging
 LOG = logging.getLogger(__name__)
 
 
-class ElasticSearchClient(object):
+class ElasticSearchClient:
     """The helper class for communication with ElasticSearch 2.*, 5.*, 6.*"""
 
     # a number of documents to push to the cluster at once.
@@ -53,8 +53,9 @@ class ElasticSearchClient(object):
         reason = reason or resp.text or "n/a"
         action = action or "connect to"
         raise exceptions.RallyException(
-            "[HTTP %s] Failed to %s ElasticSearch cluster: %s" %
-            (resp.status_code, action, reason))
+            "[HTTP %s] Failed to %s ElasticSearch cluster: %s"
+            % (resp.status_code, action, reason)
+        )
 
     def version(self):
         """Get version of the ElasticSearch cluster."""
@@ -72,16 +73,19 @@ class ElasticSearchClient(object):
         except ValueError:
             LOG.debug("Return data from %s: %s" % (self._url, resp.text))
             raise exceptions.RallyException(
-                err_msg % "The return data doesn't look like a json.")
+                err_msg % "The return data doesn't look like a json."
+            )
         version = data.get("version", {}).get("number")
         if not version:
             LOG.debug("Return data from %s: %s" % (self._url, resp.text))
             raise exceptions.RallyException(
-                err_msg % "Failed to parse the received data.")
+                err_msg % "Failed to parse the received data."
+            )
         self._version = version
         if self._version.startswith("2"):
             data["version"]["build_date"] = data["version"].pop(
-                "build_timestamp")
+                "build_timestamp"
+            )
         return data
 
     def push_documents(self, documents):
@@ -89,23 +93,28 @@ class ElasticSearchClient(object):
 
         :param documents: a list of documents to push
         """
-        LOG.debug("Pushing %s documents by chunks (up to %s documents at once)"
-                  " to ElasticSearch." %
-                  # dividing numbers by two, since each documents has 2 lines
-                  #     in `documents` (action and document itself).
-                  (len(documents) / 2, self.CHUNK_LENGTH / 2))
+        LOG.debug(
+            "Pushing %s documents by chunks (up to %s documents at once)"
+            " to ElasticSearch." %
+            # dividing numbers by two, since each documents has 2 lines
+            #     in `documents` (action and document itself).
+            (len(documents) / 2, self.CHUNK_LENGTH / 2)
+        )
 
         for pos in range(0, len(documents), self.CHUNK_LENGTH):
-            data = "\n".join(documents[pos:pos + self.CHUNK_LENGTH]) + "\n"
+            data = "\n".join(documents[pos : pos + self.CHUNK_LENGTH]) + "\n"
 
             raw_resp = requests.post(
-                self._url + "/_bulk", data=data,
-                headers={"Content-Type": "application/x-ndjson"}
+                self._url + "/_bulk",
+                data=data,
+                headers={"Content-Type": "application/x-ndjson"},
             )
             self._check_response(raw_resp, action="push documents to")
 
-            LOG.debug("Successfully pushed %s documents." %
-                      len(raw_resp.json()["items"]))
+            LOG.debug(
+                "Successfully pushed %s documents."
+                % len(raw_resp.json()["items"])
+            )
 
     def list_indices(self):
         """List all indices."""
@@ -137,7 +146,8 @@ class ElasticSearchClient(object):
 
         resp = requests.put(
             self._url + "/%s" % name,
-            json={"mappings": {doc_type: {"properties": properties}}})
+            json={"mappings": {doc_type: {"properties": properties}}},
+        )
         self._check_response(resp, "create index at")
 
     def check_document(self, index, doc_id, doc_type="data"):
@@ -147,11 +157,15 @@ class ElasticSearchClient(object):
         :param doc_id: The ID of a document
         :param doc_type: The type of a document (Defaults to data)
         """
-        resp = requests.head("%(url)s/%(index)s/%(type)s/%(id)s" %
-                             {"url": self._url,
-                              "index": index,
-                              "type": doc_type,
-                              "id": doc_id})
+        resp = requests.head(
+            "%(url)s/%(index)s/%(type)s/%(id)s"
+            % {
+                "url": self._url,
+                "index": index,
+                "type": doc_type,
+                "id": doc_id,
+            }
+        )
         if resp.status_code == 200:
             return True
         elif resp.status_code == 404:

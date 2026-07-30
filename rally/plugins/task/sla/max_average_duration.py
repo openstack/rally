@@ -35,14 +35,15 @@ if t.TYPE_CHECKING:  # pragma: no cover
 @sla.configure(name="max_avg_duration")
 class MaxAverageDuration(sla.SLA):
     """Maximum average duration of one iteration in seconds."""
+
     CONFIG_SCHEMA = {
         "type": "number",
         "$schema": consts.JSON_SCHEMA7,
-        "exclusiveMinimum": 0.0
+        "exclusiveMinimum": 0.0,
     }
 
     def __init__(self, criterion_value: float) -> None:
-        super(MaxAverageDuration, self).__init__(criterion_value)
+        super().__init__(criterion_value)
         self.avg = 0.0
         self.avg_comp = streaming_algorithms.MeanComputation()
 
@@ -60,5 +61,8 @@ class MaxAverageDuration(sla.SLA):
         return self.success
 
     def details(self) -> str:
-        return ("Average duration of one iteration %.2fs <= %.2fs - %s" %
-                (self.avg, self.criterion_value, self.status()))
+        return "Average duration of one iteration %.2fs <= %.2fs - %s" % (
+            self.avg,
+            self.criterion_value,
+            self.status(),
+        )

@@ -22,6 +22,7 @@ from rally.task.processing import plot
 @exporter.configure("html")
 class HTMLExporter(exporter.TaskExporter):
     """Generates task report in HTML format."""
+
     INCLUDE_LIBS = False
 
     def _generate_results(self):
@@ -29,7 +30,8 @@ class HTMLExporter(exporter.TaskExporter):
         processed_names = {}
         for task in self.tasks_results:
             for workload in itertools.chain(
-                    *[s["workloads"] for s in task["subtasks"]]):
+                *[s["workloads"] for s in task["subtasks"]]
+            ):
                 if workload["name"] in processed_names:
                     processed_names[workload["name"]] += 1
                     workload["position"] = processed_names[workload["name"]]
@@ -39,13 +41,15 @@ class HTMLExporter(exporter.TaskExporter):
         return results
 
     def generate(self):
-        report = plot.plot(self._generate_results(),
-                           include_libs=self.INCLUDE_LIBS)
+        report = plot.plot(
+            self._generate_results(), include_libs=self.INCLUDE_LIBS
+        )
 
         if self.output_destination:
-            return {"files": {self.output_destination: report},
-                    "open": "file://" + os.path.abspath(
-                        self.output_destination)}
+            return {
+                "files": {self.output_destination: report},
+                "open": "file://" + os.path.abspath(self.output_destination),
+            }
         else:
             return {"print": report}
 
@@ -53,4 +57,5 @@ class HTMLExporter(exporter.TaskExporter):
 @exporter.configure("html-static")
 class HTMLStaticExporter(HTMLExporter):
     """Generates task report in HTML format with embedded JS/CSS."""
+
     INCLUDE_LIBS = True

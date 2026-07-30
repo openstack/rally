@@ -35,6 +35,7 @@ def configure(
     name: str, platform: str = "default"
 ) -> t.Callable[[type[V]], type[V]]:
     """Configure validator plugin with name and platform."""
+
     def wrapper(cls: type[V]) -> type[V]:
         return plugin.configure(name=name, platform=platform)(cls)
 
@@ -54,7 +55,7 @@ class Validator(plugin.Plugin, metaclass=abc.ABCMeta):
         context: dict[str, t.Any],
         config: dict[str, t.Any] | None,
         plugin_cls: type[plugin.Plugin],
-        plugin_cfg: dict[str, t.Any] | None
+        plugin_cfg: dict[str, t.Any] | None,
     ) -> None:
         """Method that validates something.
 
@@ -84,13 +85,12 @@ class Validator(plugin.Plugin, metaclass=abc.ABCMeta):
 
 @configure(name="required_platform")
 class RequiredPlatformValidator(Validator):
-
     def __init__(self, platform: str, **kwargs: t.Any) -> None:
         """Validates specification of specified platform for the workload.
 
         :param platform: name of the platform
         """
-        super(RequiredPlatformValidator, self).__init__()
+        super().__init__()
         self.platform = platform
         self._kwargs = kwargs
 
@@ -99,19 +99,20 @@ class RequiredPlatformValidator(Validator):
         context: dict[str, t.Any],
         config: dict[str, t.Any] | None,
         plugin_cls: type[plugin.Plugin],
-        plugin_cfg: dict[str, t.Any] | None
+        plugin_cfg: dict[str, t.Any] | None,
     ) -> None:
         try:
             pvalidator_cls = RequiredPlatformValidator.get(
-                "required_platform",
-                platform=self.platform,
-                allow_hidden=True)
+                "required_platform", platform=self.platform, allow_hidden=True
+            )
         except exceptions.PluginNotFound:
             # There is no specific validation for this platform
 
             if self.platform not in context["platforms"]:
-                self.fail("There is no specification for %s platform in "
-                          "selected environment." % self.platform)
+                self.fail(
+                    "There is no specification for %s platform in "
+                    "selected environment." % self.platform
+                )
 
             if self.platform == "openstack":
                 # NOTE(andreykurilin): We had in-tree openstack plugins for a
@@ -124,7 +125,8 @@ class RequiredPlatformValidator(Validator):
                 if not (admin or users):
                     self.fail(
                         "You should specify admin=True or users=True or both "
-                        "for validating openstack platform.")
+                        "for validating openstack platform."
+                    )
 
                 platform_context = context["platforms"].get(self.platform, {})
 
@@ -142,10 +144,12 @@ class RequiredPlatformValidator(Validator):
                         pass
         else:
             pvalidator = pvalidator_cls(**self._kwargs)
-            pvalidator.validate(context=context,
-                                config=config,
-                                plugin_cls=plugin_cls,
-                                plugin_cfg=plugin_cfg)
+            pvalidator.validate(
+                context=context,
+                config=config,
+                plugin_cls=plugin_cls,
+                plugin_cfg=plugin_cfg,
+            )
 
 
 def add(name: str, **kwargs: t.Any) -> t.Callable[[type[P]], type[P]]:
@@ -163,14 +167,22 @@ def add(name: str, **kwargs: t.Any) -> t.Callable[[type[P]], type[P]]:
     def wrapper(plugin: type[P]) -> type[P]:
         if issubclass(plugin, RequiredPlatformValidator):
             raise exceptions.RallyException(
-                "Cannot add a validator to RequiredPlatformValidator")
+                "Cannot add a validator to RequiredPlatformValidator"
+            )
         elif issubclass(plugin, Validator) and name != "required_platform":
             raise exceptions.RallyException(
                 "Only RequiredPlatformValidator can be added "
-                "to other validators as a validator")
+                "to other validators as a validator"
+            )
 
         plugin._meta_setdefault("validators", [])
-        plugin._meta_get("validators").append((name, (), kwargs,))
+        plugin._meta_get("validators").append(
+            (
+                name,
+                (),
+                kwargs,
+            )
+        )
         return plugin
 
     return wrapper
@@ -187,8 +199,15 @@ def add_default(name: str, **kwargs: t.Any) -> t.Callable[[type[P]], type[P]]:
 
     def wrapper(plugin: type[P]) -> type[P]:
         plugin._default_meta_setdefault("validators", [])
-        plugin._default_meta_get("validators").append((name, (), kwargs,))
+        plugin._default_meta_get("validators").append(
+            (
+                name,
+                (),
+                kwargs,
+            )
+        )
         return plugin
+
     return wrapper
 
 
@@ -196,7 +215,7 @@ def add_default(name: str, **kwargs: t.Any) -> t.Callable[[type[P]], type[P]]:
 #   ValidationError should be used only for inner purpose.
 class ValidationError(Exception):
     def __init__(self, message: str) -> None:
-        super(ValidationError, self).__init__(message)
+        super().__init__(message)
         self.message = message
 
 
@@ -204,12 +223,13 @@ _ValidatorInfo = tuple[type[Validator], tuple[t.Any, ...], dict[str, t.Any]]
 
 
 class ValidatablePluginMixin:
-
     @staticmethod
     def _load_validators(plugin: type[plugin.Plugin]) -> list[_ValidatorInfo]:
         validators = plugin._meta_get("validators", default=[])
-        return [(Validator.get(name), args, kwargs)
-                for name, args, kwargs in validators]
+        return [
+            (Validator.get(name), args, kwargs)
+            for name, args, kwargs in validators
+        ]
 
     @classmethod
     def validate(
@@ -219,7 +239,7 @@ class ValidatablePluginMixin:
         config: dict[str, t.Any] | None,
         plugin_cfg: dict[str, t.Any] | None,
         allow_hidden: bool = False,
-        vtype: str | list[str] | tuple[str, ...] | None = None
+        vtype: str | list[str] | tuple[str, ...] | None = None,
     ) -> list[str]:
         """Execute all validators stored in meta of plugin.
 
@@ -239,7 +259,8 @@ class ValidatablePluginMixin:
         """
         try:
             plugin_cls = t.cast(plugin.Plugin, cls).get(
-                name, allow_hidden=allow_hidden)
+                name, allow_hidden=allow_hidden
+            )
         except exceptions.PluginNotFound as e:
             return [e.format_message()]
 
@@ -252,8 +273,9 @@ class ValidatablePluginMixin:
                 vtype = [vtype]
             wrong_types = set(vtype) - {"semantic", "syntax", "platform"}
             if wrong_types:
-                raise ValueError("Wrong type of validation: %s" %
-                                 ", ".join(wrong_types))
+                raise ValueError(
+                    "Wrong type of validation: %s" % ", ".join(wrong_types)
+                )
             semantic = "semantic" in vtype
             syntax = "syntax" in vtype
             platform = "platform" in vtype
@@ -272,7 +294,8 @@ class ValidatablePluginMixin:
                 if validators_of_validators:
                     if semantic:
                         regular_validators.append(
-                            (validator_cls, args, kwargs))
+                            (validator_cls, args, kwargs)
+                        )
                     if platform:
                         # Load platform validators from each validator
                         platform_validators.extend(validators_of_validators)
@@ -281,8 +304,11 @@ class ValidatablePluginMixin:
                         syntax_validators.append((validator_cls, args, kwargs))
 
         results: list[str] = []
-        for validators in (syntax_validators, platform_validators,
-                           regular_validators):
+        for validators in (
+            syntax_validators,
+            platform_validators,
+            regular_validators,
+        ):
             for validator_cls, args, kwargs in validators:
                 validator = validator_cls(*args, **kwargs)
                 result: str | None = None
@@ -291,7 +317,8 @@ class ValidatablePluginMixin:
                         context=context,
                         config=config,
                         plugin_cls=plugin_cls,
-                        plugin_cfg=plugin_cfg)
+                        plugin_cfg=plugin_cfg,
+                    )
                 except ValidationError as e:
                     result = e.message
                 except Exception:

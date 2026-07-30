@@ -50,7 +50,7 @@ class ConvertTestCase(test.TestCase):
     # the tests are basically tests that the computer is on.
 
     def setUp(self):
-        super(ConvertTestCase, self).setUp()
+        super().setUp()
 
         @types.convert(bar={"type": "test_bar"})
         @scenario.configure(name="FakeConvertPlugin.one_arg")

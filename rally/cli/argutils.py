@@ -61,13 +61,14 @@ class ArgumentOrKeyword(typer.models.ArgumentInfo):
         *kw_decls: str,
         help: str | None = None,
         envvar: str | list[str] | None = None,
-        metavar: str | None = None
+        metavar: str | None = None,
     ) -> None:
         if metavar is None and kw_decls:
             # ``--uuid`` -> ``UUID``, nicer in usage than the derived name.
             metavar = kw_decls[0].lstrip("-").replace("-", "_").upper()
-        super().__init__(default=..., help=help, envvar=envvar,
-                         metavar=metavar)
+        super().__init__(
+            default=..., help=help, envvar=envvar, metavar=metavar
+        )
         self.kw_decls = kw_decls
 
 
@@ -99,56 +100,63 @@ class DeprecatedAlias(typer.models.OptionInfo):
         *param_decls: str,
         deprecated: t.Iterable[str],
         default: t.Any = ...,
-        **kwargs: t.Any
+        **kwargs: t.Any,
     ) -> None:
         # ``default=...`` mirrors ``typer.Option`` (required unless the
         # annotated parameter carries its own default).  Only the preferred
         # flag(s) reach typer, keeping the deprecated ones out of ``--help``.
-        super().__init__(default=default, param_decls=list(param_decls),
-                         **kwargs)
+        super().__init__(
+            default=default, param_decls=list(param_decls), **kwargs
+        )
         self.deprecated = list(deprecated)
         # the flag we steer users towards must never be a deprecated one
-        self.preferred = next(d for d in param_decls
-                              if d not in self.deprecated)
+        self.preferred = next(
+            d for d in param_decls if d not in self.deprecated
+        )
 
 
 def _patch_deprecated(
-    param: "typer.core.TyperOption",
-    info: DeprecatedAlias
+    param: "typer.core.TyperOption", info: DeprecatedAlias
 ) -> None:
     """Register the deprecated aliases and warn when one is used."""
     original_add_to_parser = param.add_to_parser
 
     def add_to_parser(
         parser: "typer._click.core._OptionParser",
-        ctx: "typer._click.core.Context"
+        ctx: "typer._click.core.Context",
     ) -> None:
         original_add_to_parser(parser, ctx)
         # a separate parser option (own handler) feeding the same destination:
         # requiredness stays satisfied since both write ``param.name``.
         action = "append" if param.nargs == -1 else "store"
-        parser.add_option(param, info.deprecated, param.name,
-                          action=action, nargs=1)
+        parser.add_option(
+            param, info.deprecated, param.name, action=action, nargs=1
+        )
         for opt in info.deprecated:
             handler = parser._long_opt.get(opt) or parser._short_opt.get(opt)
             if handler is None:
                 continue
             original_process = handler.process
 
-            def process(value: t.Any, state: t.Any,
-                        _process: t.Any = original_process,
-                        _opt: str = opt) -> None:
-                LOG.warning(f"The `{_opt}` option is deprecated; use "
-                            f"`{info.preferred}` instead.")
+            def process(
+                value: t.Any,
+                state: t.Any,
+                _process: t.Any = original_process,
+                _opt: str = opt,
+            ) -> None:
+                LOG.warning(
+                    f"The `{_opt}` option is deprecated; use "
+                    f"`{info.preferred}` instead."
+                )
                 _process(value, state)
+
             handler.process = process  # type: ignore[method-assign]
 
     param.add_to_parser = add_to_parser  # type: ignore[method-assign]
 
 
 def _patch_param(
-    param: "typer.core.TyperOption",
-    kw_decls: t.Sequence[str]
+    param: "typer.core.TyperOption", kw_decls: t.Sequence[str]
 ) -> None:
     """Register ``kw_decls`` as an option feeding ``param``'s destination."""
     original_add_to_parser = param.add_to_parser
@@ -157,7 +165,7 @@ def _patch_param(
 
     def add_to_parser(
         parser: "typer._click.core._OptionParser",
-        ctx: "typer._click.core.Context"
+        ctx: "typer._click.core.Context",
     ) -> None:
         original_add_to_parser(parser, ctx)
         # Don't let the (now optional) positional overwrite a value that the
@@ -169,10 +177,12 @@ def _patch_param(
             if value in (None, ()) and param.name in state.opts:
                 return
             original_process(value, state)
+
         argument.process = process  # type: ignore[method-assign]
 
-        parser.add_option(param, list(kw_decls), param.name,
-                          action=action, nargs=1)
+        parser.add_option(
+            param, list(kw_decls), param.name, action=action, nargs=1
+        )
 
     param.add_to_parser = add_to_parser  # type: ignore[method-assign]
 

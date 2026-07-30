@@ -81,7 +81,7 @@ class FakeContext(context.Context):
         context_obj.setdefault("config", {})
         context_obj["config"].setdefault("fake", None)
         context_obj.setdefault("task", mock.MagicMock())
-        super(FakeContext, self).__init__(context_obj)
+        super().__init__(context_obj)
 
     def setup(self):
         pass
@@ -103,7 +103,7 @@ class FakeDeployment(dict):
         self.env_obj = mock.Mock()
 
     def get_platforms(self):
-        return [platform for platform in self["credentials"]]
+        return list(self["credentials"])
 
     def get_credentials_for(self, platform):
         return self["credentials"][platform][0]
@@ -115,7 +115,7 @@ class FakeDeployment(dict):
         return {}
 
 
-class FakeTask(dict, object):
+class FakeTask(dict):
 
     def __init__(self, task=None, temporary=False, **kwargs):
         self.is_temporary = temporary

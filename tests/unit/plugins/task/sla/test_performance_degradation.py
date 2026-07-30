@@ -24,7 +24,7 @@ from tests.unit import test
 class PerformanceDegradationTestCase(test.TestCase):
 
     def setUp(self):
-        super(PerformanceDegradationTestCase, self).setUp()
+        super().setUp()
         self.sla = perfdegr.PerformanceDegradation({"max_degradation": 50})
 
     @ddt.data(({"max_degradation": 1000.0}, True),

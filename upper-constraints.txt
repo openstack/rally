@@ -50,7 +50,6 @@ requests===2.34.2
 rfc3986===2.0.0
 rich===15.0.0
 rpds-py===0.30.0
-ruff===0.15.22
 setuptools===82.0.1
 shellingham===1.5.4
 six===1.17.0

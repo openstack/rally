@@ -129,7 +129,7 @@ class MigrationTestCase(rtest.DBTestCase,
         # we change DB metadata in tests so we reload
         # models to refresh the metadata to it's original state
         importlib.reload(rally.common.db.models)
-        super(MigrationTestCase, self).setUp()
+        super().setUp()
         self.alembic_config = db.schema._alembic_config()
         self.engine = db.get_engine()
         # remove everything from DB and stamp it as 'base'
@@ -151,7 +151,7 @@ class MigrationTestCase(rtest.DBTestCase,
         if type_ == "table" and name == "alembic_version":
             return False
 
-        return super(MigrationTestCase, self).include_object(
+        return super().include_object(
             object_, name, type_, reflected, compare_to)
 
     def _create_fake_model(self, table_name):
@@ -234,7 +234,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
     """Test case covers upgrade method in migrations."""
 
     def setUp(self):
-        super(MigrationWalkTestCase, self).setUp()
+        super().setUp()
         self.engine = db.get_engine()
 
     def assertColumnExists(self, engine, table, column):
@@ -1618,8 +1618,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     task_table.c.uuid == task_id)).fetchone()
             self.assertFalse(task_obj.pass_sla)
             subtask_duration = dict(
-                [(k, sum([w["load_duration"] for w in v]))
-                 for k, v in self._35fe16d4ab1c_subtasks.items()])
+                (k, sum(w["load_duration"] for w in v))
+                for k, v in self._35fe16d4ab1c_subtasks.items())
             self.assertEqual(sum(subtask_duration.values()),
                              task_obj.task_duration)
 

@@ -35,6 +35,7 @@ class RallyException(Exception):
     with the keyword arguments provided to the constructor.
 
     """
+
     msg_fmt = "%(message)s"
     error_code = 100
 
@@ -44,7 +45,7 @@ class RallyException(Exception):
         if "%(message)s" in self.msg_fmt:
             kwargs.update({"message": message})
 
-        super(RallyException, self).__init__(self.msg_fmt % kwargs)
+        super().__init__(self.msg_fmt % kwargs)
 
     def format_message(self) -> str:
         return str(self)
@@ -55,7 +56,8 @@ def find_exception(response: requests.Response) -> RallyException:
     global _exception_map
     if _exception_map is None:
         _exception_map = dict(
-            (e.error_code, e) for e in discover.itersubclasses(RallyException)
+            (e.error_code, e)
+            for e in discover.itersubclasses(RallyException)
             if hasattr(e, "error_code")
         )
     exc_class = _exception_map.get(response.status_code, RallyException)
@@ -95,10 +97,12 @@ class InvalidTaskException(InvalidConfigException):
 
 class InvalidTaskConfig(InvalidTaskException):
     error_code = 114
-    msg_fmt = ("Input task is invalid!\n\n"
-               "Subtask %(name)s[%(pos)s] has wrong configuration"
-               "\nSubtask configuration:\n%(config)s\n"
-               "\nReason(s):\n %(reason)s")
+    msg_fmt = (
+        "Input task is invalid!\n\n"
+        "Subtask %(name)s[%(pos)s] has wrong configuration"
+        "\nSubtask configuration:\n%(config)s\n"
+        "\nReason(s):\n %(reason)s"
+    )
 
 
 class InvalidScenarioArgument(RallyException):
@@ -148,8 +152,7 @@ class NotFoundException(RallyException):
 
 class PluginNotFound(NotFoundException):
     error_code = 211
-    msg_fmt = "There is no%(base)s plugin `%(name)s` in %(platform)s " \
-              "platform."
+    msg_fmt = "There is no%(base)s plugin `%(name)s` in %(platform)s platform."
 
 
 class PluginWithSuchNameExists(RallyException):
@@ -157,14 +160,17 @@ class PluginWithSuchNameExists(RallyException):
     msg_fmt = (
         "Plugin with such name: %(name)s already exists in %(platform)s "
         "platform. It's module allocates at %(existing_path)s. You are trying "
-        "to add plugin whose module allocates at %(new_path)s.")
+        "to add plugin whose module allocates at %(new_path)s."
+    )
 
 
 class MultiplePluginsFound(RallyException):
     error_code = 213
 
-    msg_fmt = ("Multiple plugins found: %(plugins)s for name %(name)s. "
-               "Use full name with platform to fix issue.")
+    msg_fmt = (
+        "Multiple plugins found: %(plugins)s for name %(name)s. "
+        "Use full name with platform to fix issue."
+    )
 
 
 class GetResourceFailure(RallyException):
@@ -184,8 +190,10 @@ class GetResourceErrorStatus(GetResourceFailure):
 
 class AuthenticationFailed(InvalidArgumentsException):
     error_code = 220
-    msg_fmt = ("Failed to authenticate to %(url)s for user '%(username)s'"
-               " in project '%(project)s': %(etype)s: %(error)s")
+    msg_fmt = (
+        "Failed to authenticate to %(url)s for user '%(username)s'"
+        " in project '%(project)s': %(etype)s: %(error)s"
+    )
 
 
 class InvalidAdminException(InvalidArgumentsException):
@@ -215,15 +223,19 @@ class ManagerInvalidSpec(ManagerException):
 
 class ManagerInvalidState(ManagerException):
     error_code = 232
-    msg_fmt = ("%(mgr)s manager in invalid state "
-               "expected `%(expected)s' actual `%(actual)s' ")
+    msg_fmt = (
+        "%(mgr)s manager in invalid state "
+        "expected `%(expected)s' actual `%(actual)s' "
+    )
 
 
 class TimeoutException(RallyException):
     error_code = 240
-    msg_fmt = ("Rally tired waiting %(timeout).2f seconds for "
-               "%(resource_type)s %(resource_name)s:%(resource_id)s to "
-               "become %(desired_status)s current status %(resource_status)s")
+    msg_fmt = (
+        "Rally tired waiting %(timeout).2f seconds for "
+        "%(resource_type)s %(resource_name)s:%(resource_id)s to "
+        "become %(desired_status)s current status %(resource_status)s"
+    )
 
 
 class ThreadTimeoutException(RallyException):

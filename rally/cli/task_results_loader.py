@@ -29,34 +29,22 @@ OLD_TASK_RESULT_SCHEMA = {
         "key": {
             "type": "object",
             "properties": {
-                "kw": {
-                    "type": "object"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "pos": {
-                    "type": "integer"
-                },
+                "kw": {"type": "object"},
+                "name": {"type": "string"},
+                "pos": {"type": "integer"},
             },
-            "required": ["kw", "name", "pos"]
+            "required": ["kw", "name", "pos"],
         },
         "sla": {
             "type": "array",
             "items": {
                 "type": "object",
                 "properties": {
-                    "criterion": {
-                        "type": "string"
-                    },
-                    "detail": {
-                        "type": "string"
-                    },
-                    "success": {
-                        "type": "boolean"
-                    }
-                }
-            }
+                    "criterion": {"type": "string"},
+                    "detail": {"type": "string"},
+                    "success": {"type": "boolean"},
+                },
+            },
         },
         "hooks": {"type": "array"},
         "result": {
@@ -64,24 +52,20 @@ OLD_TASK_RESULT_SCHEMA = {
             "items": {
                 "type": "object",
                 "properties": {
-                    "atomic_actions": {
-                        "type": "object"
-                    },
-                    "duration": {
-                        "type": "number"
-                    },
-                    "error": {
-                        "type": "array"
-                    },
-                    "idle_duration": {
-                        "type": "number"
-                    },
-                    "output": {"type": "object"}
+                    "atomic_actions": {"type": "object"},
+                    "duration": {"type": "number"},
+                    "error": {"type": "array"},
+                    "idle_duration": {"type": "number"},
+                    "output": {"type": "object"},
                 },
-                "required": ["atomic_actions", "duration", "error",
-                             "idle_duration"]
+                "required": [
+                    "atomic_actions",
+                    "duration",
+                    "error",
+                    "idle_duration",
+                ],
             },
-            "minItems": 0
+            "minItems": 0,
         },
         "load_duration": {
             "type": "number",
@@ -89,12 +73,10 @@ OLD_TASK_RESULT_SCHEMA = {
         "full_duration": {
             "type": "number",
         },
-        "created_at": {
-            "type": "string"
-        }
+        "created_at": {"type": "string"},
     },
     "required": ["key", "sla", "result", "load_duration", "full_duration"],
-    "additionalProperties": False
+    "additionalProperties": False,
 }
 
 
@@ -108,11 +90,13 @@ def _update_atomic_actions(atomic_actions, started_at):
     new = []
     for name, duration in atomic_actions.items():
         finished_at = started_at + duration
-        new.append({
-            "name": name,
-            "started_at": started_at,
-            "finished_at": finished_at,
-            "children": []}
+        new.append(
+            {
+                "name": name,
+                "started_at": started_at,
+                "finished_at": finished_at,
+                "children": [],
+            }
         )
         started_at = finished_at
     return new
@@ -120,25 +104,25 @@ def _update_atomic_actions(atomic_actions, started_at):
 
 def _update_old_results(tasks_results, path):
     """Converts tasks results in old format to latest one."""
-    task = {"version": 2,
-            "title": "Task loaded from a file.",
-            "description": "Auto-ported from task format V1.",
-            "uuid": "n/a",
-            "env_name": "n/a",
-            "env_uuid": "n/a",
-            "tags": [],
-            "status": consts.TaskStatus.FINISHED,
-            "subtasks": []}
+    task = {
+        "version": 2,
+        "title": "Task loaded from a file.",
+        "description": "Auto-ported from task format V1.",
+        "uuid": "n/a",
+        "env_name": "n/a",
+        "env_uuid": "n/a",
+        "tags": [],
+        "status": consts.TaskStatus.FINISHED,
+        "subtasks": [],
+    }
 
     start_time = None
 
     for result in tasks_results:
         try:
-            jsonschema.validate(
-                result, OLD_TASK_RESULT_SCHEMA)
+            jsonschema.validate(result, OLD_TASK_RESULT_SCHEMA)
         except jsonschema.ValidationError as e:
-            raise FailedToLoadResults(source=path,
-                                      msg=str(e))
+            raise FailedToLoadResults(source=path, msg=str(e))
 
         iter_count = 0
         failed_iter_count = 0
@@ -150,7 +134,8 @@ def _update_old_results(tasks_results, path):
                 start_time = itr["timestamp"]
             # NOTE(chenhb): back compatible for atomic_actions
             itr["atomic_actions"] = _update_atomic_actions(
-                itr["atomic_actions"], started_at=itr["timestamp"])
+                itr["atomic_actions"], started_at=itr["timestamp"]
+            )
 
             iter_count += 1
             if itr.get("error"):
@@ -165,15 +150,16 @@ def _update_old_results(tasks_results, path):
                 min_duration = duration
 
         durations_stat = charts.MainStatsTable(
-            {"total_iteration_count": iter_count})
+            {"total_iteration_count": iter_count}
+        )
 
         for itr in result["result"]:
             durations_stat.add_iteration(itr)
 
-        created_at = dt.datetime.strptime(result["created_at"],
-                                          "%Y-%d-%mT%H:%M:%S")
-        updated_at = created_at + dt.timedelta(
-            seconds=result["full_duration"])
+        created_at = dt.datetime.strptime(
+            result["created_at"], "%Y-%d-%mT%H:%M:%S"
+        )
+        updated_at = created_at + dt.timedelta(seconds=result["full_duration"])
         created_at = created_at.strftime(consts.TimeFormat.ISO8601)
         updated_at = updated_at.strftime(consts.TimeFormat.ISO8601)
         pass_sla = all(s.get("success") for s in result["sla"])
@@ -183,39 +169,37 @@ def _update_old_results(tasks_results, path):
             h["config"] = {
                 "description": h["config"].get("description"),
                 "action": (h["config"]["name"], h["config"]["args"]),
-                "trigger": (trigger["name"], trigger["args"])}
-        workload = {"uuid": "n/a",
-                    "name": result["key"]["name"],
-                    "position": result["key"]["pos"],
-                    "description": result["key"].get("description",
-                                                     ""),
-                    "full_duration": result["full_duration"],
-                    "load_duration": result["load_duration"],
-                    "total_iteration_count": iter_count,
-                    "failed_iteration_count": failed_iter_count,
-                    "min_duration": min_duration,
-                    "max_duration": max_duration,
-                    "start_time": start_time,
-                    "created_at": created_at,
-                    "updated_at": updated_at,
-                    "args": result["key"]["kw"]["args"],
-                    "runner_type": runner_type,
-                    "runner": result["key"]["kw"]["runner"],
-                    "hooks": result["hooks"],
-                    "sla": result["key"]["kw"]["sla"],
-                    "sla_results": {"sla": result["sla"]},
-                    "pass_sla": pass_sla,
-                    "contexts": result["key"]["kw"]["context"],
-                    "contexts_results": [],
-                    "data": sorted(result["result"],
-                                   key=lambda x: x["timestamp"]),
-                    "statistics": {
-                        "durations": durations_stat.to_dict()},
-                    }
+                "trigger": (trigger["name"], trigger["args"]),
+            }
+        workload = {
+            "uuid": "n/a",
+            "name": result["key"]["name"],
+            "position": result["key"]["pos"],
+            "description": result["key"].get("description", ""),
+            "full_duration": result["full_duration"],
+            "load_duration": result["load_duration"],
+            "total_iteration_count": iter_count,
+            "failed_iteration_count": failed_iter_count,
+            "min_duration": min_duration,
+            "max_duration": max_duration,
+            "start_time": start_time,
+            "created_at": created_at,
+            "updated_at": updated_at,
+            "args": result["key"]["kw"]["args"],
+            "runner_type": runner_type,
+            "runner": result["key"]["kw"]["runner"],
+            "hooks": result["hooks"],
+            "sla": result["key"]["kw"]["sla"],
+            "sla_results": {"sla": result["sla"]},
+            "pass_sla": pass_sla,
+            "contexts": result["key"]["kw"]["context"],
+            "contexts_results": [],
+            "data": sorted(result["result"], key=lambda x: x["timestamp"]),
+            "statistics": {"durations": durations_stat.to_dict()},
+        }
         task["subtasks"].append(
-            {"title": "A SubTask",
-             "description": "",
-             "workloads": [workload]})
+            {"title": "A SubTask", "description": "", "workloads": [workload]}
+        )
     return [task]
 
 
@@ -225,16 +209,19 @@ def _update_new_results(tasks_results):
             jsonschema.validate(task_result, api._Task.TASK_SCHEMA)
         except jsonschema.ValidationError as e:
             raise exceptions.RallyException(
-                "ERROR: Invalid task result format\n\n\t%s" % str(e)) from None
+                "ERROR: Invalid task result format\n\n\t%s" % str(e)
+            ) from None
         task_result.setdefault("env_name", "n/a")
         task_result.setdefault("env_uuid", "n/a")
         for subtask in task_result["subtasks"]:
             for workload in subtask["workloads"]:
                 workload.setdefault("contexts_results", [])
                 workload["runner_type"], workload["runner"] = list(
-                    workload["runner"].items())[0]
+                    workload["runner"].items()
+                )[0]
                 workload["name"], workload["args"] = list(
-                    workload.pop("scenario").items())[0]
+                    workload.pop("scenario").items()
+                )[0]
 
     return tasks_results["tasks"]
 
@@ -247,12 +234,12 @@ def load(path):
         tasks_results = json.loads(raw_tasks_results)
     except ValueError:
         raise FailedToLoadResults(
-            source=path, msg="error while loading JSON.") from None
+            source=path, msg="error while loading JSON."
+        ) from None
 
     if isinstance(tasks_results, list):
         return _update_old_results(tasks_results, path)
     elif isinstance(tasks_results, dict) and "tasks" in tasks_results:
         return _update_new_results(tasks_results)
     else:
-        raise FailedToLoadResults(
-            source=path, msg="Wrong format")
+        raise FailedToLoadResults(source=path, msg="Wrong format")

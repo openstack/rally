@@ -26,7 +26,7 @@ from tests.unit import test
 class PeriodicTriggerTestCase(test.TestCase):
 
     def setUp(self):
-        super(PeriodicTriggerTestCase, self).setUp()
+        super().setUp()
         self.hook_cls = mock.MagicMock(__name__="name")
         self.trigger = periodic.PeriodicTrigger(
             {"trigger": ("periodic", {"unit": "iteration", "step": 2}),

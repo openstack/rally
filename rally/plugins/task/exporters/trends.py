@@ -22,14 +22,16 @@ from rally.task.processing import plot
 @exporter.configure("trends-html")
 class TrendsExporter(exporter.TaskExporter):
     """Generates task trends report in HTML format."""
+
     INCLUDE_LIBS = False
 
     def generate(self):
         report = plot.trends(self.tasks_results, self.INCLUDE_LIBS)
         if self.output_destination:
-            return {"files": {self.output_destination: report},
-                    "open": "file://" + os.path.abspath(
-                        self.output_destination)}
+            return {
+                "files": {self.output_destination: report},
+                "open": "file://" + os.path.abspath(self.output_destination),
+            }
         else:
             return {"print": report}
 
@@ -37,4 +39,5 @@ class TrendsExporter(exporter.TaskExporter):
 @exporter.configure("trends-html-static")
 class TrendsStaticExport(TrendsExporter):
     """Generates task trends report in HTML format with embedded JS/CSS."""
+
     INCLUDE_LIBS = True

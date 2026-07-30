@@ -30,6 +30,7 @@ LOG = logging.getLogger(__name__)
 
 class AtomicAction(t.TypedDict):
     """Structure for atomic action data."""
+
     name: str
     children: list[AtomicAction]
     started_at: float | None
@@ -39,6 +40,7 @@ class AtomicAction(t.TypedDict):
 
 class MergedAtomicAction(t.TypedDict):
     """Structure for merged atomic action data."""
+
     duration: float
     count: int
     children: dict[str, MergedAtomicAction]
@@ -46,7 +48,6 @@ class MergedAtomicAction(t.TypedDict):
 
 
 class ActionTimerMixin:
-
     def __init__(self) -> None:
         self._atomic_actions: list[AtomicAction] = []
 
@@ -76,14 +77,14 @@ class ActionTimer(utils.Timer):
         :param instance: instance of subclass of ActionTimerMixin
         :param name: name of the ActionBuilder
         """
-        super(ActionTimer, self).__init__()
+        super().__init__()
         self.instance = instance
         self.name = name
         self._root = self._find_parent(self.instance._atomic_actions)
         self.atomic_action: AtomicAction = {
             "name": self.name,
             "children": [],
-            "started_at": None
+            "started_at": None,
         }
         self._root.append(self.atomic_action)
 
@@ -95,7 +96,7 @@ class ActionTimer(utils.Timer):
         return atomic_actions
 
     def __enter__(self) -> ActionTimer:
-        super(ActionTimer, self).__enter__()
+        super().__enter__()
         self.atomic_action["started_at"] = self.start
         return self
 
@@ -103,22 +104,23 @@ class ActionTimer(utils.Timer):
         self,
         type_: type[BaseException] | None,
         value: BaseException | None,
-        tb: t.Any
+        tb: t.Any,
     ) -> None:
-        super(ActionTimer, self).__exit__(type_, value, tb)
+        super().__exit__(type_, value, tb)
         self.atomic_action["finished_at"] = self.finish
         if type_:
             self.atomic_action["failed"] = True
 
 
 def action_timer(
-    name: str
+    name: str,
 ) -> t.Callable[[t.Callable[..., t.Any]], t.Callable[..., t.Any]]:
     """Provide measure of execution time.
 
     Decorates methods of the Scenario class.
     This provides duration in seconds of each atomic action.
     """
+
     def wrap(func: t.Callable[..., t.Any]) -> t.Callable[..., t.Any]:
         @functools.wraps(func)
         def func_atomic_actions(
@@ -127,7 +129,9 @@ def action_timer(
             with ActionTimer(self, name):
                 f = func(self, *args, **kwargs)
             return f
+
         return func_atomic_actions
+
     return wrap
 
 
@@ -135,7 +139,7 @@ def merge_atomic_actions(
     atomic_actions: list[AtomicAction],
     root: collections.OrderedDict[str, MergedAtomicAction] | None = None,
     depth: int = 0,
-    depth_of_processing: int = 2
+    depth_of_processing: int = 2,
 ) -> collections.OrderedDict[str, MergedAtomicAction]:
     """Merge duplicates of atomic actions into one atomic action.
 
@@ -155,7 +159,7 @@ def merge_atomic_actions(
             p_atomics[action["name"]] = {
                 "duration": 0,
                 "count": 0,
-                "children": collections.OrderedDict()
+                "children": collections.OrderedDict(),
             }
         started_at = action.get("started_at")
         if started_at is not None:
@@ -170,8 +174,7 @@ def merge_atomic_actions(
             children_dict = p_atomics[action["name"]]["children"]
             if isinstance(children_dict, collections.OrderedDict):
                 merge_atomic_actions(
-                    action["children"],
-                    root=children_dict,
-                    depth=depth + 1)
+                    action["children"], root=children_dict, depth=depth + 1
+                )
 
     return p_atomics

@@ -45,7 +45,7 @@ RALLY_REQUIREMENTS_FILES = (
 DO_NOT_TOUCH_TAG = "[do-not-touch]"
 
 
-class Comment(object):
+class Comment:
     def __init__(self, s=None, finished=False):
         self._comments = []
         self.is_finished = finished
@@ -66,7 +66,7 @@ class Comment(object):
 _PYPI_CACHE = {}
 
 
-class PYPIPackage(object):
+class PYPIPackage:
     # NOTE(andreykurilin): one license can have different labels. Let's use
     #   unified variant.
     LICENSE_MAP = {"MIT license": "MIT",
@@ -137,7 +137,7 @@ class Requirement(PYPIPackage):
     RE_NE_VERSIONS = re.compile(r"!=[a-zA-Z0-9.]+")
 
     def __init__(self, package_name, version):
-        super(Requirement, self).__init__(package_name)
+        super().__init__(package_name)
         self.version = version
         self.do_not_touch = False
 
@@ -240,7 +240,7 @@ class UpperConstraint(PYPIPackage):
         r"(?P<package_name>[a-zA-Z0-9-._]+)===(?P<version>[a-zA-Z0-9.]+)")
 
     def __init__(self, package_name, version=None):
-        super(UpperConstraint, self).__init__(package_name)
+        super().__init__(package_name)
         self._version = version
 
     def __str__(self):

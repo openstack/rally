@@ -38,7 +38,7 @@ LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
 
 
-class BaseWalkMigrationMixin(object):
+class BaseWalkMigrationMixin:
 
     ALEMBIC_CONFIG = alembic_config.Config(
         os.path.join(os.path.dirname(db.schema.__file__), "alembic.ini")
@@ -67,8 +67,7 @@ class BaseWalkMigrationMixin(object):
         CONF.set_override("connection", str(engine.url), group="database")
         getattr(command, alembic_command)(*args, **kwargs)
         res = buf.getvalue().strip()
-        LOG.debug("Alembic command `{command}` returns: {result}".format(
-            command=alembic_command, result=res))
+        LOG.debug(f"Alembic command `{alembic_command}` returns: {res}")
         return res
 
     def _up_and_down_versions(self):

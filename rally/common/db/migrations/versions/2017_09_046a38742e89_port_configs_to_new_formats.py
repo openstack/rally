@@ -41,9 +41,8 @@ workload_helper = sa.Table(
     sa.MetaData(),
     sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
     sa.Column("uuid", sa.String(36), nullable=False),
-
     sa.Column("runner", sa.Text),
-    sa.Column("hooks", sa.Text)
+    sa.Column("hooks", sa.Text),
 )
 
 
@@ -63,12 +62,15 @@ def upgrade() -> None:
                 hook["config"] = {
                     "description": hook_cfg.get("description"),
                     "action": (hook_cfg["name"], hook_cfg["args"]),
-                    "trigger": (trigger_cfg["name"], trigger_cfg["args"])}
+                    "trigger": (trigger_cfg["name"], trigger_cfg["args"]),
+                }
                 values["hooks"].append(hook)
             values["hooks"] = json.dumps(values["hooks"])
-        connection.execute(workload_helper.update().where(
-            workload_helper.c.uuid == workload.uuid).values(
-            **values))
+        connection.execute(
+            workload_helper.update()
+            .where(workload_helper.c.uuid == workload.uuid)
+            .values(**values)
+        )
 
 
 def downgrade() -> None:

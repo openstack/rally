@@ -22,7 +22,6 @@ from rally.task import scenario
 
 @scenario.configure(name="HttpRequests.check_request")
 class HttpRequestsCheckRequest(utils.RequestScenario):
-
     def run(
         self, url: str, method: str, status_code: int, **kwargs: t.Any
     ) -> None:
@@ -42,7 +41,6 @@ class HttpRequestsCheckRequest(utils.RequestScenario):
 
 @scenario.configure(name="HttpRequests.check_random_request")
 class HttpRequestsCheckRandomRequest(utils.RequestScenario):
-
     def run(
         self,
         requests: list[dict[str, t.Any]],

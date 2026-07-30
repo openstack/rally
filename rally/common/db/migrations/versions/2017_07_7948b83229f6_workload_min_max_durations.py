@@ -39,7 +39,7 @@ workload_helper = sa.Table(
     sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
     sa.Column("uuid", sa.String(36), nullable=False),
     sa.Column("min_duration", sa.Float),
-    sa.Column("max_duration", sa.Float)
+    sa.Column("max_duration", sa.Float),
 )
 
 workload_data_helper = sa.Table(
@@ -47,7 +47,7 @@ workload_data_helper = sa.Table(
     sa.MetaData(),
     sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
     sa.Column("uuid", sa.String(36), nullable=False),
-    sa.Column("workload_uuid", sa.String(length=36), nullable=False)
+    sa.Column("workload_uuid", sa.String(length=36), nullable=False),
 )
 
 
@@ -64,16 +64,20 @@ def upgrade() -> None:
         elif workload.min_duration == 0:
             # should check existence of workload data to ensure where 0 is a
             # real min_duration or it is just previous default value
-            r = (connection.execute(workload_data_helper.select().where(
-                 workload_data_helper.c.workload_uuid == workload.uuid))
-                 .first())
+            r = connection.execute(
+                workload_data_helper.select().where(
+                    workload_data_helper.c.workload_uuid == workload.uuid
+                )
+            ).first()
             if not r:
                 should_update = True
 
         if should_update:
-            connection.execute(workload_helper.update().where(
-                workload_helper.c.uuid == workload.uuid).values(
-                min_duration=None, max_duration=None))
+            connection.execute(
+                workload_helper.update()
+                .where(workload_helper.c.uuid == workload.uuid)
+                .values(min_duration=None, max_duration=None)
+            )
 
 
 def downgrade() -> None:

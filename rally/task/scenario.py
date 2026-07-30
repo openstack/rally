@@ -44,18 +44,20 @@ CONF_OPTS = [
     cfg.StrOpt(
         "scenario_resource_name_format",
         help="A mktemp(1)-like format string that will be used to pattern "
-             "the generated random string. It must contain two separate "
-             "segments of at least three 'X's; the first one will be replaced "
-             "by a portion of the owner ID (i.e task/subtask ID), and the "
-             "second will be replaced with a random string."),
+        "the generated random string. It must contain two separate "
+        "segments of at least three 'X's; the first one will be replaced "
+        "by a portion of the owner ID (i.e task/subtask ID), and the "
+        "second will be replaced with a random string.",
+    ),
     cfg.BoolOpt(
         "strict_type_annotations",
         default=False,
         help="Control how a scenario run() argument annotated with a type "
-             "that Rally cannot map to a JSON Schema is handled. When False "
-             "(default), such an argument is treated as unconstrained (any "
-             "value is accepted) and a warning is logged. When True, building "
-             "the scenario's argument schema raises an error instead."),
+        "that Rally cannot map to a JSON Schema is handled. When False "
+        "(default), such an argument is treated as unconstrained (any "
+        "value is accepted) and a warning is logged. When True, building "
+        "the scenario's argument schema raises an error instead.",
+    ),
 ]
 CONF.register_opts(CONF_OPTS)
 
@@ -67,7 +69,7 @@ ArgsOf = typeutils.ArgsOf
 def configure(
     name: str,
     platform: str = "default",
-    context: dict[str, t.Any] | None = None
+    context: dict[str, t.Any] | None = None,
 ) -> t.Callable[[type[S]], type[S]]:
     """Configure scenario by setting proper meta data.
 
@@ -87,17 +89,22 @@ def configure(
         # TODO(boris-42): Drop this check as soon as we refactor rally report
         if "." not in name.strip("."):
             raise exceptions.RallyException(
-                "Scenario name must include a dot: '%s'" % name)
+                "Scenario name must include a dot: '%s'" % name
+            )
 
         for c in context_dict:
             if "@" not in c:
-                msg = ("Old fashion plugin configuration detected in "
-                       " `%(scenario)s' scenario. Use full name for "
-                       " `%(context)s' context like %(context)s@platform "
-                       "where 'platform' is a name of context platform ("
-                       "openstack, k8s, etc).")
-                LOG.warning(msg % {"scenario": "%s@%s" % (name, platform),
-                                   "context": c})
+                msg = (
+                    "Old fashion plugin configuration detected in "
+                    " `%(scenario)s' scenario. Use full name for "
+                    " `%(context)s' context like %(context)s@platform "
+                    "where 'platform' is a name of context platform ("
+                    "openstack, k8s, etc)."
+                )
+                LOG.warning(
+                    msg
+                    % {"scenario": "%s@%s" % (name, platform), "context": c}
+                )
 
         cls = plugin.configure(name=name, platform=platform)(cls)
         cls._meta_setdefault("default_context", {})
@@ -115,24 +122,29 @@ class _Output(t.TypedDict):
 
 @validation.add_default("args-spec")
 @plugin.base()
-class Scenario(plugin.Plugin,
-               atomic.ActionTimerMixin,
-               functional.FunctionalMixin,
-               utils.RandomNameGeneratorMixin,
-               validation.ValidatablePluginMixin):
+class Scenario(
+    plugin.Plugin,
+    atomic.ActionTimerMixin,
+    functional.FunctionalMixin,
+    utils.RandomNameGeneratorMixin,
+    validation.ValidatablePluginMixin,
+):
     """This is base class for any scenario.
 
-        All Scenario Plugins should be subclass of this class.
+    All Scenario Plugins should be subclass of this class.
     """
+
     RESOURCE_NAME_FORMAT = "s_rally_XXXXXXXX_XXXXXXXX"
 
     @classmethod
     def _get_resource_name_format(cls) -> str:
-        return (CONF.scenario_resource_name_format
-                or super(Scenario, cls)._get_resource_name_format())
+        return (
+            CONF.scenario_resource_name_format
+            or super()._get_resource_name_format()
+        )
 
     def __init__(self, context: dict[str, t.Any] | None = None) -> None:
-        super(Scenario, self).__init__()
+        super().__init__()
         self.context = context or {}
         self.task = self.context.get("task", {})
         self._idle_duration = 0.0
@@ -141,7 +153,7 @@ class Scenario(plugin.Plugin,
     def get_owner_id(self) -> str | None:
         if "owner_id" in self.context:
             return self.context["owner_id"]
-        return super(Scenario, self).get_owner_id()
+        return super().get_owner_id()
 
     @classmethod
     def get_default_context(cls) -> dict[str, t.Any]:
@@ -151,7 +163,7 @@ class Scenario(plugin.Plugin,
         self,
         min_sleep: float,
         max_sleep: float | None = None,
-        atomic_delay: float = 0.1
+        atomic_delay: float = 0.1,
     ) -> None:
         """Call an interruptable_sleep() for a random amount of seconds.
 
@@ -169,7 +181,8 @@ class Scenario(plugin.Plugin,
 
         if not 0 <= min_sleep <= max_sleep:
             raise exceptions.InvalidArgumentsException(
-                "0 <= min_sleep <= max_sleep")
+                "0 <= min_sleep <= max_sleep"
+            )
 
         sleep_time = random.uniform(min_sleep, max_sleep)
         utils.interruptable_sleep(sleep_time, atomic_delay)
@@ -182,7 +195,7 @@ class Scenario(plugin.Plugin,
     def add_output(
         self,
         additive: dict[str, t.Any] | None = None,
-        complete: dict[str, t.Any] | None = None
+        complete: dict[str, t.Any] | None = None,
     ) -> None:
         """Add iteration's custom output data.
 
@@ -228,6 +241,7 @@ class Scenario(plugin.Plugin,
                 ].append(value)
 
     if not t.TYPE_CHECKING:
+
         def run(self, **kwargs: t.Any) -> None:
             """Execute the scenario's workload.
 
@@ -258,8 +272,10 @@ class Scenario(plugin.Plugin,
         """
         try:
             schema, _signature, hints = typeutils.arguments_schema(
-                cls.run, target_name=cls.get_name(),
-                strict=CONF.strict_type_annotations)
+                cls.run,
+                target_name=cls.get_name(),
+                strict=CONF.strict_type_annotations,
+            )
         except typeutils.UnsupportedType as e:
             # broken annotations: fall back to description-only docs
             if not CONF.strict_type_annotations:
@@ -289,7 +305,7 @@ class Scenario(plugin.Plugin,
     def get_title(cls) -> str:
         # `rally plugin list` only needs the title, so skip the
         # argument-schema build that get_info would otherwise do.
-        return super(Scenario, cls).get_info()["title"]
+        return super().get_info()["title"]
 
     @classmethod
     def get_info(cls) -> info._PluginInfo:
@@ -307,15 +323,18 @@ class Scenario(plugin.Plugin,
         still surfaced in the schema so the docs keep it, but a warning is
         logged (or an error, under strict-type-annotations mode).
         """
-        plugin_info = super(Scenario, cls).get_info()
+        plugin_info = super().get_info()
         schema: dict[str, t.Any] | None = cls._args_schema()
         docs = {p["name"]: p["doc"] for p in plugin_info["parameters"]}
         if schema is None and not docs:
             return plugin_info
         if schema is None:
             # hints could not be resolved: describe the documented params only
-            schema = {"type": "object", "additionalProperties": True,
-                      "properties": {}}
+            schema = {
+                "type": "object",
+                "additionalProperties": True,
+                "properties": {},
+            }
         properties = schema["properties"]
         additional = schema.get("additionalProperties", False)
         for name, doc in docs.items():

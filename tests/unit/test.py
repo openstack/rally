@@ -35,14 +35,14 @@ class TempHomeDir(TempDir):
     """
 
     def _setUp(self):
-        super(TempHomeDir, self)._setUp()
+        super()._setUp()
         self.useFixture(fixtures.EnvironmentVariable("HOME", self.path))
 
 
 class DatabaseFixture(cfg_fixture.Config):
     """Create clean DB before starting test."""
     def setUp(self):
-        super(DatabaseFixture, self).setUp()
+        super().setUp()
         db_url = os.environ.get("RALLY_UNITTEST_DB_URL", "sqlite://")
         db.engine_reset()
         self.conf.set_default("connection", db_url, group="database")
@@ -54,7 +54,7 @@ class TestCase(fixtures.TestWithFixtures, unittest.TestCase):
     """Test case base class for all unit tests."""
 
     def __init__(self, *args, **kwargs):
-        super(TestCase, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         # This is the number of characters shown when two objects do not
         # match for assertDictEqual, assertMultiLineEqual, and
@@ -63,7 +63,7 @@ class TestCase(fixtures.TestWithFixtures, unittest.TestCase):
         self.maxDiff = 10000
 
     def setUp(self):
-        super(TestCase, self).setUp()
+        super().setUp()
         self.addCleanup(mock.patch.stopall)
         plugins.load()
         self.useFixture(TempHomeDir())
@@ -120,7 +120,7 @@ class DBTestCase(TestCase):
     """Base class for tests which use DB."""
 
     def setUp(self):
-        super(DBTestCase, self).setUp()
+        super().setUp()
         self.useFixture(DatabaseFixture())
 
 

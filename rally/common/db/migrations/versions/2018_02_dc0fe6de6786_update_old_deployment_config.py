@@ -52,20 +52,18 @@ def upgrade() -> None:
     for deployment in connection.execute(deployments_helper.select()):
         config = deployment.config
         if isinstance(config, dict) and (
-                config.get("type", "") == "ExistingCloud"
-                and "creds" not in config):
+            config.get("type", "") == "ExistingCloud" and "creds" not in config
+        ):
             extra = config.pop("extra", None)
             dtype = config.pop("type")
-            config = {
-                "type": dtype,
-                "creds": {"openstack": config}
-            }
+            config = {"type": dtype, "creds": {"openstack": config}}
             if extra is not None:
                 config["extra"] = extra
             connection.execute(
-                deployments_helper.update().where(
-                    deployments_helper.c.id == deployment.id).values(
-                    config=config))
+                deployments_helper.update()
+                .where(deployments_helper.c.id == deployment.id)
+                .values(config=config)
+            )
 
 
 def downgrade() -> None:
