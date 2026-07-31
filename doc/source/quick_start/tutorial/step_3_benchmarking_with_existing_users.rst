@@ -107,23 +107,29 @@ to use existing users, like in the following configuration file
 .. code-block:: json
 
     {
-        "NovaServers.boot_and_delete_server": [
+        "version": 2,
+        "title": "Boot and delete servers using existing users",
+        "subtasks": [
             {
-                "args": {
-                    "flavor": {
-                        "name": "m1.tiny"
-                    },
-                    "image": {
-                        "name": "^cirros.*-disk$"
-                    },
-                    "force_delete": false
+                "title": "Boot and delete a single server",
+                "scenario": {
+                    "NovaServers.boot_and_delete_server": {
+                        "flavor": {
+                            "name": "m1.tiny"
+                        },
+                        "image": {
+                            "name": "^cirros.*-disk$"
+                        },
+                        "force_delete": false
+                    }
                 },
                 "runner": {
-                    "type": "constant",
-                    "times": 10,
-                    "concurrency": 2
+                    "constant": {
+                        "times": 10,
+                        "concurrency": 2
+                    }
                 },
-                "context": {}
+                "contexts": {}
             }
         ]
     }

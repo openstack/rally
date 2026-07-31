@@ -34,15 +34,20 @@ value). You can combine different success criteria:
 .. code-block:: json
 
     {
-        "NovaServers.boot_and_delete_server": [
+        "version": 2,
+        "title": "Boot and delete servers with success criteria",
+        "subtasks": [
             {
-                "args": {
-                    ...
+                "title": "Boot and delete a single server",
+                "scenario": {
+                    "NovaServers.boot_and_delete_server": {
+                        ...
+                    }
                 },
                 "runner": {
                     ...
                 },
-                "context": {
+                "contexts": {
                     ...
                 },
                 "sla": {
@@ -71,15 +76,21 @@ and another that just throws an exception:
 .. code-block:: json
 
     {
-        "Dummy.dummy": [
+        "version": 2,
+        "title": "Checking SLA with dummy scenarios",
+        "subtasks": [
             {
-                "args": {},
-                "runner": {
-                    "type": "constant",
-                    "times": 5,
-                    "concurrency": 2
+                "title": "Dummy scenario that does nothing",
+                "scenario": {
+                    "Dummy.dummy": {}
                 },
-                "context": {
+                "runner": {
+                    "constant": {
+                        "times": 5,
+                        "concurrency": 2
+                    }
+                },
+                "contexts": {
                     "users": {
                         "tenants": 3,
                         "users_per_tenant": 2
@@ -88,17 +99,19 @@ and another that just throws an exception:
                 "sla": {
                     "failure_rate": {"max": 0.0}
                 }
-            }
-        ],
-        "Dummy.dummy_exception": [
+            },
             {
-                "args": {},
-                "runner": {
-                    "type": "constant",
-                    "times": 5,
-                    "concurrency": 2
+                "title": "Dummy scenario that throws an exception",
+                "scenario": {
+                    "Dummy.dummy_exception": {}
                 },
-                "context": {
+                "runner": {
+                    "constant": {
+                        "times": 5,
+                        "concurrency": 2
+                    }
+                },
+                "contexts": {
                     "users": {
                         "tenants": 3,
                         "users_per_tenant": 2

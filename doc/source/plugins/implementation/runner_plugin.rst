@@ -83,14 +83,21 @@ in the configuration as well (*"min_times"* and *"max_times"* in our example):
 .. code-block:: json
 
     {
-        "Dummy.dummy": [
+        "version": 2,
+        "title": "Using a custom runner plugin",
+        "subtasks": [
             {
-                "runner": {
-                    "type": "random_times",
-                    "min_times": 10,
-                    "max_times": 20,
+                "title": "Dummy scenario with random_times runner",
+                "scenario": {
+                    "Dummy.dummy": {}
                 },
-                "context": {
+                "runner": {
+                    "random_times": {
+                        "min_times": 10,
+                        "max_times": 20
+                    }
+                },
+                "contexts": {
                     "users": {
                         "tenants": 1,
                         "users_per_tenant": 1

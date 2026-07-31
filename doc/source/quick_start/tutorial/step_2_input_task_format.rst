@@ -55,31 +55,11 @@ provides better organization, metadata support, and flexibility:
         ]
     }
 
-**Legacy format (v1) - DEPRECATED**: The old format is still supported but
-deprecated:
-
-.. code-block:: json
-
-    {
-        "<ScenarioName1>": [<config>, <config2>, ...]
-        "<ScenarioName2>": [<config>, ...]
-    }
-
-where *<config>*, in the legacy format, is a dictionary:
-
-.. code-block:: json
-
-    {
-        "args": { <scenario-specific arguments> },
-        "runner": { <type of the runner and its specific parameters> },
-        "context": { <contexts needed for this scenario> },
-        "sla": { <different SLA configs> }
-    }
-
 .. note::
-   The legacy v1 format is deprecated. New tasks should use v2 format for better
-   organization and metadata support.
-   Rally automatically converts v1 to v2 internally for compatibility.
+   An older task format (v1) also exists and is deprecated. Rally still accepts
+   it and automatically converts it to v2 internally for compatibility, but new
+   tasks should always use the v2 format shown above. The v1 format is not
+   documented here on purpose, so that new tasks are not written against it.
 
 Multiple subtasks in a single task
 ----------------------------------
@@ -90,9 +70,7 @@ so that it prescribes Rally to launch not only the
 **NovaServers.boot_and_delete_server** scenario, but also the
 **KeystoneBasic.create_delete_user** scenario.
 
-**Using v2 format (recommended):**
-
-*multiple-scenarios-v2.json*
+*multiple-scenarios.json*
 
 .. code-block:: json
 
@@ -143,54 +121,11 @@ so that it prescribes Rally to launch not only the
         ]
     }
 
-**Legacy v1 format (deprecated but still supported):**
-
-*multiple-scenarios-v1.json*
-
-.. code-block:: json
-
-    {
-        "NovaServers.boot_and_delete_server": [
-            {
-                "args": {
-                    "flavor": {
-                        "name": "m1.tiny"
-                    },
-                    "image": {
-                        "name": "^cirros.*-disk$"
-                    },
-                    "force_delete": false
-                },
-                "runner": {
-                    "type": "constant",
-                    "times": 10,
-                    "concurrency": 2
-                },
-                "context": {
-                    "users": {
-                        "tenants": 3,
-                        "users_per_tenant": 2
-                    }
-                }
-            }
-        ],
-        "KeystoneBasic.create_delete_user": [
-            {
-                "args": {},
-                "runner": {
-                    "type": "constant",
-                    "times": 10,
-                    "concurrency": 3
-                }
-            }
-        ]
-    }
-
-Now you can start this task as usually (using v2 format):
+Now you can start this task as usual:
 
 .. code-block:: console
 
-    $ rally task start multiple-scenarios-v2.json
+    $ rally task start multiple-scenarios.json
     ...
     +--------------------+-----------+-----------+-----------+---------------+---------------+---------+-------+
     | action             | min (sec) | avg (sec) | max (sec) | 90 percentile | 95 percentile | success | count |
@@ -239,9 +174,7 @@ multiple subtasks with the same scenario but different parameters. Let's say,
 you want to run the **boot_and_delete_server** scenario twice: first using the
 *"m1.tiny"* flavor and then using the *"m1.small"* flavor:
 
-**Using v2 format (recommended):**
-
-*multiple-configurations-v2.json*
+*multiple-configurations.json*
 
 .. code-block:: json
 
@@ -306,48 +239,11 @@ you want to run the **boot_and_delete_server** scenario twice: first using the
         ]
     }
 
-**Legacy v1 format (deprecated):**
-
-*multiple-configurations-v1.json*
-
-.. code-block:: json
-
-    {
-        "NovaServers.boot_and_delete_server": [
-            {
-                "args": {
-                    "flavor": {
-                        "name": "m1.tiny"
-                    },
-                    "image": {
-                        "name": "^cirros.*-disk$"
-                    },
-                    "force_delete": false
-                },
-                "runner": {...},
-                "context": {...}
-            },
-            {
-                "args": {
-                    "flavor": {
-                        "name": "m1.small"
-                    },
-                    "image": {
-                        "name": "^cirros.*-disk$"
-                    },
-                    "force_delete": false
-                },
-                "runner": {...},
-                "context": {...}
-            }
-        ]
-    }
-
 That's it! You will get again the results for each configuration separately:
 
 .. code-block:: console
 
-    $ rally task start --task=multiple-configurations-v2.json
+    $ rally task start --task=multiple-configurations.json
     ...
     +--------------------+-----------+-----------+-----------+---------------+---------------+---------+-------+
     | action             | min (sec) | avg (sec) | max (sec) | 90 percentile | 95 percentile | success | count |

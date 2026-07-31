@@ -33,36 +33,38 @@ runs a set of Nova scenarios:
 .. code-block:: yaml
 
     ---
-      NovaServers.boot_and_delete_server:
-        -
-          args:
-            flavor:
+      version: 2
+      title: Boot, delete and resize Nova servers
+      subtasks:
+        - title: Boot and delete a server
+          scenario:
+            NovaServers.boot_and_delete_server:
+              flavor:
                 name: "m1.tiny"
-            image:
+              image:
                 name: "^cirros.*-disk$"
           runner:
-            type: "constant"
-            times: 2
-            concurrency: 1
-          context:
+            constant:
+              times: 2
+              concurrency: 1
+          contexts:
             users:
               tenants: 1
               users_per_tenant: 1
-
-      NovaServers.resize_server:
-        -
-          args:
-            flavor:
+        - title: Resize a server
+          scenario:
+            NovaServers.resize_server:
+              flavor:
                 name: "m1.tiny"
-            image:
+              image:
                 name: "^cirros.*-disk$"
-            to_flavor:
+              to_flavor:
                 name: "m1.small"
           runner:
-            type: "constant"
-            times: 3
-            concurrency: 1
-          context:
+            constant:
+              times: 3
+              concurrency: 1
+          contexts:
             users:
               tenants: 1
               users_per_tenant: 1
@@ -77,36 +79,38 @@ name into a template variable:
 .. code-block:: yaml
 
     ---
-      NovaServers.boot_and_delete_server:
-        -
-          args:
-            flavor:
+      version: 2
+      title: Boot, delete and resize Nova servers
+      subtasks:
+        - title: Boot and delete a server
+          scenario:
+            NovaServers.boot_and_delete_server:
+              flavor:
                 name: "m1.tiny"
-            image:
+              image:
                 name: {{image_name}}
           runner:
-            type: "constant"
-            times: 2
-            concurrency: 1
-          context:
+            constant:
+              times: 2
+              concurrency: 1
+          contexts:
             users:
               tenants: 1
               users_per_tenant: 1
-
-      NovaServers.resize_server:
-        -
-          args:
-            flavor:
+        - title: Resize a server
+          scenario:
+            NovaServers.resize_server:
+              flavor:
                 name: "m1.tiny"
-            image:
+              image:
                 name: {{image_name}}
-            to_flavor:
+              to_flavor:
                 name: "m1.small"
           runner:
-            type: "constant"
-            times: 3
-            concurrency: 1
-          context:
+            constant:
+              times: 3
+              concurrency: 1
+          contexts:
             users:
               tenants: 1
               users_per_tenant: 1
@@ -160,37 +164,38 @@ starting a task:
 
     Input task is:
     ---
-
-      NovaServers.boot_and_delete_server:
-        -
-          args:
-            flavor:
+      version: 2
+      title: Boot, delete and resize Nova servers
+      subtasks:
+        - title: Boot and delete a server
+          scenario:
+            NovaServers.boot_and_delete_server:
+              flavor:
                 name: "m1.tiny"
-            image:
+              image:
                 name: ^cirros.*-disk$
           runner:
-            type: "constant"
-            times: 2
-            concurrency: 1
-          context:
+            constant:
+              times: 2
+              concurrency: 1
+          contexts:
             users:
               tenants: 1
               users_per_tenant: 1
-
-      NovaServers.resize_server:
-        -
-          args:
-            flavor:
+        - title: Resize a server
+          scenario:
+            NovaServers.resize_server:
+              flavor:
                 name: "m1.tiny"
-            image:
+              image:
                 name: ^cirros.*-disk$
-            to_flavor:
+              to_flavor:
                 name: "m1.small"
           runner:
-            type: "constant"
-            times: 3
-            concurrency: 1
-          context:
+            constant:
+              times: 3
+              concurrency: 1
+          contexts:
             users:
               tenants: 1
               users_per_tenant: 1
@@ -214,19 +219,21 @@ should be set using the *{% set ... %}* clause (*task.yaml*):
 
     {% set image_name = image_name or "^cirros.*-disk$" %}
     ---
-
-      NovaServers.boot_and_delete_server:
-        -
-          args:
-            flavor:
+      version: 2
+      title: Boot and delete Nova servers
+      subtasks:
+        - title: Boot and delete a server
+          scenario:
+            NovaServers.boot_and_delete_server:
+              flavor:
                 name: "m1.tiny"
-            image:
+              image:
                 name: {{image_name}}
           runner:
-            type: "constant"
-            times: 2
-            concurrency: 1
-          context:
+            constant:
+              times: 2
+              concurrency: 1
+          contexts:
             users:
               tenants: 1
               users_per_tenant: 1
@@ -245,19 +252,21 @@ default one will be used:
 
     Input task is:
     ---
-
-      NovaServers.boot_and_delete_server:
-        -
-          args:
-            flavor:
+      version: 2
+      title: Boot and delete Nova servers
+      subtasks:
+        - title: Boot and delete a server
+          scenario:
+            NovaServers.boot_and_delete_server:
+              flavor:
                 name: "m1.tiny"
-            image:
+              image:
                 name: ^cirros.*-disk$
           runner:
-            type: "constant"
-            times: 2
-            concurrency: 1
-          context:
+            constant:
+              times: 2
+              concurrency: 1
+          contexts:
             users:
               tenants: 1
               users_per_tenant: 1
@@ -280,14 +289,17 @@ increasing concurrency. The input task file (*task.yaml*) below uses the
 .. code-block:: yaml
 
     ---
-      KeystoneBasic.create_user:
+      version: 2
+      title: Create users with increasing concurrency
+      subtasks:
       {% for i in range(2, 11, 2) %}
-        -
-          args: {}
+        - title: Create users with concurrency {{i}}
+          scenario:
+            KeystoneBasic.create_user: {}
           runner:
-            type: "constant"
-            times: 10
-            concurrency: {{i}}
+            constant:
+              times: 10
+              concurrency: {{i}}
           sla:
             failure_rate:
               max: 0
@@ -307,55 +319,61 @@ automatically unfold the for-loop for you:
 
     Input task is:
     ---
+      version: 2
+      title: Create users with increasing concurrency
+      subtasks:
 
-      KeystoneBasic.create_user:
-
-        -
-          args: {}
+        - title: Create users with concurrency 2
+          scenario:
+            KeystoneBasic.create_user: {}
           runner:
-            type: "constant"
-            times: 10
-            concurrency: 2
+            constant:
+              times: 10
+              concurrency: 2
           sla:
             failure_rate:
               max: 0
 
-        -
-          args: {}
+        - title: Create users with concurrency 4
+          scenario:
+            KeystoneBasic.create_user: {}
           runner:
-            type: "constant"
-            times: 10
-            concurrency: 4
+            constant:
+              times: 10
+              concurrency: 4
           sla:
             failure_rate:
               max: 0
 
-        -
-          args: {}
+        - title: Create users with concurrency 6
+          scenario:
+            KeystoneBasic.create_user: {}
           runner:
-            type: "constant"
-            times: 10
-            concurrency: 6
+            constant:
+              times: 10
+              concurrency: 6
           sla:
             failure_rate:
               max: 0
 
-        -
-          args: {}
+        - title: Create users with concurrency 8
+          scenario:
+            KeystoneBasic.create_user: {}
           runner:
-            type: "constant"
-            times: 10
-            concurrency: 8
+            constant:
+              times: 10
+              concurrency: 8
           sla:
             failure_rate:
               max: 0
 
-        -
-          args: {}
+        - title: Create users with concurrency 10
+          scenario:
+            KeystoneBasic.create_user: {}
           runner:
-            type: "constant"
-            times: 10
-            concurrency: 10
+            constant:
+              times: 10
+              concurrency: 10
           sla:
             failure_rate:
               max: 0

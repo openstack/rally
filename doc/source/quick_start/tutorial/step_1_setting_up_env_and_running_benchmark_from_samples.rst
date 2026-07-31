@@ -113,23 +113,29 @@ servers (*samples/tasks/scenarios/nova/boot-and-delete.json*):
 .. code-block:: json
 
     {
-        "NovaServers.boot_and_delete_server": [
+        "version": 2,
+        "title": "Boot and delete servers",
+        "subtasks": [
             {
-                "args": {
-                    "flavor": {
-                        "name": "m1.tiny"
-                    },
-                    "image": {
-                        "name": "^cirros.*-disk$"
-                    },
-                    "force_delete": false
+                "title": "Boot and delete a single server",
+                "scenario": {
+                    "NovaServers.boot_and_delete_server": {
+                        "flavor": {
+                            "name": "m1.tiny"
+                        },
+                        "image": {
+                            "name": "^cirros.*-disk$"
+                        },
+                        "force_delete": false
+                    }
                 },
                 "runner": {
-                    "type": "constant",
-                    "times": 10,
-                    "concurrency": 2
+                    "constant": {
+                        "times": 10,
+                        "concurrency": 2
+                    }
                 },
-                "context": {
+                "contexts": {
                     "users": {
                         "tenants": 3,
                         "users_per_tenant": 2

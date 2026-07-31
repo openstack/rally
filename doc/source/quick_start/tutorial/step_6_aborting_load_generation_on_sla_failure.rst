@@ -36,18 +36,22 @@ Rally input task looks as follows (*auth.yaml*):
 .. code-block:: yaml
 
     ---
-      Authenticate.keystone:
-      -
-        runner:
-          type: "rps"
-          times: 6000
-          rps: 50
-        context:
-          users:
-            tenants: 5
-            users_per_tenant: 10
-        sla:
-          max_avg_duration: 5
+      version: 2
+      title: Authenticate against Keystone
+      subtasks:
+        - title: Authenticate against Keystone
+          scenario:
+            Authenticate.keystone: {}
+          runner:
+            rps:
+              times: 6000
+              rps: 50
+          contexts:
+            users:
+              tenants: 5
+              users_per_tenant: 10
+          sla:
+            max_avg_duration: 5
 
 In human-readable form this input task means: *Create 5 tenants with 10 users
 in each, after that try to authenticate to Keystone 6000 times performing 50
@@ -100,21 +104,25 @@ one more time.
 .. code-block:: yaml
 
     ---
-      Authenticate.keystone:
-      -
-        runner:
-          type: "rps"
-          times: 6000
-          rps: 50
-        context:
-          users:
-            tenants: 5
-            users_per_tenant: 10
-        sla:
-          max_avg_duration: 5
-          max_seconds_per_iteration: 10
-          failure_rate:
-            max: 0
+      version: 2
+      title: Authenticate against Keystone
+      subtasks:
+        - title: Authenticate against Keystone
+          scenario:
+            Authenticate.keystone: {}
+          runner:
+            rps:
+              times: 6000
+              rps: 50
+          contexts:
+            users:
+              tenants: 5
+              users_per_tenant: 10
+          sla:
+            max_avg_duration: 5
+            max_seconds_per_iteration: 10
+            failure_rate:
+              max: 0
 
 Now our task is going to be successful if the following three conditions hold:
 
