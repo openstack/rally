@@ -127,22 +127,28 @@ Rally was deployed for cluster using `ExistingCloud`_ type of deployment.
 .. code-block:: json
 
  {
-    "NovaServers.boot_server": [
+    "version": 2,
+    "title": "Boot server performance",
+    "subtasks": [
         {
-            "args": {
-                "flavor": {
-                    "name": "ram64"
-                },
-                "image": {
-                    "name": "TestVM"
+            "title": "Boot a server",
+            "scenario": {
+                "NovaServers.boot_server": {
+                    "flavor": {
+                        "name": "ram64"
+                    },
+                    "image": {
+                        "name": "TestVM"
+                    }
                 }
             },
             "runner": {
-                "type": "constant",
-                "concurrency": 5,
-                "times": 400
+                "constant": {
+                    "concurrency": 5,
+                    "times": 400
+                }
             },
-            "context": {
+            "contexts": {
                 "neutron_network": {
                     "network_ip_version": 4
                 },

@@ -114,22 +114,28 @@ The new plugin can be used by specifying it in context section. Like below:
 .. code-block:: json
 
     {
-        "Dummy.dummy": [
+        "version": 2,
+        "title": "Using a custom context plugin",
+        "subtasks": [
             {
-                "args": {
-                    "sleep": 0.01
+                "title": "Dummy scenario with create_flavor context",
+                "scenario": {
+                    "Dummy.dummy": {
+                        "sleep": 0.01
+                    }
                 },
                 "runner": {
-                    "type": "constant",
-                    "times": 5,
-                    "concurrency": 1
+                    "constant": {
+                        "times": 5,
+                        "concurrency": 1
+                    }
                 },
-                "context": {
+                "contexts": {
                     "users": {
                         "tenants": 1,
                         "users_per_tenant": 1
                     },
-                     "create_flavor": {
+                    "create_flavor": {
                         "ram": 1024
                     }
                 }

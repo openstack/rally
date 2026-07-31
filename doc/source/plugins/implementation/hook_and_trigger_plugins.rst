@@ -61,11 +61,11 @@ configuration:
 .. code-block:: json
 
     {
-        "name": "sys_call",
-        "args": "/bin/echo 123",
+        "action": {
+            "sys_call": "/bin/echo 123"
+        },
         "trigger": {
-            "name": "event",
-            "args": {
+            "event": {
                 "unit": "iteration",
                 "at": [5, 50, 200, 1000]
             }
@@ -73,37 +73,42 @@ configuration:
     }
 
 
-It specifies hook plugin with name "sys_call". "args" field contains string
-that will be used by sys_call plugin, but in case of any other hook plugin it
-can contain any other Python object, that is assumed to be passed to the hook.
-"trigger" field specifies which trigger plugin should be used to run this hook.
-"trigger" contains similar fields "name" and "args" which represent trigger
-plugin name and arguments for trigger plugin. In this example "event" trigger
-is specified and configured to run the hook at 5th, 50th, 200th and 1000th
-iterations.
+It specifies the hook plugin "sys_call" as the single key of the "action"
+field. The value of that key is passed to the sys_call plugin; here it is a
+string, but for any other hook plugin it can be any Python object. The
+"trigger" field specifies which trigger plugin should be used to run this hook,
+again as a single key (the trigger plugin name) mapped to its arguments. In
+this example the "event" trigger is specified and configured to run the hook at
+the 5th, 50th, 200th and 1000th iterations.
 
 Here is a full task config that contains previous hook configuration:
 
 .. code-block:: json
 
   {
-      "Dummy.dummy": [
+      "version": 2,
+      "title": "Dummy scenario with a sys_call hook",
+      "subtasks": [
           {
-              "args": {
-                  "sleep": 0.01
+              "title": "Dummy scenario with a sys_call hook",
+              "scenario": {
+                  "Dummy.dummy": {
+                      "sleep": 0.01
+                  }
               },
               "runner": {
-                  "type": "constant",
-                  "times": 1500,
-                  "concurrency": 1
+                  "constant": {
+                      "times": 1500,
+                      "concurrency": 1
+                  }
               },
               "hooks": [
                   {
-                      "name": "sys_call",
-                      "args": "/bin/echo 123",
+                      "action": {
+                          "sys_call": "/bin/echo 123"
+                      },
                       "trigger": {
-                          "name": "event",
-                          "args": {
+                          "event": {
                               "unit": "iteration",
                               "at": [5, 50, 200, 1000]
                           }
@@ -131,37 +136,37 @@ and textual information.
 .. code-block:: yaml
 
   ---
-    Dummy.dummy:
-      -
-        args:
-          sleep: 0.75
+    version: 2
+    title: Dummy scenario with multiple hooks
+    subtasks:
+      - title: Dummy scenario with multiple hooks
+        scenario:
+          Dummy.dummy:
+            sleep: 0.75
         runner:
-          type: "constant"
-          times: 20
-          concurrency: 2
+          constant:
+            times: 20
+            concurrency: 2
         hooks:
-          - name: sys_call
-            description: Run script
-            args: sh rally/rally-jobs/extra/hook_example_script.sh
+          - description: Run script
+            action:
+              sys_call: sh rally/rally-jobs/extra/hook_example_script.sh
             trigger:
-              name: event
-              args:
+              event:
                 unit: iteration
                 at: [2, 5, 8, 13, 17]
-          - name: sys_call
-            description: Show time
-            args: date +%Y-%m-%dT%H:%M:%S
+          - description: Show time
+            action:
+              sys_call: date +%Y-%m-%dT%H:%M:%S
             trigger:
-              name: event
-              args:
+              event:
                 unit: time
                 at: [0, 2, 5, 6, 9]
-          - name: sys_call
-            description: Show system name
-            args: uname -a
+          - description: Show system name
+            action:
+              sys_call: uname -a
             trigger:
-              name: event
-              args:
+              event:
                 unit: iteration
                 at: [2, 3, 4, 5, 6, 8, 10, 12, 13, 15, 17, 18]
         sla:
@@ -261,23 +266,29 @@ Sample of task that uses Hook
 .. code-block:: json
 
   {
-      "Dummy.dummy": [
+      "version": 2,
+      "title": "Dummy scenario with a simple_sys_call hook",
+      "subtasks": [
           {
-              "args": {
-                  "sleep": 0.01
+              "title": "Dummy scenario with a simple_sys_call hook",
+              "scenario": {
+                  "Dummy.dummy": {
+                      "sleep": 0.01
+                  }
               },
               "runner": {
-                  "type": "constant",
-                  "times": 10,
-                  "concurrency": 1
+                  "constant": {
+                      "times": 10,
+                      "concurrency": 1
+                  }
               },
               "hooks": [
                   {
-                      "name": "simple_sys_call",
-                      "args": "/bin/echo 123",
+                      "action": {
+                          "simple_sys_call": "/bin/echo 123"
+                      },
                       "trigger": {
-                          "name": "event",
-                          "args": {
+                          "event": {
                               "unit": "iteration",
                               "at": [3, 6]
                           }

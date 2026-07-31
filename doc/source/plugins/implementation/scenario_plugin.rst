@@ -205,15 +205,22 @@ way as any other scenarios:
 .. code-block:: json
 
     {
-        "ScenarioPlugin.list_flavors": [
+        "version": 2,
+        "title": "Using a custom scenario plugin",
+        "subtasks": [
             {
-                "runner": {
-                    "type": "serial",
-                    "times": 5,
+                "title": "List flavors",
+                "scenario": {
+                    "ScenarioPlugin.list_flavors": {}
                 },
-                "context": {
+                "runner": {
+                    "serial": {
+                        "times": 5
+                    }
+                },
+                "contexts": {
                     "create_flavor": {
-                        "ram": 512,
+                        "ram": 512
                     }
                 }
             }
