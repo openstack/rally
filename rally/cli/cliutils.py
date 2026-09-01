@@ -144,11 +144,7 @@ def print_list(
 
     if print_border and print_row_border:
         headers_horizontal_char = "="
-        try:
-            kwargs["hrules"] = prettytable.HRuleStyle.ALL
-        except AttributeError:  # pragma: no cover
-            # old prettytable
-            kwargs["hrules"] = prettytable.ALL
+        kwargs["hrules"] = prettytable.HRuleStyle.ALL
     else:
         headers_horizontal_char = "-"
     pt = prettytable.PrettyTable(field_labels)
