@@ -2231,7 +2231,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
         subtask_uuid = str(uuid.uuid4())
         start_time = 1483221602
         created_at = dt.datetime.fromtimestamp(start_time - 2)
-        created_at = created_at.replace(tzinfo=dt.timezone.utc)
+        created_at = created_at.replace(tzinfo=dt.UTC)
 
         start_time = float(start_time) * 1000000.0
         self._dc46687661df_workloads = {

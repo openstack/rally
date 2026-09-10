@@ -7,11 +7,6 @@
     timeout: 1800
 
 - job:
-    name: rally-install-ubuntu-jammy
-    parent: rally-install-base
-    nodeset: ubuntu-jammy
-
-- job:
     name: rally-install-ubuntu-noble
     parent: rally-install-base
     nodeset: ubuntu-noble

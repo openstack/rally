@@ -244,8 +244,8 @@ def use_verifier(
 @verify_app.command(name="list-verifiers", rich_help_panel=VERIFIER)
 @plugins.ensure_plugins_are_loaded
 def list_verifiers(
-    status: t.Annotated[  # type: ignore[valid-type]
-        t.Literal[tuple(consts.VerifierStatus)] | None,
+    status: t.Annotated[
+        t.Literal[tuple(consts.VerifierStatus)] | None,  # type: ignore[valid-type]
         typer.Option(help="Status to filter verifiers by."),
     ] = None,
 ) -> None:
@@ -1061,8 +1061,8 @@ def list_(
         list[str] | None,
         typer.Option("--tag", help="Tags to filter verifications by."),
     ] = None,
-    status: t.Annotated[  # type: ignore[valid-type]
-        t.Literal[tuple(consts.VerificationStatus)] | None,
+    status: t.Annotated[
+        t.Literal[tuple(consts.VerificationStatus)] | None,  # type: ignore[valid-type]
         typer.Option(help="Status to filter verifications by."),
     ] = None,
 ) -> None:

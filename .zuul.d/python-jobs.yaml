@@ -39,17 +39,6 @@
       tox_env: self
 
 - job:
-    name: rally-tox-py310
-    parent: rally-tox-base
-    description: |
-      Run unit test for rally project.
-
-      Uses tox with the ``py310`` environment.
-    vars:
-      tox_env: py310
-    nodeset: ubuntu-jammy
-
-- job:
     name: rally-tox-py311
     parent: rally-tox-base
     description: |

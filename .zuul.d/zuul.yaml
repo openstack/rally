@@ -7,7 +7,6 @@
         - rally-tox-cover
         - rally-tox-mypy
         - rally-tox-pep8
-        - rally-tox-py310
         - rally-tox-py311
         - rally-tox-py312
         - rally-tox-py313
@@ -17,7 +16,6 @@
         - rally-tox-samples
         - rally-tox-functional
         - rally-tox-self
-        - rally-install-ubuntu-jammy
         - rally-install-ubuntu-noble
         - rally-docker-build
         # ensure rally-openstack is working with latest rally

@@ -867,8 +867,8 @@ def list_(
     all_deployments: t.Annotated[
         bool, typer.Option("--all-deployments", hidden=True)
     ] = False,
-    status: t.Annotated[  # type: ignore[valid-type]
-        t.Literal[tuple(consts.TaskStatus)] | None,
+    status: t.Annotated[
+        t.Literal[tuple(consts.TaskStatus)] | None,  # type: ignore[valid-type]
         typer.Option(help="List tasks with the specified status."),
     ] = None,
     tags: t.Annotated[
