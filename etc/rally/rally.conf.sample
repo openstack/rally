@@ -36,13 +36,6 @@
 # Deprecated group/name - [DEFAULT]/logdir
 #log_dir = <None>
 
-# Uses logging handler designed to watch file system. When log file is
-# moved or removed this handler will open a new log file with
-# specified path instantaneously. It makes sense only if log_file
-# option is specified and Linux platform is used. This option is
-# ignored if log_config_append is set. (boolean value)
-#watch_log_file = false
-
 # Use syslog for logging. Existing syslog format is DEPRECATED and
 # will be changed later to honor RFC5424. This option is ignored if
 # log_config_append is set. (boolean value)
@@ -67,11 +60,13 @@
 # log_config_append is set. (boolean value)
 #use_stderr = true
 
-# Log output to Windows Event Log. (boolean value)
-#use_eventlog = false
+# (Optional) Set the 'color' key according to log levels. This option
+# takes effect only when logging to stderr or stdout is used. This
+# option is ignored if log_config_append is set. (boolean value)
+#log_color = false
 
 # The amount of time before the log files are rotated. This option is
-# ignored unless log_rotation_type is setto "interval". (integer
+# ignored unless log_rotation_type is set to "interval". (integer
 # value)
 #log_rotate_interval = 1
 
@@ -103,7 +98,7 @@
 
 # Format string to use for log messages with context. Used by
 # oslo_log.formatters.ContextFormatter (string value)
-#logging_context_format_string = %(asctime)s.%(msecs)03d %(process)d %(levelname)s %(name)s [%(request_id)s %(user_identity)s] %(instance)s%(message)s
+#logging_context_format_string = %(asctime)s.%(msecs)03d %(process)d %(levelname)s %(name)s [%(global_request_id)s %(request_id)s %(user_identity)s] %(instance)s%(message)s
 
 # Format string to use for log messages when context is undefined.
 # Used by oslo_log.formatters.ContextFormatter (string value)
@@ -121,11 +116,11 @@
 # Defines the format string for %(user_identity)s that is used in
 # logging_context_format_string. Used by
 # oslo_log.formatters.ContextFormatter (string value)
-#logging_user_identity_format = %(user)s %(tenant)s %(domain)s %(user_domain)s %(project_domain)s
+#logging_user_identity_format = %(user)s %(project)s %(domain)s %(system_scope)s %(user_domain)s %(project_domain)s
 
 # List of package logging levels in logger=LEVEL pairs. This option is
 # ignored if log_config_append is set. (list value)
-#default_log_levels = amqp=WARN,amqplib=WARN,boto=WARN,qpid=WARN,sqlalchemy=WARN,suds=INFO,oslo.messaging=INFO,oslo_messaging=INFO,iso8601=WARN,requests.packages.urllib3.connectionpool=WARN,urllib3.connectionpool=WARN,websocket=WARN,requests.packages.urllib3.util.retry=WARN,urllib3.util.retry=WARN,keystonemiddleware=WARN,routes.middleware=WARN,stevedore=WARN,taskflow=WARN,keystoneauth=WARN,oslo.cache=INFO,oslo_policy=INFO,dogpile.core.dogpile=INFO
+#default_log_levels = amqp=WARN,boto=WARN,sqlalchemy=WARN,suds=INFO,oslo.messaging=INFO,oslo_messaging=INFO,iso8601=WARN,requests.packages.urllib3.connectionpool=WARN,urllib3.connectionpool=WARN,websocket=WARN,requests.packages.urllib3.util.retry=WARN,urllib3.util.retry=WARN,keystonemiddleware=WARN,routes.middleware=WARN,stevedore=WARN,taskflow=WARN,keystoneauth=WARN,oslo.cache=INFO,oslo_policy=INFO,dogpile.core.dogpile=INFO
 
 # Enables or disables publication of error events. (boolean value)
 #publish_errors = false
@@ -145,10 +140,16 @@
 # value)
 #rate_limit_burst = 0
 
-# Log level name used by rate limiting: CRITICAL, ERROR, INFO,
-# WARNING, DEBUG or empty string. Logs with level greater or equal to
-# rate_limit_except_level are not filtered. An empty string means that
-# all levels are filtered. (string value)
+# Log level name used by rate limiting. Logs with level greater or
+# equal to rate_limit_except_level are not filtered. An empty string
+# means that all levels are filtered. (string value)
+# Possible values:
+# CRITICAL - <No description provided>
+# ERROR - <No description provided>
+# INFO - <No description provided>
+# WARNING - <No description provided>
+# DEBUG - <No description provided>
+# '' - <No description provided>
 #rate_limit_except_level = CRITICAL
 
 # Enables or disables fatal status of deprecations. (boolean value)
@@ -180,6 +181,13 @@
 # a random string. (string value)
 #scenario_resource_name_format = <None>
 
+# Control how a scenario run() argument annotated with a type that
+# Rally cannot map to a JSON Schema is handled. When False (default),
+# such an argument is treated as unconstrained (any value is accepted)
+# and a warning is logged. When True, building the scenario's argument
+# schema raises an error instead. (boolean value)
+#strict_type_annotations = false
+
 
 [database]
 
@@ -191,19 +199,35 @@
 #sqlite_synchronous = true
 
 # The back end to use for the database. (string value)
-# Deprecated group/name - [DEFAULT]/db_backend
 #backend = sqlalchemy
 
 # The SQLAlchemy connection string to use to connect to the database.
 # (string value)
-# Deprecated group/name - [DEFAULT]/sql_connection
-# Deprecated group/name - [DATABASE]/sql_connection
-# Deprecated group/name - [sql]/connection
 #connection = <None>
 
 # The SQLAlchemy connection string to use to connect to the slave
 # database. (string value)
 #slave_connection = <None>
+
+# The SQLAlchemy asyncio connection string to use to connect to the
+# database. (string value)
+#asyncio_connection = <None>
+
+# The SQLAlchemy asyncio connection string to use to connect to the
+# slave database. (string value)
+#asyncio_slave_connection = <None>
+
+# Whether or not to assume a reader context needs to guarantee it can
+# read data committed by a writer assuming replication lag is present;
+# defaults to True. When False, a reader context works the same as
+# async_reader and will select the slave database if present. When
+# using a galera cluster, this can be set to False only if you set
+# mysql_wsrep_sync_wait to 1 (this will guarantee that the reader will
+# wait until writesets are committed).Note that this may incur a
+# performance degradation within the galera cluster. Note also that
+# this parameter has no effect if you do not set any slave_connection.
+# (boolean value)
+#synchronous_reader = true
 
 # The SQL mode to be used for MySQL sessions. This option, including
 # the default, overrides any server-set SQL mode. To use whatever SQL
@@ -211,58 +235,43 @@
 # Example: mysql_sql_mode= (string value)
 #mysql_sql_mode = TRADITIONAL
 
-# If True, transparently enables support for handling MySQL Cluster
-# (NDB). (boolean value)
-#mysql_enable_ndb = false
+# For Galera only, configure wsrep_sync_wait causality checks on new
+# connections.  Default is None, meaning don't configure any setting.
+# (integer value)
+#mysql_wsrep_sync_wait = <None>
 
 # Connections which have been present in the connection pool longer
 # than this number of seconds will be replaced with a new one the next
 # time they are checked out from the pool. (integer value)
-# Deprecated group/name - [DATABASE]/idle_timeout
-# Deprecated group/name - [database]/idle_timeout
-# Deprecated group/name - [DEFAULT]/sql_idle_timeout
-# Deprecated group/name - [DATABASE]/sql_idle_timeout
-# Deprecated group/name - [sql]/idle_timeout
 #connection_recycle_time = 3600
 
 # Maximum number of SQL connections to keep open in a pool. Setting a
 # value of 0 indicates no limit. (integer value)
-# Deprecated group/name - [DEFAULT]/sql_max_pool_size
-# Deprecated group/name - [DATABASE]/sql_max_pool_size
 #max_pool_size = 5
 
 # Maximum number of database connection retries during startup. Set to
 # -1 to specify an infinite retry count. (integer value)
-# Deprecated group/name - [DEFAULT]/sql_max_retries
-# Deprecated group/name - [DATABASE]/sql_max_retries
 #max_retries = 10
 
 # Interval between retries of opening a SQL connection. (integer
 # value)
-# Deprecated group/name - [DEFAULT]/sql_retry_interval
-# Deprecated group/name - [DATABASE]/reconnect_interval
 #retry_interval = 10
 
 # If set, use this value for max_overflow with SQLAlchemy. (integer
 # value)
-# Deprecated group/name - [DEFAULT]/sql_max_overflow
-# Deprecated group/name - [DATABASE]/sqlalchemy_max_overflow
 #max_overflow = 50
 
 # Verbosity of SQL debugging information: 0=None, 100=Everything.
 # (integer value)
 # Minimum value: 0
 # Maximum value: 100
-# Deprecated group/name - [DEFAULT]/sql_connection_debug
 #connection_debug = 0
 
 # Add Python stack traces to SQL as comment strings. (boolean value)
-# Deprecated group/name - [DEFAULT]/sql_connection_trace
 #connection_trace = false
 
 # If set, use this value for pool_timeout with SQLAlchemy. (integer
 # value)
-# Deprecated group/name - [DATABASE]/sqlalchemy_pool_timeout
 #pool_timeout = <None>
 
 # Enable the experimental use of database reconnect on connection
