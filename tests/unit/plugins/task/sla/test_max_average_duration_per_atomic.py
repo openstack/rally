@@ -91,6 +91,71 @@ class MaxAverageDurationPerAtomicTestCase(test.TestCase):
             {"name": "a1", "started_at": 0, "finished_at": 1.0},
             {"name": "a2", "started_at": 0, "finished_at": 2.0}]}))
 
+    def test_add_iteration_nested_atomics(self):
+        sla_inst = madpa.MaxAverageDurationPerAtomic({"a1": 5, "nested": 2})
+        self.assertTrue(sla_inst.add_iteration({"atomic_actions": [
+            {"name": "a1", "started_at": 0, "finished_at": 4.0,
+             "children": [
+                 {"name": "nested", "started_at": 0, "finished_at": 1.0,
+                  "children": []}]}]}))
+        self.assertEqual({"a1": 4.0, "nested": 1.0}, sla_inst.avg_by_action)
+        # the nested action pushes itself over the limit
+        self.assertFalse(sla_inst.add_iteration({"atomic_actions": [
+            {"name": "a1", "started_at": 0, "finished_at": 4.0,
+             "children": [
+                 {"name": "nested", "started_at": 0, "finished_at": 5.0,
+                  "children": []}]}]}))
+        self.assertEqual({"a1": 4.0, "nested": 3.0}, sla_inst.avg_by_action)
+
+    def test_add_iteration_repeated_atomics(self):
+        sla_inst = madpa.MaxAverageDurationPerAtomic({"a1": 5})
+        # each occurrence is a separate sample, so the average is 2.0
+        self.assertTrue(sla_inst.add_iteration({"atomic_actions": [
+            {"name": "a1", "started_at": 0, "finished_at": 1.0,
+             "children": []},
+            {"name": "a1", "started_at": 1.0, "finished_at": 4.0,
+             "children": []}]}))
+        self.assertEqual({"a1": 2.0}, sla_inst.avg_by_action)
+
+    def test_add_iteration_unfinished_atomic(self):
+        sla_inst = madpa.MaxAverageDurationPerAtomic({"a1": 5, "a2": 5})
+        # 'a2' had not been finished and 'a1' had not been started at all,
+        # so there is nothing to measure
+        self.assertTrue(sla_inst.add_iteration({"atomic_actions": [
+            {"name": "a1", "started_at": None, "children": []},
+            {"name": "a2", "started_at": 0.0, "children": []}]}))
+        self.assertEqual({}, sla_inst.avg_by_action)
+        self.assertEqual([], list(sla_inst.avg_comp_by_action))
+
+    def test_add_iteration_failed_iteration_is_ignored(self):
+        sla_inst = madpa.MaxAverageDurationPerAtomic({"a1": 5})
+        self.assertTrue(sla_inst.add_iteration({
+            "error": ["Something went wrong"],
+            "atomic_actions": [{"name": "a1", "started_at": 0,
+                                "finished_at": 100.0, "children": []}]}))
+        self.assertEqual({}, sla_inst.avg_by_action)
+
+    def test_merge_with_unknown_atomics(self):
+        init = {"a1": 5, "a2": 5}
+        sla1 = madpa.MaxAverageDurationPerAtomic(init)
+        sla2 = madpa.MaxAverageDurationPerAtomic(init)
+        sla1.add_iteration({"atomic_actions": [
+            {"name": "a1", "started_at": 0, "finished_at": 1.0,
+             "children": []}]})
+        # 'a2' is known only to the second instance and violates the criterion
+        sla2.add_iteration({"atomic_actions": [
+            {"name": "a2", "started_at": 0, "finished_at": 10.0,
+             "children": []}]})
+        self.assertFalse(sla1.merge(sla2))
+        self.assertEqual({"a1": 1.0, "a2": 10.0}, sla1.avg_by_action)
+
+    def test_merge_of_never_executed_atomic(self):
+        sla1 = madpa.MaxAverageDurationPerAtomic({"a1": 5})
+        sla2 = madpa.MaxAverageDurationPerAtomic({"a1": 5})
+        self.assertTrue(sla1.merge(sla2))
+        self.assertEqual({}, sla1.avg_by_action)
+        self.assertIn("Action: 'a1'. 0.00s <= 5.00s", sla1.details())
+
     def test_merge(self):
         durations = [[1.0, 2.0, 1.5, 4.3],
                      [2.1, 3.4, 1.2, 6.3, 7.2, 7.0, 1.],

@@ -137,6 +137,7 @@ def action_timer(
 
 def merge_atomic_actions(
     atomic_actions: list[AtomicAction],
+    *,
     root: collections.OrderedDict[str, MergedAtomicAction] | None = None,
     depth: int = 0,
     depth_of_processing: int = 2,
@@ -149,7 +150,6 @@ def merge_atomic_actions(
         atomic actions)
     :param depth: current level of processing inner atomic actions
     :param depth_of_processing: the depth of processing of inner atomic actions
-        (defaults to 2)
     """
     p_atomics: collections.OrderedDict[str, MergedAtomicAction] = (
         collections.OrderedDict() if root is None else root
@@ -174,7 +174,8 @@ def merge_atomic_actions(
             children_dict = p_atomics[action["name"]]["children"]
             if isinstance(children_dict, collections.OrderedDict):
                 merge_atomic_actions(
-                    action["children"], root=children_dict, depth=depth + 1
+                    action["children"], root=children_dict, depth=depth + 1,
+                    depth_of_processing=depth_of_processing
                 )
 
     return p_atomics

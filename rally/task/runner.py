@@ -47,7 +47,7 @@ class ScenarioRunnerResult(t.TypedDict):
     idle_duration: float
     error: list[str]
     output: scenario._Output
-    atomic_actions: list[dict[str, t.Any]] | list[atomic.AtomicAction]
+    atomic_actions: list[atomic.AtomicAction]
 
 
 LOG = logging.getLogger(__name__)

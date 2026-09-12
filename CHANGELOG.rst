@@ -17,6 +17,28 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
+unreleased
+----------
+
+Changed
+~~~~~~~
+
+* ``max_avg_duration_per_atomic`` SLA now inspects atomic actions of all
+  nesting levels, so a criterion can be set for a nested atomic action as
+  well as for a top-level one.
+
+Fixed
+~~~~~
+
+* ``max_avg_duration_per_atomic`` SLA no longer fails with ``KeyError`` while
+  processing an atomic action that had not been finished (i.e the scenario
+  died in the middle of it). Such actions have no measured duration at all,
+  so they are ignored instead of being counted as zero-length ones.
+
+* ``max_avg_duration_per_atomic`` SLA no longer loses the data of atomic
+  actions that were observed only by a part of the workers while merging
+  results of a distributed run.
+
 [5.1.1] - 2026-08-13
 --------------------
 
