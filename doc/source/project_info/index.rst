@@ -136,7 +136,6 @@ Plugin Core reviewers
 Useful links
 ------------
 - `Source code`_
-- `Rally roadmap`_
 - `Project space`_
 - `Bugs`_
 - `Patches on review`_
@@ -144,7 +143,6 @@ Useful links
    **#openstack-meeting**)
 - `IRC logs`_ (server: **irc.oftc.net**, channel: **#openstack-rally**)
 - `Gitter chat`_
-- `Trello board`_
 
 
 Where can I discuss and propose changes?
@@ -162,14 +160,12 @@ Where can I discuss and propose changes?
 
 .. references:
 
-.. _Source code: https://github.com/openstack/rally
-.. _Rally roadmap: https://docs.google.com/a/mirantis.com/spreadsheets/d/16DXpfbqvlzMFaqaXAcJsBzzpowb_XpymaK2aFY2gA2g/edit#gid=0
+.. _Source code: https://opendev.org/openstack/rally
 .. _Project space: https://launchpad.net/rally
 .. _Bugs: https://bugs.launchpad.net/rally
 .. _Patches on review: https://review.openstack.org/#/q/status:open+project:openstack/rally,n,z
-.. _Meeting logs: http://eavesdrop.openstack.org/meetings/rally/2016/
-.. _IRC logs: http://irclog.perlgeek.de/openstack-rally
+.. _Meeting logs: http://eavesdrop.openstack.org/meetings/rally
+.. _IRC logs: http://eavesdrop.openstack.org/irclogs/%23openstack-rally
 .. _Gitter chat: https://gitter.im/rally-dev/Lobby
-.. _Trello board: https://trello.com/b/DoD8aeZy/rally
-.. _subscription and usage instructions: http://lists.openstack.org/cgi-bin/mailman/listinfo/openstack-dev
+.. _subscription and usage instructions: http://eavesdrop.openstack.org/irclogs/%23openstack-rally/
 .. _Rally team on Launchpad: https://launchpad.net/rally
