@@ -114,25 +114,25 @@ def _run_scenario_once(
         error = utils.format_exc(e)
         if logging.is_debug():
             LOG.exception(f"Iteration {iteration} raised Exception")
-    finally:
-        status = f"Error {error[0]}: {error[1]}" if error else "OK"
-        LOG.info(f"Task {task_uuid} | ITER: {iteration} END: {status}")
 
-        idle_duration = scenario_inst.idle_duration() if scenario_inst else 0.0
-        return {
-            "duration": timer.duration() - idle_duration,
-            "timestamp": timer.timestamp(),
-            "idle_duration": idle_duration,
-            "error": error,
-            "output": (
-                scenario_inst._output
-                if scenario_inst
-                else scenario._Output(additive=[], complete=[])
-            ),
-            "atomic_actions": (
-                scenario_inst.atomic_actions() if scenario_inst else []
-            ),
-        }
+    status = f"Error {error[0]}: {error[1]}" if error else "OK"
+    LOG.info(f"Task {task_uuid} | ITER: {iteration} END: {status}")
+
+    idle_duration = scenario_inst.idle_duration() if scenario_inst else 0.0
+    return {
+        "duration": timer.duration() - idle_duration,
+        "timestamp": timer.timestamp(),
+        "idle_duration": idle_duration,
+        "error": error,
+        "output": (
+            scenario_inst._output
+            if scenario_inst
+            else scenario._Output(additive=[], complete=[])
+        ),
+        "atomic_actions": (
+            scenario_inst.atomic_actions() if scenario_inst else []
+        ),
+    }
 
 
 def _worker_thread(

@@ -266,6 +266,7 @@ target-version = "py311"
 # which ruff does not implement) checks. The rest of the selections enforce
 # Rally's style and import conventions.
 select = [
+    "B012",    # no `return`/`break`/`continue` inside `finally`
     "E",       # pycodestyle errors
     "W",       # pycodestyle warnings
     "F",       # pyflakes
