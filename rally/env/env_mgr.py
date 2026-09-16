@@ -12,9 +12,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import annotations
+
+import builtins
 import copy
 import os
 import traceback
+import typing as t
 
 import jsonschema
 
@@ -131,7 +135,7 @@ class EnvManager:
     }
     """
 
-    def __init__(self, _data):
+    def __init__(self, _data: dict[str, t.Any]) -> None:
         """Private method to initializes env manager.
 
         This method is not meant to be called directly, use one of
@@ -141,16 +145,16 @@ class EnvManager:
         self._env["platforms"] = []
         self.uuid = self._env["uuid"]
 
-    def __str__(self):
-        return "Env `%(name)s (%(uuid)s)'" % self._env
+    def __str__(self) -> str:
+        return f"Env `{self._env['name']} ({self._env['uuid']})'"
 
     @property
-    def status(self):
+    def status(self) -> str:
         """Returns current state of Env that was fetched from DB."""
         return db.env_get_status(self.uuid)
 
     @property
-    def cached_data(self):
+    def cached_data(self) -> dict[str, t.Any]:
         platforms = {}
         for p in self._env["platforms"]:
             p = copy.deepcopy(p)
@@ -171,18 +175,14 @@ class EnvManager:
         }
 
     @property
-    def data(self):
+    def data(self) -> dict[str, t.Any]:
         """Returns full information about env including platforms."""
         self._env = db.env_get(self.uuid)
         self._env["platforms"] = db.platforms_list(self.uuid)
         return self.cached_data
 
-    def _get_platforms(self):
-        """Iterate over Envs platforms.
-
-        :returns: Generator that returns list of tuples
-                  (uuid, instance of rally.env.platform.Platform)
-        """
+    def _get_platforms(self) -> builtins.list[platform.Platform]:
+        """Return instances of the platforms of the env."""
         raw_platforms = db.platforms_list(self.uuid)
         platforms = []
 
@@ -201,7 +201,7 @@ class EnvManager:
         return platforms
 
     @classmethod
-    def get(cls, uuid_or_name):
+    def get(cls, uuid_or_name: str) -> EnvManager:
         """Get the instance of EnvManager by uuid or name.
 
         :param uuid_or_name: Returns record that has uuid or name equal to it.
@@ -210,12 +210,14 @@ class EnvManager:
         return cls(db.env_get(uuid_or_name))
 
     @classmethod
-    def list(cls, status=None):
+    def list(cls, status: str | None = None) -> builtins.list[EnvManager]:
         """Returns list of instances of EnvManagers."""
         return [cls(data) for data in db.env_list(status=status)]
 
     @classmethod
-    def _validate_and_create_env(cls, name, spec):
+    def _validate_and_create_env(
+        cls, name: str, spec: dict[str, t.Any]
+    ) -> EnvManager:
         """Validated and create env and platforms DB records.
 
         Do NOT use this method directly. Call create() method instead.
@@ -240,10 +242,10 @@ class EnvManager:
         extras = spec.pop("!extras", {})
         description = spec.pop("!description", "")
 
-        existing_platforms = {}
-        for p_name, p_spec in list(spec.items()):
+        existing_platforms: dict[str, str] = {}
+        for p_name, p_spec in builtins.list(spec.items()):
             if "@" not in p_name:
-                spec["existing@%s" % p_name] = p_spec
+                spec[f"existing@{p_name}"] = p_spec
                 spec.pop(p_name)
 
             platform_name = p_name.split("@")[1] if "@" in p_name else p_name
@@ -252,9 +254,9 @@ class EnvManager:
                     mgr="Env",
                     spec=spec,
                     errors=[
-                        "Using multiple plugins [%s, %s] with the same "
-                        "platform in single Env is not supported: "
-                        % (p_name, existing_platforms[platform_name])
+                        f"Using multiple plugins [{p_name}, "
+                        f"{existing_platforms[platform_name]}] with the same "
+                        f"platform in single Env is not supported: "
                     ],
                 )
             existing_platforms[platform_name] = p_name
@@ -290,7 +292,7 @@ class EnvManager:
             )
         )
 
-    def _create_platforms(self):
+    def _create_platforms(self) -> None:
         """Iterates over platform and creates them, storing results in DB.
 
         Do NOT use this method directly! Use create() instead.
@@ -319,13 +321,8 @@ class EnvManager:
             except Exception:
                 new_env_status = STATUS.FAILED_TO_CREATE
                 LOG.exception(
-                    "Failed to create platform (%(uuid)s): "
-                    "%(name)s with spec: %(spec)s"
-                    % {
-                        "uuid": p.uuid,
-                        "name": p.get_fullname(),
-                        "spec": p.spec,
-                    }
+                    f"Failed to create platform ({p.uuid}): "
+                    f"{p.get_fullname()} with spec: {p.spec}"
                 )
                 try:
                     db.platform_set_status(
@@ -335,11 +332,8 @@ class EnvManager:
                     )
                 except Exception:
                     LOG.exception(
-                        "Failed to set platform %(uuid)s status %(status)s"
-                        % {
-                            "uuid": p.uuid,
-                            "status": platform.STATUS.FAILED_TO_CREATE,
-                        }
+                        f"Failed to set platform {p.uuid} status "
+                        f"{platform.STATUS.FAILED_TO_CREATE}"
                     )
 
             if new_env_status == STATUS.FAILED_TO_CREATE:
@@ -365,26 +359,29 @@ class EnvManager:
                 try:
                     p.destroy()
                     LOG.warning(
-                        "Couldn't store platform %s data to DB."
-                        "Attempt to destroy it succeeded." % p.uuid
+                        f"Couldn't store platform {p.uuid} data to DB. "
+                        f"Attempt to destroy it succeeded."
                     )
                 except Exception:
                     LOG.exception(
-                        "Couldn't store data of platform(%(uuid)s): %(name)s  "
-                        "with spec: %(spec)s. Attempt to destroy it failed. "
-                        "Sorry, but we can't do anything else for you. :("
-                        % {
-                            "uuid": p.uuid,
-                            "name": p.get_fullname(),
-                            "spec": p.spec,
-                        }
+                        f"Couldn't store data of platform({p.uuid}): "
+                        f"{p.get_fullname()} with spec: {p.spec}. Attempt "
+                        f"to destroy it failed. Sorry, but we can't do "
+                        f"anything else for you. :("
                     )
 
         db.env_set_status(self.uuid, STATUS.INIT, new_env_status)
 
     @classmethod
     @plugins.ensure_plugins_are_loaded
-    def create(cls, name, spec, description=None, extras=None, config=None):
+    def create(
+        cls,
+        name: str,
+        spec: dict[str, t.Any],
+        description: str | None = None,
+        extras: dict[str, t.Any] | None = None,
+        config: dict[str, t.Any] | None = None,
+    ) -> EnvManager:
         """Creates DB record for new env and returns instance of Env class.
 
         :param name: User specified name of env
@@ -424,8 +421,11 @@ class EnvManager:
     @classmethod
     @plugins.ensure_plugins_are_loaded
     def create_spec_from_sys_environ(
-        cls, description=None, extras=None, config=None
-    ):
+        cls,
+        description: str | None = None,
+        extras: dict[str, t.Any] | None = None,
+        config: dict[str, t.Any] | None = None,
+    ) -> dict[str, t.Any]:
         """Compose an environment spec based on system environment.
 
         Iterates over all available platform-representation plugins which
@@ -439,7 +439,7 @@ class EnvManager:
             information about discovery
         """
 
-        details = {}
+        details: dict[str, platform.SysEnvSpec] = {}
         for p in platform.Platform.get_all():
             try:
                 res = p.create_spec_from_sys_environ(copy.deepcopy(os.environ))
@@ -447,15 +447,15 @@ class EnvManager:
                 res.setdefault("message", "Available")
             except Exception as e:
                 msg = (
-                    "Plugin %s.create_from_sys_environ() method is broken"
-                    % p.get_fullname()
+                    f"Plugin {p.get_fullname()}.create_from_sys_environ() "
+                    f"method is broken"
                 )
                 LOG.exception(msg)
-                res = {"message": msg, "available": False}
+                res = platform.SysEnvSpec(message=msg, available=False)
                 if not isinstance(e, jsonschema.ValidationError):
                     res["traceback"] = traceback.format_exc()
             details[p.get_fullname()] = res
-        spec = dict(
+        spec: dict[str, t.Any] = dict(
             (k, v.get("spec", {}))
             for k, v in details.items()
             if v["available"]
@@ -468,7 +468,7 @@ class EnvManager:
             spec["!config"] = config
         return {"spec": spec, "discovery_details": details}
 
-    def rename(self, new_name):
+    def rename(self, new_name: str) -> bool:
         """Renames env record.
 
         :param new_name: New Env name.
@@ -477,7 +477,12 @@ class EnvManager:
             return True
         return db.env_rename(self.uuid, self._env["name"], new_name)
 
-    def update(self, description=None, config=None, extras=None):
+    def update(
+        self,
+        description: str | None = None,
+        config: dict[str, t.Any] | None = None,
+        extras: dict[str, t.Any] | None = None,
+    ) -> bool:
         """Update description and extras for environment.
 
         :param description: New description for env
@@ -487,7 +492,7 @@ class EnvManager:
             self.uuid, description=description, config=config, extras=extras
         )
 
-    def update_spec(self, new_spec):
+    def update_spec(self, new_spec: dict[str, t.Any]) -> None:
         """Update env spec. [not implemented]"""
         # NOTE(boris-42): This functionality requires proper implementation of
         #                 state machine  and journal execution, which we are
@@ -506,18 +511,10 @@ class EnvManager:
     }
 
     @plugins.ensure_plugins_are_loaded
-    def check_health(self):
+    def check_health(self) -> dict[str, platform.HealthInfo]:
         """Iterates over all platforms in env and returns their health.
 
-        Format of result is
-        {
-            "platform_name": {
-                "available": True/False,
-                "message": "custom message"},
-                "traceback": ...
-        }
-
-        :return: Dict with results
+        :return: the health of each platform, by the full name of its plugin
         """
         result = {}
 
@@ -528,11 +525,13 @@ class EnvManager:
                 check_result.setdefault("message", "OK!")
             except Exception as e:
                 msg = (
-                    "Plugin %s.check_health() method is broken"
-                    % p.get_fullname()
+                    f"Plugin {p.get_fullname()}.check_health() method is "
+                    f"broken"
                 )
                 LOG.exception(msg)
-                check_result = {"message": msg, "available": False}
+                check_result = platform.HealthInfo(
+                    message=msg, available=False
+                )
                 if not isinstance(e, jsonschema.ValidationError):
                     check_result["traceback"] = traceback.format_exc()
 
@@ -552,7 +551,7 @@ class EnvManager:
     }
 
     @plugins.ensure_plugins_are_loaded
-    def get_info(self):
+    def get_info(self) -> dict[str, platform.PlatformInfo]:
         """Get detailed information about all platforms.
 
         Platform plugins may collect any information from plugin and return
@@ -565,9 +564,9 @@ class EnvManager:
                 info = p.info()
                 jsonschema.validate(info, self._INFO_FORMAT)
             except Exception as e:
-                msg = "Plugin %s.info() method is broken" % p.get_fullname()
+                msg = f"Plugin {p.get_fullname()}.info() method is broken"
                 LOG.exception(msg)
-                info = {"info": None, "error": msg}
+                info = platform.PlatformInfo(info=None, error=msg)
                 if not isinstance(e, jsonschema.ValidationError):
                     info["traceback"] = traceback.format_exc()
 
@@ -614,7 +613,9 @@ class EnvManager:
     }
 
     @plugins.ensure_plugins_are_loaded
-    def cleanup(self, task_uuid=None):
+    def cleanup(
+        self, task_uuid: str | None = None
+    ) -> dict[str, platform.CleanupInfo]:
         """Cleans all platform in env.
 
         :param task_uuid: Cleans up only resources of specific task.
@@ -629,16 +630,16 @@ class EnvManager:
                 cleanup_info.setdefault("message", "Succeeded")
                 jsonschema.validate(cleanup_info, self._CLEANUP_FORMAT)
             except Exception as e:
-                msg = "Plugin %s.cleanup() method is broken" % p.get_fullname()
+                msg = f"Plugin {p.get_fullname()}.cleanup() method is broken"
                 LOG.exception(msg)
-                cleanup_info = {
-                    "message": "Failed",
-                    "discovered": 0,
-                    "deleted": 0,
-                    "failed": 0,
-                    "resources": {},
-                    "errors": [{"message": msg}],
-                }
+                cleanup_info = platform.CleanupInfo(
+                    message="Failed",
+                    discovered=0,
+                    deleted=0,
+                    failed=0,
+                    resources={},
+                    errors=[platform.CleanupError(message=msg)],
+                )
                 if isinstance(e, NotImplementedError):
                     cleanup_info["message"] = "Not implemented"
                     cleanup_info["errors"] = []
@@ -653,12 +654,12 @@ class EnvManager:
         return result
 
     @plugins.ensure_plugins_are_loaded
-    def destroy(self, skip_cleanup=False):
+    def destroy(self, skip_cleanup: bool = False) -> dict[str, t.Any]:
         """Destroys all platforms related to env.
 
         :param skip_cleanup: Skip cleaning up platform resources
         """
-        cleanup_info = {"skipped": True}
+        cleanup_info: dict[str, t.Any] = {"skipped": True}
         if not skip_cleanup:
             cleanup_info["info"] = self.cleanup()
             cleanup_info["skipped"] = False
@@ -675,14 +676,14 @@ class EnvManager:
                     },
                 }
 
+        platforms: dict[str, dict[str, t.Any]] = {}
         result = {
             "cleanup_info": cleanup_info,
-            "destroy_info": {"skipped": False, "platforms": {}},
+            "destroy_info": {"skipped": False, "platforms": platforms},
         }
 
         db.env_set_status(self.uuid, STATUS.READY, STATUS.DESTROYING)
 
-        platforms = result["destroy_info"]["platforms"]
         new_env_status = STATUS.DESTROYED
 
         for p in self._get_platforms():
@@ -734,7 +735,7 @@ class EnvManager:
 
         return result
 
-    def delete(self, force=False):
+    def delete(self, force: bool = False) -> None:
         """Cascade delete of DB records related to env.
 
         It deletes all Task and Verify results related to this env as well.
@@ -748,9 +749,9 @@ class EnvManager:
             )
         db.env_delete_cascade(self.uuid)
 
-    def get_validation_context(self):
+    def get_validation_context(self) -> dict[str, t.Any]:
         """Return a validation context for a workload."""
-        context = {}
+        context: dict[str, t.Any] = {}
         for p in self._get_platforms():
             context.update(p._get_validation_context())
         return context

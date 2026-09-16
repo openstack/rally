@@ -27,6 +27,7 @@ import subprocess
 import sys
 
 import rally.common.version
+from rally.utils import rstutils
 
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -60,6 +61,7 @@ extensions = [
     "sphinx.ext.coverage",
     "sphinx.ext.ifconfig",
     "sphinx.ext.viewcode",
+    "sphinx.ext.extlinks",
     "ext.cli_reference",
     "ext.plugin_reference",
     "ext.include_vars"
@@ -68,6 +70,17 @@ if on_rtd:
     extensions.append("sphinx_rtd_theme")
 else:
     extensions.append("openstackdocstheme")
+
+# ``:rally-file:`path``` links a file of the rally repository at the release
+# tag the docs are built for, or at the master branch for a development build
+_rally_repository = rstutils.SourceRepository.from_distribution(
+    "rally", "https://github.com/openstack/rally", distribution="rally"
+)
+extlinks = {
+    "rally-file": (
+        f"{_rally_repository.url}/blob/{_rally_repository.ref}/%s", "%s"
+    ),
+}
 
 todo_include_todos = True
 
@@ -143,13 +156,11 @@ pygments_style = "native"
 # a list of builtin themes.
 if on_rtd:
     html_theme = "sphinx_rtd_theme"
+    # keep the whole tree expanded in the sidebar instead of showing only the
+    # current chapter
+    html_theme_options = {"collapse_navigation": False}
 else:
     html_theme = "openstackdocs"
-
-# Theme options are theme-specific and customize the look and feel of a theme
-# further.  For a list of options available for each theme, see the
-# documentation.
-# html_theme_options = {}
 
 # Add any paths that contain custom themes here, relative to this directory.
 html_theme_path = []

@@ -27,12 +27,18 @@ from docutils import utils
 from docutils.parsers import rst
 
 
-def parse_text(text: str) -> list:
+def parse_text(text: str, *, source: str = "<generated rst>") -> list:
+    """Parse reStructuredText into docutils nodes.
+
+    :param text: the reStructuredText to parse
+    :param source: the name that warnings about the text are reported with,
+        followed by the line number inside the text
+    """
     parser = rst.Parser()
     settings = frontend.OptionParser(
         components=(rst.Parser,)
     ).get_default_values()
-    document = utils.new_document(text, settings)
+    document = utils.new_document(source, settings)
     try:
         parser.parse(text, document)
     except Exception as e:
@@ -50,56 +56,47 @@ subcategory = lambda title: parse_text("%s\n%s" % (title, "~" * len(title)))[0]
 section = lambda title: parse_text("%s\n%s" % (title, '"' * len(title)))[0]
 
 
-def make_definition(term: str, ref: str, descriptions: list) -> t.Any:
-    """Constructs definition with reference to it."""
-    ref = ref.replace("_", "-").replace(" ", "-")
+def make_definition(
+    term: str,
+    ref: str,
+    descriptions: list,
+    qualifiers: list[str] | None = None,
+) -> t.Any:
+    """Constructs definition with reference to it.
+
+    ``qualifiers`` are rendered as ``term (a, b)`` next to the term, matching
+    how the plugin reference shows a parameter's type and requiredness.
+    """
+    # docutils turns the target name of ``.. _<ref>:`` into an id with
+    # make_id(), while the ``__ #<ref>`` URI is kept verbatim, so the ref is
+    # normalized the same way (e.g. an uppercase UUID metavar, or a leading
+    # "-" of a command without a category) to not link to a missing anchor
+    ref = nodes.make_id(ref)
+    suffix = f" ({', '.join(qualifiers)})" if qualifiers else ""
     # render the term (e.g. CLI flags like ``--uuid``) as an inline literal:
     # emphasis would let Sphinx's smartquotes mangle ``--`` into an en-dash
+    # the anonymous target is indented into the list item on purpose: docutils
+    # pairs anonymous references with targets in document order, and the
+    # descriptions below may carry their own pair (e.g. the "use"-command
+    # hint).  Keeping each target next to its reference stops them swapping.
     definition = parse_text(
-        ".. _%(ref)s:\n\n* ``%(term)s`` [ref__]\n\n__ #%(ref)s"
-        % {"ref": ref, "term": term}
+        f".. _{ref}:\n\n* ``{term}``{suffix} [ref__]\n\n  __ #{ref}"
     )
+    # nest the descriptions inside the list item, so they are indented under
+    # the flag they describe.  Appending them to ``definition`` would make
+    # them siblings of the whole bullet list instead.
+    container: t.Any = definition
+    for node in definition:
+        if isinstance(node, nodes.bullet_list) and len(node):
+            container = node[0]
+            break
+
     for descr in descriptions:
         if descr:
             if isinstance(descr, str):
                 if descr[0] not in string.ascii_uppercase:
-                    descr = descr.capitalize()
-                descr = paragraph("  %s" % descr)
-            definition.append(descr)
-    return definition
-
-
-def make_definitions(
-    title: str,
-    ref_prefix: str,
-    terms: list[tuple[str, str, list[str]]],
-    descriptions: list | None = None,
-) -> list:
-    """Constructs a list of definitions with reference to them."""
-    raw_text = [f"**{title}**:"]
-    if descriptions:
-        for descr in descriptions:
-            raw_text.append(descr)
-
-    for term, ref, definitions in terms:
-        ref = (
-            f"{ref_prefix}{ref}".lower()
-            .replace(".", "-")
-            .replace("_", "-")
-            .replace(" ", "-")
-        )
-        raw_text.append(f".. _{ref}:")
-        raw_text.append(f"* *{term}* [ref__]")
-
-        for d in definitions:
-            d = d.strip() if d else None
-            if d:
-                if d[0] not in string.ascii_uppercase:
                     # .capitalize() removes existing caps
-                    d = d[0].upper() + d[1:]
-                d = "\n  ".join(d.split("\n"))
-                raw_text.append(f"  {d}")
-
-        raw_text.append(f"__ #{ref}")
-
-    return parse_text("\n\n".join(raw_text) + "\n")
+                    descr = descr[0].upper() + descr[1:]
+                descr = paragraph(descr)
+            container.append(descr)
+    return definition

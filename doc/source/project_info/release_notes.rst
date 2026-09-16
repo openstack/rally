@@ -16,8 +16,11 @@
 Release Notes
 -------------
 
+Notes for every release since 1.0.0 live in a single changelog. Releases
+before that one have their own pages in the archive.
+
 .. toctree::
    :maxdepth: 1
 
+   release_notes/changelog.rst
    release_notes/archive.rst
-   release_notes/latest.rst

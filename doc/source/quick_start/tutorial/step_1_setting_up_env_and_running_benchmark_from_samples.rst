@@ -40,10 +40,9 @@ Registering an OpenStack environment in Rally
 ---------------------------------------------
 
 After successful installation, you have to provide Rally with an OpenStack
-cloud that should be tested. Such cloud is described by an *environment spec*
-- a mapping where each key is a name of a platform plugin and each value is a
-configuration of that platform. The plugin that knows how to talk to an
-already deployed OpenStack cloud is `existing@openstack
+cloud that should be tested. The cloud is described by an :ref:`environment
+spec <env-spec>`. The plugin that knows how to talk to an already deployed
+OpenStack cloud is `existing@openstack
 <../../plugins/plugin_reference.html#existing-platform>`_.
 
 In case you already have an `OpenRC file
@@ -152,10 +151,10 @@ The *env create* command accepts such file via ``--spec`` argument:
    |                     | }                                              |
    +---------------------+------------------------------------------------+
 
-Note the *"Using environment"* line in the output. It says that the just
-created environment is now the default one; that means that all task or verify
-commands are going to be run against it. Later in tutorial is described how to
-use multiple environments.
+Note the *"Using environment"* line in the output. The new environment became
+the default one, so task and verify commands will run against it. See
+:ref:`env-component` for how to change that and how to keep several
+environments around.
 
 
 Specifying versions of OpenStack APIs
@@ -211,9 +210,8 @@ environment is healthy and ready to be tested:
    | :-)       | openstack | OK!     |
    +-----------+-----------+---------+
 
-While *env check* only answers whether the cloud is reachable, the *env info*
-command asks each platform for the details it can discover. For OpenStack it
-is a list of services available in the cloud:
+The *env info* command goes further and asks each platform for the details it
+can discover. For OpenStack it is a list of services available in the cloud:
 
 .. code-block:: console
 

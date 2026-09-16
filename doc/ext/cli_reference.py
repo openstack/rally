@@ -34,24 +34,32 @@ if t.TYPE_CHECKING:
 
 
 DEFAULT_UUIDS_CMD = {
-    "deployment": ["rally deployment create"],
+    "env": ["rally env create"],
     "task": ["rally task start"],
     "verification": ["rally verify start", "rally verify import"],
 }
 
 # Maps the "use"-command hint for each default-from-environment id.
 USE_CMD = {
-    "deployment": "rally deployment use",
+    "env": "rally env use",
     "task": "rally task use",
     "verification": "rally verify use",
 }
 
 # Maps a parameter's env var to a default-uuid id.
 _ENVVAR_DEST = {
-    "RALLY_ENV": "deployment",
-    "RALLY_DEPLOYMENT": "deployment",
+    "RALLY_ENV": "env",
     "RALLY_TASK": "task",
     "RALLY_VERIFICATION": "verification",
+}
+
+# Typer has no way to mark a whole command group as deprecated, so the notice
+# is kept here.
+DEPRECATED_CATEGORIES = {
+    "deployment": (
+        "These commands are deprecated. Use the ``env`` commands instead, "
+        "they are described at the Environment Component page."
+    ),
 }
 
 
@@ -89,23 +97,62 @@ def _note_dest(cmd_name: str, param: TyperParameter) -> str | None:
     return _ENVVAR_DEST.get(param.envvar[0])
 
 
+# click type names are an implementation detail; these match the names of
+# types in the plugin reference.
+_TYPE_NAMES = {"text": "string", "float": "number", "boolean": "flag"}
+
+
+def _choices(param: TyperParameter) -> t.Sequence[str] | None:
+    return getattr(getattr(param, "type", None), "choices", None)
+
+
+def _is_option(param: TyperParameter) -> bool:
+    return bool(param.opts) and param.opts[0].startswith("-")
+
+
+def _qualifiers(param: TyperParameter) -> list[str]:
+    """Describe a parameter the way the plugin reference does.
+
+    The result is rendered next to the name as ``--flag (string, required)``.
+    """
+    qualifiers = []
+    if getattr(param, "is_flag", False):
+        qualifiers.append("flag")
+    elif not _choices(param):
+        # the accepted values of a choice are spelled out in the description
+        # instead, so the bare "choice" adds nothing here
+        name = getattr(getattr(param, "type", None), "name", None)
+        if name:
+            qualifiers.append(_TYPE_NAMES.get(name, name))
+
+    # an option given several times, or a positional argument that takes
+    # all the remaining values
+    if getattr(param, "multiple", False) or param.nargs == -1:
+        qualifiers.append("repeatable")
+
+    # a parameter that reads an env var is not really required: the variable
+    # (or the value saved by a "use" command) supplies the value, and the
+    # note above the description explains that
+    if not param.envvar and getattr(param, "required", False):
+        qualifiers.append("required")
+    return qualifiers
+
+
 def _display_names(param: TyperParameter) -> t.Sequence[str]:
     """Return the flag(s)/name shown for a parameter."""
-    if param.opts and param.opts[0].startswith("-"):
+    if _is_option(param):
         return param.opts
     # A positional argument: show its metavar (e.g. ``UUID``) rather than the
-    # internal destination name.
-    if param.metavar:
-        return [param.metavar]
-    return param.opts or [param.name or ""]
+    # internal destination name, uppercased like a metavar when there is none.
+    return [param.metavar or (param.name or "").upper()]
 
 
 def _iter_params(
-    command: typer.core.TyperCommand,
+    command: typer.core.TyperGroup | typer.core.TyperCommand,
 ) -> t.Iterator[TyperParameter]:
     """Yield the documentable parameters of a command (skip ``--help``)."""
     for param in command.params:
-        if param.opts and param.opts[0] in ("--help", "-h", "--version"):
+        if param.opts and param.opts[0] in ("--help", "-h"):
             continue
         if param.name == "help":
             continue
@@ -113,10 +160,34 @@ def _iter_params(
 
 
 def make_arguments_section(
-    category_name: str, cmd_name: str, command: typer.core.TyperCommand
+    category_name: str,
+    cmd_name: str,
+    command: typer.core.TyperGroup | typer.core.TyperCommand,
+    options_title: str = "**Options**:",
 ) -> list:
-    elements = [utils.paragraph("**Command arguments**:")]
-    for param in _iter_params(command):
+    params = list(_iter_params(command))
+    positional = [p for p in params if not _is_option(p)]
+    options = [p for p in params if _is_option(p)]
+    elements = []
+    for title, group in (
+        ("**Positional arguments**:", positional),
+        (options_title, options),
+    ):
+        if group:
+            elements.append(utils.paragraph(title))
+            elements.extend(
+                _make_parameter_definitions(category_name, cmd_name, group)
+            )
+    return elements
+
+
+def _make_parameter_definitions(
+    category_name: str,
+    cmd_name: str,
+    params: t.Sequence[TyperParameter],
+) -> list:
+    elements = []
+    for param in params:
         names = _display_names(param)
         flag = names[0]
 
@@ -130,22 +201,42 @@ def make_arguments_section(
 
         description.append(getattr(param, "help", None))
 
-        if not getattr(param, "is_flag", False):
-            type_name = getattr(getattr(param, "type", None), "name", None)
-            if type_name:
-                description.append("**Type**: %s" % type_name)
+        # values are shown as they are typed in a shell, unlike the plugin
+        # reference, which shows them as they are written in a task file
+        choices = _choices(param)
+        if choices:
+            values = [f"``{c}``" for c in choices]
+            if len(values) == 1:
+                description.append(f"Expected value: {values[0]}.")
+            else:
+                description.append(
+                    f"Set of expected values: {', '.join(values)}."
+                )
 
+        if not getattr(param, "is_flag", False):
             default = getattr(param, "default", None)
             if note_dest is None and default is not None:
-                description.append("**Default**: %s" % default)
+                # an empty inline literal is not valid markup
+                shown = default if default != "" else '""'
+                description.append(f"Defaults to ``{shown}``.")
 
-        ref = "%s_%s_%s" % (
-            category_name,
-            cmd_name,
-            flag.replace("-", "").replace(" ", ""),
-        )
+        if param.envvar:
+            envvar = (
+                param.envvar
+                if isinstance(param.envvar, str)
+                else param.envvar[0]
+            )
+            description.append(f"**Environment variable**: ``{envvar}``")
+
+        anchor = flag.replace("-", "").replace(" ", "")
+        ref = f"{category_name}_{cmd_name}_{anchor}"
         elements.extend(
-            utils.make_definition(", ".join(names), ref, description)
+            utils.make_definition(
+                ", ".join(names),
+                ref,
+                description,
+                qualifiers=_qualifiers(param),
+            )
         )
     return elements
 
@@ -153,18 +244,42 @@ def make_arguments_section(
 def make_command_section(
     category_name: str, name: str, command: typer.core.TyperCommand
 ) -> t.Any:
-    section = utils.subcategory(f"rally {category_name} {name}")
+    title = " ".join(part for part in ("rally", category_name, name) if part)
+    section = utils.subcategory(title)
     description = inspect.getdoc(command.callback) or command.help or ""
-    section.extend(utils.parse_text(description))
+    section.extend(utils.parse_text(description, source=f"<{title}>"))
     if any(True for _ in _iter_params(command)):
         section.extend(make_arguments_section(category_name, name, command))
+    return section
+
+
+def make_general_section(
+    cli: t.Any,
+    leaf_commands: dict[str, typer.core.TyperCommand],
+) -> t.Any:
+    """Render the options and commands that belong to no category."""
+    section = utils.category("General")
+    section.extend(
+        utils.parse_text(
+            "These options are accepted by every command and have to be "
+            "placed before the category name, i.e. ``rally --debug task "
+            "start ...`` and not ``rally task start --debug ...``."
+        )
+    )
+    section.extend(
+        make_arguments_section(
+            "global", "options", cli, options_title="**Global options**:"
+        )
+    )
+    for name in sorted(leaf_commands):
+        section.append(make_command_section("", name, leaf_commands[name]))
     return section
 
 
 def make_category_section(
     name: str, group: typer.core.TyperGroup | typer.core.TyperCommand
 ) -> t.Any:
-    category_obj = utils.category("Category: %s" % name)
+    category_obj = utils.category(f"Category: {name}")
     description = group.help or ""
     # TODO(andreykurilin): write a decorator which will mark cli-class as
     #   deprecated without changing its docstring.
@@ -173,7 +288,11 @@ def make_category_section(
         msg = description[1:i]
         description = description[i + 1 :].strip()
         category_obj.append(utils.warning(msg))
-    category_obj.extend(utils.parse_text(description))
+    elif name in DEPRECATED_CATEGORIES:
+        category_obj.append(utils.warning(DEPRECATED_CATEGORIES[name]))
+    category_obj.extend(
+        utils.parse_text(description, source=f"<rally {name}>")
+    )
 
     commands: dict[str, typer.core.TyperCommand] = getattr(
         group, "commands", {}
@@ -192,14 +311,22 @@ class CLIReferenceDirective(rst.Directive):
     def run(self) -> list:
         cli = typer.main.get_command(main.app)
         groups = getattr(cli, "commands", {})
-        # only command groups (skip top-level leaf commands like ``version``)
         categories = [
             c for c, g in groups.items() if getattr(g, "commands", None)
         ]
-        if "group" in self.options:
-            categories = [c for c in categories if c == self.options["group"]]
-
         content = []
+        if "group" in self.options:
+            # a single category is embedded into a component page; the global
+            # options stay on the full reference only
+            categories = [c for c in categories if c == self.options["group"]]
+        else:
+            leaves = dict(
+                (c, g)
+                for c, g in groups.items()
+                if not getattr(g, "commands", None)
+            )
+            content.append(make_general_section(cli, leaves))
+
         for cg in sorted(categories):
             content.append(make_category_section(cg, groups[cg]))
         return content

@@ -43,7 +43,7 @@ as well) and packages which possibly doesn't relate to Rally at all.
 
 The example ou usage:
 
-  .. console:: bash
+  .. code-block:: console
 
      $ git clone https://github.com/openstack/rally && cd rally
      $ pip install . --constraint upper-constraints.txt

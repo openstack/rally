@@ -20,12 +20,43 @@ Changelog
 unreleased
 ----------
 
+Added
+~~~~~
+
+* New documentation pages: the Environment Component, the Configuration and
+  a guide for writing platform plugins.
+
+* The generated plugin reference describes arguments in more detail: the keys
+  of dictionaries, the elements of lists and the options of values that
+  accept several formats, groups of arguments one of which should be provided,
+  and exclusive minimum and maximum values. Plugins that accept a single value
+  instead of named arguments show it as an "Input value".
+
+* The CLI reference lists the global options, separates positional arguments
+  from options and shows the type, whether an argument is required or can be
+  repeated, its default value and environment variable.
+
+* ``rally.env.platform`` provides typed dicts that describe the results of
+  platform plugin methods (``HealthInfo``, ``PlatformInfo``, ``CleanupInfo``
+  and ``SysEnvSpec``).
+
 Changed
 ~~~~~~~
 
 * ``max_avg_duration_per_atomic`` SLA now inspects atomic actions of all
   nesting levels, so a criterion can be set for a nested atomic action as
   well as for a top-level one.
+
+* ``rally plugin show`` uses full type names: ``integer``, ``string``,
+  ``number``, ``boolean`` and ``dictionary`` instead of ``int``, ``str``,
+  ``float``, ``bool`` and ``dict``. Arguments that must not be set are shown
+  as such instead of accepting any value.
+
+* Links to the source code of plugins in the plugin reference point to the
+  release of the installed ``rally`` and ``rally-openstack`` packages instead
+  of the master branch.
+
+* The changelog is now a part of the release notes in the documentation.
 
 Fixed
 ~~~~~
@@ -38,6 +69,15 @@ Fixed
 * ``max_avg_duration_per_atomic`` SLA no longer loses the data of atomic
   actions that were observed only by a part of the workers while merging
   results of a distributed run.
+
+* Validation of a task failed with ``AttributeError`` for an environment with
+  a platform plugin that does not implement ``_get_validation_context()``.
+  Rally calls this method, while the base class of platform plugins declared
+  ``get_validation_context()`` instead. Platform plugins that implemented
+  ``get_validation_context()`` should rename it, since it was never called.
+
+* ``Deployment.list(name=...)`` failed with ``TypeError`` instead of
+  returning the deployment with that name.
 
 [5.1.1] - 2026-08-13
 --------------------
@@ -229,7 +269,7 @@ Added
      @validation.add("required_context", contexts=["ctx_name@platform"])
      class ElasticsearchLogInstanceName(scenario.Scenario):
          def run(self):
-              pass   
+              pass
 
 Removed
 ~~~~~~~
@@ -554,26 +594,27 @@ Added
 
 * Briefly: the new base image is published at `Docker Hub
   <https://hub.docker.com/r/xrally/xrally>`_
+
   Detailed story: Long time ago Rally team introduced first docker images which
-    were hosted by `rallyforge account at Docker Hub
-    <https://hub.docker.com/r/rallyforge/rally/>`_. Due to various
-    circumstances we lost access to that account and Docker support restored
-    access to it in a strange way (we lost all repositories and could not
-    recreate them). That is why Rally team started publishing docker images
-    from scratch. The new organization was created -`xRally
-    <https://hub.docker.com/r/xrally>`_ . Since we already had plans to move
-    OpenStack plugins to the separate repository, we started publishing images
-    with in-tree OpenStack plugins to `xrally/xrally-openstack repository
-    <https://hub.docker.com/r/xrally/xrally-openstack/>`_. As soon as, a
-    separate package for OpenStack plugins was introduced, we switched the
-    source of `xrally/xrally-openstack Docker Hub repository
-    <https://hub.docker.com/r/xrally/xrally-openstack/>`_ to `rally-openstack
-    git repository <http://github.com/openstack/rally-openstack>`_.
-    As for Rally 1.0.0 we finally have pure framework without heavy
-    dependencies and can start publishing separate images for Rally framework
-    itself which can be used as a base image for all plugins.
-    New images will be located at `xrally/xrally Docker Hub repository
-    <https://hub.docker.com/r/xrally/xrally>`_.
+  were hosted by `rallyforge account at Docker Hub
+  <https://hub.docker.com/r/rallyforge/rally/>`_. Due to various
+  circumstances we lost access to that account and Docker support restored
+  access to it in a strange way (we lost all repositories and could not
+  recreate them). That is why Rally team started publishing docker images
+  from scratch. The new organization was created - `xRally
+  <https://hub.docker.com/r/xrally>`_. Since we already had plans to move
+  OpenStack plugins to the separate repository, we started publishing images
+  with in-tree OpenStack plugins to `xrally/xrally-openstack repository
+  <https://hub.docker.com/r/xrally/xrally-openstack/>`_. As soon as, a
+  separate package for OpenStack plugins was introduced, we switched the
+  source of `xrally/xrally-openstack Docker Hub repository
+  <https://hub.docker.com/r/xrally/xrally-openstack/>`_ to `rally-openstack
+  git repository <http://github.com/openstack/rally-openstack>`_.
+  As for Rally 1.0.0 we finally have pure framework without heavy
+  dependencies and can start publishing separate images for Rally framework
+  itself which can be used as a base image for all plugins.
+  New images will be located at `xrally/xrally Docker Hub repository
+  <https://hub.docker.com/r/xrally/xrally>`_.
 
 Changed
 ~~~~~~~

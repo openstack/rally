@@ -821,19 +821,26 @@ class EnvManagerTestCase(test.TestCase):
 
     @mock.patch("rally.env.env_mgr.EnvManager._get_platforms")
     def test_get_validation_context(self, mock__get_platforms):
-        platform1 = mock.MagicMock()
-        platform1._get_validation_context.return_value = {
-            "users@openstack": {}}
 
-        platform2 = mock.MagicMock()
-        platform2._get_validation_context.return_value = {
-            "foo_bar": "xxx"}
+        @platform.configure(name="with_context", platform="validation")
+        class WithContextPlatform(platform.Platform):
 
-        mock__get_platforms.return_value = [platform1, platform2]
+            def _get_validation_context(self):
+                return {"users@openstack": {}, "foo_bar": "xxx"}
+
+        # relies on the default of the base class
+        @platform.configure(name="without_context", platform="validation")
+        class WithoutContextPlatform(platform.Platform):
+            pass
+
+        for p in [WithContextPlatform, WithoutContextPlatform]:
+            self.addCleanup(p.unregister)
+
+        mock__get_platforms.return_value = [
+            WithContextPlatform({}), WithoutContextPlatform({})
+        ]
 
         env = env_mgr.EnvManager({"uuid": "44"})
 
-        self.assertEqual({"users@openstack": {},
-                          "foo_bar": "xxx"}, env.get_validation_context())
-        platform1._get_validation_context.assert_called_once_with()
-        platform2._get_validation_context.assert_called_once_with()
+        self.assertEqual({"users@openstack": {}, "foo_bar": "xxx"},
+                         env.get_validation_context())

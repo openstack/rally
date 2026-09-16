@@ -62,6 +62,36 @@ class DeploymentTestCase(test.TestCase):
         mock_env_manager_get.assert_called_once_with(self.env.data["uuid"])
         self.assertEqual(self.env.uuid, deploy["uuid"])
 
+    @mock.patch("rally.common.objects.deploy.env_mgr.EnvManager.list")
+    @mock.patch("rally.common.objects.deploy.env_mgr.EnvManager.get")
+    def test_list(self, mock_env_manager_get, mock_env_manager_list):
+        with self.subTest("by name"):
+            mock_env_manager_get.return_value = self.env
+
+            deployments = objects.Deployment.list(name="foo")
+
+            mock_env_manager_get.assert_called_once_with("foo")
+            self.assertEqual([self.env.uuid], [d["uuid"] for d in deployments])
+            self.assertFalse(mock_env_manager_list.called)
+
+        with self.subTest("by name that does not exist"):
+            mock_env_manager_get.reset_mock()
+            mock_env_manager_get.side_effect = exceptions.DBRecordNotFound(
+                criteria="uuid or name is foo", table="envs"
+            )
+
+            self.assertEqual([], objects.Deployment.list(name="foo"))
+            mock_env_manager_get.assert_called_once_with("foo")
+            self.assertFalse(mock_env_manager_list.called)
+
+        with self.subTest("by status"):
+            mock_env_manager_list.return_value = [self.env]
+
+            deployments = objects.Deployment.list(status="READY")
+
+            mock_env_manager_list.assert_called_once_with(status="READY")
+            self.assertEqual([self.env.uuid], [d["uuid"] for d in deployments])
+
     @mock.patch("rally.common.objects.deploy.env_mgr.EnvManager.get")
     def test_get_validation_context(self, mock_env_manager_get):
         mock_env_manager_get.return_value = self.env

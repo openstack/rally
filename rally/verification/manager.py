@@ -418,8 +418,11 @@ class VerifierManager(plugin.Plugin, metaclass=abc.ABCMeta):
     def list_extensions(self):
         """List all verifier extensions.
 
-        Every extension is a dict object which contains
-        name and entry_point keys. example:
+        Every extension is a dict object which contains name and entry_point
+        keys. Example:
+
+        .. code-block:: python
+
             {
                 "name": p.name,
                 "entry_point": p.entry_point_target

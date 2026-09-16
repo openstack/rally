@@ -36,6 +36,12 @@ it plugins package should include it as a dependency.
     # platform
     pip install rally-openstack
 
+Configuration
+-------------
+
+Rally works right after the installation, no configuration file is needed. If
+you want another database or custom logging, see :ref:`configuration`.
+
 Rally & Docker
 --------------
 

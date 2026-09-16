@@ -110,6 +110,18 @@ def show(
             print("PARAMETERS")
             rows = []
             for name, prop in props.items():
+                if prop is False:
+                    # a forbidden key (a ``Never`` hint): no value validates
+                    # it, so the usual "Any" label would say the opposite of
+                    # the truth. Worded as in the plugin reference docs.
+                    rows.append(
+                        utils.Struct(
+                            name=name,
+                            type="",
+                            description="Must not be set.",
+                        )
+                    )
+                    continue
                 prop = prop if isinstance(prop, dict) else {}
                 rows.append(
                     utils.Struct(

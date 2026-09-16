@@ -49,7 +49,7 @@ class JSONReporter(reporter.VerificationReporter):
                     "xfail_list": {"some.test.TestCase.test_xfail":
                                        "Some reason why it is expected."},
                     "skip_list": {"some.test.TestCase.test_skipped":
-                                      "This test was skipped intentionally"},
+                                      "This test was skipped intentionally"}
                 },
                 "success": 1,
                 "expected_failures": 1,
@@ -68,7 +68,7 @@ class JSONReporter(reporter.VerificationReporter):
                     "xfail_list": {"some.test.TestCase.test_xfail":
                                        "Some reason why it is expected."},
                     "skip_list": {"some.test.TestCase.test_skipped":
-                                      "This test was skipped intentionally"},
+                                      "This test was skipped intentionally"}
                 },
                 "success": 1,
                 "expected_failures": 1,
@@ -115,36 +115,12 @@ class JSONReporter(reporter.VerificationReporter):
                     "verification-uuid-1": {
                         "status": "xfail",
                         "duration": "3",
-                        "details": "Some reason why it is expected.\\n\\n"
-                            "Traceback (most recent call last): \\n"
-                            "  File "fake.py", line 13, in <module>\\n"
-                            "    yyy()\\n"
-                            "  File "fake.py", line 11, in yyy\\n"
-                            "    xxx()\\n"
-                            "  File "fake.py", line 8, in xxx\\n"
-                            "    bar()\\n"
-                            "  File "fake.py", line 5, in bar\\n"
-                            "    foo()\\n"
-                            "  File "fake.py", line 2, in foo\\n"
-                            "    raise Exception()\\n"
-                            "Exception"
+                        "details": "Some reason why it is expected.\\n\\n..."
                     },
                     "verification-uuid-2": {
                         "status": "xfail",
                         "duration": "3",
-                        "details": "Some reason why it is expected.\\n\\n"
-                            "Traceback (most recent call last): \\n"
-                            "  File "fake.py", line 13, in <module>\\n"
-                            "    yyy()\\n"
-                            "  File "fake.py", line 11, in yyy\\n"
-                            "    xxx()\\n"
-                            "  File "fake.py", line 8, in xxx\\n"
-                            "    bar()\\n"
-                            "  File "fake.py", line 5, in bar\\n"
-                            "    foo()\\n"
-                            "  File "fake.py", line 2, in foo\\n"
-                            "    raise Exception()\\n"
-                            "Exception"
+                        "details": "Some reason why it is expected.\\n\\n..."
                     }
                 }
             },
@@ -155,23 +131,11 @@ class JSONReporter(reporter.VerificationReporter):
                     "verification-uuid-2": {
                         "status": "fail",
                         "duration": "4",
-                        "details": "Some reason why it is expected.\\n\\n"
-                            "Traceback (most recent call last): \\n"
-                            "  File "fake.py", line 13, in <module>\\n"
-                            "    yyy()\\n"
-                            "  File "fake.py", line 11, in yyy\\n"
-                            "    xxx()\\n"
-                            "  File "fake.py", line 8, in xxx\\n"
-                            "    bar()\\n"
-                            "  File "fake.py", line 5, in bar\\n"
-                            "    foo()\\n"
-                            "  File "fake.py", line 2, in foo\\n"
-                            "    raise Exception()\\n"
-                            "Exception"
-                        }
+                        "details": "Traceback (most recent call last): ..."
                     }
                 }
             }
+         }
         }
 
     """

@@ -127,7 +127,7 @@ class Deployment:
         # we do not use parent_uuid...
         if name:
             try:
-                env = env_mgr.EnvManager(name)
+                env = env_mgr.EnvManager.get(name)
             except exceptions.DBRecordNotFound:
                 return []
             envs = [env]

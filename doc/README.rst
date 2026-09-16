@@ -40,8 +40,12 @@ hardware and so on..
 release_notes
 ~~~~~~~~~~~~~
 
-The latest.rst_ contains new features and API changes of Rally's latest release.
-And you could find all old releases in archive_.
+Notes for all releases since 1.0.0 are written in a single CHANGELOG.rst_ file
+in the root of the repository. The changelog.rst symlink here is what pulls it
+into the built documentation.
 
-.. _latest.rst: https://github.com/openstack/rally/blob/master/doc/release_notes/latest.rst
+Releases older than 1.0.0 have a separate page each, you could find them in
+archive_.
+
+.. _CHANGELOG.rst: https://github.com/openstack/rally/blob/master/CHANGELOG.rst
 .. _archive: https://github.com/openstack/rally/tree/master/doc/release_notes/archive

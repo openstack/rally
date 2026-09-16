@@ -32,3 +32,11 @@ Active feature requests:
    :maxdepth: 1
 
    feature_request/*
+
+Implemented feature requests:
+
+.. toctree::
+   :glob:
+   :maxdepth: 1
+
+   feature_request/implemented/*

@@ -24,6 +24,7 @@ from rally.cli import cliutils
 from rally.cli import envutils
 from rally.cli import yamlutils as yaml
 from rally.env import env_mgr
+from rally.env import platform
 
 
 env_app = typer.Typer(
@@ -186,7 +187,7 @@ def cleanup(
       fail Rally execution of cleanup
     """
     env_obj = env_mgr.EnvManager.get(env)
-    _print("Cleaning up resources for %s" % env_obj, to_json)
+    _print(f"Cleaning up resources for {env_obj}", to_json)
     result = env_obj.cleanup()
 
     if to_json:
@@ -198,17 +199,17 @@ def cleanup(
     print("Cleaning is finished. See the results bellow.")
 
     return_code = 0
-    for platform in sorted(result):
-        cleanup_info = result[platform]
-        print("\nInformation for %s platform." % platform)
+    for platform_name in sorted(result):
+        cleanup_info = result[platform_name]
+        print(f"\nInformation for {platform_name} platform.")
         print("=" * 80)
-        print("Status: %s" % cleanup_info["message"])
+        print(f"Status: {cleanup_info['message']}")
         for key in ("discovered", "deleted", "failed"):
-            print("Total %s: %s" % (key, cleanup_info[key]))
+            print(f"Total {key}: {cleanup_info[key]}")
         if cleanup_info["errors"]:
             return_code = 1
             errors = "\t- ".join(e["message"] for e in cleanup_info["errors"])
-            print("Errors:\n\t- %s" % errors)
+            print(f"Errors:\n\t- {errors}")
 
     if return_code:
         raise typer.Exit(code=1)
@@ -249,7 +250,7 @@ def destroy(
             to_json,
         )
     else:
-        _print("%s Successfully destroyed env %s" % (YES, env_obj), to_json)
+        _print(f"{YES} Successfully destroyed env {env_obj}", to_json)
 
     if detailed or to_json:
         print(json.dumps(result, indent=2))
@@ -354,10 +355,10 @@ def info(
 
     table = prettytable.PrettyTable()
     table.field_names = ["platform", "info", "error"]
-    for platform, data in env_info.items():
+    for platform_name, data in env_info.items():
         table.add_row(
             [
-                platform,
+                platform_name,
                 json.dumps(data["info"], indent=2),
                 data.get("error") or "",
             ]
@@ -395,7 +396,7 @@ def check(
             raise typer.Exit(code=1)
         return
 
-    def _format_raw(plugin_name: str, el: dict) -> list:
+    def _format_raw(plugin_name: str, el: platform.HealthInfo) -> list:
         return [
             el["available"] and YES or NO,
             plugin_name.split("@")[1],

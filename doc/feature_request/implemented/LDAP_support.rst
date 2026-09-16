@@ -28,6 +28,6 @@ Current Solution
 
 * Add ability to specify existing users in the *ExistingCloud* plugin config
 * When such an *ExistingCloud* deployment is active, and the task file does not
-specify the *"users"* context, use the existing users instead of creating the
-temporary ones.
+  specify the *"users"* context, use the existing users instead of creating the
+  temporary ones.
 * Modify the *rally show* commands to list resources for each user separately.

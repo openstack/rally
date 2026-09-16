@@ -310,7 +310,7 @@ Example:
 
 .. code-block:: shell
 
-  $ rally task trends --tasks 6f63d9ec-eecd-4696-8e9c-2ba065c68535 a5737eba-a204-43d6-a262-d5ea4b0065da --out trends.html
+  $ rally task trends 6f63d9ec-eecd-4696-8e9c-2ba065c68535 a5737eba-a204-43d6-a262-d5ea4b0065da --out trends.html
 
 What is an order of workload runs?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

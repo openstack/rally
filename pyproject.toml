@@ -158,14 +158,6 @@ module = "rally.common.streaming_algorithms"
 disable_error_code = ["no-untyped-def"]
 
 [[tool.mypy.overrides]]
-module = "rally.env.env_mgr"
-disable_error_code = ["attr-defined", "index", "no-untyped-def", "var-annotated"]
-
-[[tool.mypy.overrides]]
-module = "rally.env.platform"
-disable_error_code = ["no-untyped-def"]
-
-[[tool.mypy.overrides]]
 module = "rally.plugins.task.exporters.elastic.client"
 disable_error_code = ["no-untyped-def"]
 

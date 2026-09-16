@@ -40,6 +40,8 @@ Contents
    install_and_upgrade/index
    quick_start/index
    cli_reference
+   configuration
+   env/index
    task/index
    verification/index
    plugins/index

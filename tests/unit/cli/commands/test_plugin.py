@@ -95,7 +95,7 @@ class PluginCommandsTestCase(test.CLITestCase):
         # the annotation-derived schema populates the new "type" column.
         self.assertIn("type", result.output)
         self.assertIn("count", result.output)
-        self.assertIn("int", result.output)
+        self.assertIn("integer", result.output)
 
     def test_show_not_found(self):
         for args, text in (
@@ -175,6 +175,8 @@ class PluginCommandsTestCase(test.CLITestCase):
         label = plugin_cmd._schema_type_label
         self.assertEqual("", label({}))
         self.assertEqual("Enum[a, b]", label({"enum": ["a", "b"]}))
-        self.assertEqual("int", label({"type": "integer"}))
-        self.assertEqual("int", label({"type": ["integer", "null"]}))
-        self.assertEqual("int/str", label({"type": ["integer", "string"]}))
+        self.assertEqual("integer", label({"type": "integer"}))
+        self.assertEqual("integer", label({"type": ["integer", "null"]}))
+        self.assertEqual(
+            "integer/string", label({"type": ["integer", "string"]})
+        )

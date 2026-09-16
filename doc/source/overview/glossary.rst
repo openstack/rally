@@ -43,15 +43,10 @@ performance and stability.
 Rally Config
 ------------
 
-Rally behavior can be customized by editing its configuration file,
-*rally.conf*, in `configparser
-<https://docs.python.org/3.4/library/configparser.html>`_
-format. While being installed, Rally generates a config with default
-values from its `sample
-<https://github.com/openstack/rally/blob/master/etc/rally/rally.conf.sample>`_.
-When started, Rally searches for its config in
-"<sys.prefix>/etc/rally/rally.conf", "~/.rally/rally.conf",
-"/etc/rally/rally.conf"
+An optional INI file, *rally.conf*, that customizes Rally behaviour. Nothing
+creates it for you. Put it in one of the directories Rally looks at, or pass
+a path with ``--config-file``. See :ref:`configuration` for the search order
+and where to find all the options.
 
 Rally DB
 --------
@@ -70,18 +65,36 @@ Scenarios, runners, contexts and even charts for HTML report are plugins.
 It is easy to create your own plugin and use it. Read more at
 `plugin reference <https://rally.readthedocs.io/en/latest/plugins/plugin_reference.html>`_.
 
-Deployment
-==========
+Environment
+===========
+
+Environment
+-----------
+
+A record in the Rally database that describes the target you test. It holds
+everything Rally needs to reach that target, for example a URL and
+credentials. Each task and verification runs against one environment. See
+:ref:`env-component`.
+
+Platform
+--------
+
+One target inside an environment, for example an OpenStack cloud. A platform
+is created from a platform plugin, which is the code that knows how to talk
+to that kind of target. A single environment can hold several platforms.
+
+Env spec
+--------
+
+The JSON or YAML input that describes an environment. See
+:ref:`env-spec`.
 
 Deployment
 ----------
 
-A set of information about target environment (for example: URI and
-authentication credentials) which is saved in the database. It is used
-to define the target system for testing each time a task is started.
-It has a "type" value which changes task behavior for the selected
-target system; for example type "openstack" will enable OpenStack
-authentication and services.
+The old name of an environment. Deployments are deprecated and replaced by
+environments. The ``rally deployment`` commands still work, but they print a
+warning and should not be used in new setups.
 
 Task
 ====

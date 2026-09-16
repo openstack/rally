@@ -15,9 +15,10 @@
 HowTo migrate from Verification component 0.7.0 to 0.8.0
 ========================================================
 
-.. note:: This document describes migration process from 0.7.0 to 0.8.0 Rally
-    version. You can apply this instruction for migration to later versions,
-    but check all references and release notes before trying to do it.
+.. note:: This document describes the migration from Rally 0.7.0 to the new
+    Verification Component, which was introduced in 0.8.0. The commands on the
+    "new" side are kept up to date with the current release, so you can follow
+    it when migrating to any later version.
 
 
 Verification Component was introduced long time ago even before the first Rally
@@ -98,7 +99,7 @@ Command for Rally 0.7.0 - `rally verify install
   $ rally verify install --deployment <uuid> --source <url> --version <vers> \
     --system-wide
 
-Command since Rally 0.8.0:
+Current command:
 
 .. code-block:: console
 
@@ -113,9 +114,10 @@ Here you can find several important improvements:
    all ``rally verify`` commands as it was previously with ``--system-wide``
    flag.
 
-2) You can use particular verifier for multiple deployments. ``--deployment``
-   flag moved to ``rally verify start`` command. Also, you can run it
-   simultaneously (checking in parallel different sets, different cloud, etc)
+2) You can use particular verifier for multiple environments. The
+   ``--deployment`` flag moved to ``rally verify start`` command, where it is
+   now called ``--env``. Also, you can run it simultaneously (checking in
+   parallel different sets, different cloud, etc)
 
 3) Verification Component can use not only Tempest for verifying system. Check
    :ref:`known-verifier-types` for full list of supported tools.
@@ -133,21 +135,24 @@ Command for Rally 0.7.0 - `rally verify reinstall
   $ rally verify reinstall --deployment <uuid> --source <url> --version <vers> \
     --system-wide
 
-Command since Rally 0.8.0:
+Current command:
 
 .. code-block:: console
 
-  $ rally verify update-verifier --id <id> --source <url> --version <vers> \
+  $ rally verify update-verifier <id> --version <vers> \
     --system-wide --no-system-wide --update-venv
 
 Changes:
 
-1) ``rally verify update-verifier`` doesn't require deployment id
+1) ``rally verify update-verifier`` doesn't require an environment
 
 2) You can switch between usage of system-wide installation and virtual
    environment.
 
 3) You can update just virtual environment without cloning verifier code again
+
+4) There is no ``--source`` argument. To move a verifier to another source you
+   need to delete it and create a new one.
 
 Uninstall
 """""""""
@@ -159,17 +164,17 @@ Command for Rally 0.7.0 - `rally verify uninstall
 
   $ rally verify uninstall --deployment <uuid>
 
-Command since Rally 0.8.0:
+Current command:
 
 .. code-block:: console
 
-  $ rally verify delete-verifier --id <id> --deployment-id <id> --force
+  $ rally verify delete-verifier <id> --env <uuid> --force
 
 Changes:
 
 1) As it was mentioned before, Verifier doesn't have an alignment to any
-   particular deployment, so deployment argument is optional now.
-   If --deployment-id argument is specified only deployment specific data will
+   particular environment, so the environment argument is optional now.
+   If ``--env`` argument is specified only environment specific data will
    be removed (i.e, configurations).
 
 2) New --force flag for removing all verifications results for that verifier.
@@ -185,11 +190,11 @@ Command for Rally 0.7.0 - `rally verify installplugin
   $ rally verify installplugin --deployment <uuid> --source <url> \
     --version <vers> --system-wide
 
-Command since Rally 0.8.0:
+Current command:
 
 .. code-block:: console
 
-  $ rally verify add-verifier-ext --id <id> --source <url> --version <vers> \
+  $ rally verify add-verifier-ext <id> --source <url> --version <vers> \
     --extra-settings <data>
 
 Changes:
@@ -214,11 +219,11 @@ Command for Rally 0.7.0 - `rally verify uninstallplugin
   $ rally verify uninstallplugin --deployment <uuid> --repo-name <repo_name> \
     --system-wide
 
-Command since Rally 0.8.0:
+Current command:
 
 .. code-block:: console
 
-  $ rally verify delete-verifier-ext --id <id> --name <name>
+  $ rally verify delete-verifier-ext <id> --name <name>
 
 Changes:
 
@@ -228,6 +233,8 @@ Changes:
 2) --deployment flag is gone.
 
 3) --repo-name is renamed to just --name.
+
+4) The verifier is passed as a positional argument instead of --id.
 
 List extensions
 """""""""""""""
@@ -239,11 +246,11 @@ Command for Rally 0.7.0 - `rally verify listplugins
 
   $ rally verify listplugins --deployment <uuid> --system-wide
 
-Command since Rally 0.8.0:
+Current command:
 
 .. code-block:: console
 
-  $ rally verify list-verifier-exts --id <id>
+  $ rally verify list-verifier-exts <id>
 
 Changes:
 
@@ -261,11 +268,11 @@ Command for Rally 0.7.0 - `rally verify discover
 
   $ rally verify discover --deployment <uuid> --system-wide --pattern <pattern>
 
-Command since Rally 0.8.0:
+Current command:
 
 .. code-block:: console
 
-  $ rally verify list-verifier-tests --id <id> --pattern <pattern>
+  $ rally verify list-verifier-tests <id> --pattern <pattern>
 
 Changes:
 
@@ -286,11 +293,11 @@ Commands for Rally 0.7.0:
     $ rally verify genconfig --deployment <uuid> --tempest-config <path> \
       --add-options <path> --override
 
-Command since Rally 0.8.0:
+Current command:
 
 .. code-block:: console
 
-  $ rally verify configure-verifier --id <id> --deployment-id <uuid> \
+  $ rally verify configure-verifier <id> --env <uuid> \
     --extend <path/json/yaml> --override <path> --reconfigure --show
 
 Changes:
@@ -317,11 +324,11 @@ Command for Rally 0.7.0 - `rally verify showconfig
 
   $ rally verify showconfig --deployment <uuid>
 
-Command since Rally 0.8.0:
+Current command:
 
 .. code-block:: console
 
-  $ rally verify configure-verifier --id <id> --deployment-id <uuid> --show
+  $ rally verify configure-verifier <id> --env <uuid> --show
 
 Changes:
 
@@ -342,13 +349,13 @@ Command for Rally 0.7.0 - `rally verify start
     --tempest-config <path> --xfail-list <path> --system-wide \
     --concurrency <N> --failing --no-use
 
-Command since Rally 0.8.0:
+Current command:
 
 .. code-block:: console
 
-  $ rally verify start --id <id> --deployment-id <uuid> --pattern <pattern> \
+  $ rally verify start <id> --env <uuid> --pattern <pattern> \
     --load-list <path> --skip-list <path> --xfail-list <path> \
-    --concurrency <N> --no-use --detailed
+    --tag <tag> --concurrency <N> --no-use --detailed
 
 Changes:
 
@@ -365,8 +372,8 @@ Changes:
    JSON/YAML format. Content should be a dictionary, where keys are tests
    names (full name with id and tags) and values are reasons.
 5) The argument ``--tempest-config`` is gone. Use
-   ``rally verify configure-verifier --id <id> --deployment-id <uuid>
-   --override <path>`` instead.
+   ``rally verify configure-verifier <id> --env <uuid> --override <path>``
+   instead.
 6) The argument ``--system-wide`` is gone like in most of other commands.
 7) In case of specified ``--detailed`` arguments, traces of failed tests will
    be displayed (default behaviour in old verification design)
@@ -392,11 +399,11 @@ Commands for Rally 0.7.0:
     $ rally verify detailed --uuid <uuid> --sort-by <query>
 
 
-Command since Rally 0.8.0:
+Current command:
 
 .. code-block:: console
 
-  $ rally verify show --uuid <uuid> --sort-by <query> --detailed
+  $ rally verify show <uuid> --sort-by <query> --detailed
 
 Changes:
 
@@ -414,16 +421,16 @@ Command for Rally 0.7.0 - `rally verify list
 
   $ rally verify list
 
-Command since Rally 0.8.0:
+Current command:
 
 .. code-block:: console
 
-  $ rally verify list --id <id> --deployment-id <id> --status <status>
+  $ rally verify list --id <id> --env <uuid> --tag <tag> --status <status>
 
 Changes:
 
-  You can filter verifications by verifiers, by deployments and results
-  statuses.
+  You can filter verifications by verifiers, by environments, by tags and by
+  results statuses.
 
 Importing results
 """""""""""""""""
@@ -435,11 +442,11 @@ Command for Rally 0.7.0 - `rally verify import
 
   $ rally verify import --deployment <uuid> --set <set_name> --file <path> --no-use
 
-Command since Rally 0.8.0:
+Current command:
 
 .. code-block:: console
 
-  $ rally verify import --id <id> --deployment-id <uuid> --file <path> \
+  $ rally verify import <id> --env <uuid> --file <path> \
     --run-args <run_args> --no-use
 
 Changes:
@@ -469,11 +476,11 @@ Commands for Rally 0.7.0:
     $ rally verify compare --uuid-1 <uuid_1> --uuid-2 <uuid_2> --csv --html \
       --json --output-file <output_file> --threshold <threshold>
 
-Command since Rally 0.8.0:
+Current command:
 
 .. code-block:: console
 
-  $ rally verify report --uuid <uuid> --type <type> --to <destination> --open
+  $ rally verify report <uuid> --type <type> --to <destination> --open
 
 Changes:
 

@@ -158,9 +158,10 @@ The diagram below shows how this is possible:
 The actual **Rally core** consists of 3 main components, listed below in the
 order they go into action:
 
-    1. **Deploy** - store credentials about your deployments, credentials
-       are used by verify and task commands. It has plugable mechanism that
-       allows one to implement basic LCM for testing environment as well.
+    1. **Env** - describes and stores the environments you test. The stored
+       data is used by verify and task commands. It is pluggable, so a plugin
+       can also create and destroy the environment, not only describe an
+       existing one.
 
     2. **Verify** - wraps unittest based functional testing framework to
        provide complete tool with result storage and reporting.

@@ -31,15 +31,15 @@ PARAM_REGEX = re.compile(
     re.S,
 )
 
-# jsonschema primitive type -> short human label, shared by the CLI
+# jsonschema primitive type -> human label, shared by the CLI
 # (`rally plugin show`) and the Sphinx plugin reference.
 JSON_SCHEMA_TYPE_LABELS = {
-    "boolean": "bool",
-    "string": "str",
-    "number": "float",
-    "integer": "int",
+    "boolean": "boolean",
+    "string": "string",
+    "number": "number",
+    "integer": "integer",
     "array": "list",
-    "object": "dict",
+    "object": "dictionary",
 }
 
 
