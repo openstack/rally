@@ -45,10 +45,6 @@ Project Core maintainers
 +------------------------------+------------------------------------------------+
 |       Contact                |             Area of interest                   |
 +------------------------------+------------------------------------------------+
-| | Alexander Maretskiy        |  * Rally reports                               |
-| | amaretskiy (irc)           |  * Front-end                                   |
-| | amaretskiy@mirantis.com    |                                                |
-+------------------------------+------------------------------------------------+
 | | Anton Studenov             |  * Rally Deployment                            |
 | | tohin (irc)                |  * Task Hooks                                  |
 | | astudenov@mirantis.com     |                                                |
@@ -61,37 +57,9 @@ Project Core maintainers
 | | chenhb-zte (gitter)        |                                                |
 | | chen.haibing1@zte.com.cn   |                                                |
 +------------------------------+------------------------------------------------+
-| | Chris St. Pierre           |  * Rally task & plugins                        |
-| | stpierre (irc)             |  * Bash guru ;)                                |
-| | cstpierr@cisco.com         |                                                |
-+------------------------------+------------------------------------------------+
-| | Hai Shi                    |  * Rally task & plugins                        |
-| | shihai1991 (gitter)        |                                                |
-| | shihai1992@gmail.com       |                                                |
-+------------------------------+------------------------------------------------+
-| | Illia Khudoshyn            |  * Rally task & plugins                        |
-| | ikhudoshyn (irc)           |                                                |
-| | ikhudoshyn@mirantis.com    |                                                |
-+------------------------------+------------------------------------------------+
-| | Kun Huang                  |  * Rally task & plugins                        |
-| | kun_huang (irc)            |                                                |
-| | gareth.huang@huawei.com    |                                                |
-+------------------------------+------------------------------------------------+
 | | Li Yingjun                 |  * Rally task & plugins                        |
 | | liyingjun (irc)            |                                                |
 | | yingjun.li@kylin-cloud.com |                                                |
-+------------------------------+------------------------------------------------+
-| | Roman Vasilets             |  * Rally task & plugins                        |
-| | rvasilets (irc)            |                                                |
-| | pomeo92@gmail.com          |                                                |
-+------------------------------+------------------------------------------------+
-| | Sergey Skripnick           |  * Rally CI/CD                                 |
-| | redixin (irc)              |  * Rally deploy                                |
-| | sskripnick@mirantis.com    |  * Automation of everything                    |
-+------------------------------+------------------------------------------------+
-| | Yaroslav Lobankov          |  * Rally Verification                          |
-| | ylobankov (irc)            |                                                |
-| | ylobankov@mirantis.com     |                                                |
 +------------------------------+------------------------------------------------+
 
 | *All cores from this list are reviewing all changes that are proposed to Rally.
@@ -108,22 +76,6 @@ Plugin Core reviewers
 | | Ivan Kolodyazhny           |  * Cinder plugins                              |
 | | e0ne (irc)                 |                                                |
 | | e0ne@e0ne.info             |                                                |
-+------------------------------+------------------------------------------------+
-| | Nikita Konovalov           |  * Sahara plugins                              |
-| | NikitaKonovalov (irc)      |                                                |
-| | nkonovalov@mirantis.com    |                                                |
-+------------------------------+------------------------------------------------+
-| | Oleg Bondarev              |  * Neutron plugins                             |
-| | obondarev (irc)            |                                                |
-| | obondarev@mirantis.com     |                                                |
-+------------------------------+------------------------------------------------+
-| | Sergey Kraynev             |  * Heat plugins                                |
-| | skraynev (irc)             |                                                |
-| | skraynev@mirantis.com      |                                                |
-+------------------------------+------------------------------------------------+
-| | Spyros Trigazis            |  * Magnum plugins                              |
-| | strigazi (irc)             |                                                |
-| | strigazi@gmail.com         |                                                |
 +------------------------------+------------------------------------------------+
 
 

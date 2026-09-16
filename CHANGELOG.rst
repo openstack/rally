@@ -58,6 +58,9 @@ Changed
 
 * The changelog is now a part of the release notes in the documentation.
 
+* The list of core reviewers is cleaned up. Many thanks to everyone who has
+  moved on for their contributions to Rally!
+
 Fixed
 ~~~~~
 
