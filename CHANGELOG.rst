@@ -58,8 +58,11 @@ Changed
 
 * The changelog is now a part of the release notes in the documentation.
 
-* The list of core reviewers is cleaned up. Many thanks to everyone who has
-  moved on for their contributions to Rally!
+* The list of core reviewers is cleaned up. Many thanks to Alexander
+  Maretskiy, Chris St. Pierre, Hai Shi, Illia Khudoshyn, Kun Huang, Nikita
+  Konovalov, Oleg Bondarev, Roman Vasylets, Sergey Kraynev, Sergey Skripnick,
+  Spyros Trigazis and Yaroslav Lobankov for all their reviews and
+  contributions to Rally!
 
 Fixed
 ~~~~~
