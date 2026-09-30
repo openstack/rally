@@ -745,6 +745,25 @@ class EnvTestCase(test.DBTestCase):
         self.assertEqual(0, len(db.env_list()))
         self.assertEqual(0, len(db.platforms_list(env["uuid"])))
 
+    def test_env_delete_cascade_with_tasks(self):
+        env = db.env_create("name", "status", "descr", {}, {}, {}, [])
+        task = db.task_create({"env_uuid": env["uuid"], "tags": ["t"]})
+        subtask = db.subtask_create(task["uuid"], title="foo")
+        workload = db.workload_create(
+            task["uuid"], subtask["uuid"], name="atata", description="",
+            position=0, args={}, contexts={}, sla={}, hooks=[], runner={},
+            runner_type="r")
+        db.workload_data_create(task["uuid"], workload["uuid"], 0,
+                                {"raw": []})
+        db.env_delete_cascade(env["uuid"])
+
+        self.assertEqual(0, len(db.env_list()))
+        self.assertRaises(exceptions.DBRecordNotFound,
+                          db.task_get, task["uuid"])
+        self.assertIsNone(db.workload_get(workload["uuid"]))
+        self.assertEqual(
+            [], db.tags_get(task["uuid"], consts.TagType.TASK))
+
 
 class PlatformTestCase(test.DBTestCase):
 

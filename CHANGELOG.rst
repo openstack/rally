@@ -82,6 +82,10 @@ Fixed
   ``get_validation_context()`` instead. Platform plugins that implemented
   ``get_validation_context()`` should rename it, since it was never called.
 
+* ``rally env delete`` and ``rally deployment destroy`` failed with a foreign
+  key error on MySQL for an environment that had tasks, because the tasks
+  were deleted before their subtasks, workloads and workload data.
+
 * ``Deployment.list(name=...)`` failed with ``TypeError`` instead of
   returning the deployment with that name.
 

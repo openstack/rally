@@ -703,6 +703,32 @@ def env_set_status(session, uuid, old_status, new_status):
 
 @with_session
 def env_delete_cascade(session, uuid):
+    task_uuids = sa.select(models.Task.uuid).where(
+        models.Task.env_uuid == uuid
+    )
+    session.query(
+        models.WorkloadData
+    ).filter(
+        models.WorkloadData.task_uuid.in_(task_uuids)
+    ).delete(synchronize_session=False)
+
+    session.query(
+        models.Workload
+    ).filter(
+        models.Workload.task_uuid.in_(task_uuids)
+    ).delete(synchronize_session=False)
+
+    session.query(
+        models.Subtask
+    ).filter(
+        models.Subtask.task_uuid.in_(task_uuids)
+    ).delete(synchronize_session=False)
+
+    session.query(models.Tag).filter(
+        models.Tag.uuid.in_(task_uuids),
+        models.Tag.type == consts.TagType.TASK,
+    ).delete(synchronize_session=False)
+
     for model in [models.Task, models.Verification, models.Platform]:
         session.query(model).filter_by(env_uuid=uuid).delete()
     session.query(models.Env).filter_by(uuid=uuid).delete()
