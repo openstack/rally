@@ -449,10 +449,12 @@ class VerifierManager(plugin.Plugin, metaclass=abc.ABCMeta):
         :param pattern: Filter tests by given pattern
         """
 
-    def parse_results(self, results_data):
-        """Parse subunit results data of a test run."""
+    def parse_results(
+        self, results_data: bytes
+    ) -> subunit_v2.SubunitV2StreamResult:
+        """Parse subunit v2 results data of a test run."""
         # TODO(andreykurilin): Support more formats.
-        return subunit_v2.parse(io.StringIO(results_data))
+        return subunit_v2.parse(io.BytesIO(results_data))
 
     @abc.abstractmethod
     def run(self, context):

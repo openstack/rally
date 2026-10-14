@@ -102,6 +102,19 @@ class VerifyTestCase(unittest.TestCase):
         output = rally("verify rerun %s" % verification_uuid)
         self.assertIn("successfully finished", output)
 
+    def test_import_results(self):
+        rally = utils.Rally(plugin_path="tests/functional/extra")
+        output = rally("verify create-verifier --name fakeverify "
+                       "--type extension --platform fakeverifier",
+                       write_report=False)
+        uuid = re.search(r"UUID=([0-9a-f\-]{36})", output).group(1)
+        output = rally(f"verify import --id {uuid} "
+                       "--file tests/unit/common/io/subunit_v2.stream")
+        self.assertIn("Ran: 7 tests in 5.007 sec.", output)
+        self.assertIn(" - Failures: 3\n", output)
+
+        self.assertIn("fakeverify", rally("verify list"))
+
     def test_add_list_delete_extension(self):
         rally = utils.Rally(plugin_path="tests/functional/extra")
         output = rally("verify create-verifier --name extension "

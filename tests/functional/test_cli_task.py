@@ -25,6 +25,7 @@ import jsonschema
 import pytest
 
 from rally import api
+from rally.common import db
 from tests.functional import utils
 
 
@@ -498,6 +499,7 @@ class TaskTestCase(unittest.TestCase):
         # obtain the task object from the database, to check that CLI prints
         # everything right
         rapi = api.API(config_file=rally.config_filename)
+        self.addCleanup(db.engine_reset)
         task = rapi.task.get(task_id=task_uuid)
 
         actual = rally("task list --env MAIN")

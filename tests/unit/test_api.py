@@ -1731,10 +1731,11 @@ class VerificationAPITestCase(test.TestCase):
                             mock_verification_create):
         verifier_id = "vuuuiiddd"
         deployment_id = "duuuiidd"
-        data = "contest of file with results"
+        data = b"contest of file with results"
         run_args = {"set_name": "compute"}
+        mock_verification_create.return_value = mock.create_autospec(
+            objects.Verification, instance=True)
 
-        # verifier_obj = mock___verifier__get.return_value
         verifier_obj = self.verification_inst.api.verifier._get.return_value
         verifier_obj.deployment = {
             "name": "deployment_name",
@@ -1765,7 +1766,8 @@ class VerificationAPITestCase(test.TestCase):
         # check setting failed
         verification.finish.reset_mock()
 
-        verifier_obj.manager.parse_results.side_effect = RuntimeError
+        error = RuntimeError("bad subunit stream")
+        verifier_obj.manager.parse_results.side_effect = error
         self.assertRaises(RuntimeError,
                           self.verification_inst.import_results,
                           verifier_id=verifier_id,
@@ -1773,7 +1775,7 @@ class VerificationAPITestCase(test.TestCase):
                           data=data,
                           **run_args)
         self.assertFalse(verification.finish.called)
-        self.assertTrue(verification.set_failed.called)
+        verification.set_error.assert_called_once_with(error)
 
     @mock.patch("rally.api._Verifier._get")
     @mock.patch("rally.api.objects.Deployment.get",

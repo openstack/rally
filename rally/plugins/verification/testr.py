@@ -153,7 +153,7 @@ class TestrLauncher(manager.VerifierManager):
         xfail_list = context.get("xfail_list")
         skip_list = context.get("skip_list")
         results = subunit_v2.parse(
-            t.cast(t.IO, stream.stdout),
+            t.cast(t.IO[bytes], stream.stdout),
             live=True,
             expected_failures=xfail_list,
             skipped_tests=skip_list,

@@ -19,11 +19,12 @@ import os
 import re
 import sys
 import time
+import typing as t
 
 import jinja2
 import jinja2.meta
 import requests
-from requests.packages import urllib3
+import urllib3
 
 from rally import consts
 from rally import exceptions
@@ -1108,6 +1109,14 @@ class _Verifier(APIGroup):
         )
 
 
+class VerificationResults(t.TypedDict):
+    """Results of a verification together with the verification itself."""
+
+    verification: dict
+    totals: dict
+    tests: dict
+
+
 class _Verification(APIGroup):
     def start(self, verifier_id, deployment_id, tags=None, **run_args):
         """Start a verification.
@@ -1321,12 +1330,18 @@ class _Verification(APIGroup):
         LOG.info("The report has been successfully built.")
         return result
 
-    def import_results(self, verifier_id, deployment_id, data, **run_args):
+    def import_results(
+        self,
+        verifier_id: str,
+        deployment_id: str,
+        data: bytes,
+        **run_args: t.Any,
+    ) -> VerificationResults:
         """Import results of a test run into Rally database.
 
         :param verifier_id: Verifier name or UUID
         :param deployment_id: Deployment name or UUID
-        :param data: Results data of a test run to import
+        :param data: Results of a test run to import, as a subunit v2 stream
         :param run_args: Dictionary with run arguments
         """
         # TODO(aplanas): Create an external deployment if this is missing, as
@@ -1355,7 +1370,7 @@ class _Verification(APIGroup):
         try:
             results = verifier.manager.parse_results(data)
         except Exception as e:
-            verification.set_failed(e)
+            verification.set_error(e)
             raise
         verification.finish(results.totals, results.tests)
 

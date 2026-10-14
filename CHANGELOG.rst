@@ -85,6 +85,14 @@ Fixed
 * ``Deployment.list(name=...)`` failed with ``TypeError`` instead of
   returning the deployment with that name.
 
+* ``rally verify import`` could not import any results. It failed to read
+  the subunit v2 file (a binary format) and, after that, to parse it and to
+  print the imported verification. When the results cannot be parsed, the
+  verification is now marked as ``crashed`` and the real error is shown,
+  instead of failing with ``KeyError: 'set_failed'`` and leaving the
+  verification ``running``. The ``data`` argument of ``import_results()`` in
+  the Python API is the subunit v2 stream as ``bytes``.
+
 [5.1.1] - 2026-08-13
 --------------------
 

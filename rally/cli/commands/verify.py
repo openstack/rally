@@ -1248,11 +1248,11 @@ def import_results(
     if not os.path.exists(file_to_parse):
         print("File '%s' not found." % file_to_parse)
         raise typer.Exit(code=1)
-    with open(file_to_parse) as f:
+    with open(file_to_parse, "rb") as f:
         data = f.read()
 
     parsed_run_args = yaml.safe_load(run_args) if run_args else {}
-    verification, results = api.verification.import_results(
+    results = api.verification.import_results(
         verifier_id=verifier_id,
         deployment_id=env,
         data=data,
@@ -1260,7 +1260,7 @@ def import_results(
     )
     _print_totals(results["totals"])
 
-    verification_uuid = verification["uuid"]
+    verification_uuid = results["verification"]["uuid"]
     if not no_use:
         _use(api, verification_uuid)
     else:

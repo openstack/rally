@@ -90,7 +90,7 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "rally.api"
-disable_error_code = ["attr-defined", "no-untyped-def"]
+disable_error_code = ["no-untyped-def"]
 
 [[tool.mypy.overrides]]
 module = "rally.cli.cliutils"

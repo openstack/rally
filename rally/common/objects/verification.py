@@ -13,6 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import datetime as dt
+import typing as t
+
 from rally import consts
 from rally.common import db
 
@@ -21,6 +24,26 @@ class Verification:
     """Represents a verification object."""
 
     TIME_FORMAT = consts.TimeFormat.ISO8601
+
+    # Fields of the database entry, resolved at runtime by __getattr__.
+    id: int
+    uuid: str
+    verifier_uuid: str
+    env_uuid: str
+    deployment_uuid: str
+    run_args: dict
+    status: str
+    tests_count: int
+    failures: int
+    skipped: int
+    success: int
+    unexpected_success: int
+    expected_failures: int
+    tests_duration: float
+    tests: dict
+    tags: list[str]
+    created_at: dt.datetime
+    updated_at: dt.datetime
 
     def __init__(self, verification):
         """Init a verification object.
@@ -31,8 +54,10 @@ class Verification:
         self._db_entry = verification
         self._db_entry["deployment_uuid"] = self._db_entry["env_uuid"]
 
-    def __getattr__(self, attr):
-        return self._db_entry[attr]
+    if not t.TYPE_CHECKING:
+        # hidden from mypy, otherwise any attribute name type-checks
+        def __getattr__(self, attr):
+            return self._db_entry[attr]
 
     def __getitem__(self, item):
         return self._db_entry[item]
@@ -67,19 +92,21 @@ class Verification:
         return data
 
     @classmethod
-    def create(cls, verifier_id, deployment_id, tags=None, run_args=None):
+    def create(
+        cls, verifier_id, deployment_id, tags=None, run_args=None
+    ) -> "Verification":
         return cls(
             db.verification_create(verifier_id, deployment_id, tags, run_args)
         )
 
     @classmethod
-    def get(cls, verification_uuid):
+    def get(cls, verification_uuid) -> "Verification":
         return cls(db.verification_get(verification_uuid))
 
     @classmethod
     def list(
         cls, verifier_id=None, deployment_id=None, tags=None, status=None
-    ):
+    ) -> list["Verification"]:
         verification_list = db.verification_list(
             verifier_id, deployment_id, tags, status
         )

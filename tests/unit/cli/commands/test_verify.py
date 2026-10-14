@@ -625,7 +625,8 @@ class VerifyCommandsTestCase(test.CLITestCase):
     @mock.patch("rally.api._Verification.import_results")
     def test_import_results(self, mock_import_results):
         verifier, env, verification = self._create_verification()
-        mock_import_results.return_value = (verification, RESULTS)
+        mock_import_results.return_value = dict(
+            RESULTS, verification={"uuid": verification["uuid"]})
 
         # a missing input file is reported and exits 1
         result = self.invoke([
@@ -634,16 +635,18 @@ class VerifyCommandsTestCase(test.CLITestCase):
         self.assertEqual(1, result.exit_code, result.output)
         self.assertFalse(mock_import_results.called)
 
-        # a real file is read and forwarded to the API
-        with tempfile.NamedTemporaryFile("w") as tf:
-            tf.write("data")
+        # a real file is read as binary (subunit v2 is not text) and
+        # forwarded to the API
+        with tempfile.NamedTemporaryFile("wb") as tf:
+            tf.write(b"\xb3data")
             tf.flush()
             result = self.invoke([
                 "verify", "import", verifier.uuid, "--env",
                 env["uuid"], "--file", tf.name])
         self.assertEqual(0, result.exit_code, result.output)
         mock_import_results.assert_called_once_with(
-            verifier_id=verifier.uuid, deployment_id=env["uuid"], data="data")
+            verifier_id=verifier.uuid, deployment_id=env["uuid"],
+            data=b"\xb3data")
 
         # --no-use imports without setting the default verification
         with tempfile.NamedTemporaryFile("w") as tf:
@@ -653,7 +656,8 @@ class VerifyCommandsTestCase(test.CLITestCase):
                 "verify", "import", verifier.uuid, "--env",
                 env["uuid"], "--file", tf.name, "--no-use"])
         self.assertEqual(0, result.exit_code, result.output)
-        self.assertIn("Verification UUID", result.output)
+        self.assertIn(f"Verification UUID: {verification['uuid']}.",
+                      result.output)
 
     def test_default_reporters(self):
         available_reporters = {

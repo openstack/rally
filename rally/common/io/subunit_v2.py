@@ -310,7 +310,7 @@ class SubunitV2StreamResult:
 
 
 def parse(
-    stream: t.IO[bytes] | t.IO[str],
+    stream: t.IO[bytes],
     expected_failures: dict[str, str] | None = None,
     skipped_tests: dict[str, str] | None = None,
     live: bool = False,

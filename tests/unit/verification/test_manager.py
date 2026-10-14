@@ -288,15 +288,19 @@ class VerifierManagerTestCase(test.TestCase):
                           FakeVerifier(mock.Mock()).uninstall_extension,
                           "name")
 
-    @mock.patch("rally.verification.manager.io.StringIO")
-    @mock.patch("rally.verification.manager.subunit_v2")
-    def test_parse_results(self, mock_subunit_v2, mock_string_io):
-        data = "123123"
-        self.assertEqual(mock_subunit_v2.parse.return_value,
-                         FakeVerifier(mock.Mock()).parse_results(data))
-        mock_subunit_v2.parse.assert_called_once_with(
-            mock_string_io.return_value)
-        mock_string_io.assert_called_once_with(data)
+    def test_parse_results(self):
+        stream = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                              "..", "common", "io", "subunit_v2.stream")
+        with open(stream, "rb") as f:
+            results = FakeVerifier(mock.Mock()).parse_results(f.read())
+
+        self.assertEqual({"tests_count": 7,
+                          "tests_duration": "5.007",
+                          "skipped": 1,
+                          "success": 2,
+                          "failures": 3,
+                          "expected_failures": 0,
+                          "unexpected_success": 1}, results.totals)
 
     def test_validate_args(self):
         # validating "pattern" argument
