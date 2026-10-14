@@ -15,6 +15,7 @@
 
 import json
 import os
+import re
 import tempfile
 import unittest
 
@@ -65,6 +66,37 @@ class EnvTestCase(unittest.TestCase):
         rally("env delete MAIN")
         self.assertEqual([], rally("env list --json", getjson=True))
         self.assertIn("There are no environments", rally("env list"))
+
+    def test_delete_with_task_and_verification(self):
+        task_config = utils.TaskConfig({
+            "version": 2,
+            "title": "Dummy task",
+            "subtasks": [
+                {
+                    "title": "dummy-subtask",
+                    "scenario": {"Dummy.dummy": {"sleep": 0}},
+                    "runner": {"constant": {"times": 2}}
+                }
+            ]
+        })
+
+        for delete_cmds in (["env destroy MAIN", "env delete MAIN"],
+                            ["deployment destroy MAIN"]):
+            with self.subTest(delete_cmds=delete_cmds):
+                rally = utils.Rally(plugin_path="tests/functional/extra")
+                rally(f"task start --task {task_config.filename} --tag t")
+                output = rally("verify create-verifier --name fakeverify "
+                               "--type installation --platform fakeverifier",
+                               write_report=False)
+                verifier_uuid = re.search(r"UUID=([0-9a-f\-]{36})",
+                                          output).group(1)
+                rally(f"verify start --id {verifier_uuid} --tag t "
+                      "--pattern \\.test_testr\\.")
+
+                for cmd in delete_cmds:
+                    rally(cmd)
+
+                self.assertEqual([], rally("env list --json", getjson=True))
 
     def test_list(self):
         rally = utils.Rally()

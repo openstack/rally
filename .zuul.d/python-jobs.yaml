@@ -29,6 +29,34 @@
       tox_env: functional
 
 - job:
+    name: rally-tox-functional-mariadb
+    parent: rally-tox-functional
+    description: |
+      Run functional tests for rally project against MariaDB.
+
+      Uses tox with the ``functional`` environment. Every test gets its own
+      database on the MariaDB server.
+    pre-run: tests/ci/playbooks/functional-db-setup.yaml
+    vars:
+      rally_functional_db: mariadb
+      tox_environment:
+        RALLY_FUNCTIONAL_DB_URL: "mysql+pymysql://rally:rally@127.0.0.1/"
+
+- job:
+    name: rally-tox-functional-postgresql
+    parent: rally-tox-functional
+    description: |
+      Run functional tests for rally project against PostgreSQL.
+
+      Uses tox with the ``functional`` environment. Every test gets its own
+      database on the PostgreSQL server.
+    pre-run: tests/ci/playbooks/functional-db-setup.yaml
+    vars:
+      rally_functional_db: postgresql
+      tox_environment:
+        RALLY_FUNCTIONAL_DB_URL: "postgresql+psycopg://rally:rally@127.0.0.1/postgres"
+
+- job:
     name: rally-tox-self
     parent: rally-tox-base
     description: |

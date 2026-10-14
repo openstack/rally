@@ -11,8 +11,7 @@ RUN apt-get update && apt-get install --yes sudo vim git-core build-essential &&
 COPY ./ /rally/source
 WORKDIR /rally/source
 
-RUN python3 -m pip install . --constraint upper-constraints.txt --no-cache-dir && \
-    python3 -m pip install pymysql psycopg2-binary --no-cache-dir && \
+RUN python3 -m pip install ".[mysql,postgres]" --constraint upper-constraints.txt --no-cache-dir && \
     mkdir -p /etc/rally && \
     echo "[database]" > /etc/rally/rally.conf && \
     echo "connection=sqlite:////home/rally/.rally/rally.db" >> /etc/rally/rally.conf

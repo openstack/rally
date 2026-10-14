@@ -1,0 +1,34 @@
+- name: Prepare a database server for functional tests
+  hosts: all
+  tasks:
+    - name: Install MariaDB
+      become: true
+      package:
+        state: present
+        name: mariadb-server
+      when: rally_functional_db == "mariadb"
+
+    - name: Create MariaDB user allowed to create databases
+      become: true
+      command:
+        cmd: >-
+          mysql -e "
+          CREATE USER IF NOT EXISTS 'rally'@'localhost' IDENTIFIED BY 'rally';
+          CREATE USER IF NOT EXISTS 'rally'@'127.0.0.1' IDENTIFIED BY 'rally';
+          GRANT ALL PRIVILEGES ON *.* TO 'rally'@'localhost';
+          GRANT ALL PRIVILEGES ON *.* TO 'rally'@'127.0.0.1';"
+      when: rally_functional_db == "mariadb"
+
+    - name: Install PostgreSQL
+      become: true
+      package:
+        state: present
+        name: postgresql
+      when: rally_functional_db == "postgresql"
+
+    - name: Create PostgreSQL role allowed to create databases
+      become: true
+      become_user: postgres
+      command:
+        cmd: psql -c "CREATE ROLE rally LOGIN PASSWORD 'rally' CREATEDB"
+      when: rally_functional_db == "postgresql"

@@ -2,4 +2,5 @@
 - name: Run tox
   args:
     chdir: "{{ zuul.project.src_dir }}"
+  environment: "{{ tox_environment | default({}) }}"
   command: "tox -e {{ tox_env }}"

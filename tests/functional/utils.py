@@ -22,8 +22,14 @@ import os
 import shutil
 import subprocess
 import tempfile
+import uuid
+
+import sqlalchemy as sa
 
 from rally.utils import encodeutils
+
+
+DB_URL_ENV = "RALLY_FUNCTIONAL_DB_URL"
 
 
 class RallyCliError(Exception):
@@ -76,6 +82,7 @@ class Rally:
         self.env = copy.deepcopy(os.environ)
         self.env["HOME"] = self.tmp_dir
         self.config_filename = None
+        self.db_name = None
         self.method_name = None
         self.class_name = None
 
@@ -95,8 +102,7 @@ class Rally:
             config_filename = os.path.join(self.tmp_dir, "conf")
             config = configparser.RawConfigParser()
             config.add_section("database")
-            config.set("database", "connection",
-                       "sqlite:///%s/db" % self.tmp_dir)
+            config.set("database", "connection", self._create_db())
             with open(config_filename, "w") as conf:
                 config.write(conf)
             self.args = ["rally", "--config-file", config_filename]
@@ -117,6 +123,37 @@ class Rally:
 
     def __del__(self):
         shutil.rmtree(self.tmp_dir)
+        if self.db_name:
+            statement = f"DROP DATABASE {self.db_name}"
+            if sa.make_url(os.environ[DB_URL_ENV]).get_backend_name() == (
+                    "postgresql"):
+                # tests may keep in-process API connections open
+                statement += " WITH (FORCE)"
+            self._execute_on_db_server(statement)
+
+    def _execute_on_db_server(self, statement):
+        engine = sa.create_engine(os.environ[DB_URL_ENV],
+                                  isolation_level="AUTOCOMMIT")
+        try:
+            with engine.connect() as conn:
+                conn.execute(sa.text(statement))
+        finally:
+            engine.dispose()
+
+    def _create_db(self):
+        """Create a dedicated database and return its connection string.
+
+        SQLite is used by default. If DB_URL_ENV holds a server connection
+        string (MySQL/MariaDB or PostgreSQL), a database with a unique name
+        is created on that server instead, so concurrently running tests
+        never share one.
+        """
+        if not os.environ.get(DB_URL_ENV):
+            return f"sqlite:///{self.tmp_dir}/db"
+        self.db_name = f"rally_{uuid.uuid4().hex}"
+        self._execute_on_db_server(f"CREATE DATABASE {self.db_name}")
+        url = sa.make_url(os.environ[DB_URL_ENV]).set(database=self.db_name)
+        return url.render_as_string(hide_password=False)
 
     def _safe_make_dirs(self, dirs):
         try:

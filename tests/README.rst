@@ -62,11 +62,25 @@ Fuctional tests use Rally API only and check responses without touching internal
 
 To run functional tests locally::
 
-  $ source openrc
-  $ rally deployment create --fromenv --name testing
-  $ tox -e cli
+  $ tox -e functional
 
-  # NOTE: openrc file with OpenStack admin credentials
+By default every test uses its own SQLite database. To run the tests against
+MySQL/MariaDB or PostgreSQL, pass a connection string to the database server
+through the ``RALLY_FUNCTIONAL_DB_URL`` environment variable. The user needs
+permission to create databases: every test creates its own database on that
+server and drops it afterwards, so tests can still run in parallel::
+
+  $ RALLY_FUNCTIONAL_DB_URL="mysql+pymysql://rally:rally@127.0.0.1/" \
+      tox -e functional
+  $ RALLY_FUNCTIONAL_DB_URL="postgresql+psycopg://rally:rally@127.0.0.1/postgres" \
+      tox -e functional
+
+Both drivers (the ``mysql`` and ``postgres`` extras) are installed in the
+``functional`` environment and need no system packages. Use the ``mysql``
+driver for MariaDB as well.
+
+The number of parallel workers defaults to the number of CPUs. Set
+``PYTEST_XDIST_AUTO_NUM_WORKERS`` to change it.
 
 Output of every Rally execution will be collected under some reports root in
 directory structure like: reports_root/ClassName/MethodName_suffix.extension

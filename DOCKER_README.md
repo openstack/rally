@@ -80,6 +80,25 @@ docker volumes or mount the directory.
       # And finally, you can start doing your things.*
       $ docker run -v /var/lib/rally_container:/home/rally/.rally xrally/xrally env create --name "foo"
 
+# Using MySQL/MariaDB or PostgreSQL
+
+Instead of SQLite, rally can store its data in MySQL/MariaDB or PostgreSQL.
+The image already contains the database drivers:
+
+* PyMySQL for MySQL and MariaDB: `mysql+pymysql://user:password@host/rally`
+* psycopg (version 3) for PostgreSQL:
+  `postgresql+psycopg://user:password@host/rally`. A plain `postgresql://`
+  connection string does not work: it selects psycopg2, which the image does
+  not contain.
+
+Put the connection string in `/home/rally/.rally/rally.conf` and create the
+database schema once:
+
+    [database]
+    connection = postgresql+psycopg://user:password@host/rally
+
+    $ docker run -v rally_volume:/home/rally/.rally xrally/xrally db create
+
 Have fun!
 
 # Links

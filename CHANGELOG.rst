@@ -58,6 +58,12 @@ Changed
 
 * The changelog is now a part of the release notes in the documentation.
 
+* The ``postgres`` extra installs ``psycopg`` (version 3) instead of
+  ``psycopg2``. It ships binary wheels, so no compiler or ``libpq``
+  development package is needed anymore. Use ``postgresql+psycopg://`` in the
+  ``[database]connection`` option: a plain ``postgresql://`` URL still
+  selects ``psycopg2``, which is no longer installed by the extra.
+
 * The list of core reviewers is cleaned up. Many thanks to Alexander
   Maretskiy, Chris St. Pierre, Hai Shi, Illia Khudoshyn, Kun Huang, Nikita
   Konovalov, Oleg Bondarev, Roman Vasylets, Sergey Kraynev, Sergey Skripnick,
