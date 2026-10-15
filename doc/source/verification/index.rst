@@ -21,8 +21,7 @@ Functional testing is a first step to ensuring that your product works as
 expected and API covers all use-cases. Rally Verification Component is all
 about this. It is not designed to generate a real big load (for this job we
 have :ref:`task-component`), but it should be enough to check that your
-environment works by different tools (we call them
-:ref:`glossary-verification`).
+environment works by different tools (we call them verifiers).
 
 .. toctree::
     :maxdepth: 2

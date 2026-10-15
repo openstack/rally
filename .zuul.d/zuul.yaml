@@ -5,6 +5,7 @@
     check: &queue
       jobs:
         - rally-tox-cover
+        - rally-tox-docs-rtd
         - rally-tox-mypy
         - rally-tox-pep8
         - rally-tox-py311

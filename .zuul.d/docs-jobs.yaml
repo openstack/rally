@@ -14,6 +14,18 @@
           NTrHR2CkWb+e4lu0lQSIQX1/95HaQD8Q7pwG89VwRUH0hYEY6TRMu1QHwSu/6w=
 
 - job:
+    name: rally-tox-docs-rtd
+    parent: openstack-tox-docs
+    description: |
+      Build the documentation the way Read the Docs does: ``tox -e docs``
+      with ``READTHEDOCS=True``, which selects the Read the Docs theme.
+      The ``openstack-tox-docs`` job covers the openstackdocs theme.
+    vars:
+      tox_environment:
+        READTHEDOCS: "True"
+      tox_skip_pdf: true
+
+- job:
     name: rally-trigger-readthedocs
     description: "Trigger a Read the Docs build of the rally documentation."
     nodeset:

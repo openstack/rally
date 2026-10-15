@@ -1,0 +1,35 @@
+# How each report screenshot under doc/source/images/reports/ is made.
+#
+# source is one or more `rally task export --type json` files under _data/.
+# To remake a screenshot, render the sources with the command its `report`
+# names, `rally task report <source> --out report.html` for "task" or
+# `rally task trends <source>... --out report.html` for "trends", and capture
+# it with headless Chrome:
+#
+#   google-chrome --headless=new --hide-scrollbars \
+#       --force-device-scale-factor=1.5 --window-size=<width>,<height> \
+#       --virtual-time-budget=8000 --screenshot=<name>.png \
+#       "file:///path/to/report.html#/<url_fragment>"
+
+- name: task-overview
+  source: reports/keystone-ci.json
+  report: task
+  viewport: {width: 1280, height: 390}
+  url_fragment: ""
+
+- name: task-atomic-actions
+  source: reports/keystone-ci.json
+  report: task
+  viewport: {width: 1280, height: 560}
+  url_fragment: "KeystoneBasic.get_entities/details"
+
+- name: trends-total
+  source:
+    - reports/keystone-trends-1.json
+    - reports/keystone-trends-2.json
+    - reports/keystone-trends-3.json
+    - reports/keystone-trends-4.json
+    - reports/keystone-trends-5.json
+  report: trends
+  viewport: {width: 1280, height: 610}
+  url_fragment: "KeystoneBasic.get_entities/total"

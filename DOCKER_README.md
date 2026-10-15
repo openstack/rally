@@ -43,14 +43,16 @@ version:
     # pull the 5.1.1 image (the latest release at the point of writing the note)
     $ docker pull xrally/xrally:5.1.1
 
-**WARNING: never attach folders and volumes to `/rally` inside the container. It can break everything.**
+**WARNING: the image keeps the Rally source tree, with all the sample tasks,
+in `/rally/source`. Do not attach folders or volumes over `/rally` inside the
+container, or these files are hidden.**
 
 The default configuration file is located at `/etc/rally/rally.conf`. You
 should not be aware of it. If you want to override some options, use
 `/home/rally/.rally/rally.conf` location instead. Rally does not load all
 configuration files, so the primary one will be used.
 
-The default place for rally database file is `/home/rally/.rally/rally.sqlite`.
+The default place for rally database file is `/home/rally/.rally/rally.db`.
 To make the storage persistent across all container runs, you may want to use
 docker volumes or mount the directory.
 

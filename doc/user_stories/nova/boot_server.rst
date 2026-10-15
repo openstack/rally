@@ -44,7 +44,7 @@ Cluster
 This cluster was created via Fuel Dashboard interface.
 
 +----------------------+--------------------------------------------+
-| Deployment           | Custom build of `Mirantis OpenStack`_ v5.1 |
+| Distribution         | Custom build of `Mirantis OpenStack`_ v5.1 |
 +----------------------+--------------------------------------------+
 | OpenStack release    | Icehouse                                   |
 +----------------------+--------------------------------------------+
@@ -68,11 +68,12 @@ Rally
 
 For this test case, we use custom Rally with the following patch:
 
-https://review.openstack.org/#/c/96300/
+https://review.opendev.org/c/openstack/rally/+/96300
 
-**Deployment**
+**Environment**
 
-Rally was deployed for cluster using `ExistingCloud`_ type of deployment.
+Rally ran against an environment for the existing cluster, created from a
+spec like `existing.json`_.
 
 **Server flavor**
 
@@ -122,53 +123,37 @@ Rally was deployed for cluster using `ExistingCloud`_ type of deployment.
  +------------------+--------------------------------------+
 
 
-**Task configuration file (in JSON format):**
+**Task configuration file:**
 
-.. code-block:: json
+.. code-block:: yaml
 
- {
-    "version": 2,
-    "title": "Boot server performance",
-    "subtasks": [
-        {
-            "title": "Boot a server",
-            "scenario": {
-                "NovaServers.boot_server": {
-                    "flavor": {
-                        "name": "ram64"
-                    },
-                    "image": {
-                        "name": "TestVM"
-                    }
-                }
-            },
-            "runner": {
-                "constant": {
-                    "concurrency": 5,
-                    "times": 400
-                }
-            },
-            "contexts": {
-                "neutron_network": {
-                    "network_ip_version": 4
-                },
-                "users": {
-                    "concurrent": 30,
-                    "users_per_tenant": 5,
-                    "tenants": 5
-                },
-                "quotas": {
-                    "neutron": {
-                        "subnet": -1,
-                        "port": -1,
-                        "network": -1,
-                        "router": -1
-                    }
-                }
-            }
-        }
-    ]
- }
+    ---
+    version: 2
+    title: Boot server performance
+    subtasks:
+      - title: Boot a server
+        scenario:
+          NovaServers.boot_server:
+            flavor:
+              name: ram64
+            image:
+              name: TestVM
+        runner:
+          constant:
+            concurrency: 5
+            times: 400
+        contexts:
+          network: {}
+          users:
+            resource_management_workers: 30
+            users_per_tenant: 5
+            tenants: 5
+          quotas:
+            neutron:
+              subnet: -1
+              port: -1
+              network: -1
+              router: -1
 
 The only difference between first and second run is that runner.times for first
 time was set to 500
@@ -206,4 +191,4 @@ agent), we got **100% success and 2x improved average performance**:
 
 .. _bug in Keystone: https://bugs.launchpad.net/keystone/+bug/1360446
 .. _Mirantis OpenStack: https://www.mirantis.com/
-.. _ExistingCloud: https://github.com/openstack/rally-openstack/tree/master/samples/deployments/existing.json
+.. _existing.json: https://github.com/openstack/rally-openstack/blob/master/samples/deployments/existing.json

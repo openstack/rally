@@ -16,4 +16,4 @@ Bugs should be filed on Launchpad:
 For more specific information about contributing to this repository, see the
 rally contributor guide:
 
-   https://rally.readthedocs.io/en/latest/contribute.html
+   https://rally.readthedocs.io/latest/contribute.html

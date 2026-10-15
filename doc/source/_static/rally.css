@@ -1,0 +1,46 @@
+/* Task statuses on the Task Component page, see the roles defined there. The
+   selectors outrank the themes' own colours for inline literals. */
+code.literal.status {
+  border: 1px solid;
+  border-radius: 3px;
+  padding: 0 4px;
+  font-weight: bold;
+}
+code.literal.status.status-new {
+  color: #4a5560; background: #eef0f2; border-color: #c6ccd2;
+}
+code.literal.status.status-running {
+  color: #1f5f8b; background: #e7f1f9; border-color: #a9cbe5;
+}
+code.literal.status.status-ok {
+  color: #1e6b34; background: #e8f5ec; border-color: #a7d7b4;
+}
+code.literal.status.status-failed {
+  color: #a12a2a; background: #fbeaea; border-color: #e5abab;
+}
+code.literal.status.status-aborted {
+  color: #8a5a00; background: #fdf3e1; border-color: #ebcf96;
+}
+
+/* The parts table on the Overview. The Read the Docs theme keeps table
+   cells on one line, which makes prose cells scroll sideways, and the
+   openstackdocs theme centres the cells and draws its links and literals in
+   colours that do not show on its dark header. */
+table.docutils.rally-parts th,
+table.docutils.rally-parts td {
+  white-space: normal;
+  vertical-align: top;
+  text-align: left;
+}
+div.docs-body table.docutils.rally-parts th a,
+div.docs-body table.docutils.rally-parts th code.literal {
+  color: inherit;
+}
+
+/* parsed-literal blocks (commands with substitutions) get the colours of the
+   "native" Pygments style, so they look like code-block ones in the Read the
+   Docs theme too. */
+.rst-content pre.literal-block {
+  background: #202020;
+  color: #d0d0d0;
+}

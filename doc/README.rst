@@ -3,7 +3,7 @@ Content of doc directory
 ========================
 
 This directory contains everything that is related to documentation and
-bureaucracy. You can find here 4 subdirectories:
+bureaucracy. You can find here these subdirectories:
 
 
 feature_request
@@ -19,7 +19,7 @@ source
 
 Source of documentation. Latest version of documentation_.
 
-.. _documentation: https://rally.readthedocs.io/en/latest/
+.. _documentation: https://rally.readthedocs.io/latest/
 
 
 specs
@@ -35,6 +35,13 @@ user_stories
 Place where you can share any of Rally user experience. E.g. fixing some bugs,
 measuring performance of different architectures or comparing different
 hardware and so on..
+
+
+logos
+~~~~~
+
+Logos for the "Who uses Rally" grid on the overview page, the list of
+organizations in ``sources.yaml`` and the script that builds the grid.
 
 
 release_notes

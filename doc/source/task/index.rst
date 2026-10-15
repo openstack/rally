@@ -1,15 +1,75 @@
 .. _task-component:
 
+.. role:: st-new(literal)
+   :class: status status-new
+.. role:: st-running(literal)
+   :class: status status-running
+.. role:: st-ok(literal)
+   :class: status status-ok
+.. role:: st-failed(literal)
+   :class: status status-failed
+.. role:: st-aborted(literal)
+   :class: status status-aborted
+
 ==============
 Task Component
 ==============
 
-This section describes Rally Task Component (including feature presented since
-Rally v0.5.0, allowing to analyze statistics trends for the given tasks).
-
 .. contents::
   :depth: 2
   :local:
+
+.. _task-statuses:
+
+Task statuses
+=============
+
+``rally task start`` validates the task file, then runs it.
+``rally task status`` and ``rally task list`` show where a task is:
+
+* :st-new:`init`: the task is created and nothing has run yet.
+* :st-new:`validating`: Rally checks the task file: its syntax, that its
+  plugins exist, and that the environment has what they need.
+* :st-running:`running`: the load is running.
+* :st-ok:`finished`: every workload has run, including those whose SLA
+  failed.
+* :st-failed:`crashed`: the task file was invalid, or an unexpected error
+  stopped the run. ``rally task detailed`` shows the error.
+* :st-aborted:`soft_aborting`: ``rally task abort --soft`` was called. Rally
+  finishes the current workload and skips the rest.
+* :st-aborted:`aborting`: ``rally task abort`` was called. Rally stops
+  starting new iterations; those already running finish.
+* :st-aborted:`aborted`: the task stopped after an abort. A soft abort during
+  the last workload leaves nothing to skip, so that task ends as
+  :st-ok:`finished`.
+
+A failed SLA does not change the state: the task still ends as
+:st-ok:`finished`, and the report and ``rally task sla-check`` show which
+criteria failed. ``rally task start`` then exits with code 2, so a CI job
+running it fails. With ``rally task start --abort-on-sla-failure``, a failed
+criterion stops the current workload and skips the rest, as a soft abort
+does.
+
+.. _task-cleanup:
+
+Cleanup
+=======
+
+Rally removes what a workload created once the workload is over, whether its
+iterations passed, failed or were aborted:
+
+* Each context deletes what it set up, for example the temporary users of
+  an OpenStack cloud.
+* In rally-openstack, each scenario declares the services it creates
+  resources in, and Rally deletes the resources there whose names it
+  generated for the task. You do not set this up in the task file.
+
+Rally gives the resources it creates names that start with ``s_rally_`` (made
+by a scenario) or ``c_rally_`` (made by a context). If the Rally process is
+killed, or the system under test stops responding, cleanup does not finish,
+and these names help you find what was left. If resources stay behind
+otherwise, please `file a bug <https://bugs.launchpad.net/rally>`_ with the
+task file and the list of what was left.
 
 HTML Reports
 ============

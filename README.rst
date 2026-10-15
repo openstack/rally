@@ -2,114 +2,89 @@
 Rally
 =====
 
-Rally is tool & framework that allows one to write simple plugins and combine
-them in complex tests scenarios that allows to perform all kinds of testing!
-
-Team and repository tags
-========================
-
-.. image:: https://governance.openstack.org/tc/badges/rally.svg
-    :target: https://governance.openstack.org/tc/reference/tags/index.html
-
 .. image:: https://img.shields.io/pypi/v/rally.svg
     :target: https://pypi.org/project/rally/
     :alt: Latest Version
-
-.. image:: https://img.shields.io/badge/gitter-join_chat-ff69b4.svg
-    :target: https://gitter.im/rally-dev/Lobby
-    :alt: Gitter Chat
-
-.. image:: https://img.shields.io/badge/tasks-trello_board-blue.svg
-    :target: https://trello.com/b/DoD8aeZy/rally
-    :alt: Trello Board
 
 .. image:: https://img.shields.io/github/license/openstack/rally.svg
     :target: https://www.apache.org/licenses/LICENSE-2.0
     :alt: Apache License, Version 2.0
 
+Rally is a tool for testing how a system behaves under load. You describe
+what to do, how hard to push and what counts as success in a task file.
+Rally runs it, measures every iteration, keeps the results and turns them
+into reports.
 
-What is Rally
-=============
+The Rally core has no code for any particular system; plugins connect it to
+one. OpenStack support comes from the `rally-openstack`_ package, a few
+generic plugins (for example, HTTP requests) ship with Rally itself, and you
+can write plugins for your own services.
 
-Rally is intended to provide a testing framework that is
-capable to perform **specific**, **complicated** and **reproducible**
-test cases on **real deployment** scenarios.
+Features
+========
 
-**Rally** workflow can be visualized by the following diagram:
+* Load tests with clear pass or fail criteria (SLA), so a task can gate a
+  CI pipeline.
+* Verification: runs an existing test suite such as Tempest against an
+  environment and compares the results with earlier runs.
+* History: every result is kept in a `database`_.
+* Reports: interactive HTML, trends across many runs, JSON, JUnit XML and
+  Elasticsearch export.
+* Plugins for everything: platforms, scenarios, runners, contexts, SLA
+  criteria, hooks, exporters and verifiers. Write your own or install a
+  plugin package.
 
-.. image:: doc/source/images/Rally-Actions.png
-   :alt: Rally Architecture
+Quick start
+===========
 
+No cloud needed: this task sends HTTP requests to a website and checks that
+every response is successful and fast enough.
 
-Who Is Using Rally
-==================
+.. code-block:: console
 
-.. image:: doc/source/images/Rally_who_is_using.png
-   :alt: Who is Using Rally
+    $ pip install rally
+    $ rally db create
+    $ rally env create --name local
+    $ cat > task.yaml << EOF
+    ---
+    version: 2
+    title: My first task
+    subtasks:
+      - title: Check that example.com responds
+        scenario:
+          HttpRequests.check_request:
+            url: https://www.example.com
+            method: GET
+            status_code: 200
+        runner:
+          constant:
+            times: 20
+            concurrency: 4
+        sla:
+          failure_rate:
+            max: 0
+          max_seconds_per_iteration: 2
+    EOF
+    $ rally task start task.yaml
+    $ rally task report --out report.html
 
-
-Documentation
-=============
-
-`Rally documentation on ReadTheDocs <https://rally.readthedocs.org/en/latest/>`_
-is a perfect place to start learning about Rally. It provides you with an
-**easy** and **illustrative** guidance through this benchmarking tool.
-
-For example, check out the `Rally step-by-step tutorial
-<https://rally.readthedocs.io/en/latest/quick_start/tutorial.html>`_ that
-explains, in a series of lessons, how to explore the power of Rally in
-benchmarking your OpenStack clouds.
-
-Architecture
-------------
-
-In terms of software architecture, Rally is built of 4 main components:
-
-1. **Environment** - one of key component in Rally. It manages and stores
-   information about tested platforms. Env manager is using platform plugins
-   to: create, delete, cleanup, check health, obtain information about
-   platforms.
-2. **Task** component is responsible for executing tests defined in
-   task specs, persisting and reporting results.
-3. **Verification** component allows to wrap subunit-based testing tools and
-   provide complete tool on top of them with allow to do pre configuration,
-   post cleanup as well process and persist results to Rally DB for future use
-   like reporting and results comparing.
-
-Use Cases
----------
-
-There are 3 major high level Rally Use Cases:
-
-.. image:: doc/source/images/Rally-UseCases.png
-   :alt: Rally Use Cases
-
-
-Typical cases where Rally aims to help are:
-
-- Automate measuring & profiling focused on how new code changes affect the
-  OpenStack performance;
-- Using Rally profiler to detect scaling & performance issues;
-- Investigate how different deployments affect the OS performance:
-
-    - Find the set of suitable OpenStack deployment architectures;
-    - Create deployment specifications for different loads (amount of
-      controllers, swift nodes, etc.);
-- Automate the search for hardware best suited for particular OpenStack cloud;
-- Automate the production cloud specification generation:
-
-    - Determine terminal loads for basic cloud operations: VM start & stop,
-      Block Device create/destroy & various OpenStack API methods;
-    - Check performance of basic cloud operations in case of different loads.
+To test an OpenStack cloud, install ``rally-openstack`` and follow the
+`tutorial`_.
 
 Links
------
+=====
 
-* Free software: Apache license
-* Documentation: https://rally.readthedocs.org/en/latest/
+* Documentation: https://rally.readthedocs.io/latest/ (also published at
+  https://docs.openstack.org/rally/latest/)
+* Release notes:
+  https://opendev.org/openstack/rally/src/branch/master/CHANGELOG.rst
 * Source: https://opendev.org/openstack/rally
 * Bugs: https://bugs.launchpad.net/rally
-* Step-by-step tutorial: https://rally.readthedocs.io/en/latest/quick_start/tutorial.html
-* Launchpad page: https://launchpad.net/rally
-* Gitter chat: https://gitter.im/rally-dev/Lobby
-* Trello board: https://trello.com/b/DoD8aeZy/rally
+* Contributing:
+  https://opendev.org/openstack/rally/src/branch/master/CONTRIBUTING.rst
+* OpenStack plugins: https://opendev.org/openstack/rally-openstack
+* License: Apache License, Version 2.0
+
+.. _rally-openstack: https://pypi.org/project/rally-openstack/
+.. _database: https://rally.readthedocs.io/latest/install.html#database
+.. _tutorial: https://rally.readthedocs.io/latest/quick_start/tutorial.html

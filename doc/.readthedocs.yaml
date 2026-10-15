@@ -13,6 +13,13 @@ build:
     # nodejs: "20"
     # rust: "1.70"
     # golang: "1.20"
+  jobs:
+    # Read the Docs clones only the latest commits. pbr and the
+    # |stable_release| substitution in conf.py need the release tags, so
+    # fetch the whole history with them. A clone that is complete already
+    # rejects --unshallow, then only the tags are fetched.
+    post_checkout:
+      - git fetch --unshallow --tags || git fetch --tags
 
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:

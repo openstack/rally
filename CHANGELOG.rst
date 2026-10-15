@@ -36,10 +36,6 @@ Added
   from options and shows the type, whether an argument is required or can be
   repeated, its default value and environment variable.
 
-* ``rally.env.platform`` provides typed dicts that describe the results of
-  platform plugin methods (``HealthInfo``, ``PlatformInfo``, ``CleanupInfo``
-  and ``SysEnvSpec``).
-
 Changed
 ~~~~~~~
 
@@ -102,6 +98,10 @@ Fixed
   instead of failing with ``KeyError: 'set_failed'`` and leaving the
   verification ``running``. The ``data`` argument of ``import_results()`` in
   the Python API is the subunit v2 stream as ``bytes``.
+
+* The documentation showed some command line options with a single long dash
+  (for example, "–task-args" instead of "--task-args"), so copying them gave
+  a wrong option.
 
 [5.1.1] - 2026-08-13
 --------------------

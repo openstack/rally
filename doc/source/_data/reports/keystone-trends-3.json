@@ -1,0 +1,1765 @@
+{
+  "info": {
+    "rally_version": "5.1.1",
+    "generated_at": "2026-10-08T11:32:06",
+    "format_version": "1.2"
+  },
+  "tasks": [
+    {
+      "uuid": "c7443660-9158-435f-bed5-7c7c8949eb91",
+      "title": "",
+      "description": "",
+      "status": "finished",
+      "tags": [],
+      "env_uuid": "cdc415a4-28c5-4720-99c5-d2ca80512c76",
+      "env_name": "devstack",
+      "created_at": "2026-10-08T11:27:09",
+      "updated_at": "2026-10-08T11:31:55",
+      "pass_sla": true,
+      "subtasks": [
+        {
+          "uuid": "0bd6273b-ad40-4047-985f-b5a060ef9fd7",
+          "title": "KeystoneBasic.create_user tests",
+          "description": "",
+          "status": "finished",
+          "created_at": "2026-10-08T11:27:19",
+          "updated_at": "2026-10-08T11:27:25",
+          "sla": {},
+          "workloads": [
+            {
+              "uuid": "d7d9f952-8bb7-49d3-9552-ca729d161cd9",
+              "description": "Create a keystone user with random name.",
+              "runner": {
+                "constant": {
+                  "times": 10,
+                  "concurrency": 10
+                }
+              },
+              "hooks": [],
+              "scenario": {
+                "KeystoneBasic.create_user": {}
+              },
+              "min_duration": 0.5159240944812415,
+              "max_duration": 1.163901292442364,
+              "start_time": 1791458841.1231325,
+              "load_duration": 1.1741392612457275,
+              "full_duration": 5.839490012495892,
+              "statistics": {
+                "durations": {
+                  "total": {
+                    "data": {
+                      "iteration_count": 10,
+                      "min": 0.516,
+                      "median": 0.965,
+                      "90%ile": 1.127,
+                      "95%ile": 1.145,
+                      "max": 1.164,
+                      "avg": 0.9,
+                      "success": "100.0%"
+                    },
+                    "count_per_iteration": 1,
+                    "name": "total",
+                    "display_name": "total",
+                    "children": [
+                      {
+                        "data": {
+                          "iteration_count": 10,
+                          "min": 0.516,
+                          "median": 0.965,
+                          "90%ile": 1.127,
+                          "95%ile": 1.145,
+                          "max": 1.164,
+                          "avg": 0.9,
+                          "success": "100.0%"
+                        },
+                        "count_per_iteration": 1,
+                        "name": "duration",
+                        "display_name": "duration",
+                        "children": []
+                      },
+                      {
+                        "data": {
+                          "iteration_count": 10,
+                          "min": 0.0,
+                          "median": 0.0,
+                          "90%ile": 0.0,
+                          "95%ile": 0.0,
+                          "max": 0.0,
+                          "avg": 0.0,
+                          "success": "100.0%"
+                        },
+                        "count_per_iteration": 1,
+                        "name": "idle_duration",
+                        "display_name": "idle_duration",
+                        "children": []
+                      }
+                    ]
+                  },
+                  "atomics": [
+                    {
+                      "data": {
+                        "iteration_count": 10,
+                        "min": 0.39,
+                        "median": 0.674,
+                        "90%ile": 0.799,
+                        "95%ile": 0.803,
+                        "max": 0.807,
+                        "avg": 0.644,
+                        "success": "100.0%"
+                      },
+                      "count_per_iteration": 1,
+                      "name": "keystone.create_user",
+                      "display_name": "keystone.create_user",
+                      "children": []
+                    }
+                  ]
+                }
+              },
+              "data": [
+                {
+                  "duration": 1.0111932962072179,
+                  "timestamp": 1791458841.1231325,
+                  "idle_duration": 0.0,
+                  "error": [],
+                  "output": {
+                    "additive": [],
+                    "complete": []
+                  },
+                  "atomic_actions": [
+                    {
+                      "name": "keystone.create_user",
+                      "children": [],
+                      "started_at": 1791458841.4938674,
+                      "finished_at": 1791458842.1343153
+                    }
+                  ]
+                },
+                {
+                  "duration": 1.0840069002993198,
+                  "timestamp": 1791458841.1272025,
+                  "idle_duration": 0.0,
+                  "error": [],
+                  "output": {
+                    "additive": [],
+                    "complete": []
+                  },
+                  "atomic_actions": [
+                    {
+                      "name": "keystone.create_user",
+                      "children": [],
+                      "started_at": 1791458841.5036762,
+                      "finished_at": 1791458842.2112052
+                    }
+                  ]
+                },
+                {
+                  "duration": 0.5431169941896301,
+                  "timestamp": 1791458841.1287365,
+                  "idle_duration": 0.0,
+                  "error": [],
+                  "output": {
+                    "additive": [],
+                    "complete": []
+                  },
+                  "atomic_actions": [
+                    {
+                      "name": "keystone.create_user",
+                      "children": [],
+                      "started_at": 1791458841.1933076,
+                      "finished_at": 1791458841.6718473
+                    }
+                  ]
+                },
+                {
+                  "duration": 1.1224052676320813,
+                  "timestamp": 1791458841.1306717,
+                  "idle_duration": 0.0,
+                  "error": [],
+                  "output": {
+                    "additive": [],
+                    "complete": []
+                  },
+                  "atomic_actions": [
+                    {
+                      "name": "keystone.create_user",
+                      "children": [],
+                      "started_at": 1791458841.4456275,
+                      "finished_at": 1791458842.253072
+                    }
+                  ]
+                },
+                {
+                  "duration": 0.9195421907784299,
+                  "timestamp": 1791458841.1313825,
+                  "idle_duration": 0.0,
+                  "error": [],
+                  "output": {
+                    "additive": [],
+                    "complete": []
+                  },
+                  "atomic_actions": [
+                    {
+                      "name": "keystone.create_user",
+                      "children": [],
+                      "started_at": 1791458841.2525973,
+                      "finished_at": 1791458842.0509202
+                    }
+                  ]
+                },
+                {
+                  "duration": 1.1107628364144901,
+                  "timestamp": 1791458841.1323812,
+                  "idle_duration": 0.0,
+                  "error": [],
+                  "output": {
+                    "additive": [],
+                    "complete": []
+                  },
+                  "atomic_actions": [
+                    {
+                      "name": "keystone.create_user",
+                      "children": [],
+                      "started_at": 1791458841.4455657,
+                      "finished_at": 1791458842.2431383
+                    }
+                  ]
+                },
+                {
+                  "duration": 0.8783559710755985,
+                  "timestamp": 1791458841.1323915,
+                  "idle_duration": 0.0,
+                  "error": [],
+                  "output": {
+                    "additive": [],
+                    "complete": []
+                  },
+                  "atomic_actions": [
+                    {
+                      "name": "keystone.create_user",
+                      "children": [],
+                      "started_at": 1791458841.4186044,
+                      "finished_at": 1791458842.0107415
+                    }
+                  ]
+                },
+                {
+                  "duration": 1.163901292442364,
+                  "timestamp": 1791458841.1333704,
+                  "idle_duration": 0.0,
+                  "error": [],
+                  "output": {
+                    "additive": [],
+                    "complete": []
+                  },
+                  "atomic_actions": [
+                    {
+                      "name": "keystone.create_user",
+                      "children": [],
+                      "started_at": 1791458841.5861518,
+                      "finished_at": 1791458842.2972665
+                    }
+                  ]
+                },
+                {
+                  "duration": 0.5159240944812415,
+                  "timestamp": 1791458841.137883,
+                  "idle_duration": 0.0,
+                  "error": [],
+                  "output": {
+                    "additive": [],
+                    "complete": []
+                  },
+                  "atomic_actions": [
+                    {
+                      "name": "keystone.create_user",
+                      "children": [],
+                      "started_at": 1791458841.263978,
+                      "finished_at": 1791458841.6538012
+                    }
+                  ]
+                },
+                {
+                  "duration": 0.649875796892003,
+                  "timestamp": 1791458841.1435826,
+                  "idle_duration": 0.0,
+                  "error": [],
+                  "output": {
+                    "additive": [],
+                    "complete": []
+                  },
+                  "atomic_actions": [
+                    {
+                      "name": "keystone.create_user",
+                      "children": [],
+                      "started_at": 1791458841.2780058,
+                      "finished_at": 1791458841.7934513
+                    }
+                  ]
+                }
+              ],
+              "failed_iteration_count": 0,
+              "total_iteration_count": 10,
+              "created_at": "2026-10-08T11:27:19",
+              "updated_at": "2026-10-08T11:27:25",
+              "contexts": {},
+              "contexts_results": [],
+              "position": 0,
+              "pass_sla": true,
+              "sla_results": {
+                "sla": [
+                  {
+                    "criterion": "failure_rate",
+                    "success": true,
+                    "detail": "Failure rate criteria 0.00% <= 0.00% <= 0.00% - Passed"
+                  }
+                ]
+              },
+              "sla": {
+                "failure_rate": {
+                  "max": 0
+                }
+              }
+            }
+          ]
+        },
+        {
+          "uuid": "154dda6a-8623-48f6-87bd-a3b139df6bb5",
+          "title": "KeystoneBasic.get_entities tests",
+          "description": "",
+          "status": "finished",
+          "created_at": "2026-10-08T11:27:52",
+          "updated_at": "2026-10-08T11:28:13",
+          "sla": {},
+          "workloads": [
+            {
+              "uuid": "6fe90555-fe7f-4d16-b747-4c8df0ceded3",
+              "description": "Get instance of a tenant, user, role and service by id's.",
+              "runner": {
+                "constant": {
+                  "times": 20,
+                  "concurrency": 10
+                }
+              },
+              "hooks": [],
+              "scenario": {
+                "KeystoneBasic.get_entities": {}
+              },
+              "min_duration": 3.6484287451101896,
+              "max_duration": 5.401867601655543,
+              "start_time": 1791458873.7448752,
+              "load_duration": 9.370438575744629,
+              "full_duration": 20.271754874483694,
+              "statistics": {
+                "durations": {
+                  "total": {
+                    "data": {
+                      "iteration_count": 20,
+                      "min": 3.648,
+                      "median": 4.312,
+                      "90%ile": 4.749,
+                      "95%ile": 4.822,
+                      "max": 5.402,
+                      "avg": 4.347,
+                      "success": "100.0%"
+                    },
+                    "count_per_iteration": 1,
+                    "name": "total",
+                    "display_name": "total",
+                    "children": [
+                      {
+                        "data": {
+                          "iteration_count": 20,
+                          "min": 3.648,
+                          "median": 4.312,
+                          "90%ile": 4.749,
+                          "95%ile": 4.822,
+                          "max": 5.402,
+                          "avg": 4.347,
+                          "success": "100.0%"
+                        },
+                        "count_per_iteration": 1,
+                        "name": "duration",
+                        "display_name": "duration",
+                        "children": []
+                      },
+                      {
+                        "data": {
+                          "iteration_count": 20,
+                          "min": 0.0,
+                          "median": 0.0,
+                          "90%ile": 0.0,
+                          "95%ile": 0.0,
+                          "max": 0.0,
+                          "avg": 0.0,
+                          "success": "100.0%"
+                        },
+                        "count_per_iteration": 1,
+                        "name": "idle_duration",
+                        "display_name": "idle_duration",
+                        "children": []
+                      }
+                    ]
+                  },
+                  "atomics": [
+                    {
+                      "data": {
+                        "iteration_count": 20,
+                        "min": 0.566,
+                        "median": 0.903,
+                        "90%ile": 1.048,
+                        "95%ile": 1.055,
+                        "max": 1.088,
+                        "avg": 0.872,
+                        "success": "100.0%"
+                      },
+                      "count_per_iteration": 1,
+                      "name": "keystone.create_project",
+                      "display_name": "keystone.create_project",
+                      "children": []
+                    },
+                    {
+                      "data": {
+                        "iteration_count": 20,
+                        "min": 0.792,
+                        "median": 0.926,
+                        "90%ile": 1.061,
+                        "95%ile": 1.093,
+                        "max": 1.147,
+                        "avg": 0.934,
+                        "success": "100.0%"
+                      },
+                      "count_per_iteration": 1,
+                      "name": "keystone.create_user",
+                      "display_name": "keystone.create_user",
+                      "children": []
+                    },
+                    {
+                      "data": {
+                        "iteration_count": 20,
+                        "min": 0.346,
+                        "median": 0.392,
+                        "90%ile": 0.454,
+                        "95%ile": 0.488,
+                        "max": 0.512,
+                        "avg": 0.401,
+                        "success": "100.0%"
+                      },
+                      "count_per_iteration": 1,
+                      "name": "keystone.create_role",
+                      "display_name": "keystone.create_role",
+                      "children": []
+                    },
+                    {
+                      "data": {
+                        "iteration_count": 20,
+                        "min": 0.32,
+                        "median": 0.39,
+                        "90%ile": 0.428,
+                        "95%ile": 0.434,
+                        "max": 0.436,
+                        "avg": 0.386,
+                        "success": "100.0%"
+                      },
+                      "count_per_iteration": 1,
+                      "name": "keystone.get_project",
+                      "display_name": "keystone.get_project",
+                      "children": []
+                    },
+                    {
+                      "data": {
+                        "iteration_count": 20,
+                        "min": 0.292,
+                        "median": 0.392,
+                        "90%ile": 0.425,
+                        "95%ile": 0.428,
+                        "max": 0.448,
+                        "avg": 0.384,
+                        "success": "100.0%"
+                      },
+                      "count_per_iteration": 1,
+                      "name": "keystone.get_user",
+                      "display_name": "keystone.get_user",
+                      "children": []
+                    },
+                    {
+                      "data": {
+                        "iteration_count": 20,
+                        "min": 0.339,
+                        "median": 0.381,
+                        "90%ile": 0.436,
+                        "95%ile": 0.447,
+                        "max": 0.455,
+                        "avg": 0.388,
+                        "success": "100.0%"
+                      },
+                      "count_per_iteration": 1,
+                      "name": "keystone.get_role",
+                      "display_name": "keystone.get_role",
+                      "children": []
+                    },
+                    {
+                      "data": {
+                        "iteration_count": 20,
+                        "min": 0.281,
+                        "median": 0.367,
+                        "90%ile": 0.422,
+                        "95%ile": 0.422,
+                        "max": 0.426,
+                        "avg": 0.369,
+                        "success": "100.0%"
+                      },
+                      "count_per_iteration": 1,
+                      "name": "keystone.list_services",
+                      "display_name": "keystone.list_services",
+                      "children": []
+                    },
+                    {
+                      "data": {
+                        "iteration_count": 20,
+                        "min": 0.305,
+                        "median": 0.36,
+                        "90%ile": 0.415,
+                        "95%ile": 0.433,
+                        "max": 0.458,
+                        "avg": 0.365,
+                        "success": "100.0%"
+                      },
+                      "count_per_iteration": 1,
+                      "name": "keystone.get_service",
+                      "display_name": "keystone.get_service",
+                      "children": []
+                    }
+                  ]
+                }
+              },
+              "data": [
+                {
+                  "duration": 4.555046555270047,
+                  "timestamp": 1791458873.7448752,
+                  "idle_duration": 0.0,
+                  "error": [],
+                  "output": {
+                    "additive": [],
+                    "complete": []
+                  },
+                  "atomic_actions": [
+                    {
+                      "name": "keystone.create_project",
+                      "children": [],
+                      "started_at": 1791458873.89897,
+                      "finished_at": 1791458874.9173653
+                    },
+                    {
+                      "name": "keystone.create_user",
+                      "children": [],
+                      "started_at": 1791458874.9173932,
+                      "finished_at": 1791458875.8574111
+                    },
+                    {
+                      "name": "keystone.create_role",
+                      "children": [],
+                      "started_at": 1791458875.8574238,
+                      "finished_at": 1791458876.23101
+                    },
+                    {
+                      "name": "keystone.get_project",
+                      "children": [],
+                      "started_at": 1791458876.231027,
+                      "finished_at": 1791458876.6667233
+                    },
+                    {
+                      "name": "keystone.get_user",
+                      "children": [],
+                      "started_at": 1791458876.666738,
+                      "finished_at": 1791458877.0918758
+                    },
+                    {
+                      "name": "keystone.get_role",
+                      "children": [],
+                      "started_at": 1791458877.0918968,
+                      "finished_at": 1791458877.50594
+                    },
+                    {
+                      "name": "keystone.list_services",
+                      "children": [],
+                      "started_at": 1791458877.5059557,
+                      "finished_at": 1791458877.9322999
+                    },
+                    {
+                      "name": "keystone.get_service",
+                      "children": [],
+                      "started_at": 1791458877.932315,
+                      "finished_at": 1791458878.299903
+                    }
+                  ]
+                },
+                {
+                  "duration": 4.128083382468261,
+                  "timestamp": 1791458873.7491324,
+                  "idle_duration": 0.0,
+                  "error": [],
+                  "output": {
+                    "additive": [],
+                    "complete": []
+                  },
+                  "atomic_actions": [
+                    {
+                      "name": "keystone.create_project",
+                      "children": [],
+                      "started_at": 1791458873.8872032,
+                      "finished_at": 1791458874.6349201
+                    },
+                    {
+                      "name": "keystone.create_user",
+                      "children": [],
+                      "started_at": 1791458874.634944,
+                      "finished_at": 1791458875.5425568
+                    },
+                    {
+                      "name": "keystone.create_role",
+                      "children": [],
+                      "started_at": 1791458875.5425954,
+                      "finished_at": 1791458875.9531903
+                    },
+                    {
+                      "name": "keystone.get_project",
+                      "children": [],
+                      "started_at": 1791458875.9532092,
+                      "finished_at": 1791458876.348072
+                    },
+                    {
+                      "name": "keystone.get_user",
+                      "children": [],
+                      "started_at": 1791458876.3480957,
+                      "finished_at": 1791458876.7144954
+                    },
+                    {
+                      "name": "keystone.get_role",
+                      "children": [],
+                      "started_at": 1791458876.7145226,
+                      "finished_at": 1791458877.1240766
+                    },
+                    {
+                      "name": "keystone.list_services",
+                      "children": [],
+                      "started_at": 1791458877.1240976,
+                      "finished_at": 1791458877.48989
+                    },
+                    {
+                      "name": "keystone.get_service",
+                      "children": [],
+                      "started_at": 1791458877.4899163,
+                      "finished_at": 1791458877.877193
+                    }
+                  ]
+                },
+                {
+                  "duration": 4.597040623049884,
+                  "timestamp": 1791458873.751068,
+                  "idle_duration": 0.0,
+                  "error": [],
+                  "output": {
+                    "additive": [],
+                    "complete": []
+                  },
+                  "atomic_actions": [
+                    {
+                      "name": "keystone.create_project",
+                      "children": [],
+                      "started_at": 1791458873.9275382,
+                      "finished_at": 1791458875.0154474
+                    },
+                    {
+                      "name": "keystone.create_user",
+                      "children": [],
+                      "started_at": 1791458875.0154593,
+                      "finished_at": 1791458875.9090867
+                    },
+                    {
+                      "name": "keystone.create_role",
+                      "children": [],
+                      "started_at": 1791458875.9090958,
+                      "finished_at": 1791458876.2585375
+                    },
+                    {
+                      "name": "keystone.get_project",
+                      "children": [],
+                      "started_at": 1791458876.2585485,
+                      "finished_at": 1791458876.685711
+                    },
+                    {
+                      "name": "keystone.get_user",
+                      "children": [],
+                      "started_at": 1791458876.6857252,
+                      "finished_at": 1791458877.0752337
+                    },
+                    {
+                      "name": "keystone.get_role",
+                      "children": [],
+                      "started_at": 1791458877.0752494,
+                      "finished_at": 1791458877.522231
+                    },
+                    {
+                      "name": "keystone.list_services",
+                      "children": [],
+                      "started_at": 1791458877.5222464,
+                      "finished_at": 1791458877.9443936
+                    },
+                    {
+                      "name": "keystone.get_service",
+                      "children": [],
+                      "started_at": 1791458877.9444084,
+                      "finished_at": 1791458878.3480918
+                    }
+                  ]
+                },
+                {
+                  "duration": 3.8491168743117314,
+                  "timestamp": 1791458873.7513423,
+                  "idle_duration": 0.0,
+                  "error": [],
+                  "output": {
+                    "additive": [],
+                    "complete": []
+                  },
+                  "atomic_actions": [
+                    {
+                      "name": "keystone.create_project",
+                      "children": [],
+                      "started_at": 1791458873.9208543,
+                      "finished_at": 1791458874.7481933
+                    },
+                    {
+                      "name": "keystone.create_user",
+                      "children": [],
+                      "started_at": 1791458874.7482052,
+                      "finished_at": 1791458875.5406563
+                    },
+                    {
+                      "name": "keystone.create_role",
+                      "children": [],
+                      "started_at": 1791458875.5406642,
+                      "finished_at": 1791458875.8895442
+                    },
+                    {
+                      "name": "keystone.get_project",
+                      "children": [],
+                      "started_at": 1791458875.8895583,
+                      "finished_at": 1791458876.2154827
+                    },
+                    {
+                      "name": "keystone.get_user",
+                      "children": [],
+                      "started_at": 1791458876.2154982,
+                      "finished_at": 1791458876.597458
+                    },
+                    {
+                      "name": "keystone.get_role",
+                      "children": [],
+                      "started_at": 1791458876.597479,
+                      "finished_at": 1791458876.937422
+                    },
+                    {
+                      "name": "keystone.list_services",
+                      "children": [],
+                      "started_at": 1791458876.9374356,
+                      "finished_at": 1791458877.25878
+                    },
+                    {
+                      "name": "keystone.get_service",
+                      "children": [],
+                      "started_at": 1791458877.2587945,
+                      "finished_at": 1791458877.6004372
+                    }
+                  ]
+                },
+                {
+                  "duration": 4.191367419203885,
+                  "timestamp": 1791458873.7523203,
+                  "idle_duration": 0.0,
+                  "error": [],
+                  "output": {
+                    "additive": [],
+                    "complete": []
+                  },
+                  "atomic_actions": [
+                    {
+                      "name": "keystone.create_project",
+                      "children": [],
+                      "started_at": 1791458873.8921092,
+                      "finished_at": 1791458874.767945
+                    },
+                    {
+                      "name": "keystone.create_user",
+                      "children": [],
+                      "started_at": 1791458874.7679586,
+                      "finished_at": 1791458875.715719
+                    },
+                    {
+                      "name": "keystone.create_role",
+                      "children": [],
+                      "started_at": 1791458875.7157352,
+                      "finished_at": 1791458876.0905862
+                    },
+                    {
+                      "name": "keystone.get_project",
+                      "children": [],
+                      "started_at": 1791458876.0906005,
+                      "finished_at": 1791458876.4668806
+                    },
+                    {
+                      "name": "keystone.get_user",
+                      "children": [],
+                      "started_at": 1791458876.4669013,
+                      "finished_at": 1791458876.8256643
+                    },
+                    {
+                      "name": "keystone.get_role",
+                      "children": [],
+                      "started_at": 1791458876.8256845,
+                      "finished_at": 1791458877.197877
+                    },
+                    {
+                      "name": "keystone.list_services",
+                      "children": [],
+                      "started_at": 1791458877.197905,
+                      "finished_at": 1791458877.590939
+                    },
+                    {
+                      "name": "keystone.get_service",
+                      "children": [],
+                      "started_at": 1791458877.5909543,
+                      "finished_at": 1791458877.9436705
+                    }
+                  ]
+                },
+                {
+                  "duration": 4.069693656166842,
+                  "timestamp": 1791458873.7548847,
+                  "idle_duration": 0.0,
+                  "error": [],
+                  "output": {
+                    "additive": [],
+                    "complete": []
+                  },
+                  "atomic_actions": [
+                    {
+                      "name": "keystone.create_project",
+                      "children": [],
+                      "started_at": 1791458873.926511,
+                      "finished_at": 1791458874.7619424
+                    },
+                    {
+                      "name": "keystone.create_user",
+                      "children": [],
+                      "started_at": 1791458874.7619643,
+                      "finished_at": 1791458875.6870036
+                    },
+                    {
+                      "name": "keystone.create_role",
+                      "children": [],
+                      "started_at": 1791458875.6870217,
+                      "finished_at": 1791458876.034382
+                    },
+                    {
+                      "name": "keystone.get_project",
+                      "children": [],
+                      "started_at": 1791458876.0343988,
+                      "finished_at": 1791458876.3890297
+                    },
+                    {
+                      "name": "keystone.get_user",
+                      "children": [],
+                      "started_at": 1791458876.3890495,
+                      "finished_at": 1791458876.7424676
+                    },
+                    {
+                      "name": "keystone.get_role",
+                      "children": [],
+                      "started_at": 1791458876.7424858,
+                      "finished_at": 1791458877.0871933
+                    },
+                    {
+                      "name": "keystone.list_services",
+                      "children": [],
+                      "started_at": 1791458877.087203,
+                      "finished_at": 1791458877.4678166
+                    },
+                    {
+                      "name": "keystone.get_service",
+                      "children": [],
+                      "started_at": 1791458877.467826,
+                      "finished_at": 1791458877.824549
+                    }
+                  ]
+                },
+                {
+                  "duration": 3.6484287451101896,
+                  "timestamp": 1791458873.7550378,
+                  "idle_duration": 0.0,
+                  "error": [],
+                  "output": {
+                    "additive": [],
+                    "complete": []
+                  },
+                  "atomic_actions": [
+                    {
+                      "name": "keystone.create_project",
+                      "children": [],
+                      "started_at": 1791458873.898602,
+                      "finished_at": 1791458874.5511165
+                    },
+                    {
+                      "name": "keystone.create_user",
+                      "children": [],
+                      "started_at": 1791458874.5511408,
+                      "finished_at": 1791458875.3761096
+                    },
+                    {
+                      "name": "keystone.create_role",
+                      "children": [],
+                      "started_at": 1791458875.3763497,
+                      "finished_at": 1791458875.7224133
+                    },
+                    {
+                      "name": "keystone.get_project",
+                      "children": [],
+                      "started_at": 1791458875.722439,
+                      "finished_at": 1791458876.0634131
+                    },
+                    {
+                      "name": "keystone.get_user",
+                      "children": [],
+                      "started_at": 1791458876.0634658,
+                      "finished_at": 1791458876.355619
+                    },
+                    {
+                      "name": "keystone.get_role",
+                      "children": [],
+                      "started_at": 1791458876.355654,
+                      "finished_at": 1791458876.7252314
+                    },
+                    {
+                      "name": "keystone.list_services",
+                      "children": [],
+                      "started_at": 1791458876.7252476,
+                      "finished_at": 1791458877.067959
+                    },
+                    {
+                      "name": "keystone.get_service",
+                      "children": [],
+                      "started_at": 1791458877.0679855,
+                      "finished_at": 1791458877.4034474
+                    }
+                  ]
+                },
+                {
+                  "duration": 3.933651267625609,
+                  "timestamp": 1791458873.7554538,
+                  "idle_duration": 0.0,
+                  "error": [],
+                  "output": {
+                    "additive": [],
+                    "complete": []
+                  },
+                  "atomic_actions": [
+                    {
+                      "name": "keystone.create_project",
+                      "children": [],
+                      "started_at": 1791458873.8962379,
+                      "finished_at": 1791458874.5328007
+                    },
+                    {
+                      "name": "keystone.create_user",
+                      "children": [],
+                      "started_at": 1791458874.5328236,
+                      "finished_at": 1791458875.4547167
+                    },
+                    {
+                      "name": "keystone.create_role",
+                      "children": [],
+                      "started_at": 1791458875.4547486,
+                      "finished_at": 1791458875.852533
+                    },
+                    {
+                      "name": "keystone.get_project",
+                      "children": [],
+                      "started_at": 1791458875.8525581,
+                      "finished_at": 1791458876.2533753
+                    },
+                    {
+                      "name": "keystone.get_user",
+                      "children": [],
+                      "started_at": 1791458876.2533925,
+                      "finished_at": 1791458876.565104
+                    },
+                    {
+                      "name": "keystone.get_role",
+                      "children": [],
+                      "started_at": 1791458876.5651338,
+                      "finished_at": 1791458876.926923
+                    },
+                    {
+                      "name": "keystone.list_services",
+                      "children": [],
+                      "started_at": 1791458876.9269423,
+                      "finished_at": 1791458877.3128285
+                    },
+                    {
+                      "name": "keystone.get_service",
+                      "children": [],
+                      "started_at": 1791458877.3128502,
+                      "finished_at": 1791458877.6890836
+                    }
+                  ]
+                },
+                {
+                  "duration": 4.23617087725683,
+                  "timestamp": 1791458873.7695374,
+                  "idle_duration": 0.0,
+                  "error": [],
+                  "output": {
+                    "additive": [],
+                    "complete": []
+                  },
+                  "atomic_actions": [
+                    {
+                      "name": "keystone.create_project",
+                      "children": [],
+                      "started_at": 1791458873.9114957,
+                      "finished_at": 1791458874.5683541
+                    },
+                    {
+                      "name": "keystone.create_user",
+                      "children": [],
+                      "started_at": 1791458874.568379,
+                      "finished_at": 1791458875.658176
+                    },
+                    {
+                      "name": "keystone.create_role",
+                      "children": [],
+                      "started_at": 1791458875.6581984,
+                      "finished_at": 1791458876.0734758
+                    },
+                    {
+                      "name": "keystone.get_project",
+                      "children": [],
+                      "started_at": 1791458876.073496,
+                      "finished_at": 1791458876.4376328
+                    },
+                    {
+                      "name": "keystone.get_user",
+                      "children": [],
+                      "started_at": 1791458876.4376519,
+                      "finished_at": 1791458876.8590298
+                    },
+                    {
+                      "name": "keystone.get_role",
+                      "children": [],
+                      "started_at": 1791458876.8590584,
+                      "finished_at": 1791458877.2410412
+                    },
+                    {
+                      "name": "keystone.list_services",
+                      "children": [],
+                      "started_at": 1791458877.24106,
+                      "finished_at": 1791458877.6187732
+                    },
+                    {
+                      "name": "keystone.get_service",
+                      "children": [],
+                      "started_at": 1791458877.6188176,
+                      "finished_at": 1791458878.005681
+                    }
+                  ]
+                },
+                {
+                  "duration": 4.240792345438995,
+                  "timestamp": 1791458873.7801068,
+                  "idle_duration": 0.0,
+                  "error": [],
+                  "output": {
+                    "additive": [],
+                    "complete": []
+                  },
+                  "atomic_actions": [
+                    {
+                      "name": "keystone.create_project",
+                      "children": [],
+                      "started_at": 1791458873.902352,
+                      "finished_at": 1791458874.9140682
+                    },
+                    {
+                      "name": "keystone.create_user",
+                      "children": [],
+                      "started_at": 1791458874.9140813,
+                      "finished_at": 1791458875.7825801
+                    },
+                    {
+                      "name": "keystone.create_role",
+                      "children": [],
+                      "started_at": 1791458875.782595,
+                      "finished_at": 1791458876.1542232
+                    },
+                    {
+                      "name": "keystone.get_project",
+                      "children": [],
+                      "started_at": 1791458876.1542368,
+                      "finished_at": 1791458876.473951
+                    },
+                    {
+                      "name": "keystone.get_user",
+                      "children": [],
+                      "started_at": 1791458876.4739711,
+                      "finished_at": 1791458876.9014306
+                    },
+                    {
+                      "name": "keystone.get_role",
+                      "children": [],
+                      "started_at": 1791458876.9014552,
+                      "finished_at": 1791458877.2662313
+                    },
+                    {
+                      "name": "keystone.list_services",
+                      "children": [],
+                      "started_at": 1791458877.2662504,
+                      "finished_at": 1791458877.607718
+                    },
+                    {
+                      "name": "keystone.get_service",
+                      "children": [],
+                      "started_at": 1791458877.6077366,
+                      "finished_at": 1791458878.020878
+                    }
+                  ]
+                },
+                {
+                  "duration": 4.31607276861175,
+                  "timestamp": 1791458877.5051622,
+                  "idle_duration": 0.0,
+                  "error": [],
+                  "output": {
+                    "additive": [],
+                    "complete": []
+                  },
+                  "atomic_actions": [
+                    {
+                      "name": "keystone.create_project",
+                      "children": [],
+                      "started_at": 1791458877.797621,
+                      "finished_at": 1791458878.363389
+                    },
+                    {
+                      "name": "keystone.create_user",
+                      "children": [],
+                      "started_at": 1791458878.3634002,
+                      "finished_at": 1791458879.3292022
+                    },
+                    {
+                      "name": "keystone.create_role",
+                      "children": [],
+                      "started_at": 1791458879.3292108,
+                      "finished_at": 1791458879.8164446
+                    },
+                    {
+                      "name": "keystone.get_project",
+                      "children": [],
+                      "started_at": 1791458879.8164573,
+                      "finished_at": 1791458880.2176788
+                    },
+                    {
+                      "name": "keystone.get_user",
+                      "children": [],
+                      "started_at": 1791458880.2176936,
+                      "finished_at": 1791458880.6306713
+                    },
+                    {
+                      "name": "keystone.get_role",
+                      "children": [],
+                      "started_at": 1791458880.6306872,
+                      "finished_at": 1791458881.0429533
+                    },
+                    {
+                      "name": "keystone.list_services",
+                      "children": [],
+                      "started_at": 1791458881.0429654,
+                      "finished_at": 1791458881.3898973
+                    },
+                    {
+                      "name": "keystone.get_service",
+                      "children": [],
+                      "started_at": 1791458881.3899226,
+                      "finished_at": 1791458881.821207
+                    }
+                  ]
+                },
+                {
+                  "duration": 4.588833430544234,
+                  "timestamp": 1791458877.5102382,
+                  "idle_duration": 0.0,
+                  "error": [],
+                  "output": {
+                    "additive": [],
+                    "complete": []
+                  },
+                  "atomic_actions": [
+                    {
+                      "name": "keystone.create_project",
+                      "children": [],
+                      "started_at": 1791458877.780648,
+                      "finished_at": 1791458878.7114952
+                    },
+                    {
+                      "name": "keystone.create_user",
+                      "children": [],
+                      "started_at": 1791458878.7115095,
+                      "finished_at": 1791458879.768893
+                    },
+                    {
+                      "name": "keystone.create_role",
+                      "children": [],
+                      "started_at": 1791458879.7689047,
+                      "finished_at": 1791458880.151953
+                    },
+                    {
+                      "name": "keystone.get_project",
+                      "children": [],
+                      "started_at": 1791458880.1519694,
+                      "finished_at": 1791458880.528498
+                    },
+                    {
+                      "name": "keystone.get_user",
+                      "children": [],
+                      "started_at": 1791458880.5285118,
+                      "finished_at": 1791458880.9231224
+                    },
+                    {
+                      "name": "keystone.get_role",
+                      "children": [],
+                      "started_at": 1791458880.9231389,
+                      "finished_at": 1791458881.3335497
+                    },
+                    {
+                      "name": "keystone.list_services",
+                      "children": [],
+                      "started_at": 1791458881.333573,
+                      "finished_at": 1791458881.736442
+                    },
+                    {
+                      "name": "keystone.get_service",
+                      "children": [],
+                      "started_at": 1791458881.736452,
+                      "finished_at": 1791458882.0990417
+                    }
+                  ]
+                },
+                {
+                  "duration": 4.308086897534036,
+                  "timestamp": 1791458877.573425,
+                  "idle_duration": 0.0,
+                  "error": [],
+                  "output": {
+                    "additive": [],
+                    "complete": []
+                  },
+                  "atomic_actions": [
+                    {
+                      "name": "keystone.create_project",
+                      "children": [],
+                      "started_at": 1791458877.9117975,
+                      "finished_at": 1791458878.8929062
+                    },
+                    {
+                      "name": "keystone.create_user",
+                      "children": [],
+                      "started_at": 1791458878.8929179,
+                      "finished_at": 1791458879.7718108
+                    },
+                    {
+                      "name": "keystone.create_role",
+                      "children": [],
+                      "started_at": 1791458879.771821,
+                      "finished_at": 1791458880.1588774
+                    },
+                    {
+                      "name": "keystone.get_project",
+                      "children": [],
+                      "started_at": 1791458880.1588905,
+                      "finished_at": 1791458880.5109901
+                    },
+                    {
+                      "name": "keystone.get_user",
+                      "children": [],
+                      "started_at": 1791458880.5110114,
+                      "finished_at": 1791458880.864482
+                    },
+                    {
+                      "name": "keystone.get_role",
+                      "children": [],
+                      "started_at": 1791458880.8644972,
+                      "finished_at": 1791458881.2039278
+                    },
+                    {
+                      "name": "keystone.list_services",
+                      "children": [],
+                      "started_at": 1791458881.2039444,
+                      "finished_at": 1791458881.5414813
+                    },
+                    {
+                      "name": "keystone.get_service",
+                      "children": [],
+                      "started_at": 1791458881.5414944,
+                      "finished_at": 1791458881.8814867
+                    }
+                  ]
+                },
+                {
+                  "duration": 4.543466817558818,
+                  "timestamp": 1791458877.5834503,
+                  "idle_duration": 0.0,
+                  "error": [],
+                  "output": {
+                    "additive": [],
+                    "complete": []
+                  },
+                  "atomic_actions": [
+                    {
+                      "name": "keystone.create_project",
+                      "children": [],
+                      "started_at": 1791458877.9072633,
+                      "finished_at": 1791458878.778846
+                    },
+                    {
+                      "name": "keystone.create_user",
+                      "children": [],
+                      "started_at": 1791458878.7788608,
+                      "finished_at": 1791458879.651254
+                    },
+                    {
+                      "name": "keystone.create_role",
+                      "children": [],
+                      "started_at": 1791458879.651263,
+                      "finished_at": 1791458880.0998032
+                    },
+                    {
+                      "name": "keystone.get_project",
+                      "children": [],
+                      "started_at": 1791458880.0998156,
+                      "finished_at": 1791458880.521978
+                    },
+                    {
+                      "name": "keystone.get_user",
+                      "children": [],
+                      "started_at": 1791458880.5219932,
+                      "finished_at": 1791458880.9702182
+                    },
+                    {
+                      "name": "keystone.get_role",
+                      "children": [],
+                      "started_at": 1791458880.9702349,
+                      "finished_at": 1791458881.35102
+                    },
+                    {
+                      "name": "keystone.list_services",
+                      "children": [],
+                      "started_at": 1791458881.3510332,
+                      "finished_at": 1791458881.7727947
+                    },
+                    {
+                      "name": "keystone.get_service",
+                      "children": [],
+                      "started_at": 1791458881.7728078,
+                      "finished_at": 1791458882.1268935
+                    }
+                  ]
+                },
+                {
+                  "duration": 4.414084438147795,
+                  "timestamp": 1791458877.6354163,
+                  "idle_duration": 0.0,
+                  "error": [],
+                  "output": {
+                    "additive": [],
+                    "complete": []
+                  },
+                  "atomic_actions": [
+                    {
+                      "name": "keystone.create_project",
+                      "children": [],
+                      "started_at": 1791458877.8418272,
+                      "finished_at": 1791458878.8888743
+                    },
+                    {
+                      "name": "keystone.create_user",
+                      "children": [],
+                      "started_at": 1791458878.8888862,
+                      "finished_at": 1791458879.8192823
+                    },
+                    {
+                      "name": "keystone.create_role",
+                      "children": [],
+                      "started_at": 1791458879.8193035,
+                      "finished_at": 1791458880.2061248
+                    },
+                    {
+                      "name": "keystone.get_project",
+                      "children": [],
+                      "started_at": 1791458880.2061357,
+                      "finished_at": 1791458880.587665
+                    },
+                    {
+                      "name": "keystone.get_user",
+                      "children": [],
+                      "started_at": 1791458880.5876825,
+                      "finished_at": 1791458880.992385
+                    },
+                    {
+                      "name": "keystone.get_role",
+                      "children": [],
+                      "started_at": 1791458880.9924054,
+                      "finished_at": 1791458881.382309
+                    },
+                    {
+                      "name": "keystone.list_services",
+                      "children": [],
+                      "started_at": 1791458881.382455,
+                      "finished_at": 1791458881.7442439
+                    },
+                    {
+                      "name": "keystone.get_service",
+                      "children": [],
+                      "started_at": 1791458881.7442546,
+                      "finished_at": 1791458882.0494742
+                    }
+                  ]
+                },
+                {
+                  "duration": 3.8495936610812174,
+                  "timestamp": 1791458877.6454103,
+                  "idle_duration": 0.0,
+                  "error": [],
+                  "output": {
+                    "additive": [],
+                    "complete": []
+                  },
+                  "atomic_actions": [
+                    {
+                      "name": "keystone.create_project",
+                      "children": [],
+                      "started_at": 1791458877.8654103,
+                      "finished_at": 1791458878.4711056
+                    },
+                    {
+                      "name": "keystone.create_user",
+                      "children": [],
+                      "started_at": 1791458878.4711192,
+                      "finished_at": 1791458879.3175244
+                    },
+                    {
+                      "name": "keystone.create_role",
+                      "children": [],
+                      "started_at": 1791458879.317533,
+                      "finished_at": 1791458879.7235644
+                    },
+                    {
+                      "name": "keystone.get_project",
+                      "children": [],
+                      "started_at": 1791458879.723576,
+                      "finished_at": 1791458880.1095223
+                    },
+                    {
+                      "name": "keystone.get_user",
+                      "children": [],
+                      "started_at": 1791458880.1095366,
+                      "finished_at": 1791458880.48356
+                    },
+                    {
+                      "name": "keystone.get_role",
+                      "children": [],
+                      "started_at": 1791458880.483578,
+                      "finished_at": 1791458880.8323874
+                    },
+                    {
+                      "name": "keystone.list_services",
+                      "children": [],
+                      "started_at": 1791458880.8323991,
+                      "finished_at": 1791458881.1726053
+                    },
+                    {
+                      "name": "keystone.get_service",
+                      "children": [],
+                      "started_at": 1791458881.1726177,
+                      "finished_at": 1791458881.4949787
+                    }
+                  ]
+                },
+                {
+                  "duration": 4.532941596381026,
+                  "timestamp": 1791458877.7027993,
+                  "idle_duration": 0.0,
+                  "error": [],
+                  "output": {
+                    "additive": [],
+                    "complete": []
+                  },
+                  "atomic_actions": [
+                    {
+                      "name": "keystone.create_project",
+                      "children": [],
+                      "started_at": 1791458877.847966,
+                      "finished_at": 1791458878.8894546
+                    },
+                    {
+                      "name": "keystone.create_user",
+                      "children": [],
+                      "started_at": 1791458878.889468,
+                      "finished_at": 1791458879.8400342
+                    },
+                    {
+                      "name": "keystone.create_role",
+                      "children": [],
+                      "started_at": 1791458879.8400438,
+                      "finished_at": 1791458880.2908363
+                    },
+                    {
+                      "name": "keystone.get_project",
+                      "children": [],
+                      "started_at": 1791458880.2908502,
+                      "finished_at": 1791458880.7166846
+                    },
+                    {
+                      "name": "keystone.get_user",
+                      "children": [],
+                      "started_at": 1791458880.7167058,
+                      "finished_at": 1791458881.1152081
+                    },
+                    {
+                      "name": "keystone.get_role",
+                      "children": [],
+                      "started_at": 1791458881.1152227,
+                      "finished_at": 1791458881.5386324
+                    },
+                    {
+                      "name": "keystone.list_services",
+                      "children": [],
+                      "started_at": 1791458881.538648,
+                      "finished_at": 1791458881.9282594
+                    },
+                    {
+                      "name": "keystone.get_service",
+                      "children": [],
+                      "started_at": 1791458881.9282737,
+                      "finished_at": 1791458882.235713
+                    }
+                  ]
+                },
+                {
+                  "duration": 5.401867601655543,
+                  "timestamp": 1791458877.7134461,
+                  "idle_duration": 0.0,
+                  "error": [],
+                  "output": {
+                    "additive": [],
+                    "complete": []
+                  },
+                  "atomic_actions": [
+                    {
+                      "name": "keystone.create_project",
+                      "children": [],
+                      "started_at": 1791458878.3040326,
+                      "finished_at": 1791458879.344068
+                    },
+                    {
+                      "name": "keystone.create_user",
+                      "children": [],
+                      "started_at": 1791458879.3440785,
+                      "finished_at": 1791458880.4908683
+                    },
+                    {
+                      "name": "keystone.create_role",
+                      "children": [],
+                      "started_at": 1791458880.490881,
+                      "finished_at": 1791458881.002411
+                    },
+                    {
+                      "name": "keystone.get_project",
+                      "children": [],
+                      "started_at": 1791458881.002423,
+                      "finished_at": 1791458881.4367256
+                    },
+                    {
+                      "name": "keystone.get_user",
+                      "children": [],
+                      "started_at": 1791458881.4367437,
+                      "finished_at": 1791458881.8346622
+                    },
+                    {
+                      "name": "keystone.get_role",
+                      "children": [],
+                      "started_at": 1791458881.834679,
+                      "finished_at": 1791458882.2894797
+                    },
+                    {
+                      "name": "keystone.list_services",
+                      "children": [],
+                      "started_at": 1791458882.2894952,
+                      "finished_at": 1791458882.6568139
+                    },
+                    {
+                      "name": "keystone.get_service",
+                      "children": [],
+                      "started_at": 1791458882.6568253,
+                      "finished_at": 1791458883.1152828
+                    }
+                  ]
+                },
+                {
+                  "duration": 4.743895979518021,
+                  "timestamp": 1791458877.7647831,
+                  "idle_duration": 0.0,
+                  "error": [],
+                  "output": {
+                    "additive": [],
+                    "complete": []
+                  },
+                  "atomic_actions": [
+                    {
+                      "name": "keystone.create_project",
+                      "children": [],
+                      "started_at": 1791458878.3538792,
+                      "finished_at": 1791458879.4069562
+                    },
+                    {
+                      "name": "keystone.create_user",
+                      "children": [],
+                      "started_at": 1791458879.4069693,
+                      "finished_at": 1791458880.3341908
+                    },
+                    {
+                      "name": "keystone.create_role",
+                      "children": [],
+                      "started_at": 1791458880.3342013,
+                      "finished_at": 1791458880.7384462
+                    },
+                    {
+                      "name": "keystone.get_project",
+                      "children": [],
+                      "started_at": 1791458880.7384574,
+                      "finished_at": 1791458881.135845
+                    },
+                    {
+                      "name": "keystone.get_user",
+                      "children": [],
+                      "started_at": 1791458881.1358588,
+                      "finished_at": 1791458881.5363147
+                    },
+                    {
+                      "name": "keystone.get_role",
+                      "children": [],
+                      "started_at": 1791458881.536333,
+                      "finished_at": 1791458881.9036386
+                    },
+                    {
+                      "name": "keystone.list_services",
+                      "children": [],
+                      "started_at": 1791458881.9036534,
+                      "finished_at": 1791458882.184808
+                    },
+                    {
+                      "name": "keystone.get_service",
+                      "children": [],
+                      "started_at": 1791458882.1848202,
+                      "finished_at": 1791458882.5086389
+                    }
+                  ]
+                },
+                {
+                  "duration": 4.791343726904969,
+                  "timestamp": 1791458877.8054886,
+                  "idle_duration": 0.0,
+                  "error": [],
+                  "output": {
+                    "additive": [],
+                    "complete": []
+                  },
+                  "atomic_actions": [
+                    {
+                      "name": "keystone.create_project",
+                      "children": [],
+                      "started_at": 1791458878.2795153,
+                      "finished_at": 1791458879.238573
+                    },
+                    {
+                      "name": "keystone.create_user",
+                      "children": [],
+                      "started_at": 1791458879.2385828,
+                      "finished_at": 1791458880.2308671
+                    },
+                    {
+                      "name": "keystone.create_role",
+                      "children": [],
+                      "started_at": 1791458880.2308786,
+                      "finished_at": 1791458880.6553357
+                    },
+                    {
+                      "name": "keystone.get_project",
+                      "children": [],
+                      "started_at": 1791458880.65535,
+                      "finished_at": 1791458881.0652843
+                    },
+                    {
+                      "name": "keystone.get_user",
+                      "children": [],
+                      "started_at": 1791458881.0653005,
+                      "finished_at": 1791458881.4304247
+                    },
+                    {
+                      "name": "keystone.get_role",
+                      "children": [],
+                      "started_at": 1791458881.430436,
+                      "finished_at": 1791458881.8653612
+                    },
+                    {
+                      "name": "keystone.list_services",
+                      "children": [],
+                      "started_at": 1791458881.8653736,
+                      "finished_at": 1791458882.2296338
+                    },
+                    {
+                      "name": "keystone.get_service",
+                      "children": [],
+                      "started_at": 1791458882.2296462,
+                      "finished_at": 1791458882.5968127
+                    }
+                  ]
+                }
+              ],
+              "failed_iteration_count": 0,
+              "total_iteration_count": 20,
+              "created_at": "2026-10-08T11:27:52",
+              "updated_at": "2026-10-08T11:28:13",
+              "contexts": {},
+              "contexts_results": [],
+              "position": 0,
+              "pass_sla": true,
+              "sla_results": {
+                "sla": [
+                  {
+                    "criterion": "failure_rate",
+                    "success": true,
+                    "detail": "Failure rate criteria 0.00% <= 0.00% <= 0.00% - Passed"
+                  }
+                ]
+              },
+              "sla": {
+                "failure_rate": {
+                  "max": 0
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

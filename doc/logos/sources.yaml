@@ -1,0 +1,34 @@
+# Logos shown in the "Who uses Rally" grid and where each file came from.
+# The grid is drawn in this order. After a change, rebuild it with:
+#
+#   tox -e venv -- python doc/logos/build_grid.py
+
+- {name: B1 Systems, file: b1-systems.svg, source: "https://www.b1-systems.de/wp-content/uploads/b1-systems_logo.svg"}
+- {name: Canonical, file: canonical.svg, source: "https://commons.wikimedia.org/wiki/File:Canonical_logo_2023.svg"}
+- {name: CERN, file: cern.svg, source: "https://commons.wikimedia.org/wiki/File:CERN_logo_badge.svg"}
+- {name: Cisco, file: cisco.svg, source: "https://commons.wikimedia.org/wiki/File:Cisco_logo_blue_2016.svg"}
+- {name: Dell, file: dell.svg, source: "https://commons.wikimedia.org/wiki/File:Dell_logo_2016.svg"}
+- {name: EasyStack, file: easystack.png, source: "https://www.easystack.cn/"}
+- {name: Flex, file: flex.svg, source: "https://commons.wikimedia.org/wiki/File:Flex_logo_(2015).svg"}
+- {name: Fujitsu, file: fujitsu.svg, source: "https://commons.wikimedia.org/wiki/File:Fujitsu-Logo.svg"}
+- {name: GoDaddy, file: godaddy.svg, source: "https://commons.wikimedia.org/wiki/File:GoDaddy_logo_2020.svg"}
+- {name: Hewlett Packard Enterprise, file: hpe.svg, source: "https://commons.wikimedia.org/wiki/File:Hewlett_Packard_Enterprise_logo_2025.svg"}
+- {name: Huawei, file: huawei.png, source: "https://en.wikipedia.org/wiki/File:Huawei_Standard_logo.svg"}
+- {name: IBM, file: ibm.svg, source: "https://commons.wikimedia.org/wiki/File:IBM_logo.svg"}
+- {name: Intel, file: intel.svg, source: "https://commons.wikimedia.org/wiki/File:Intel_logo_2023.svg"}
+- {name: MapleLabs (now part of Xoriant), file: maplelabs.png, source: "https://web.archive.org/web/20240104130058/https://maplelabs.com/"}
+- {name: Mirantis, file: mirantis.svg, source: "https://commons.wikimedia.org/wiki/File:Mirantis_logo.svg"}
+- {name: Nokia, file: nokia.svg, source: "https://commons.wikimedia.org/wiki/File:Nokia_2023.svg"}
+- {name: "NTT (NTT DOCOMO BUSINESS, NTT DATA)", file: ntt.svg, source: "https://commons.wikimedia.org/wiki/File:NTT_2025.svg"}
+- {name: Numergy, file: numergy.png, source: "https://fr.wikipedia.org/wiki/Fichier:Logo_numergy_0.png"}
+- {name: Orange, file: orange.svg, source: "https://commons.wikimedia.org/wiki/File:Orange_logo.svg"}
+- {name: Rackspace, file: rackspace.svg, source: "https://commons.wikimedia.org/wiki/File:Rackspace_Technology.svg"}
+- {name: Red Hat, file: red-hat.svg, source: "https://commons.wikimedia.org/wiki/File:Red_Hat_Logo_2019.svg"}
+- {name: Reliance Communications, file: reliance-communications.svg, source: "https://en.wikipedia.org/wiki/File:Reliance_Communications_Logo.svg"}
+- {name: SAP, file: sap.svg, source: "https://commons.wikimedia.org/wiki/File:SAP_2011_logo.svg"}
+- {name: StackHPC, file: stackhpc.png, source: "https://www.stackhpc.com/images/og/stackhpc-og-logo.png"}
+- {name: SUSE, file: suse.svg, source: "https://en.wikipedia.org/wiki/File:SUSE_S.A._logo.svg"}
+- {name: Symantec, file: symantec.svg, source: "https://commons.wikimedia.org/wiki/File:Symantec_logo10.svg"}
+- {name: VMware, file: vmware.svg, source: "https://commons.wikimedia.org/wiki/File:VMware_logo.svg"}
+- {name: Yahoo, file: yahoo.svg, source: "https://commons.wikimedia.org/wiki/File:Yahoo!_(2019).svg"}
+- {name: ZTE, file: zte.svg, source: "https://commons.wikimedia.org/wiki/File:ZTE-logo.svg"}

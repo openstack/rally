@@ -56,23 +56,24 @@ Results
 
 1. Concurrency = 4
 
-.. code-block:: json
+.. code-block:: yaml
 
-    {
-        "contexts": {
-            "users": {
-                "concurrent": 30,
-                "tenants": 12,
-                "users_per_tenant": 512
-            }
-        },
-        "runner": {
-            "constant": {
-                "concurrency": 4,
-                "times": 10000
-            }
-        }
-    }
+    ---
+    version: 2
+    title: Keystone token creation
+    subtasks:
+      - title: Authenticate users
+        scenario:
+          Authenticate.keystone: {}
+        contexts:
+          users:
+            resource_management_workers: 30
+            tenants: 12
+            users_per_tenant: 512
+        runner:
+          constant:
+            concurrency: 4
+            times: 10000
 
 
 +--------+-----------+-----------+-----------+---------------+---------------+---------+-------+-----------------------+--------------+
@@ -88,23 +89,24 @@ Results
 
 2. Concurrency = 16
 
-.. code-block:: json
+.. code-block:: yaml
 
-    {
-        "contexts": {
-            "users": {
-                "concurrent": 30,
-                "tenants": 12,
-                "users_per_tenant": 512
-            }
-        },
-        "runner": {
-            "constant": {
-                "concurrency": 16,
-                "times": 10000
-            }
-        }
-    }
+    ---
+    version: 2
+    title: Keystone token creation
+    subtasks:
+      - title: Authenticate users
+        scenario:
+          Authenticate.keystone: {}
+        contexts:
+          users:
+            resource_management_workers: 30
+            tenants: 12
+            users_per_tenant: 512
+        runner:
+          constant:
+            concurrency: 16
+            times: 10000
 
 +--------+-----------+-----------+-----------+---------------+---------------+---------+-------+-----------------------+--------------+
 | action | min (sec) | avg (sec) | max (sec) | 90 percentile | 95 percentile | success | count |apache enabled keystone|public_workers|
@@ -119,23 +121,24 @@ Results
 
 3. Concurrency = 32
 
-.. code-block:: json
+.. code-block:: yaml
 
-    {
-        "contexts": {
-            "users": {
-                "concurrent": 30,
-                "tenants": 12,
-                "users_per_tenant": 512
-            }
-        },
-        "runner": {
-            "constant": {
-                "concurrency": 32,
-                "times": 10000
-            }
-        }
-    }
+    ---
+    version: 2
+    title: Keystone token creation
+    subtasks:
+      - title: Authenticate users
+        scenario:
+          Authenticate.keystone: {}
+        contexts:
+          users:
+            resource_management_workers: 30
+            tenants: 12
+            users_per_tenant: 512
+        runner:
+          constant:
+            concurrency: 32
+            times: 10000
 
 +--------+-----------+-----------+-----------+---------------+---------------+---------+-------+-----------------------+--------------+
 | action | min (sec) | avg (sec) | max (sec) | 90 percentile | 95 percentile | success | count |apache enabled keystone|public_workers|
