@@ -86,9 +86,10 @@ class JSONExporterTestCase(test.TestCase):
             ])], reporter._generate_tasks())
 
     @mock.patch("%s.json.dumps" % PATH, return_value="json")
-    @mock.patch("%s.dt" % PATH)
+    @mock.patch("%s.dt" % PATH, wraps=dt)
     def test_generate(self, mock_dt, mock_json_dumps):
-        mock_dt.datetime.utcnow.return_value = dt.datetime.utcnow()
+        mock_dt.datetime.utcnow.return_value = dt.datetime(
+            2026, 11, 1, 12, 34, 56, 0)
         tasks_results = dummy_data.get_tasks_results()
 
         # print
@@ -97,13 +98,10 @@ class JSONExporterTestCase(test.TestCase):
         self.assertEqual({"print": "json"}, reporter.generate())
         results = {
             "info": {"rally_version": rally_version.version_string(),
-                     "generated_at": mock_dt.datetime.strftime.return_value,
+                     "generated_at": "2026-11-01T12:34:56",
                      "format_version": "1.2"},
             "tasks": reporter._generate_tasks.return_value
         }
-        mock_dt.datetime.strftime.assert_called_once_with(
-            mock_dt.datetime.utcnow.return_value,
-            json_exporter.TIMEFORMAT)
         reporter._generate_tasks.assert_called_once_with()
         mock_json_dumps.assert_called_once_with(results,
                                                 sort_keys=False,

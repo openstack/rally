@@ -388,10 +388,11 @@ class HTMLReporterTestCase(test.TestCase):
 
 class JUnitXMLReporterTestCase(test.TestCase):
 
-    @mock.patch("rally.common.io.junit.dt")
+    @mock.patch("rally.common.io.junit.dt", wrps=dt)
     @mock.patch("rally.common.version.version_string")
     def test_generate(self, mock_version_string, mock_dt):
-        mock_dt.datetime.utcnow.return_value.isoformat.return_value = "TIME"
+        mock_dt.datetime.utcnow.return_value = dt.datetime(
+            2026, 11, 1, 12, 34, 56, 0)
         # release when junit reporter was introduced
         mock_version_string.return_value = "0.8.0"
         with open(os.path.join(os.path.dirname(__file__),

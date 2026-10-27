@@ -68,7 +68,8 @@ class JUnitXMLExporterTestCase(test.TestCase):
 
         patcher = mock.patch("rally.common.io.junit.dt")
         self.dt = patcher.start()
-        self.dt.datetime.utcnow.return_value.isoformat.return_value = "$TIME"
+        self.dt.datetime.utcnow.return_value = dt.datetime(
+            2026, 11, 1, 12, 34, 56, 0)
         self.addCleanup(patcher.stop)
 
     @mock.patch("rally.common.version.version_string")
