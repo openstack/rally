@@ -10,31 +10,28 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""``:pyproject:`` inserts a value from the project's pyproject.toml.
+"""``:package:`` inserts a value from the metadata of the installed rally.
 
-The argument is a dotted path to the value, optionally followed by a filter:
+The argument is a metadata field, optionally followed by a filter:
 
-* ``:pyproject:`project.optional-dependencies.mysql``` gives
-  ``PyMySQL>=0.9.0``; a list is joined with commas.
-* ``:pyproject:`project.requires-python | min``` gives the lowest version a
-  specifier allows, for example ``3.11``.
+* ``:package:`requires-python | min``` gives the lowest Python version the
+  package allows, for example ``3.11``.
+* ``:package:`extra mysql``` gives the requirements that the ``mysql`` extra
+  adds, for example ``PyMySQL>=0.9.0``; several are joined with commas.
 """
 
 from __future__ import annotations
 
-import pathlib
-import tomllib
+import importlib.metadata
 import typing as t
 
 from docutils import nodes
+from packaging import requirements
 from packaging import specifiers
 from packaging import version
 
-import rally
 
-
-ROOT = pathlib.Path(rally.__file__).resolve().parents[1]
-PYPROJECT = ROOT / "pyproject.toml"
+DISTRIBUTION = "rally"
 
 
 def min_version(value: str) -> str:
@@ -51,20 +48,34 @@ def min_version(value: str) -> str:
 FILTERS: dict[str, t.Callable[[str], str]] = {"min": min_version}
 
 
-def get_value(text: str, path: pathlib.Path = PYPROJECT) -> str:
+def extra_requirements(metadata: t.Any, extra: str) -> str:
+    if extra not in (metadata.get_all("Provides-Extra") or []):
+        raise ValueError(f"there is no {extra!r} extra")
+    found = []
+    for line in metadata.get_all("Requires-Dist") or []:
+        req = requirements.Requirement(line)
+        if req.marker is not None and req.marker.evaluate({"extra": extra}):
+            req.marker = None
+            found.append(str(req))
+    return ", ".join(found)
+
+
+def get_value(text: str) -> str:
     key, _, filter_name = (part.strip() for part in text.partition("|"))
-    with path.open("rb") as f:
-        value: t.Any = tomllib.load(f)
-    for part in key.split("."):
-        value = value[part]
-    if isinstance(value, list):
-        value = ", ".join(value)
+    metadata = importlib.metadata.metadata(DISTRIBUTION)
+    field, _, argument = key.partition(" ")
+    if field == "extra":
+        value = extra_requirements(metadata, argument.strip())
+    elif key in metadata:
+        value = metadata[key]
+    else:
+        raise ValueError(f"there is no {key!r} field")
     if filter_name:
         value = FILTERS[filter_name](value)
-    return str(value)
+    return value
 
 
-def pyproject_role(
+def package_role(
     name: str,
     rawtext: str,
     text: str,
@@ -77,12 +88,13 @@ def pyproject_role(
         value = get_value(text)
     except (KeyError, ValueError) as e:
         msg = inliner.reporter.error(
-            f"Cannot take {text!r} from {PYPROJECT.name}: {e}", line=lineno
+            f"Cannot take {text!r} from the {DISTRIBUTION} metadata: {e}",
+            line=lineno,
         )
         return [inliner.problematic(rawtext, rawtext, msg)], [msg]
     return [nodes.inline("", value)], []
 
 
 def setup(app: t.Any) -> dict[str, t.Any]:
-    app.add_role("pyproject", pyproject_role)
+    app.add_role("package", package_role)
     return {"parallel_read_safe": True}

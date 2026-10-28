@@ -67,7 +67,7 @@ extensions = [
     "ext.cli_reference",
     "ext.plugin_reference",
     "ext.include_vars",
-    "ext.pyproject",
+    "ext.package",
 ]
 if on_rtd:
     extensions.append("sphinx_rtd_theme")
