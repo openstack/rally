@@ -24,7 +24,7 @@ Every Rally release is published as Python packages on
 From PyPI
 ---------
 
-Rally needs Python :pyproject:`project.requires-python | min` or newer.
+Rally needs Python :package:`requires-python | min` or newer.
 To test an OpenStack cloud, add the OpenStack plugins:
 
 .. tab-set::
@@ -149,10 +149,9 @@ tables in it.
       ``uv tool install`` replaces the whole environment, so add
       ``--with rally-openstack`` if you use the OpenStack plugins.
 
-The ``mysql`` extra installs
-:pyproject:`project.optional-dependencies.mysql` and the ``postgres`` extra
-installs :pyproject:`project.optional-dependencies.postgres`. These are the
-drivers Rally is tested with, and the ``connection`` URLs above use them.
+The ``mysql`` extra installs :package:`extra mysql` and the ``postgres``
+extra installs :package:`extra postgres`. These are the drivers Rally is
+tested with, and the ``connection`` URLs above use them.
 
 .. _upgrade:
 
