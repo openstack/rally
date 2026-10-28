@@ -17,8 +17,8 @@ Changelog
 .. Release notes for existing releases are MUTABLE! If there is something that
    was missed or can be improved, feel free to change it!
 
-unreleased
-----------
+[5.2.0] - 2026-10-28
+--------------------
 
 Added
 ~~~~~
@@ -59,6 +59,8 @@ Changed
   development package is needed anymore. Use ``postgresql+psycopg://`` in the
   ``[database]connection`` option: a plain ``postgresql://`` URL still
   selects ``psycopg2``, which is no longer installed by the extra.
+
+* Rally docker image switched to python3.13-slim as base image
 
 * The list of core reviewers is cleaned up. Many thanks to Alexander
   Maretskiy, Chris St. Pierre, Hai Shi, Illia Khudoshyn, Kun Huang, Nikita

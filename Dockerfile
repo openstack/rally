@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 RUN apt-get update && apt-get install --yes sudo vim git-core build-essential && \
     apt clean && \

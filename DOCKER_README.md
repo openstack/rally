@@ -5,7 +5,7 @@ them in complex tests scenarios that allows to perform all kinds of testing!
 
 # The purpose of xrally image or how to use it
 
-**xrally** image bases on the official python3.11-slim docker image.
+**xrally** image bases on the official python3.13-slim docker image.
 It provides raw xrally framework with only in-tree plugins (no
 pre-installed plugins for Kubernetes, OpenStack, etc).
 
@@ -17,7 +17,7 @@ additional plugins:
     #   for rally user is used.
     #
     # Tags of the image are the same as releases of xRally/Rally
-    FROM xrally/xrally:5.1.1
+    FROM xrally/xrally:5.2.0
     
     # "rally" user (which is selected by-default) is owner of "/rally" directory,
     #   so there is no need to call chown or switch the user
@@ -40,8 +40,8 @@ details)
 First, you need to pull the container. We suggest using the last tagged 
 version:
 
-    # pull the 5.1.1 image (the latest release at the point of writing the note)
-    $ docker pull xrally/xrally:5.1.1
+    # pull the 5.2.0 image (the latest release at the point of writing the note)
+    $ docker pull xrally/xrally:5.2.0
 
 **WARNING: the image keeps the Rally source tree, with all the sample tasks,
 in `/rally/source`. Do not attach folders or volumes over `/rally` inside the
@@ -59,7 +59,7 @@ docker volumes or mount the directory.
 * use docker volumes. It is the easiest way. You just need to do something like:
 
       $ docker volume create --name rally_volume
-      $ docker run -v rally_volume:/home/rally/.rally xrally/xrally:5.1.1 env create --name "foo"
+      $ docker run -v rally_volume:/home/rally/.rally xrally/xrally:5.2.0 env create --name "foo"
 
 
 * mount outer directory inside the container
