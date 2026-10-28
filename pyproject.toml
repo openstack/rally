@@ -1,6 +1,7 @@
 [build-system]
 requires = [
-    "pbr>=6.1.1"
+    "pbr>=6.1.1",
+    "setuptools>=77.0.0",
 ]
 build-backend = "pbr.build"
 
@@ -11,12 +12,12 @@ authors = [
     {name = "OpenStack", email = "openstack-discuss@lists.openstack.org"},
 ]
 readme = { file = "README.rst", content-type = "text/x-rst" }
-license = { text = "Apache License, Version 2.0" }
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 classifiers = [
     "Environment :: OpenStack",
     "Intended Audience :: Developers",
     "Intended Audience :: Information Technology",
-    "License :: OSI Approved :: Apache Software License",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python",
     "Programming Language :: Python :: Implementation :: CPython",
