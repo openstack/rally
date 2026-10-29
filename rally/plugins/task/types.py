@@ -38,10 +38,23 @@ class PathOrUrl(types.ResourceType):
             return path
         try:
             head = requests.head(path, verify=False, allow_redirects=True)
-            if head.status_code == 200:
+            try:
+                status_code = head.status_code
+            finally:
+                head.close()
+            # Some servers reject HEAD even though the resource can be read.
+            if status_code in (403, 405):
+                response = requests.get(
+                    path, verify=False, allow_redirects=True, stream=True
+                )
+                try:
+                    status_code = response.status_code
+                finally:
+                    response.close()
+            if status_code == 200:
                 return path
             raise exceptions.InvalidScenarioArgument(
-                f"Url {path} unavailable (code {head.status_code})"
+                f"Url {path} unavailable (code {status_code})"
             )
         except Exception as ex:
             raise exceptions.InvalidScenarioArgument(
