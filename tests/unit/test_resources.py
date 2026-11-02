@@ -15,6 +15,8 @@
 
 import difflib
 import os
+import subprocess
+import tempfile
 
 import rally
 from rally.cli import bashcomplete
@@ -26,6 +28,26 @@ RES_PATH = os.path.join(os.path.dirname(rally.__file__), os.pardir, "etc")
 
 
 class BashCompletionTestCase(test.TestCase):
+    def test_task_args_file_completion(self):
+        script = os.path.join(RES_PATH, "rally.bash_completion")
+        command = (
+            'source "$1"; '
+            'COMP_WORDS=(rally task "$2" --task-args-file "$3"); '
+            'COMP_CWORD=4; _rally; printf "%s\\n" "${COMPREPLY[@]}"'
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            open(os.path.join(directory, "args.txt"), "w").close()
+            os.mkdir(os.path.join(directory, "args_dir"))
+            for subcommand in ("start", "validate"):
+                for prefix, expected in (("args.t", "args.txt"),
+                                         ("args_d", "args_dir"),
+                                         ("./args.t", "./args.txt")):
+                    result = subprocess.run(
+                        ["bash", "-c", command, "bash", script, subcommand,
+                         prefix], cwd=directory, check=True,
+                        capture_output=True, text=True)
+                    self.assertIn(expected, result.stdout.splitlines())
+
     def test_bash_completion(self):
         with open(os.path.join(RES_PATH, "rally.bash_completion")) as f:
             old = f.read().splitlines()

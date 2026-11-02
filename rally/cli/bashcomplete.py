@@ -47,7 +47,8 @@ _FOOTER = r"""    for OPT in ${!OPTS[*]} ; do
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
 
-    if [[ $cur =~ ^(\.|\~|\/) ]] || [[ $prev =~ ^--out(|put-file)$ ]] ; then
+    if [[ $cur =~ ^(\.|\~|\/) ]] || [[ $prev =~ ^--out(|put-file)$ ]] || \
+       [[ $prev == --task-args-file ]] ; then
         _rally_filedir
     elif [[ $prev =~ ^--(task|filename)$ ]] ; then
         _rally_filedir "\.json|\.yaml|\.yml"
