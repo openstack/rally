@@ -124,6 +124,7 @@
     vars:
       coverage_output_src: '{{ zuul.project.src_dir }}/cover/'
       zuul_executor_dest: '{{ zuul.executor.log_root }}/coverage/'
+      ensure_tox_version: '!=4.67.5'
 
 - job:
     name: rally-tox-zuul-ansible-lint

@@ -27,7 +27,7 @@
 - name: Install python tox
   become: true
   become_user: root
-  shell: "{{ python_exec }} -m pip install tox --break-system-packages"
+  shell: "{{ python_exec }} -m pip install 'tox!=4.67.5' --break-system-packages"
 
 - name: Install system deps
   include_role:

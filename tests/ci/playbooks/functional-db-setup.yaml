@@ -32,3 +32,10 @@
       command:
         cmd: psql -c "CREATE ROLE rally LOGIN PASSWORD 'rally' CREATEDB"
       when: rally_functional_db == "postgresql"
+
+    - name: Allow PostgreSQL role to terminate other sessions
+      become: true
+      become_user: postgres
+      command:
+        cmd: psql -c "GRANT pg_signal_backend TO rally"
+      when: rally_functional_db == "postgresql"
